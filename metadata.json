@@ -1,0 +1,6 @@
+{
+  "name": "Personal finance",
+  "description": "Финансовый калькулятор и анализ капитала: денежный поток, подушка безопасности, бенчмарк Fidelity, КФС и расчет FIRE.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
