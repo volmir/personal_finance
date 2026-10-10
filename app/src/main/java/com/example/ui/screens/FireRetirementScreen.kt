@@ -452,7 +452,7 @@ fun FireRetirementScreen(
                                         )
                                     )
                                 }
-                                val futurePropertySum = (if (simulationState.scenarios.carLoan5Years) 12.0 * inputData.monthlyIncome else 0.0) +
+                                val futurePropertySum = (if (simulationState.scenarios.carLoan5Years) 6.0 * inputData.monthlyIncome else 0.0) +
                                         (if (simulationState.scenarios.mortgage20Years35Income) 84.0 * inputData.monthlyIncome else 0.0)
                                 if (futurePropertySum > 0.0) {
                                     Spacer(modifier = Modifier.height(3.dp))

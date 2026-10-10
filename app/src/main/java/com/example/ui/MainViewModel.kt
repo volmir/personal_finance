@@ -316,7 +316,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         if (sc.carLoan5Years) {
             deferredAssets.add(
                 com.example.domain.DeferredAsset(
-                    amount = 12.0 * baseInput.monthlyIncome,
+                    amount = 6.0 * baseInput.monthlyIncome,
                     afterYears = 5.0
                 )
             )

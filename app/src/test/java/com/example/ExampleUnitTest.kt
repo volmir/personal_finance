@@ -165,10 +165,10 @@ class ExampleUnitTest {
         )
         assertTrue(mortgageMetrics.yearsToRetirement <= mortgageWithoutAssetMetrics.yearsToRetirement)
 
-        // 4. Автомобиль в кредит (20% от ежемесячного дохода на 5 лет, +12 доходов в имущество)
+        // 4. Автомобиль в кредит (20% от ежемесячного дохода на 5 лет, +6 доходов в имущество / 50% стоимости)
         val carLoanMonthly = 0.20 * baseInput.monthlyIncome // 20 000
         val carLoanAnnual = carLoanMonthly * 12.0
-        val carLoanAsset = 12.0 * baseInput.monthlyIncome
+        val carLoanAsset = 6.0 * baseInput.monthlyIncome
         val carLoanInput = baseInput.copy(monthlyExpenses = baseInput.monthlyExpenses + carLoanMonthly)
         val carLoanMetrics = FinanceCalculator.calculate(
             carLoanInput,

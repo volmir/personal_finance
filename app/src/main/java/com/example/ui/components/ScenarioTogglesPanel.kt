@@ -48,8 +48,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.FinancialInputData
 import com.example.ui.FireScenarioToggles
+import com.example.ui.theme.AccentGold
 import com.example.ui.theme.AlertRed
 import com.example.ui.theme.SuccessGreen
+import com.example.ui.theme.WarningYellowBg
 import com.example.util.Formatters
 
 private data class ScenarioItemData(
@@ -178,8 +180,8 @@ fun ScenarioTogglesPanel(
             id = "car_loan",
             number = 4,
             title = "Автомобиль в кредит",
-            parametersText = "20% дохода на 5 лет (+12 доходов в имущество)",
-            description = "Платеж: ${Formatters.formatMoney(inputData.monthlyIncome * 0.20, inputData.currencySymbol)}/мес. (5 лет). В конце срока: +${Formatters.formatMoney(12.0 * inputData.monthlyIncome, inputData.currencySymbol)} в имущество/активы",
+            parametersText = "20% дохода на 5 лет (+6 доходов в имущество)",
+            description = "Платеж: ${Formatters.formatMoney(inputData.monthlyIncome * 0.20, inputData.currencySymbol)}/мес. (5 лет). В конце срока: +${Formatters.formatMoney(6.0 * inputData.monthlyIncome, inputData.currencySymbol)} в имущество (50% стоимости)",
             icon = Icons.Default.DirectionsCar,
             isChecked = scenarios.carLoan5Years,
             isPositive = false
@@ -460,16 +462,32 @@ private fun ScenarioToggleCard(
                     )
                 )
 
+                val badgeBgColor = if (item.isChecked) {
+                    accentColor.copy(alpha = 0.12f)
+                } else if (item.isPositive) {
+                    SuccessGreen.copy(alpha = 0.10f)
+                } else {
+                    WarningYellowBg
+                }
+
+                val badgeTextColor = if (item.isChecked) {
+                    accentColor
+                } else if (item.isPositive) {
+                    SuccessGreen
+                } else {
+                    AccentGold
+                }
+
                 Surface(
                     shape = RoundedCornerShape(6.dp),
-                    color = (if (item.isChecked) accentColor else MaterialTheme.colorScheme.primary).copy(alpha = 0.10f),
+                    color = badgeBgColor,
                     modifier = Modifier.padding(vertical = 2.dp)
                 ) {
                     Text(
                         text = "Параметры: ${item.parametersText}",
                         style = MaterialTheme.typography.labelSmall.copy(
                             fontWeight = FontWeight.Medium,
-                            color = if (item.isChecked) accentColor else MaterialTheme.colorScheme.primary,
+                            color = badgeTextColor,
                             fontSize = 10.sp
                         ),
                         modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
