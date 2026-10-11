@@ -71,6 +71,9 @@ import com.example.domain.AuditorAnalysisGenerator
 import com.example.ui.theme.AlertRed
 import com.example.ui.theme.SuccessGreen
 import com.example.util.Formatters
+import com.example.util.localization.BreakdownCategory
+import com.example.util.localization.LocalAppLanguage
+import com.example.util.localization.LocalAppStrings
 
 @Composable
 fun InputDataScreen(
@@ -82,6 +85,9 @@ fun InputDataScreen(
     onNavigateToMetrics: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val lang = LocalAppLanguage.current
+    val strings = LocalAppStrings.current
+
     // Доллар ($) на 1-м месте, Евро (€) на 2-м месте, Гривна (₴) на 4-м месте
     val currencies = listOf("$", "€", "₽", "₴", "₸", "Br")
 
@@ -128,12 +134,12 @@ fun InputDataScreen(
         // Блок №1: Доходы и Расходы
         item {
             InputSectionCard(
-                title = "1. Доходы и Расходы",
+                title = strings.block1Title,
                 icon = Icons.Default.AttachMoney,
-                subtitle = "Ежемесячный приток и отток денежных средств"
+                subtitle = strings.block1Subtitle
             ) {
                 NumberInputField(
-                    label = "Доходы (в месяц)",
+                    label = strings.monthlyIncomeLabel,
                     value = inputData.monthlyIncome,
                     currency = inputData.currencySymbol,
                     onValueChange = { newVal -> onUpdate { it.copy(monthlyIncome = newVal) } },
@@ -141,35 +147,18 @@ fun InputDataScreen(
                 )
 
                 CategoryBreakdownHint(
-                    metricName = "Доходы",
-                    categories = listOf(
-                        "Заработная плата" to listOf(
-                            "Основная работа (оклад, премия, бонусы)",
-                            "Вторая работа, совместительство"
-                        ),
-                        "Доход от бизнеса и самозанятости" to listOf(
-                            "Прибыль от собственного бизнеса / ИП",
-                            "Фриланс, подработки, консалтинг, разовые услуги"
-                        ),
-                        "Пассивный и инвестиционный доход" to listOf(
-                            "Проценты по банковским вкладам и накопительным счетам",
-                            "Дивиденды по акциям и купоны по облигациям",
-                            "Доход от сдачи недвижимости или транспорта в аренду",
-                            "Роялти, авторские права"
-                        ),
-                        "Социальные и прочие выплаты" to listOf(
-                            "Пенсии, государственные пособия, субсидии",
-                            "Алименты, регулярная помощь родственников",
-                            "Налоговые вычеты, кэшбэк"
-                        )
-                    ),
+                    metricName = strings.incomeBreakdownName,
+                    hintCollapsed = strings.incomeHintCollapsed,
+                    hintExpanded = strings.incomeHintExpanded,
+                    instruction = strings.breakdownInstruction,
+                    categories = strings.incomeCategories,
                     modifier = Modifier.padding(top = 6.dp)
                 )
 
                 Spacer(modifier = Modifier.height(10.dp))
 
                 NumberInputField(
-                    label = "Расходы (в месяц)",
+                    label = strings.monthlyExpensesLabel,
                     value = inputData.monthlyExpenses,
                     currency = inputData.currencySymbol,
                     onValueChange = { newVal -> onUpdate { it.copy(monthlyExpenses = newVal) } },
@@ -177,35 +166,11 @@ fun InputDataScreen(
                 )
 
                 CategoryBreakdownHint(
-                    metricName = "Расходы",
-                    categories = listOf(
-                        "Базовые обязательные расходы" to listOf(
-                            "Продукты питания и бытовая химия",
-                            "Аренда жилья или ипотечные платежи",
-                            "Коммунальные услуги (ЖКХ, электричество, вода)",
-                            "Связь, интернет, мобильные подписки"
-                        ),
-                        "Транспорт и логистика" to listOf(
-                            "Общественный транспорт, проездные",
-                            "Топливо, парковка, мойка",
-                            "ТО, автостраховка (ОСАГО/КАСКО), ремонт",
-                            "Такси, каршеринг"
-                        ),
-                        "Здоровье и личные нужды" to listOf(
-                            "Медикаменты, врачи, стоматология, ДМС",
-                            "Одежда, обувь, средства ухода",
-                            "Спорт, фитнес-абонементы, секции"
-                        ),
-                        "Досуг, образование и семья" to listOf(
-                            "Кафе, рестораны, доставка еды",
-                            "Развлечения, кино, путешествия, хобби",
-                            "Обучение, курсы, книги, кружки детей",
-                            "Подарки, благотворительность, непредвиденные траты"
-                        ),
-                        "Обслуживание долгов" to listOf(
-                            "Ежемесячные платежи по потребительским кредитам и кредитным картам"
-                        )
-                    ),
+                    metricName = strings.expensesBreakdownName,
+                    hintCollapsed = strings.expensesHintCollapsed,
+                    hintExpanded = strings.expensesHintExpanded,
+                    instruction = strings.breakdownInstruction,
+                    categories = strings.expensesCategories,
                     modifier = Modifier.padding(top = 6.dp)
                 )
 
@@ -213,9 +178,9 @@ fun InputDataScreen(
 
                 // Строка 1: Денежный поток по шаблону "Реальная доходность капитала"
                 MetricIndicatorRow(
-                    title = "Денежный поток:",
-                    formula = "(Доходы - Расходы)",
-                    value = Formatters.formatMoney(metrics.cashFlow, inputData.currencySymbol),
+                    title = strings.cashFlowTitle,
+                    formula = strings.cashFlowFormula,
+                    value = Formatters.formatMoney(metrics.cashFlow, inputData.currencySymbol, lang),
                     valueColor = if (metrics.cashFlow >= 0) SuccessGreen else AlertRed
                 )
 
@@ -223,9 +188,9 @@ fun InputDataScreen(
 
                 // Строка 2: Норма сбережений перенесена на отдельную строку по шаблону
                 MetricIndicatorRow(
-                    title = "Норма сбережений:",
-                    formula = "(Денежный поток / Доходы) * 100%",
-                    value = Formatters.formatPercent(metrics.savingsRate),
+                    title = strings.savingsRateTitle,
+                    formula = strings.savingsRateFormula,
+                    value = Formatters.formatPercent(metrics.savingsRate, lang),
                     valueColor = MaterialTheme.colorScheme.primary
                 )
             }
@@ -234,12 +199,12 @@ fun InputDataScreen(
         // Блок №2: Активы (Σ)
         item {
             InputSectionCard(
-                title = "2. Активы (Σ)",
+                title = strings.block2Title,
                 icon = Icons.Default.AccountBalance,
-                subtitle = "Ликвидные, финансовые и имущественные накопления"
+                subtitle = strings.block2Subtitle
             ) {
                 NumberInputField(
-                    label = "Ликвидные (наличные, вклады до востребования)",
+                    label = strings.liquidAssetsLabel,
                     value = inputData.liquidAssets,
                     currency = inputData.currencySymbol,
                     onValueChange = { newVal -> onUpdate { it.copy(liquidAssets = newVal) } },
@@ -249,7 +214,7 @@ fun InputDataScreen(
                 Spacer(modifier = Modifier.height(10.dp))
 
                 NumberInputField(
-                    label = "Финансовые (акции, облигации, фонды, брокерские счета)",
+                    label = strings.financialAssetsLabel,
                     value = inputData.financialAssets,
                     currency = inputData.currencySymbol,
                     onValueChange = { newVal -> onUpdate { it.copy(financialAssets = newVal) } },
@@ -259,7 +224,7 @@ fun InputDataScreen(
                 Spacer(modifier = Modifier.height(10.dp))
 
                 NumberInputField(
-                    label = "Имущественные (недвижимость, автомобили, ценности)",
+                    label = strings.propertyAssetsLabel,
                     value = inputData.propertyAssets,
                     currency = inputData.currencySymbol,
                     onValueChange = { newVal -> onUpdate { it.copy(propertyAssets = newVal) } },
@@ -267,31 +232,11 @@ fun InputDataScreen(
                 )
 
                 CategoryBreakdownHint(
-                    metricName = "Активы",
-                    categories = listOf(
-                        "Ликвидные активы" to listOf(
-                            "Наличные деньги в любой валюте",
-                            "Остатки на текущих и дебетовых картах",
-                            "Накопительные счета и вклады до востребования",
-                            "Краткосрочные депозиты (до 1-3 месяцев)"
-                        ),
-                        "Финансовые (инвестиционные) активы" to listOf(
-                            "Акции, ETF, паевые инвестиционные фонды (ПИФ)",
-                            "Облигации (ОФЗ, корпоративные, еврооблигации)",
-                            "Средства на брокерских счетах и ИИС",
-                            "Срочные долгосрочные банковские вклады",
-                            "Драгоценные металлы (ОМС, слитки, монеты)",
-                            "Криптовалюты и цифровые активы",
-                            "Пенсионные накопления в НПФ"
-                        ),
-                        "Имущественные (материальные) активы" to listOf(
-                            "Жилая недвижимость (квартира, дом, дача)",
-                            "Коммерческая недвижимость, земельные участки, гаражи",
-                            "Транспортные средства (автомобиль, мотоцикл и др.)",
-                            "Оборудование, антиквариат, ювелирные ценности",
-                            "Доля в реальном бизнесе (оценочная стоимость)"
-                        )
-                    ),
+                    metricName = strings.assetsBreakdownName,
+                    hintCollapsed = strings.assetsHintCollapsed,
+                    hintExpanded = strings.assetsHintExpanded,
+                    instruction = strings.breakdownInstruction,
+                    categories = strings.assetsCategories,
                     modifier = Modifier.padding(top = 6.dp)
                 )
 
@@ -299,9 +244,9 @@ fun InputDataScreen(
 
                 // Расчет Активы (Σ) по единому шаблону
                 MetricIndicatorRow(
-                    title = "Активы (Σ):",
-                    formula = "(Ликвидные + Финансовые + Имущественные)",
-                    value = Formatters.formatMoney(metrics.totalAssets, inputData.currencySymbol),
+                    title = strings.totalAssetsTitle,
+                    formula = strings.totalAssetsFormula,
+                    value = Formatters.formatMoney(metrics.totalAssets, inputData.currencySymbol, lang),
                     valueColor = MaterialTheme.colorScheme.primary
                 )
 
@@ -315,11 +260,11 @@ fun InputDataScreen(
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = "Включать финансовые активы в подушку",
+                            text = strings.toggleEmergencyFundTitle,
                             style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium)
                         )
                         Text(
-                            text = if (inputData.includeFinancialInEmergencyFund) "Подушка = Ликвидные + Финансовые" else "Подушка = Только Ликвидные",
+                            text = if (inputData.includeFinancialInEmergencyFund) strings.toggleEmergencyFundSubOn else strings.toggleEmergencyFundSubOff,
                             style = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
                         )
                     }
@@ -339,12 +284,12 @@ fun InputDataScreen(
         // Блок №3: Пассивы
         item {
             InputSectionCard(
-                title = "3. Пассивы",
+                title = strings.block3Title,
                 icon = Icons.Default.TrendingUp,
-                subtitle = "Обязательства, кредиты, долги и ипотека"
+                subtitle = strings.block3Subtitle
             ) {
                 NumberInputField(
-                    label = "Пассивы (все долги и обязательства)",
+                    label = strings.liabilitiesLabel,
                     value = inputData.liabilities,
                     currency = inputData.currencySymbol,
                     onValueChange = { newVal -> onUpdate { it.copy(liabilities = newVal) } },
@@ -352,37 +297,21 @@ fun InputDataScreen(
                 )
 
                 CategoryBreakdownHint(
-                    metricName = "Пассивы",
-                    categories = listOf(
-                        "Залоговые и долгосрочные обязательства" to listOf(
-                            "Остаток основного долга по ипотеке (квартира, дом)",
-                            "Автокредит (остаток задолженности)",
-                            "Кредиты под залог имущества"
-                        ),
-                        "Потребительские и краткосрочные кредиты" to listOf(
-                            "Потребительские кредиты наличными",
-                            "Задолженность по кредитным картам и картам рассрочки",
-                            "Рассрочки, BNPL-сервисы, займы в МФО"
-                        ),
-                        "Личные и частные долги" to listOf(
-                            "Долги перед родственниками, друзьями или коллегами",
-                            "Частные займы под расписку"
-                        ),
-                        "Прочие финансовые обязательства" to listOf(
-                            "Задолженность по налогам, штрафам, судебным искам",
-                            "Долги по коммунальным платежам (ЖКХ)"
-                        )
-                    ),
+                    metricName = strings.liabilitiesBreakdownName,
+                    hintCollapsed = strings.liabilitiesHintCollapsed,
+                    hintExpanded = strings.liabilitiesHintExpanded,
+                    instruction = strings.breakdownInstruction,
+                    categories = strings.liabilitiesCategories,
                     modifier = Modifier.padding(top = 6.dp)
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                // Расчет формулы для "Чистый капитал" (Активы - Пассивы) перенесен на новую строку по примеру блока №4
+                // Расчет формулы для "Чистый капитал" (Активы - Пассивы)
                 MetricIndicatorRow(
-                    title = "Чистый капитал:",
-                    formula = "(Активы - Пассивы)",
-                    value = Formatters.formatMoney(metrics.netWorth, inputData.currencySymbol),
+                    title = strings.netWorthTitle,
+                    formula = strings.netWorthFormula,
+                    value = Formatters.formatMoney(metrics.netWorth, inputData.currencySymbol, lang),
                     valueColor = MaterialTheme.colorScheme.primary
                 )
             }
@@ -391,9 +320,9 @@ fun InputDataScreen(
         // Блок №4: Инвестиции & Инфляция
         item {
             InputSectionCard(
-                title = "4. Инвестиции & Инфляция",
+                title = strings.block4Title,
                 icon = Icons.Default.Percent,
-                subtitle = "Параметры доходности капитала и покупательской способности"
+                subtitle = strings.block4Subtitle
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -401,7 +330,7 @@ fun InputDataScreen(
                 ) {
                     Box(modifier = Modifier.weight(1f)) {
                         NumberInputField(
-                            label = "Номинальная %",
+                            label = strings.nominalReturnLabel,
                             value = inputData.nominalReturnPercent,
                             currency = "%",
                             onValueChange = { newVal -> onUpdate { it.copy(nominalReturnPercent = newVal) } },
@@ -410,7 +339,7 @@ fun InputDataScreen(
                     }
                     Box(modifier = Modifier.weight(1f)) {
                         NumberInputField(
-                            label = "Инфляция %",
+                            label = strings.inflationLabel,
                             value = inputData.inflationPercent,
                             currency = "%",
                             onValueChange = { newVal -> onUpdate { it.copy(inflationPercent = newVal) } },
@@ -423,9 +352,9 @@ fun InputDataScreen(
 
                 // Шаблон отображения "Реальная доходность капитала"
                 MetricIndicatorRow(
-                    title = "Реальная доходность капитала:",
-                    formula = "(1 + Номинальная доходность) / (1 + Инфляция) - 1",
-                    value = Formatters.formatPercent(metrics.realReturnPercent),
+                    title = strings.realReturnTitle,
+                    formula = strings.realReturnFormula,
+                    value = Formatters.formatPercent(metrics.realReturnPercent, lang),
                     valueColor = SuccessGreen
                 )
             }
@@ -434,9 +363,9 @@ fun InputDataScreen(
         // Блок №5: Возраст & Горизонт FIRE
         item {
             InputSectionCard(
-                title = "5. Возраст & Горизонт FIRE",
+                title = strings.block5Title,
                 icon = Icons.Default.CalendarMonth,
-                subtitle = "Параметры для расчета выхода на пенсию"
+                subtitle = strings.block5Subtitle
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -445,7 +374,7 @@ fun InputDataScreen(
                     OutlinedTextField(
                         value = inputData.birthDate,
                         onValueChange = { newDate -> onUpdate { it.copy(birthDate = newDate) } },
-                        label = { Text("Дата рождения (ГГГГ-ММ-ДД)") },
+                        label = { Text(strings.birthDateLabel) },
                         singleLine = true,
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = MaterialTheme.colorScheme.primary,
@@ -462,7 +391,7 @@ fun InputDataScreen(
                             val v = str.toIntOrNull() ?: inputData.lifeExpectancy
                             onUpdate { it.copy(lifeExpectancy = v) }
                         },
-                        label = { Text("Дожитие (лет)") },
+                        label = { Text(strings.lifeExpectancyLabel) },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         singleLine = true,
                         colors = OutlinedTextFieldDefaults.colors(
@@ -479,85 +408,40 @@ fun InputDataScreen(
 
                 // Отображение горизонта дожития по единому шаблону
                 MetricIndicatorRow(
-                    title = "Горизонт дожития:",
-                    formula = "(Возраст дожития - Текущий возраст)",
-                    value = "${metrics.remainingYearsHorizon} года (возраст ${metrics.currentAge} лет)",
+                    title = strings.horizonTitle,
+                    formula = strings.horizonFormula,
+                    value = strings.horizonValueFormat(metrics.remainingYearsHorizon, metrics.currentAge),
                     valueColor = MaterialTheme.colorScheme.primary
                 )
             }
         }
 
-        // Кнопка перехода к расчету показателей и кнопка экспорта (в одну строку без переносов)
+        // Кнопка перехода к расчету показателей
         item {
-            val context = LocalContext.current
-            Row(
+            Button(
+                onClick = onNavigateToMetrics,
+                shape = RoundedCornerShape(14.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary
+                ),
+                contentPadding = PaddingValues(horizontal = 16.dp),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(52.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
+                    .height(52.dp)
+                    .testTag("go_to_metrics_button")
             ) {
-                Button(
-                    onClick = onNavigateToMetrics,
-                    shape = RoundedCornerShape(14.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary
-                    ),
-                    contentPadding = PaddingValues(horizontal = 8.dp),
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxHeight()
-                        .testTag("go_to_metrics_button")
-                ) {
-                    Text(
-                        text = "Рассчитать показатели",
-                        style = MaterialTheme.typography.titleSmall.copy(
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 13.sp
-                        ),
-                        maxLines = 1,
-                        softWrap = false
+                Text(
+                    text = strings.calculateButtonText,
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Bold
                     )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Icon(
-                        imageVector = Icons.Default.ArrowForward,
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp)
-                    )
-                }
-
-                OutlinedButton(
-                    onClick = {
-                        val exportText = AuditorAnalysisGenerator.generateExportSummary(inputData, metrics)
-                        val sendIntent = Intent().apply {
-                            action = Intent.ACTION_SEND
-                            putExtra(Intent.EXTRA_TEXT, exportText)
-                            type = "text/plain"
-                        }
-                        context.startActivity(Intent.createChooser(sendIntent, "Экспорт финансовых данных"))
-                    },
-                    shape = RoundedCornerShape(14.dp),
-                    contentPadding = PaddingValues(horizontal = 12.dp),
-                    modifier = Modifier
-                        .fillMaxHeight()
-                        .testTag("export_button")
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Share,
-                        contentDescription = "Экспорт",
-                        modifier = Modifier.size(18.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = "Экспорт",
-                        style = MaterialTheme.typography.titleSmall.copy(
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 13.sp
-                        ),
-                        maxLines = 1,
-                        softWrap = false
-                    )
-                }
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Icon(
+                    imageVector = Icons.Default.ArrowForward,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp)
+                )
             }
             Spacer(modifier = Modifier.height(20.dp))
         }
@@ -723,7 +607,10 @@ fun NumberInputField(
 @Composable
 fun CategoryBreakdownHint(
     metricName: String,
-    categories: List<Pair<String, List<String>>>,
+    hintCollapsed: String,
+    hintExpanded: String,
+    instruction: String,
+    categories: List<BreakdownCategory>,
     modifier: Modifier = Modifier
 ) {
     var isExpanded by remember { mutableStateOf(false) }
@@ -759,7 +646,7 @@ fun CategoryBreakdownHint(
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
-                        text = if (isExpanded) "Скрыть структуру показателя «$metricName»" else "Что входит в «$metricName»? (подсказка)",
+                        text = if (isExpanded) hintExpanded else hintCollapsed,
                         style = MaterialTheme.typography.labelSmall.copy(
                             color = MaterialTheme.colorScheme.primary,
                             fontWeight = FontWeight.Medium,
@@ -793,7 +680,7 @@ fun CategoryBreakdownHint(
                             fontSize = 12.sp
                         )
                         Text(
-                            text = "Посчитайте и сложите ваши статьи из списка ниже самостоятельно, а полученную итоговую сумму укажите в поле выше.",
+                            text = instruction,
                             style = MaterialTheme.typography.bodySmall.copy(
                                 fontWeight = FontWeight.SemiBold,
                                 color = MaterialTheme.colorScheme.onSurface,
@@ -807,21 +694,21 @@ fun CategoryBreakdownHint(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 // Список статей по группам
-                categories.forEachIndexed { index, (catTitle, items) ->
+                categories.forEachIndexed { index, cat ->
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(vertical = 4.dp)
                     ) {
                         Text(
-                            text = "• $catTitle",
+                            text = "• ${cat.title}",
                             style = MaterialTheme.typography.labelSmall.copy(
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurface,
                                 fontSize = 11.sp
                             )
                         )
-                        items.forEach { itemText ->
+                        cat.items.forEach { itemText ->
                             Text(
                                 text = "    – $itemText",
                                 style = MaterialTheme.typography.bodySmall.copy(

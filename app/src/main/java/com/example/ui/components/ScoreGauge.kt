@@ -25,6 +25,8 @@ import com.example.ui.theme.AlertRed
 import com.example.ui.theme.SuccessGreen
 import com.example.ui.theme.WarningYellow
 import com.example.util.Formatters
+import com.example.util.localization.LocalAppLanguage
+import com.example.util.localization.LocalAppStrings
 
 @Composable
 fun ScoreGauge(
@@ -34,6 +36,8 @@ fun ScoreGauge(
     strokeWidth: Dp = 14.dp,
     modifier: Modifier = Modifier
 ) {
+    val lang = LocalAppLanguage.current
+    val strings = LocalAppStrings.current
     val progress = (score / maxScore).coerceIn(0.0, 1.0).toFloat()
     val animatedProgress by animateFloatAsState(
         targetValue = progress,
@@ -81,7 +85,7 @@ fun ScoreGauge(
             verticalArrangement = Arrangement.Center
         ) {
             Text(
-                text = Formatters.formatScore(score),
+                text = Formatters.formatScore(score, lang = lang),
                 style = MaterialTheme.typography.headlineLarge.copy(
                     fontSize = 32.sp,
                     fontWeight = FontWeight.Bold,
@@ -89,7 +93,7 @@ fun ScoreGauge(
                 )
             )
             Text(
-                text = "из ${maxScore.toInt()}",
+                text = strings.scoresGaugeOutOf(maxScore.toInt()),
                 style = MaterialTheme.typography.bodySmall.copy(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

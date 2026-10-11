@@ -43,6 +43,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -54,11 +55,15 @@ import com.example.ui.screens.InputDataScreen
 import com.example.ui.screens.MetricsScreen
 import com.example.ui.theme.SuccessGreen
 import com.example.util.Formatters
+import com.example.util.localization.LocalAppLanguage
+import com.example.util.localization.LocalAppStrings
+import com.example.util.localization.getAppStrings
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FinanceApp(viewModel: MainViewModel) {
     val currentTab by viewModel.currentTab.collectAsStateWithLifecycle()
+    val appLanguage by viewModel.appLanguage.collectAsStateWithLifecycle()
     val inputData by viewModel.inputData.collectAsStateWithLifecycle()
     val metrics by viewModel.metrics.collectAsStateWithLifecycle()
     val simulatedMetrics by viewModel.simulatedMetrics.collectAsStateWithLifecycle()
@@ -67,143 +72,149 @@ fun FinanceApp(viewModel: MainViewModel) {
     val simulatedTrajectory by viewModel.simulatedTrajectory.collectAsStateWithLifecycle()
     val savedScenarios by viewModel.savedScenarios.collectAsStateWithLifecycle()
 
+    val strings = getAppStrings(appLanguage)
     val tabs = AppTab.values()
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            contentAlignment = Alignment.Center,
-                            modifier = Modifier
-                                .size(34.dp)
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Whatshot,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(20.dp)
+    CompositionLocalProvider(
+        LocalAppLanguage provides appLanguage,
+        LocalAppStrings provides strings
+    ) {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                contentAlignment = Alignment.Center,
+                                modifier = Modifier
+                                    .size(34.dp)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Whatshot,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Text(
+                                text = strings.appName,
+                                style = MaterialTheme.typography.titleMedium.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
                             )
                         }
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Text(
-                            text = "Personal finance",
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                        )
-                    }
-                },
-                actions = {
-                    // Quick Score Pill
-                    Surface(
-                        shape = RoundedCornerShape(12.dp),
-                        color = SuccessGreen.copy(alpha = 0.15f),
-                        modifier = Modifier
-                            .padding(end = 12.dp)
-                            .testTag("topbar_score_badge")
-                    ) {
-                        Text(
-                            text = "${Formatters.formatScore(metrics.scores.totalScore)} / 10",
-                            style = MaterialTheme.typography.labelMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = SuccessGreen
-                            ),
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                )
-            )
-        },
-        bottomBar = {
-            NavigationBar(
-                containerColor = MaterialTheme.colorScheme.surface,
-                modifier = Modifier.testTag("bottom_nav_bar")
-            ) {
-                tabs.forEach { tab ->
-                    val selected = currentTab == tab
-                    val (filledIcon, outlinedIcon) = when (tab) {
-                        AppTab.INPUT -> Icons.Filled.Calculate to Icons.Outlined.Calculate
-                        AppTab.METRICS -> Icons.Filled.Equalizer to Icons.Outlined.Equalizer
-                        AppTab.SCORES -> Icons.Filled.Grade to Icons.Outlined.Grade
-                        AppTab.FIRE -> Icons.Filled.Whatshot to Icons.Outlined.Whatshot
-                    }
-
-                    NavigationBarItem(
-                        selected = selected,
-                        onClick = { viewModel.selectTab(tab) },
-                        icon = {
-                            Icon(
-                                imageVector = if (selected) filledIcon else outlinedIcon,
-                                contentDescription = tab.title
-                            )
-                        },
-                        label = {
+                    },
+                    actions = {
+                        // Quick Score Pill
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = SuccessGreen.copy(alpha = 0.15f),
+                            modifier = Modifier
+                                .padding(end = 12.dp)
+                                .testTag("topbar_score_badge")
+                        ) {
                             Text(
-                                text = tab.shortTitle,
-                                fontSize = 11.sp,
-                                fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
+                                text = "${Formatters.formatScore(metrics.scores.totalScore, lang = appLanguage)} / 10",
+                                style = MaterialTheme.typography.labelMedium.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    color = SuccessGreen
+                                ),
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
                             )
-                        },
-                        colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = MaterialTheme.colorScheme.onPrimary,
-                            selectedTextColor = MaterialTheme.colorScheme.primary,
-                            indicatorColor = MaterialTheme.colorScheme.primary
-                        ),
-                        modifier = Modifier.testTag("nav_item_${tab.name.lowercase()}")
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.surface
                     )
+                )
+            },
+            bottomBar = {
+                NavigationBar(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    modifier = Modifier.testTag("bottom_nav_bar")
+                ) {
+                    tabs.forEach { tab ->
+                        val selected = currentTab == tab
+                        val (filledIcon, outlinedIcon) = when (tab) {
+                            AppTab.INPUT -> Icons.Filled.Calculate to Icons.Outlined.Calculate
+                            AppTab.METRICS -> Icons.Filled.Equalizer to Icons.Outlined.Equalizer
+                            AppTab.SCORES -> Icons.Filled.Grade to Icons.Outlined.Grade
+                            AppTab.FIRE -> Icons.Filled.Whatshot to Icons.Outlined.Whatshot
+                        }
+
+                        NavigationBarItem(
+                            selected = selected,
+                            onClick = { viewModel.selectTab(tab) },
+                            icon = {
+                                Icon(
+                                    imageVector = if (selected) filledIcon else outlinedIcon,
+                                    contentDescription = tab.localizedTitle(strings)
+                                )
+                            },
+                            label = {
+                                Text(
+                                    text = tab.localizedShortTitle(strings),
+                                    fontSize = 11.sp,
+                                    fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
+                                )
+                            },
+                            colors = NavigationBarItemDefaults.colors(
+                                selectedIconColor = MaterialTheme.colorScheme.onPrimary,
+                                selectedTextColor = MaterialTheme.colorScheme.primary,
+                                indicatorColor = MaterialTheme.colorScheme.primary
+                            ),
+                            modifier = Modifier.testTag("nav_item_${tab.name.lowercase()}")
+                        )
+                    }
                 }
             }
-        }
-    ) { innerPadding ->
-        Crossfade(
-            targetState = currentTab,
-            label = "tab_crossfade",
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-        ) { activeTab ->
-            when (activeTab) {
-                AppTab.INPUT -> InputDataScreen(
-                    inputData = inputData,
-                    metrics = metrics,
-                    onUpdate = { transform -> viewModel.updateInputData(transform) },
-                    onLoadRussiaAverage = { viewModel.loadRussiaAverage() },
-                    onClear = { viewModel.clearData() },
-                    onNavigateToMetrics = { viewModel.selectTab(AppTab.METRICS) }
-                )
+        ) { innerPadding ->
+            Crossfade(
+                targetState = currentTab,
+                label = "tab_crossfade",
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+            ) { activeTab ->
+                when (activeTab) {
+                    AppTab.INPUT -> InputDataScreen(
+                        inputData = inputData,
+                        metrics = metrics,
+                        onUpdate = { transform -> viewModel.updateInputData(transform) },
+                        onLoadRussiaAverage = { viewModel.loadRussiaAverage() },
+                        onClear = { viewModel.clearData() },
+                        onNavigateToMetrics = { viewModel.selectTab(AppTab.METRICS) }
+                    )
 
-                AppTab.METRICS -> MetricsScreen(
-                    inputData = inputData,
-                    metrics = metrics
-                )
+                    AppTab.METRICS -> MetricsScreen(
+                        inputData = inputData,
+                        metrics = metrics
+                    )
 
-                AppTab.SCORES -> AuditScoreScreen(
-                    inputData = inputData,
-                    metrics = metrics
-                )
+                    AppTab.SCORES -> AuditScoreScreen(
+                        inputData = inputData,
+                        metrics = metrics
+                    )
 
-                AppTab.FIRE -> FireRetirementScreen(
-                    inputData = inputData,
-                    metrics = metrics,
-                    simulatedMetrics = simulatedMetrics,
-                    simulationState = simulationState,
-                    trajectory = if (simulationState.isSimulating) simulatedTrajectory else trajectory,
-                    onUpdateSimulation = { extraSavings, returnDelta, expReduction ->
-                        viewModel.updateSimulation(extraSavings, returnDelta, expReduction)
-                    },
-                    onToggleScenario = { scenarioId ->
-                        viewModel.toggleScenario(scenarioId)
-                    },
-                    onResetSimulation = { viewModel.resetSimulation() }
-                )
+                    AppTab.FIRE -> FireRetirementScreen(
+                        inputData = inputData,
+                        metrics = metrics,
+                        simulatedMetrics = simulatedMetrics,
+                        simulationState = simulationState,
+                        trajectory = if (simulationState.isSimulating) simulatedTrajectory else trajectory,
+                        onUpdateSimulation = { extraSavings, returnDelta, expReduction ->
+                            viewModel.updateSimulation(extraSavings, returnDelta, expReduction)
+                        },
+                        onToggleScenario = { scenarioId ->
+                            viewModel.toggleScenario(scenarioId)
+                        },
+                        onResetSimulation = { viewModel.resetSimulation() }
+                    )
+                }
             }
         }
     }

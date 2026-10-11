@@ -48,6 +48,8 @@ import com.example.ui.components.ScenarioTogglesPanel
 import com.example.ui.theme.AlertRed
 import com.example.ui.theme.SuccessGreen
 import com.example.util.Formatters
+import com.example.util.localization.LocalAppLanguage
+import com.example.util.localization.LocalAppStrings
 
 @Composable
 fun FireRetirementScreen(
@@ -61,6 +63,8 @@ fun FireRetirementScreen(
     onResetSimulation: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val lang = LocalAppLanguage.current
+    val strings = LocalAppStrings.current
     val isSimulating = simulationState.isSimulating
 
     val displayMetrics = if (isSimulating) simulatedMetrics else metrics
@@ -134,14 +138,14 @@ fun FireRetirementScreen(
                             Spacer(modifier = Modifier.width(10.dp))
                             Column {
                                 Text(
-                                    text = "Финансовая свобода, пенсия, FIRE",
+                                    text = strings.fireHeroTitle,
                                     style = MaterialTheme.typography.titleMedium.copy(
                                         fontWeight = FontWeight.Bold,
                                         color = MaterialTheme.colorScheme.onSurface
                                     )
                                 )
                                 Text(
-                                    text = "Расчет срока до выхода на пенсию",
+                                    text = strings.fireHeroSubtitle,
                                     style = MaterialTheme.typography.bodySmall.copy(
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
@@ -153,7 +157,7 @@ fun FireRetirementScreen(
                     Spacer(modifier = Modifier.height(14.dp))
 
                     Text(
-                        text = "До пенсии осталось:",
+                        text = strings.fireTimeToRetire,
                         style = MaterialTheme.typography.bodyMedium.copy(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -161,14 +165,14 @@ fun FireRetirementScreen(
 
                     Row(verticalAlignment = Alignment.Bottom) {
                         Text(
-                            text = Formatters.formatRatio(displayMetrics.yearsToRetirement),
+                            text = Formatters.formatRatio(displayMetrics.yearsToRetirement, lang),
                             style = MaterialTheme.typography.displayMedium.copy(
                                 fontWeight = FontWeight.Bold,
                                 color = SuccessGreen
                             )
                         )
                         Text(
-                            text = " года (лет)",
+                            text = strings.fireYearsSuffix,
                             style = MaterialTheme.typography.titleMedium.copy(
                                 fontWeight = FontWeight.SemiBold,
                                 color = MaterialTheme.colorScheme.onSurface
@@ -178,7 +182,7 @@ fun FireRetirementScreen(
                     }
 
                     Text(
-                        text = "(с учетом будущих сбережений, инфляции и доходности капитала)",
+                        text = strings.fireHeroAssumption,
                         style = MaterialTheme.typography.bodySmall.copy(
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontSize = 11.sp
@@ -197,9 +201,9 @@ fun FireRetirementScreen(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                Text("Возраст выхода на пенсию:", style = MaterialTheme.typography.bodySmall)
+                                Text(strings.fireRetirementAgeLabel, style = MaterialTheme.typography.bodySmall)
                                 Text(
-                                    text = "${Formatters.formatRatio(displayMetrics.retirementAge)} лет",
+                                    text = strings.fireRetirementAgeValue(Formatters.formatRatio(displayMetrics.retirementAge, lang)),
                                     style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold)
                                 )
                             }
@@ -208,9 +212,9 @@ fun FireRetirementScreen(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                Text("Требуемый целевой капитал:", style = MaterialTheme.typography.bodySmall)
+                                Text(strings.fireTargetCapitalLabel, style = MaterialTheme.typography.bodySmall)
                                 Text(
-                                    text = Formatters.formatMoney(displayMetrics.retirementTargetCapital, inputData.currencySymbol),
+                                    text = Formatters.formatMoney(displayMetrics.retirementTargetCapital, inputData.currencySymbol, lang),
                                     style = MaterialTheme.typography.bodySmall.copy(
                                         fontWeight = FontWeight.Bold,
                                         color = MaterialTheme.colorScheme.primary
@@ -242,7 +246,7 @@ fun FireRetirementScreen(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "Параметры возраста и горизонта",
+                            text = strings.fireParamsTitle,
                             style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
                         )
                     }
@@ -253,7 +257,7 @@ fun FireRetirementScreen(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text("Дата рождения:", style = MaterialTheme.typography.bodySmall)
+                        Text(strings.fireBirthDateLabel, style = MaterialTheme.typography.bodySmall)
                         Text(inputData.birthDate, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold))
                     }
 
@@ -263,8 +267,8 @@ fun FireRetirementScreen(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text("Текущий возраст:", style = MaterialTheme.typography.bodySmall)
-                        Text("${metrics.currentAge} лет", style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold))
+                        Text(strings.fireCurrentAgeLabel, style = MaterialTheme.typography.bodySmall)
+                        Text(strings.fireCurrentAgeValue(metrics.currentAge), style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold))
                     }
 
                     Spacer(modifier = Modifier.height(6.dp))
@@ -273,8 +277,8 @@ fun FireRetirementScreen(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text("Возраст дожития:", style = MaterialTheme.typography.bodySmall)
-                        Text("${metrics.lifeExpectancy} лет", style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold))
+                        Text(strings.fireLifeExpectancyLabel, style = MaterialTheme.typography.bodySmall)
+                        Text(strings.fireLifeExpectancyValue(metrics.lifeExpectancy), style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold))
                     }
 
                     Spacer(modifier = Modifier.height(6.dp))
@@ -283,9 +287,9 @@ fun FireRetirementScreen(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text("(Возраст дожития - Текущий возраст):", style = MaterialTheme.typography.bodySmall)
+                        Text(strings.fireHorizonLabel, style = MaterialTheme.typography.bodySmall)
                         Text(
-                            "${metrics.remainingYearsHorizon} года",
+                            strings.fireHorizonValue(metrics.remainingYearsHorizon),
                             style = MaterialTheme.typography.bodySmall.copy(
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.primary
@@ -299,9 +303,9 @@ fun FireRetirementScreen(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text("Реальная доходность капитала:", style = MaterialTheme.typography.bodySmall)
+                        Text(strings.fireRealReturnLabel, style = MaterialTheme.typography.bodySmall)
                         Text(
-                            Formatters.formatPercent(metrics.realReturnPercent),
+                            Formatters.formatPercent(metrics.realReturnPercent, lang),
                             style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold)
                         )
                     }
@@ -318,11 +322,11 @@ fun FireRetirementScreen(
             ) {
                 Column(modifier = Modifier.padding(14.dp)) {
                     Text(
-                        text = "Траектория накопления капитала",
+                        text = strings.fireTrajectoryTitle,
                         style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
                     )
                     Text(
-                        text = "Рост капитала до точки FIRE и обеспечение жизни на пенсии",
+                        text = strings.fireTrajectorySubtitle,
                         style = MaterialTheme.typography.bodySmall.copy(
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontSize = 11.sp
@@ -350,7 +354,7 @@ fun FireRetirementScreen(
                                 simulationState.expenseReduction != 0.0 ||
                                 simulationState.realReturnAdjustment != 0.0
 
-                        val badgeText = Formatters.formatSimulationBadge(activeScenariosCount, hasSliders)
+                        val badgeText = Formatters.formatSimulationBadge(activeScenariosCount, hasSliders, lang)
 
                         Spacer(modifier = Modifier.height(14.dp))
                         Surface(
@@ -367,7 +371,7 @@ fun FireRetirementScreen(
                                     modifier = Modifier.fillMaxWidth()
                                 ) {
                                     Text(
-                                        text = "Итог симуляции (совместное влияние)",
+                                        text = strings.fireSimSummaryTitle,
                                         style = MaterialTheme.typography.titleSmall.copy(
                                             fontWeight = FontWeight.Bold,
                                             color = alertColor
@@ -395,14 +399,26 @@ fun FireRetirementScreen(
 
                                 Spacer(modifier = Modifier.height(8.dp))
 
+                                val summaryDiffText = if (isPositive) {
+                                    strings.fireSimEarlier(
+                                        Formatters.formatRatio(yearsDiff, lang),
+                                        Formatters.formatRatio(simulatedMetrics.yearsToRetirement, lang),
+                                        Formatters.formatRatio(simulatedMetrics.retirementAge, lang)
+                                    )
+                                } else if (isNegative) {
+                                    strings.fireSimLater(
+                                        Formatters.formatRatio(-yearsDiff, lang),
+                                        Formatters.formatRatio(simulatedMetrics.yearsToRetirement, lang),
+                                        Formatters.formatRatio(simulatedMetrics.retirementAge, lang)
+                                    )
+                                } else {
+                                    strings.fireSimSame(
+                                        Formatters.formatRatio(simulatedMetrics.yearsToRetirement, lang)
+                                    )
+                                }
+
                                 Text(
-                                    text = if (isPositive) {
-                                        "⚡ Пенсия наступит на ${Formatters.formatRatio(yearsDiff)} года раньше (через ${Formatters.formatRatio(simulatedMetrics.yearsToRetirement)} лет, в возрасте ${Formatters.formatRatio(simulatedMetrics.retirementAge)} лет)!"
-                                    } else if (isNegative) {
-                                        "⏳ Срок до пенсии увеличится на ${Formatters.formatRatio(-yearsDiff)} года (через ${Formatters.formatRatio(simulatedMetrics.yearsToRetirement)} лет, в возрасте ${Formatters.formatRatio(simulatedMetrics.retirementAge)} лет)."
-                                    } else {
-                                        "Срок выхода на пенсию остается прежним (через ${Formatters.formatRatio(simulatedMetrics.yearsToRetirement)} лет)."
-                                    },
+                                    text = summaryDiffText,
                                     style = MaterialTheme.typography.bodyMedium.copy(
                                         fontWeight = FontWeight.Bold,
                                         color = alertColor
@@ -416,9 +432,9 @@ fun FireRetirementScreen(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
-                                    Text("Денежный поток (сбережения):", style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp))
+                                    Text(strings.fireSimCashFlowRow, style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp))
                                     Text(
-                                        "${Formatters.formatMoney(metrics.cashFlow, inputData.currencySymbol)} ➔ ${Formatters.formatMoney(simulatedMetrics.cashFlow, inputData.currencySymbol)}",
+                                        "${Formatters.formatMoney(metrics.cashFlow, inputData.currencySymbol, lang)} ➔ ${Formatters.formatMoney(simulatedMetrics.cashFlow, inputData.currencySymbol, lang)}",
                                         style = MaterialTheme.typography.bodySmall.copy(
                                             fontWeight = FontWeight.SemiBold,
                                             fontSize = 11.sp,
@@ -431,9 +447,9 @@ fun FireRetirementScreen(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
-                                    Text("Ежемесячные расходы:", style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp))
+                                    Text(strings.fireSimExpensesRow, style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp))
                                     Text(
-                                        "${Formatters.formatMoney(inputData.monthlyExpenses, inputData.currencySymbol)} ➔ ${Formatters.formatMoney(simulatedMetrics.annualExpenses / 12.0, inputData.currencySymbol)}",
+                                        "${Formatters.formatMoney(inputData.monthlyExpenses, inputData.currencySymbol, lang)} ➔ ${Formatters.formatMoney(simulatedMetrics.annualExpenses / 12.0, inputData.currencySymbol, lang)}",
                                         style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold, fontSize = 11.sp)
                                     )
                                 }
@@ -442,9 +458,9 @@ fun FireRetirementScreen(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
-                                    Text("Чистый капитал (активы − долги):", style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp))
+                                    Text(strings.fireSimNetWorthRow, style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp))
                                     Text(
-                                        "${Formatters.formatMoney(metrics.netWorth, inputData.currencySymbol)} ➔ ${Formatters.formatMoney(simulatedMetrics.netWorth, inputData.currencySymbol)}",
+                                        "${Formatters.formatMoney(metrics.netWorth, inputData.currencySymbol, lang)} ➔ ${Formatters.formatMoney(simulatedMetrics.netWorth, inputData.currencySymbol, lang)}",
                                         style = MaterialTheme.typography.bodySmall.copy(
                                             fontWeight = FontWeight.SemiBold,
                                             fontSize = 11.sp,
@@ -460,9 +476,9 @@ fun FireRetirementScreen(
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
-                                        Text("Прирост имущества (по окончании выплат):", style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp))
+                                        Text(strings.fireSimPropertyRow, style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp))
                                         Text(
-                                            "+${Formatters.formatMoney(futurePropertySum, inputData.currencySymbol)}",
+                                            "+${Formatters.formatMoney(futurePropertySum, inputData.currencySymbol, lang)}",
                                             style = MaterialTheme.typography.bodySmall.copy(
                                                 fontWeight = FontWeight.SemiBold,
                                                 fontSize = 11.sp,
@@ -503,7 +519,7 @@ fun FireRetirementScreen(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = "Симулятор «Что если?»",
+                                text = strings.fireSimSliderTitle,
                                 style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
                             )
                         }
@@ -514,7 +530,7 @@ fun FireRetirementScreen(
                                 contentPadding = ButtonDefaults.ContentPadding,
                                 modifier = Modifier.height(30.dp)
                             ) {
-                                Text("Сброс", fontSize = 11.sp)
+                                Text(strings.fireSimReset, fontSize = 11.sp)
                             }
                         }
                     }
@@ -522,7 +538,7 @@ fun FireRetirementScreen(
                     Spacer(modifier = Modifier.height(12.dp))
 
                     Text(
-                        text = "Тонкая настройка шкал (ползунки):",
+                        text = strings.fireSimFineTuning,
                         style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
                     )
 
@@ -537,7 +553,7 @@ fun FireRetirementScreen(
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    text = "Ежемесячные сбережения:",
+                                    text = strings.fireSliderSavings,
                                     style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium)
                                 )
                                 if (isSimulating) {
@@ -547,13 +563,13 @@ fun FireRetirementScreen(
                                         Text(
                                             text = buildString {
                                                 append(if (isSavingsPositive) "+" else "")
-                                                append(Formatters.formatMoney(netSavingsDiff, inputData.currencySymbol))
-                                                append(" к базовым")
+                                                append(Formatters.formatMoney(netSavingsDiff, inputData.currencySymbol, lang))
+                                                append(" ${strings.fireSliderBaseSuffix}")
                                                 val incFactors = mutableListOf<String>()
-                                                if (simulationState.scenarios.jobLoss) incFactors.add("потеря работы")
-                                                if (simulationState.scenarios.salaryIncrease20) incFactors.add("зарплата +20%")
+                                                if (simulationState.scenarios.jobLoss) incFactors.add(strings.scenarioJobLossTitle.lowercase())
+                                                if (simulationState.scenarios.salaryIncrease20) incFactors.add(strings.scenarioSalaryIncreaseTitle.lowercase())
                                                 if (simulationState.extraMonthlySavings != 0.0) {
-                                                    incFactors.add("ползунок: ${if (simulationState.extraMonthlySavings > 0) "+" else ""}${Formatters.formatMoney(simulationState.extraMonthlySavings, inputData.currencySymbol)}")
+                                                    incFactors.add("${strings.scenarioParamsPrefix.trim()} ${if (simulationState.extraMonthlySavings > 0) "+" else ""}${Formatters.formatMoney(simulationState.extraMonthlySavings, inputData.currencySymbol, lang)}")
                                                 }
                                                 if (incFactors.isNotEmpty()) {
                                                     append(" (")
@@ -570,7 +586,7 @@ fun FireRetirementScreen(
                                 }
                             }
                             Text(
-                                text = Formatters.formatMoney(currentEffectiveSavings, inputData.currencySymbol),
+                                text = Formatters.formatMoney(currentEffectiveSavings, inputData.currencySymbol, lang),
                                 style = MaterialTheme.typography.bodyMedium.copy(
                                     fontWeight = FontWeight.Bold,
                                     color = if (currentEffectiveSavings >= 0) MaterialTheme.colorScheme.primary else AlertRed
@@ -601,14 +617,14 @@ fun FireRetirementScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "от ${Formatters.formatMoney(savingsConfig.minValue.toDouble(), inputData.currencySymbol)}",
+                                text = strings.fireSliderFrom(Formatters.formatMoney(savingsConfig.minValue.toDouble(), inputData.currencySymbol, lang)),
                                 style = MaterialTheme.typography.labelSmall.copy(
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     fontSize = 10.sp
                                 )
                             )
                             Text(
-                                text = "шаг ${Formatters.formatMoney(savingsConfig.stepSize, inputData.currencySymbol)}",
+                                text = strings.fireSliderStep(Formatters.formatMoney(savingsConfig.stepSize, inputData.currencySymbol, lang)),
                                 style = MaterialTheme.typography.labelSmall.copy(
                                     color = MaterialTheme.colorScheme.primary,
                                     fontSize = 10.sp,
@@ -616,7 +632,7 @@ fun FireRetirementScreen(
                                 )
                             )
                             Text(
-                                text = "до +${Formatters.formatMoney(savingsConfig.maxValue.toDouble(), inputData.currencySymbol)}",
+                                text = strings.fireSliderTo(Formatters.formatMoney(savingsConfig.maxValue.toDouble(), inputData.currencySymbol, lang)),
                                 style = MaterialTheme.typography.labelSmall.copy(
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     fontSize = 10.sp
@@ -636,7 +652,7 @@ fun FireRetirementScreen(
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    text = "Ежемесячные расходы:",
+                                    text = strings.fireSliderExpenses,
                                     style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium)
                                 )
                                 if (isSimulating) {
@@ -646,18 +662,18 @@ fun FireRetirementScreen(
                                         Text(
                                             text = buildString {
                                                 append(if (netExpChange > 0) "+" else "")
-                                                append(Formatters.formatMoney(netExpChange, inputData.currencySymbol))
-                                                append(if (isReduced) " (снижение)" else " (рост)")
+                                                append(Formatters.formatMoney(netExpChange, inputData.currencySymbol, lang))
+                                                append(" (${if (isReduced) strings.fireSliderDec else strings.fireSliderInc})")
                                                 val factors = mutableListOf<String>()
-                                                if (simulationState.scenarios.expenseOptimization15) factors.add("оптимизация -15%")
-                                                if (simulationState.scenarios.relocationLowerCost30) factors.add("переезд -30%")
-                                                if (simulationState.scenarios.mortgage20Years35Income) factors.add("ипотека 35% дохода (20 л.)")
-                                                if (simulationState.scenarios.carLoan5Years) factors.add("автокредит 20% дохода (5 л.)")
-                                                if (simulationState.scenarios.inflation20Expenses) factors.add("инфляция +20%")
-                                                if (simulationState.scenarios.childOrDependent18Years) factors.add("ребёнок +25% (18 л.)")
+                                                if (simulationState.scenarios.expenseOptimization15) factors.add(strings.scenarioExpenseOptTitle.lowercase())
+                                                if (simulationState.scenarios.relocationLowerCost30) factors.add(strings.scenarioRelocationTitle.lowercase())
+                                                if (simulationState.scenarios.mortgage20Years35Income) factors.add(strings.scenarioMortgageTitle.lowercase())
+                                                if (simulationState.scenarios.carLoan5Years) factors.add(strings.scenarioCarLoanTitle.lowercase())
+                                                if (simulationState.scenarios.inflation20Expenses) factors.add(strings.scenarioInflationTitle.lowercase())
+                                                if (simulationState.scenarios.childOrDependent18Years) factors.add(strings.scenarioChildTitle.lowercase())
                                                 if (simulationState.expenseReduction != 0.0) {
                                                     val red = simulationState.expenseReduction
-                                                    factors.add("ползунок ${if (red > 0) "-" else "+"}${Formatters.formatMoney(kotlin.math.abs(red), inputData.currencySymbol)}")
+                                                    factors.add("${if (red > 0) "-" else "+"}${Formatters.formatMoney(kotlin.math.abs(red), inputData.currencySymbol, lang)}")
                                                 }
                                                 if (factors.isNotEmpty()) {
                                                     append(" • ")
@@ -673,7 +689,7 @@ fun FireRetirementScreen(
                                 }
                             }
                             Text(
-                                text = Formatters.formatMoney(currentEffectiveExpenses, inputData.currencySymbol),
+                                text = Formatters.formatMoney(currentEffectiveExpenses, inputData.currencySymbol, lang),
                                 style = MaterialTheme.typography.bodyMedium.copy(
                                     fontWeight = FontWeight.Bold,
                                     color = if (currentEffectiveExpenses < inputData.monthlyExpenses) SuccessGreen
@@ -706,14 +722,14 @@ fun FireRetirementScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "${Formatters.formatMoney(expensesConfig.minValue.toDouble(), inputData.currencySymbol)} (рост)",
+                                text = "${Formatters.formatMoney(expensesConfig.minValue.toDouble(), inputData.currencySymbol, lang)} (${strings.fireSliderInc})",
                                 style = MaterialTheme.typography.labelSmall.copy(
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     fontSize = 10.sp
                                 )
                             )
                             Text(
-                                text = "шаг ${Formatters.formatMoney(expensesConfig.stepSize, inputData.currencySymbol)}",
+                                text = strings.fireSliderStep(Formatters.formatMoney(expensesConfig.stepSize, inputData.currencySymbol, lang)),
                                 style = MaterialTheme.typography.labelSmall.copy(
                                     color = MaterialTheme.colorScheme.primary,
                                     fontSize = 10.sp,
@@ -721,7 +737,7 @@ fun FireRetirementScreen(
                                 )
                             )
                             Text(
-                                text = "+${Formatters.formatMoney(expensesConfig.maxValue.toDouble(), inputData.currencySymbol)} (сниж.)",
+                                text = "+${Formatters.formatMoney(expensesConfig.maxValue.toDouble(), inputData.currencySymbol, lang)} (${strings.fireSliderDec})",
                                 style = MaterialTheme.typography.labelSmall.copy(
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     fontSize = 10.sp
@@ -741,12 +757,12 @@ fun FireRetirementScreen(
                         ) {
                             Column {
                                 Text(
-                                    text = "Реальная доходность капитала:",
+                                    text = strings.fireSliderReturn,
                                     style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium)
                                 )
                                 if (simulationState.realReturnAdjustment != 0.0) {
                                     Text(
-                                        text = "${if (simulationState.realReturnAdjustment > 0) "+" else ""}${Formatters.formatRatio(simulationState.realReturnAdjustment)}% к базовой",
+                                        text = "${if (simulationState.realReturnAdjustment > 0) "+" else ""}${Formatters.formatRatio(simulationState.realReturnAdjustment, lang)}% ${strings.fireSliderBaseReturnSuffix}",
                                         style = MaterialTheme.typography.labelSmall.copy(
                                             color = MaterialTheme.colorScheme.primary,
                                             fontSize = 10.sp
@@ -755,7 +771,7 @@ fun FireRetirementScreen(
                                 }
                             }
                             Text(
-                                text = Formatters.formatPercent(currentEffectiveReturn),
+                                text = Formatters.formatPercent(currentEffectiveReturn, lang),
                                 style = MaterialTheme.typography.bodyMedium.copy(
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.primary
@@ -786,14 +802,14 @@ fun FireRetirementScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "от ${Formatters.formatRatio(returnConfig.minValue.toDouble())}%",
+                                text = strings.fireSliderFrom("${Formatters.formatRatio(returnConfig.minValue.toDouble(), lang)}%"),
                                 style = MaterialTheme.typography.labelSmall.copy(
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     fontSize = 10.sp
                                 )
                             )
                             Text(
-                                text = "шаг ${Formatters.formatRatio(returnConfig.stepSize)}%",
+                                text = strings.fireSliderStep("${Formatters.formatRatio(returnConfig.stepSize, lang)}%"),
                                 style = MaterialTheme.typography.labelSmall.copy(
                                     color = MaterialTheme.colorScheme.primary,
                                     fontSize = 10.sp,
@@ -801,7 +817,7 @@ fun FireRetirementScreen(
                                 )
                             )
                             Text(
-                                text = "до +${Formatters.formatRatio(returnConfig.maxValue.toDouble())}%",
+                                text = strings.fireSliderTo("+${Formatters.formatRatio(returnConfig.maxValue.toDouble(), lang)}%"),
                                 style = MaterialTheme.typography.labelSmall.copy(
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     fontSize = 10.sp

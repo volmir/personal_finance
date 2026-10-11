@@ -48,6 +48,7 @@ import com.example.ui.theme.SuccessGreen
 import com.example.ui.theme.SuccessGreenBg
 import com.example.ui.theme.WarningYellow
 import com.example.ui.theme.WarningYellowBg
+import com.example.util.localization.LocalAppStrings
 
 @Composable
 fun MetricCard(
@@ -63,6 +64,7 @@ fun MetricCard(
     modifier: Modifier = Modifier
 ) {
     var expanded by remember { mutableStateOf(false) }
+    val strings = LocalAppStrings.current
 
     Card(
         shape = RoundedCornerShape(14.dp),
@@ -190,7 +192,7 @@ fun MetricCard(
                         )
                 ) {
                     Text(
-                        text = "Формула: $formula",
+                        text = "${strings.metricCardFormulaPrefix} $formula",
                         style = MaterialTheme.typography.labelSmall.copy(
                             fontFamily = FontFamily.Monospace,
                             fontSize = 10.sp,
@@ -209,7 +211,7 @@ fun MetricCard(
                     modifier = Modifier.padding(start = 2.dp)
                 ) {
                     Text(
-                        text = if (expanded) "Скрыть" else "Инфо",
+                        text = if (expanded) strings.metricCardHide else strings.metricCardInfo,
                         style = MaterialTheme.typography.labelSmall.copy(
                             color = MaterialTheme.colorScheme.primary,
                             fontSize = 11.sp
@@ -217,7 +219,7 @@ fun MetricCard(
                     )
                     Icon(
                         imageVector = if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                        contentDescription = if (expanded) "Свернуть" else "Развернуть",
+                        contentDescription = if (expanded) strings.metricCardCollapse else strings.metricCardExpand,
                         tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(16.dp)
                     )

@@ -32,6 +32,8 @@ import com.example.data.model.TrajectoryPoint
 import com.example.ui.theme.AccentGold
 import com.example.ui.theme.SuccessGreen
 import com.example.util.Formatters
+import com.example.util.localization.LocalAppLanguage
+import com.example.util.localization.LocalAppStrings
 
 @Composable
 fun FireTrajectoryChart(
@@ -43,6 +45,8 @@ fun FireTrajectoryChart(
 ) {
     if (trajectory.isEmpty()) return
 
+    val lang = LocalAppLanguage.current
+    val strings = LocalAppStrings.current
     val maxCapital = trajectory.maxOfOrNull { maxOf(it.accumulatedCapital, it.requiredCapital) } ?: 1.0
     val minAge = trajectory.first().age
     val maxAge = trajectory.last().age
@@ -65,7 +69,7 @@ fun FireTrajectoryChart(
             )
             Spacer(modifier = Modifier.width(6.dp))
             Text(
-                text = "Накопленный капитал",
+                text = strings.fireChartAccumulated,
                 style = MaterialTheme.typography.labelSmall.copy(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -80,7 +84,7 @@ fun FireTrajectoryChart(
             )
             Spacer(modifier = Modifier.width(6.dp))
             Text(
-                text = "Необходимый капитал",
+                text = strings.fireChartRequired,
                 style = MaterialTheme.typography.labelSmall.copy(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -210,12 +214,12 @@ fun FireTrajectoryChart(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "${minAge.toInt()} лет",
+                text = "${minAge.toInt()} ${strings.fireChartYearsSuffix}",
                 style = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
             )
             Spacer(modifier = Modifier.weight(1f))
             Text(
-                text = "FIRE: ${Formatters.formatRatio(retireAge)} лет",
+                text = strings.fireChartFirePoint(Formatters.formatRatio(retireAge, lang)),
                 style = MaterialTheme.typography.labelSmall.copy(
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary
@@ -223,7 +227,7 @@ fun FireTrajectoryChart(
             )
             Spacer(modifier = Modifier.weight(1f))
             Text(
-                text = "${maxAge.toInt()} лет",
+                text = "${maxAge.toInt()} ${strings.fireChartYearsSuffix}",
                 style = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
             )
         }

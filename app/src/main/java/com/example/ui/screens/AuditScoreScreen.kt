@@ -6,6 +6,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -23,6 +24,8 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.TrendingUp
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
@@ -55,6 +58,8 @@ import com.example.ui.theme.SuccessGreenBg
 import com.example.ui.theme.WarningYellow
 import com.example.ui.theme.WarningYellowBg
 import com.example.util.Formatters
+import com.example.util.localization.LocalAppLanguage
+import com.example.util.localization.LocalAppStrings
 
 @Composable
 fun AuditScoreScreen(
@@ -63,6 +68,8 @@ fun AuditScoreScreen(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+    val lang = LocalAppLanguage.current
+    val strings = LocalAppStrings.current
     val scores = metrics.scores
 
     LazyColumn(
@@ -96,14 +103,14 @@ fun AuditScoreScreen(
                     ) {
                         Column {
                             Text(
-                                text = "Набранные баллы",
+                                text = strings.scoresHeaderTitle,
                                 style = MaterialTheme.typography.titleLarge.copy(
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
                             )
                             Text(
-                                text = "Итоги и суммирование результатов",
+                                text = strings.scoresHeaderSubtitle,
                                 style = MaterialTheme.typography.bodySmall.copy(
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -112,27 +119,39 @@ fun AuditScoreScreen(
 
                         IconButton(
                             onClick = {
-                                val reportText = buildString {
-                                    appendLine("📊 Финансовый отчет и аудит капитала:")
-                                    appendLine("• Итоговый результат: ${Formatters.formatScore(scores.totalScore)} из 10")
-                                    appendLine("• Норма сбережений: ${scores.savingsRateScore}/10 (${Formatters.formatPercent(metrics.savingsRate)})")
-                                    appendLine("• Запас расходов: ${scores.safetyMonthsScore}/10 (${Formatters.formatRatio(metrics.safetyMonths)} мес.)")
-                                    appendLine("• Коэффициент задолженности: ${scores.debtRatioScore}/10 (${Formatters.formatRatio(metrics.debtRatio)})")
-                                    appendLine("• Коэффициент фин. свободы: ${scores.cfsScore}/10 (${Formatters.formatRatio(metrics.financialFreedomRatio)})")
-                                    appendLine("• До пенсии (FIRE): ${Formatters.formatRatio(metrics.yearsToRetirement)} лет (в ${Formatters.formatRatio(metrics.retirementAge)} лет)")
+                                val reportText = if (lang == com.example.util.localization.AppLanguage.EN) {
+                                    buildString {
+                                        appendLine("📊 Financial Report & Capital Audit:")
+                                        appendLine("• Overall Score: ${Formatters.formatScore(scores.totalScore, lang = lang)} of 10")
+                                        appendLine("• Savings Rate: ${scores.savingsRateScore}/10 (${Formatters.formatPercent(metrics.savingsRate, lang)})")
+                                        appendLine("• Expense Buffer: ${scores.safetyMonthsScore}/10 (${Formatters.formatRatio(metrics.safetyMonths, lang)} mo.)")
+                                        appendLine("• Debt Ratio: ${scores.debtRatioScore}/10 (${Formatters.formatRatio(metrics.debtRatio, lang)})")
+                                        appendLine("• Financial Freedom Ratio: ${scores.cfsScore}/10 (${Formatters.formatRatio(metrics.financialFreedomRatio, lang)})")
+                                        appendLine("• Time to Retirement (FIRE): ${Formatters.formatRatio(metrics.yearsToRetirement, lang)} yrs (at age ${Formatters.formatRatio(metrics.retirementAge, lang)} yrs)")
+                                    }
+                                } else {
+                                    buildString {
+                                        appendLine("📊 Финансовый отчет и аудит капитала:")
+                                        appendLine("• Итоговый результат: ${Formatters.formatScore(scores.totalScore, lang = lang)} из 10")
+                                        appendLine("• Норма сбережений: ${scores.savingsRateScore}/10 (${Formatters.formatPercent(metrics.savingsRate, lang)})")
+                                        appendLine("• Запас расходов: ${scores.safetyMonthsScore}/10 (${Formatters.formatRatio(metrics.safetyMonths, lang)} мес.)")
+                                        appendLine("• Коэффициент задолженности: ${scores.debtRatioScore}/10 (${Formatters.formatRatio(metrics.debtRatio, lang)})")
+                                        appendLine("• Коэффициент фин. свободы: ${scores.cfsScore}/10 (${Formatters.formatRatio(metrics.financialFreedomRatio, lang)})")
+                                        appendLine("• До пенсии (FIRE): ${Formatters.formatRatio(metrics.yearsToRetirement, lang)} лет (в ${Formatters.formatRatio(metrics.retirementAge, lang)} лет)")
+                                    }
                                 }
                                 val sendIntent = Intent().apply {
                                     action = Intent.ACTION_SEND
                                     putExtra(Intent.EXTRA_TEXT, reportText)
                                     type = "text/plain"
                                 }
-                                context.startActivity(Intent.createChooser(sendIntent, "Поделиться отчетом"))
+                                context.startActivity(Intent.createChooser(sendIntent, strings.scoresShareReportChooser))
                             },
                             modifier = Modifier.testTag("share_audit_button")
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Share,
-                                contentDescription = "Поделиться отчетом",
+                                contentDescription = strings.scoresShareReportChooser,
                                 tint = MaterialTheme.colorScheme.primary
                             )
                         }
@@ -157,7 +176,7 @@ fun AuditScoreScreen(
                     }
 
                     Text(
-                        text = "Итоговый результат: ${Formatters.formatScore(scores.totalScore)} из 10",
+                        text = strings.scoresTotalResult(Formatters.formatScore(scores.totalScore, lang = lang)),
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.Bold,
                             color = totalScoreColor
@@ -165,10 +184,10 @@ fun AuditScoreScreen(
                     )
 
                     val statusDesc = when {
-                        scores.totalScore >= 8.0 -> "Отличная финансовая устойчивость и готовность к долгосрочным инвестициям."
-                        scores.totalScore >= 6.0 -> "Хорошая финансовая форма с потенциалом роста нормы накопления."
-                        scores.totalScore >= 4.0 -> "Умеренная стабильность. Рекомендуется нарастить подушку безопасности."
-                        else -> "Требуется оптимизация расходов и погашение долговых обязательств."
+                        scores.totalScore >= 8.0 -> strings.scoresStatusExcellent
+                        scores.totalScore >= 6.0 -> strings.scoresStatusGood
+                        scores.totalScore >= 4.0 -> strings.scoresStatusModerate
+                        else -> strings.scoresStatusAttention
                     }
 
                     Text(
@@ -185,7 +204,7 @@ fun AuditScoreScreen(
         // Section Breakdown Items
         item {
             Text(
-                text = "Детализация баллов по компонентам:",
+                text = strings.scoresBreakdownTitle,
                 style = MaterialTheme.typography.titleMedium.copy(
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
@@ -197,23 +216,32 @@ fun AuditScoreScreen(
         // 1. Норма сбережений Score
         item {
             ScoreItemCard(
-                title = "Норма сбережений",
+                title = strings.savingsRateTitle,
                 score = scores.savingsRateScore,
-                currentValue = Formatters.formatPercent(metrics.savingsRate),
-                formula = "(Денежный поток / Доходы) * 100%",
-                comment = "Рекомендуется не менее 15-20%. У вас отличное значение (${Formatters.formatPercent(metrics.savingsRate)}).",
+                currentValue = Formatters.formatPercent(metrics.savingsRate, lang),
+                formula = strings.savingsRateFormula,
+                comment = strings.savingsRateScoreComment(Formatters.formatPercent(metrics.savingsRate, lang)),
+                valuePrefix = strings.scoreValuePrefix,
+                scoreOutOfTen = strings.scoreOutOfTen(scores.savingsRateScore),
                 tag = "score_savings_rate"
             )
         }
 
         // 2. Запас месячных расходов Score
         item {
+            val monthsText = if (lang == com.example.util.localization.AppLanguage.EN) {
+                "${Formatters.formatRatio(metrics.safetyMonths, lang)} mo."
+            } else {
+                "${Formatters.formatRatio(metrics.safetyMonths, lang)} мес."
+            }
             ScoreItemCard(
-                title = "Запас месячных расходов",
+                title = strings.metricSafetyMonthsTitle,
                 score = scores.safetyMonthsScore,
-                currentValue = "${Formatters.formatRatio(metrics.safetyMonths)} мес.",
-                formula = "(Подушка безопасности / Ежемесячные расходы)",
-                comment = "Минимум 3-6 месяцев, идеал 12+ мес. Ваш запас превышает 12 месяцев (максимальный балл).",
+                currentValue = monthsText,
+                formula = strings.metricSafetyMonthsFormula,
+                comment = strings.safetyMonthsScoreComment,
+                valuePrefix = strings.scoreValuePrefix,
+                scoreOutOfTen = strings.scoreOutOfTen(scores.safetyMonthsScore),
                 tag = "score_safety_months"
             )
         }
@@ -221,17 +249,19 @@ fun AuditScoreScreen(
         // 3. Коэффициент задолженности Score
         item {
             val debtComment = when {
-                metrics.debtRatio <= 0.3 -> "0,0 - 0,3: Отличная устойчивость, активы финансируются собственными средствами."
-                metrics.debtRatio <= 0.6 -> "0,3 - 0,6: Сбалансированное кредитное плечо, умеренная нагрузка."
-                metrics.debtRatio <= 1.0 -> "0,6 - 1,0: Высокий риск, значительная зависимость от заемных средств."
-                else -> "Более 1,0: Критический риск, долги превышают стоимость активов."
+                metrics.debtRatio <= 0.3 -> strings.debtComment0
+                metrics.debtRatio <= 0.6 -> strings.debtComment1
+                metrics.debtRatio <= 1.0 -> strings.debtComment2
+                else -> strings.debtComment3
             }
             ScoreItemCard(
-                title = "Коэффициент задолженности",
+                title = strings.metricDebtRatioTitle,
                 score = scores.debtRatioScore,
-                currentValue = Formatters.formatRatio(metrics.debtRatio),
-                formula = "(Пассивы / Активы)",
+                currentValue = Formatters.formatRatio(metrics.debtRatio, lang),
+                formula = strings.metricDebtRatioFormula,
                 comment = debtComment,
+                valuePrefix = strings.scoreValuePrefix,
+                scoreOutOfTen = strings.scoreOutOfTen(scores.debtRatioScore),
                 tag = "score_debt_ratio"
             )
         }
@@ -239,26 +269,28 @@ fun AuditScoreScreen(
         // 4. Коэффициент финансовой свободы Score
         item {
             ScoreItemCard(
-                title = "Коэффициент финансовой свободы",
+                title = strings.metricCfsTitle,
                 score = scores.cfsScore,
-                currentValue = Formatters.formatRatio(metrics.financialFreedomRatio),
-                formula = "(Активы / Годовые расходы)",
-                comment = metrics.cfsStageDescription,
+                currentValue = Formatters.formatRatio(metrics.financialFreedomRatio, lang),
+                formula = strings.metricCfsFormula,
+                comment = com.example.domain.FinanceCalculator.getCfsStageDescription(metrics.financialFreedomRatio, lang),
+                valuePrefix = strings.scoreValuePrefix,
+                scoreOutOfTen = strings.scoreOutOfTen(scores.cfsScore),
                 tag = "score_cfs"
             )
         }
 
         // Recommendations Card (Аудиторское заключение по всем показателям)
         item {
-            val opinion = AuditorAnalysisGenerator.generate(inputData, metrics)
+            val opinion = AuditorAnalysisGenerator.generate(inputData, metrics, lang)
 
             val shareFullOpinion: () -> Unit = {
                 val sendIntent = Intent().apply {
                     action = Intent.ACTION_SEND
-                    putExtra(Intent.EXTRA_TEXT, opinion.toFormattedShareText(inputData, metrics))
+                    putExtra(Intent.EXTRA_TEXT, opinion.toFormattedShareText(inputData, metrics, lang))
                     type = "text/plain"
                 }
-                context.startActivity(Intent.createChooser(sendIntent, "Поделиться аудиторским заключением"))
+                context.startActivity(Intent.createChooser(sendIntent, strings.shareAuditorOpinionChooser))
             }
 
             Card(
@@ -284,11 +316,11 @@ fun AuditScoreScreen(
                             Spacer(modifier = Modifier.width(8.dp))
                             Column {
                                 Text(
-                                    text = "Аудиторское заключение",
+                                    text = strings.auditorOpinionTitle,
                                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
                                 )
                                 Text(
-                                    text = "Анализ по всем ${opinion.totalCount} показателям экрана «Показатели»",
+                                    text = strings.auditorOpinionSubtitle(opinion.totalCount),
                                     style = MaterialTheme.typography.bodySmall.copy(
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                                         fontSize = 11.sp
@@ -303,7 +335,7 @@ fun AuditScoreScreen(
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Share,
-                                contentDescription = "Поделиться аудиторским заключением",
+                                contentDescription = strings.shareAuditorOpinionChooser,
                                 tint = MaterialTheme.colorScheme.primary
                             )
                         }
@@ -327,7 +359,7 @@ fun AuditScoreScreen(
                                 horizontalArrangement = Arrangement.Center
                             ) {
                                 Text(
-                                    text = "🟢 ${opinion.positive.size} позит.",
+                                    text = strings.positiveBadgeText(opinion.positive.size),
                                     style = MaterialTheme.typography.labelSmall.copy(
                                         fontWeight = FontWeight.Bold,
                                         color = SuccessGreen,
@@ -349,7 +381,7 @@ fun AuditScoreScreen(
                                 horizontalArrangement = Arrangement.Center
                             ) {
                                 Text(
-                                    text = "🟡 ${opinion.neutral.size} нейтр.",
+                                    text = strings.neutralBadgeText(opinion.neutral.size),
                                     style = MaterialTheme.typography.labelSmall.copy(
                                         fontWeight = FontWeight.Bold,
                                         color = AccentGold,
@@ -371,7 +403,7 @@ fun AuditScoreScreen(
                                 horizontalArrangement = Arrangement.Center
                             ) {
                                 Text(
-                                    text = "🔴 ${opinion.negative.size} негатив.",
+                                    text = strings.negativeBadgeText(opinion.negative.size),
                                     style = MaterialTheme.typography.labelSmall.copy(
                                         fontWeight = FontWeight.Bold,
                                         color = AlertRed,
@@ -387,7 +419,7 @@ fun AuditScoreScreen(
 
                     // 1. Позитивные показатели
                     Text(
-                        text = "Позитивные показатели (${opinion.positive.size})",
+                        text = strings.positiveSectionTitle(opinion.positive.size),
                         style = MaterialTheme.typography.titleSmall.copy(
                             fontWeight = FontWeight.Bold,
                             color = SuccessGreen
@@ -401,7 +433,7 @@ fun AuditScoreScreen(
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Text(
-                                text = "Позитивных показателей пока не выявлено. Рекомендуется оптимизировать доходы и расходы.",
+                                text = strings.positiveEmptyText,
                                 style = MaterialTheme.typography.bodySmall.copy(
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     fontSize = 11.sp
@@ -421,7 +453,7 @@ fun AuditScoreScreen(
 
                     // 2. Нейтральные показатели
                     Text(
-                        text = "Нейтральные показатели (${opinion.neutral.size})",
+                        text = strings.neutralSectionTitle(opinion.neutral.size),
                         style = MaterialTheme.typography.titleSmall.copy(
                             fontWeight = FontWeight.Bold,
                             color = AccentGold
@@ -435,7 +467,7 @@ fun AuditScoreScreen(
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Text(
-                                text = "Нейтральных показателей нет — все метрики в позитивной или негативной зоне.",
+                                text = strings.neutralEmptyText,
                                 style = MaterialTheme.typography.bodySmall.copy(
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     fontSize = 11.sp
@@ -455,7 +487,7 @@ fun AuditScoreScreen(
 
                     // 3. Негативные показатели
                     Text(
-                        text = "Негативные показатели (${opinion.negative.size})",
+                        text = strings.negativeSectionTitle(opinion.negative.size),
                         style = MaterialTheme.typography.titleSmall.copy(
                             fontWeight = FontWeight.Bold,
                             color = AlertRed
@@ -470,7 +502,7 @@ fun AuditScoreScreen(
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Text(
-                                text = "🎉 Критических и негативных факторов не выявлено — все показатели в безопасной зоне!",
+                                text = strings.negativeEmptyText,
                                 style = MaterialTheme.typography.bodySmall.copy(
                                     color = SuccessGreen,
                                     fontWeight = FontWeight.Medium,
@@ -490,7 +522,42 @@ fun AuditScoreScreen(
             }
         }
 
+        // Кнопка экспорта краткого финансового отчета
         item {
+            val context = LocalContext.current
+            Button(
+                onClick = {
+                    val exportText = AuditorAnalysisGenerator.generateExportSummary(inputData, metrics, lang)
+                    val sendIntent = Intent().apply {
+                        action = Intent.ACTION_SEND
+                        putExtra(Intent.EXTRA_TEXT, exportText)
+                        type = "text/plain"
+                    }
+                    context.startActivity(Intent.createChooser(sendIntent, strings.exportChooserTitle))
+                },
+                shape = RoundedCornerShape(14.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary
+                ),
+                contentPadding = PaddingValues(horizontal = 16.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp)
+                    .testTag("export_button")
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Share,
+                    contentDescription = strings.exportButtonText,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = strings.exportButtonText,
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Bold
+                    )
+                )
+            }
             Spacer(modifier = Modifier.height(24.dp))
         }
     }
@@ -503,6 +570,8 @@ fun ScoreItemCard(
     currentValue: String,
     formula: String,
     comment: String,
+    valuePrefix: String = "Значение:",
+    scoreOutOfTen: String = "$score из 10",
     tag: String
 ) {
     Card(
@@ -533,7 +602,7 @@ fun ScoreItemCard(
                         )
                     )
                     Text(
-                        text = "Значение: $currentValue",
+                        text = "$valuePrefix $currentValue",
                         style = MaterialTheme.typography.bodySmall.copy(
                             color = scoreColor,
                             fontWeight = FontWeight.SemiBold
@@ -546,7 +615,7 @@ fun ScoreItemCard(
                     color = scoreColor.copy(alpha = 0.15f)
                 ) {
                     Text(
-                        text = "$score из 10",
+                        text = scoreOutOfTen,
                         style = MaterialTheme.typography.labelMedium.copy(
                             fontWeight = FontWeight.Bold,
                             color = scoreColor

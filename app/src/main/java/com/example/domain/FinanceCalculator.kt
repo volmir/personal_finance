@@ -214,15 +214,27 @@ object FinanceCalculator {
         }
     }
 
-    fun getCfsStageDescription(cfs: Double): String {
-        return when {
-            cfs < 0 -> "КФС < 0 — Вы в долгах"
-            cfs <= 0.5 -> "КФС 0..0,5 — У вас есть минимальная «подушка безопасности»"
-            cfs <= 2.0 -> "КФС 0,5..2 — Вы начали формировать свой финансовый капитал"
-            cfs <= 5.0 -> "КФС 2..5 — Вы можете начать заниматься долгосрочными инвестициями"
-            cfs <= 15.0 -> "КФС 5..15 — Доходы от капитала могут приносить вам существенную прибавку. Инфляция все более значительно влияет на капитал"
-            cfs <= 30.0 -> "КФС 15..30 — Крепкая финансовая стабильность. На что вы тратите свой невосполнимый капитал времени?"
-            else -> "КФС > 30 — Вы достигли финансовой независимости"
+    fun getCfsStageDescription(cfs: Double, lang: com.example.util.localization.AppLanguage = com.example.util.localization.AppLanguage.RU): String {
+        return if (lang == com.example.util.localization.AppLanguage.EN) {
+            when {
+                cfs < 0 -> "CFS < 0 — You are in debt"
+                cfs <= 0.5 -> "CFS 0..0.5 — You have a minimal emergency buffer"
+                cfs <= 2.0 -> "CFS 0.5..2 — You have started building financial capital"
+                cfs <= 5.0 -> "CFS 2..5 — You can begin engaging in long-term investing"
+                cfs <= 15.0 -> "CFS 5..15 — Investment returns provide significant income. Inflation affects capital more"
+                cfs <= 30.0 -> "CFS 15..30 — Solid financial stability. How do you spend your irreplaceable time?"
+                else -> "CFS > 30 — You have achieved financial independence"
+            }
+        } else {
+            when {
+                cfs < 0 -> "КФС < 0 — Вы в долгах"
+                cfs <= 0.5 -> "КФС 0..0,5 — У вас есть минимальная «подушка безопасности»"
+                cfs <= 2.0 -> "КФС 0,5..2 — Вы начали формировать свой финансовый капитал"
+                cfs <= 5.0 -> "КФС 2..5 — Вы можете начать заниматься долгосрочными инвестициями"
+                cfs <= 15.0 -> "КФС 5..15 — Доходы от капитала могут приносить вам существенную прибавку. Инфляция все более значительно влияет на капитал"
+                cfs <= 30.0 -> "КФС 15..30 — Крепкая финансовая стабильность. На что вы тратите свой невосполнимый капитал времени?"
+                else -> "КФС > 30 — Вы достигли финансовой независимости"
+            }
         }
     }
 

@@ -22,6 +22,6 @@ dependencyResolutionManagement {
   }
 }
 
-rootProject.name = "Personal finance"
+rootProject.name = "Личные финансы"
 
 include(":app")

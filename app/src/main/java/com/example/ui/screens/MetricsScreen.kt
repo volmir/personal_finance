@@ -51,6 +51,15 @@ import com.example.ui.theme.AlertRed
 import com.example.ui.theme.SuccessGreen
 import com.example.ui.theme.WarningYellow
 import com.example.util.Formatters
+import com.example.util.localization.LocalAppLanguage
+import com.example.util.localization.LocalAppStrings
+
+private enum class MetricFilterCategory {
+    ALL,
+    CASH_FLOW,
+    CAPITAL_RISKS,
+    BENCHMARKS
+}
 
 @Composable
 fun MetricsScreen(
@@ -58,8 +67,9 @@ fun MetricsScreen(
     metrics: CalculatedMetrics,
     modifier: Modifier = Modifier
 ) {
-    var selectedCategory by remember { mutableStateOf("Все") }
-    val categories = listOf("Все", "Денежный поток", "Капитал & Риски", "Бенчмарки")
+    val lang = LocalAppLanguage.current
+    val strings = LocalAppStrings.current
+    var selectedCategory by remember { mutableStateOf(MetricFilterCategory.ALL) }
 
     LazyColumn(
         modifier = modifier
@@ -88,14 +98,14 @@ fun MetricsScreen(
                         Spacer(modifier = Modifier.size(8.dp))
                         Column {
                             Text(
-                                text = "Расчет показателей",
+                                text = strings.metricsHeaderTitle,
                                 style = MaterialTheme.typography.titleMedium.copy(
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
                             )
                             Text(
-                                text = "Все ключевые метрики с формулами и оценкой",
+                                text = strings.metricsHeaderSubtitle,
                                 style = MaterialTheme.typography.bodySmall.copy(
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     fontSize = 11.sp
@@ -106,35 +116,51 @@ fun MetricsScreen(
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    // Фильтры по категориям: первая строка ("Все", "Денежный поток", "Капитал & Риски")
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        listOf("Все", "Денежный поток", "Капитал & Риски").forEach { cat ->
-                            FilterChip(
-                                selected = selectedCategory == cat,
-                                onClick = { selectedCategory = cat },
-                                label = { Text(cat, fontSize = 11.sp) },
-                                colors = FilterChipDefaults.filterChipColors(
-                                    selectedContainerColor = MaterialTheme.colorScheme.primary,
-                                    selectedLabelColor = MaterialTheme.colorScheme.onPrimary
-                                )
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(4.dp))
-
-                    // Вторая строка: "Бенчмарки" перенесены на следующую строку
+                    // Фильтры по категориям: первая строка (Все, Денежный поток, Капитал & Риски)
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         FilterChip(
-                            selected = selectedCategory == "Бенчмарки",
-                            onClick = { selectedCategory = "Бенчмарки" },
-                            label = { Text("Бенчмарки", fontSize = 11.sp) },
+                            selected = selectedCategory == MetricFilterCategory.ALL,
+                            onClick = { selectedCategory = MetricFilterCategory.ALL },
+                            label = { Text(strings.categoryAll, fontSize = 11.sp) },
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = MaterialTheme.colorScheme.primary,
+                                selectedLabelColor = MaterialTheme.colorScheme.onPrimary
+                            )
+                        )
+                        FilterChip(
+                            selected = selectedCategory == MetricFilterCategory.CASH_FLOW,
+                            onClick = { selectedCategory = MetricFilterCategory.CASH_FLOW },
+                            label = { Text(strings.categoryCashFlow, fontSize = 11.sp) },
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = MaterialTheme.colorScheme.primary,
+                                selectedLabelColor = MaterialTheme.colorScheme.onPrimary
+                            )
+                        )
+                        FilterChip(
+                            selected = selectedCategory == MetricFilterCategory.CAPITAL_RISKS,
+                            onClick = { selectedCategory = MetricFilterCategory.CAPITAL_RISKS },
+                            label = { Text(strings.categoryCapitalRisks, fontSize = 11.sp) },
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = MaterialTheme.colorScheme.primary,
+                                selectedLabelColor = MaterialTheme.colorScheme.onPrimary
+                            )
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    // Вторая строка: Бенчмарки
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        FilterChip(
+                            selected = selectedCategory == MetricFilterCategory.BENCHMARKS,
+                            onClick = { selectedCategory = MetricFilterCategory.BENCHMARKS },
+                            label = { Text(strings.categoryBenchmarks, fontSize = 11.sp) },
                             colors = FilterChipDefaults.filterChipColors(
                                 selectedContainerColor = MaterialTheme.colorScheme.primary,
                                 selectedLabelColor = MaterialTheme.colorScheme.onPrimary
@@ -146,30 +172,28 @@ fun MetricsScreen(
         }
 
         // 1. Денежный поток
-        if (selectedCategory == "Все" || selectedCategory == "Денежный поток") {
+        if (selectedCategory == MetricFilterCategory.ALL || selectedCategory == MetricFilterCategory.CASH_FLOW) {
             item {
                 MetricCard(
-                    title = "Денежный поток",
-                    value = Formatters.formatMoney(metrics.cashFlow, inputData.currencySymbol),
-                    formula = "(Доходы - Расходы)",
-                    description = "Cash Flow. Движение денег (приток и отток) за период.\n\n" +
-                            "• Положительное значение: Вы зарабатываете больше, чем тратите.\n" +
-                            "• Отрицательное значение: Вы тратите больше, чем зарабатываете.",
+                    title = strings.metricCashFlowTitle,
+                    value = Formatters.formatMoney(metrics.cashFlow, inputData.currencySymbol, lang),
+                    formula = strings.metricCashFlowFormula,
+                    description = strings.metricCashFlowDesc,
                     icon = Icons.Default.MonetizationOn,
                     highlightColor = if (metrics.cashFlow >= 0) SuccessGreen else AlertRed,
-                    subValue = if (metrics.cashFlow >= 0) "Положительный приток денег" else "Дефицит бюджета"
+                    subValue = if (metrics.cashFlow >= 0) strings.metricCashFlowPositiveSub else strings.metricCashFlowNegativeSub
                 )
             }
         }
 
         // 2. Норма сбережений
-        if (selectedCategory == "Все" || selectedCategory == "Денежный поток") {
+        if (selectedCategory == MetricFilterCategory.ALL || selectedCategory == MetricFilterCategory.CASH_FLOW) {
             item {
                 MetricCard(
-                    title = "Норма сбережений",
-                    value = Formatters.formatPercent(metrics.savingsRate),
-                    formula = "(Денежный поток / Доходы) * 100%",
-                    description = "Рекомендуется стремиться к норме сбережения не менее чем 15-20% от общего дохода.",
+                    title = strings.metricSavingsRateTitle,
+                    value = Formatters.formatPercent(metrics.savingsRate, lang),
+                    formula = strings.metricSavingsRateFormula,
+                    description = strings.metricSavingsRateDesc,
                     icon = Icons.Default.Savings,
                     score = metrics.scores.savingsRateScore,
                     highlightColor = when {
@@ -177,36 +201,34 @@ fun MetricsScreen(
                         metrics.savingsRate >= 15.0 -> WarningYellow
                         else -> AlertRed
                     },
-                    subValue = "Целевой ориентир: ≥ 15-20%"
+                    subValue = strings.metricSavingsRateSub
                 )
             }
         }
 
         // 3. Подушка безопасности
-        if (selectedCategory == "Все" || selectedCategory == "Капитал & Риски") {
+        if (selectedCategory == MetricFilterCategory.ALL || selectedCategory == MetricFilterCategory.CAPITAL_RISKS) {
             item {
                 MetricCard(
-                    title = "Подушка безопасности",
-                    value = Formatters.formatMoney(metrics.emergencyFund, inputData.currencySymbol),
-                    formula = "(Ликвидные активы)",
-                    description = "Личная финансовая «подушка безопасности» или запас денег, созданный для покрытия непредвиденных расходов (болезни, потеря работы и т.п.) и обеспечения финансовой стабильности в экстренных ситуациях, чтобы не влезать в долги.",
+                    title = strings.metricEmergencyFundTitle,
+                    value = Formatters.formatMoney(metrics.emergencyFund, inputData.currencySymbol, lang),
+                    formula = strings.metricEmergencyFundFormula,
+                    description = strings.metricEmergencyFundDesc,
                     icon = Icons.Default.Shield,
                     highlightColor = MaterialTheme.colorScheme.primary,
-                    subValue = if (inputData.includeFinancialInEmergencyFund) "Ликвидные + финансовые" else "Только ликвидные"
+                    subValue = if (inputData.includeFinancialInEmergencyFund) strings.metricEmergencyFundSubLiquidPlusFin else strings.metricEmergencyFundSubOnlyLiquid
                 )
             }
         }
 
         // 4. Запас месячных расходов
-        if (selectedCategory == "Все" || selectedCategory == "Капитал & Риски") {
+        if (selectedCategory == MetricFilterCategory.ALL || selectedCategory == MetricFilterCategory.CAPITAL_RISKS) {
             item {
                 MetricCard(
-                    title = "Запас месячных расходов",
-                    value = "${Formatters.formatRatio(metrics.safetyMonths)} мес.",
-                    formula = "(Подушка безопасности / Ежемесячные расходы)",
-                    description = "Количество месяцев, которые вы можете прожить на средства из \"подушки безопасности\".\n\n" +
-                            "• Минимальный уровень: 3-6 месяцев основных расходов (аренда/ипотека, еда, транспорт, коммунальные услуги, связь). Это «спокойное» существование при нулевых доходах.\n" +
-                            "• Идеальный уровень: Может включать больше, например, до 12 месяцев, для более уверенного прохождения длительных кризисов, особенно при нестабильной работе или наличии иждивенцев.",
+                    title = strings.metricSafetyMonthsTitle,
+                    value = "${Formatters.formatRatio(metrics.safetyMonths, lang)} ${strings.monthsSuffix}",
+                    formula = strings.metricSafetyMonthsFormula,
+                    description = strings.metricSafetyMonthsDesc,
                     icon = Icons.Default.AvTimer,
                     score = metrics.scores.safetyMonthsScore,
                     highlightColor = when {
@@ -214,23 +236,19 @@ fun MetricsScreen(
                         metrics.safetyMonths >= 3.0 -> WarningYellow
                         else -> AlertRed
                     },
-                    subValue = "Норма: 3-6 мес, Идеал: 12+ мес"
+                    subValue = strings.metricSafetyMonthsSub
                 )
             }
         }
 
         // 5. Коэффициент задолженности
-        if (selectedCategory == "Все" || selectedCategory == "Капитал & Риски") {
+        if (selectedCategory == MetricFilterCategory.ALL || selectedCategory == MetricFilterCategory.CAPITAL_RISKS) {
             item {
                 MetricCard(
-                    title = "Коэффициент задолженности",
-                    value = Formatters.formatRatio(metrics.debtRatio),
-                    formula = "(Пассивы / Активы)",
-                    description = "Показывает, какая доля активов финансируется за счет долгов (обязательств), отражая степень финансового риска и зависимости от кредиторов.\n\n" +
-                            "• 0,0 - 0,3: Хорошая финансовая устойчивость, большая часть активов финансируется собственными средствами\n" +
-                            "• 0,3 - 0,6: Идеальный баланс для большинства, сбалансированное кредитное плечо\n" +
-                            "• Больше 0,6: Высокий риск, сильная зависимость от долгов\n" +
-                            "• Больше 1,0: Долгов больше, чем активов; очень высокий риск",
+                    title = strings.metricDebtRatioTitle,
+                    value = Formatters.formatRatio(metrics.debtRatio, lang),
+                    formula = strings.metricDebtRatioFormula,
+                    description = strings.metricDebtRatioDesc,
                     icon = Icons.Default.AccountBalanceWallet,
                     score = metrics.scores.debtRatioScore,
                     highlightColor = when {
@@ -238,43 +256,41 @@ fun MetricsScreen(
                         metrics.debtRatio <= 0.6 -> WarningYellow
                         else -> AlertRed
                     },
-                    subValue = if (metrics.debtRatio <= 0.3) "Низкий риск (отлично)" else "Высокий риск долгов"
+                    subValue = if (metrics.debtRatio <= 0.3) strings.metricDebtRatioLowSub else strings.metricDebtRatioHighSub
                 )
             }
         }
 
         // 6. Чистый капитал
-        if (selectedCategory == "Все" || selectedCategory == "Капитал & Риски") {
+        if (selectedCategory == MetricFilterCategory.ALL || selectedCategory == MetricFilterCategory.CAPITAL_RISKS) {
             item {
                 MetricCard(
-                    title = "Чистый капитал",
-                    value = Formatters.formatMoney(metrics.netWorth, inputData.currencySymbol),
-                    formula = "(Активы - Пассивы)",
-                    description = "Общая стоимость активов за вычетом всех обязательств. Это те средства, что останутся у собственника после продажи всех активов и погашения всех долгов.",
+                    title = strings.metricNetWorthTitle,
+                    value = Formatters.formatMoney(metrics.netWorth, inputData.currencySymbol, lang),
+                    formula = strings.metricNetWorthFormula,
+                    description = strings.metricNetWorthDesc,
                     icon = Icons.Default.AccountBalance,
                     highlightColor = MaterialTheme.colorScheme.primary,
-                    subValue = "Активы: ${Formatters.formatMoney(metrics.totalAssets, inputData.currencySymbol)}"
+                    subValue = "${strings.metricNetWorthSubPrefix}: ${Formatters.formatMoney(metrics.totalAssets, inputData.currencySymbol, lang)}"
                 )
             }
         }
 
         // 7. Бенчмарк Fidelity
-        if (selectedCategory == "Все" || selectedCategory == "Бенчмарки") {
+        if (selectedCategory == MetricFilterCategory.ALL || selectedCategory == MetricFilterCategory.BENCHMARKS) {
             item {
                 val fidelityRatio = if (metrics.fidelityTarget > 0) {
                     (metrics.netWorth / metrics.fidelityTarget).coerceIn(0.0, 1.0).toFloat()
                 } else 0f
 
                 MetricCard(
-                    title = "Бенчмарк: целевые показатели по Fidelity",
-                    value = Formatters.formatMoney(metrics.fidelityTarget, inputData.currencySymbol),
-                    formula = "Годовой доход * Множитель",
-                    description = "Методика Fidelity показывает, во сколько раз ваши текущие пенсионные накопления должны превышать ваш годовой заработок на определенном жизненном этапе.\n\n" +
-                            "Шкала Fidelity дискретна (задана конкретными точками для 30, 40, 50, 60 и 67 лет).\n" +
-                            "Пример: Если вам 40 лет и вы зарабатываете ($100,000) в год, то, согласно Fidelity, на ваших инвестиционных и пенсионных счетах должно быть накоплено не менее ($300,000).",
+                    title = strings.metricFidelityTitle,
+                    value = Formatters.formatMoney(metrics.fidelityTarget, inputData.currencySymbol, lang),
+                    formula = strings.metricFidelityFormula,
+                    description = strings.metricFidelityDesc,
                     icon = Icons.Default.Flag,
                     highlightColor = AccentGold,
-                    subValue = "Возраст: ${metrics.currentAge} лет | Множитель: ${Formatters.formatRatio(metrics.fidelityMultiplier)}x",
+                    subValue = strings.metricFidelitySubFormat(metrics.currentAge, Formatters.formatRatio(metrics.fidelityMultiplier, lang)),
                     extraContent = {
                         Column {
                             Row(
@@ -282,7 +298,7 @@ fun MetricsScreen(
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
                                 Text(
-                                    text = "Прогресс к ориентиру Fidelity:",
+                                    text = strings.metricFidelityProgress,
                                     style = MaterialTheme.typography.labelSmall.copy(
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                                         fontSize = 11.sp
@@ -314,39 +330,35 @@ fun MetricsScreen(
         }
 
         // 8. Коэффициент финансовой свободы (КФС)
-        if (selectedCategory == "Все" || selectedCategory == "Бенчмарки") {
+        if (selectedCategory == MetricFilterCategory.ALL || selectedCategory == MetricFilterCategory.BENCHMARKS) {
             item {
                 MetricCard(
-                    title = "Коэффициент финансовой свободы",
-                    value = Formatters.formatRatio(metrics.financialFreedomRatio),
-                    formula = "(Активы / Годовые расходы)",
-                    description = "Показывает, сколько годовых расходов покрывает ваш капитал.\n\n" +
-                            "• КФС < 0 — Вы в долгах\n" +
-                            "• КФС > 0 и КФС <= 0,5 — У вас есть минимальная «подушка безопасности»\n" +
-                            "• КФС > 0,5 и КФС <= 2 — Вы начали формировать свой финансовый капитала\n" +
-                            "• КФС > 2 и КФС <= 5 — Вы можете начать заниматься долгосрочными инвестициями\n" +
-                            "• КФС > 5 и КФС <= 15 — Доходы от капитала могут приносить вам существенную прибавку. Инфляция все более значительно влияет на капитал\n" +
-                            "• КФС > 15 и КФС <= 30 — Крепкая финансовая стабильность. На что вы тратите свой невосполнимый капитал времени?\n" +
-                            "• КФС > 30 — Вы достигли финансовой независимости",
+                    title = strings.metricCfsTitle,
+                    value = Formatters.formatRatio(metrics.financialFreedomRatio, lang),
+                    formula = strings.metricCfsFormula,
+                    description = strings.metricCfsDesc,
                     icon = Icons.Default.CompassCalibration,
                     score = metrics.scores.cfsScore,
                     highlightColor = AccentTeal,
-                    subValue = metrics.cfsStageDescription
+                    subValue = com.example.domain.FinanceCalculator.getCfsStageDescription(metrics.financialFreedomRatio, lang)
                 )
             }
         }
 
         // 9. Реальная доходность капитала
-        if (selectedCategory == "Все" || selectedCategory == "Бенчмарки") {
+        if (selectedCategory == MetricFilterCategory.ALL || selectedCategory == MetricFilterCategory.BENCHMARKS) {
             item {
                 MetricCard(
-                    title = "Реальная доходность капитала, %",
-                    value = Formatters.formatPercent(metrics.realReturnPercent),
-                    formula = "(1 + Номинальная доходность) / (1 + Инфляция) - 1",
-                    description = "Фактический прирост ваших сбережений после того, как из начисленной прибыли вычли уровень инфляции. Показывает, на сколько увеличилась ваша реальная покупательная способность.",
+                    title = strings.metricRealReturnTitle,
+                    value = Formatters.formatPercent(metrics.realReturnPercent, lang),
+                    formula = strings.metricRealReturnFormula,
+                    description = strings.metricRealReturnDesc,
                     icon = Icons.Default.Percent,
                     highlightColor = SuccessGreen,
-                    subValue = "Номинал: ${Formatters.formatPercent(inputData.nominalReturnPercent)} | Инфляция: ${Formatters.formatPercent(inputData.inflationPercent)}"
+                    subValue = strings.metricRealReturnSubFormat(
+                        Formatters.formatPercent(inputData.nominalReturnPercent, lang),
+                        Formatters.formatPercent(inputData.inflationPercent, lang)
+                    )
                 )
             }
         }

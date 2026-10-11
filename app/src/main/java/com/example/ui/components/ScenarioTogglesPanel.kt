@@ -53,6 +53,8 @@ import com.example.ui.theme.AlertRed
 import com.example.ui.theme.SuccessGreen
 import com.example.ui.theme.WarningYellowBg
 import com.example.util.Formatters
+import com.example.util.localization.LocalAppLanguage
+import com.example.util.localization.LocalAppStrings
 
 private data class ScenarioItemData(
     val id: String,
@@ -72,13 +74,18 @@ fun ScenarioTogglesPanel(
     onToggleScenario: (scenarioId: String) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val lang = LocalAppLanguage.current
+    val strings = LocalAppStrings.current
+
     val positiveItems = listOf(
         ScenarioItemData(
             id = "pos_salary_increase",
             number = 1,
-            title = "Повышение зарплаты",
-            parametersText = "доход +20% ежемесячно, постоянно",
-            description = "Увеличение дохода: +${Formatters.formatMoney(inputData.monthlyIncome * 0.20, inputData.currencySymbol)}/мес.",
+            title = strings.scenarioSalaryIncreaseTitle,
+            parametersText = strings.scenarioSalaryIncreaseParam,
+            description = strings.scenarioSalaryIncreaseDesc(
+                Formatters.formatMoney(inputData.monthlyIncome * 0.20, inputData.currencySymbol, lang)
+            ),
             icon = Icons.Default.TrendingUp,
             isChecked = scenarios.salaryIncrease20,
             isPositive = true
@@ -86,9 +93,11 @@ fun ScenarioTogglesPanel(
         ScenarioItemData(
             id = "pos_market_growth",
             number = 2,
-            title = "Рост рынка на 25%",
-            parametersText = "ETF +25%",
-            description = "Прирост финансового портфеля: +${Formatters.formatMoney(inputData.financialAssets * 0.25, inputData.currencySymbol)}",
+            title = strings.scenarioMarketGrowthTitle,
+            parametersText = strings.scenarioMarketGrowthParam,
+            description = strings.scenarioMarketGrowthDesc(
+                Formatters.formatMoney(inputData.financialAssets * 0.25, inputData.currencySymbol, lang)
+            ),
             icon = Icons.Default.ShowChart,
             isChecked = scenarios.marketGrowth25,
             isPositive = true
@@ -96,9 +105,11 @@ fun ScenarioTogglesPanel(
         ScenarioItemData(
             id = "pos_expense_optimization",
             number = 3,
-            title = "Оптимизация расходов",
-            parametersText = "−15% к ежемесячным расходам, постоянно",
-            description = "Постоянная экономия: -${Formatters.formatMoney(inputData.monthlyExpenses * 0.15, inputData.currencySymbol)}/мес.",
+            title = strings.scenarioExpenseOptTitle,
+            parametersText = strings.scenarioExpenseOptParam,
+            description = strings.scenarioExpenseOptDesc(
+                Formatters.formatMoney(inputData.monthlyExpenses * 0.15, inputData.currencySymbol, lang)
+            ),
             icon = Icons.Default.Savings,
             isChecked = scenarios.expenseOptimization15,
             isPositive = true
@@ -106,9 +117,11 @@ fun ScenarioTogglesPanel(
         ScenarioItemData(
             id = "pos_relocation",
             number = 4,
-            title = "Переезд в регион с более низкой стоимостью жизни",
-            parametersText = "−30% к ежемесячным расходам, постоянно",
-            description = "Снижение стоимости жизни: -${Formatters.formatMoney(inputData.monthlyExpenses * 0.30, inputData.currencySymbol)}/мес.",
+            title = strings.scenarioRelocationTitle,
+            parametersText = strings.scenarioRelocationParam,
+            description = strings.scenarioRelocationDesc(
+                Formatters.formatMoney(inputData.monthlyExpenses * 0.30, inputData.currencySymbol, lang)
+            ),
             icon = Icons.Default.LocationCity,
             isChecked = scenarios.relocationLowerCost30,
             isPositive = true
@@ -116,9 +129,11 @@ fun ScenarioTogglesPanel(
         ScenarioItemData(
             id = "pos_inheritance",
             number = 5,
-            title = "Наследство или крупный подарок",
-            parametersText = "разовое поступление 1200% мес. дохода",
-            description = "Приток капитала: +${Formatters.formatMoney(12.0 * inputData.monthlyIncome, inputData.currencySymbol)} (в ликвидные активы)",
+            title = strings.scenarioInheritanceTitle,
+            parametersText = strings.scenarioInheritanceParam,
+            description = strings.scenarioInheritanceDesc(
+                Formatters.formatMoney(12.0 * inputData.monthlyIncome, inputData.currencySymbol, lang)
+            ),
             icon = Icons.Default.Redeem,
             isChecked = scenarios.inheritance1200,
             isPositive = true
@@ -126,9 +141,11 @@ fun ScenarioTogglesPanel(
         ScenarioItemData(
             id = "pos_property_sale",
             number = 6,
-            title = "Продажа имущества (авто, участок, недвижимость)",
-            parametersText = "разовое поступление 2000% мес. дохода",
-            description = "Выручка от продажи: +${Formatters.formatMoney(20.0 * inputData.monthlyIncome, inputData.currencySymbol)} (в ликвидные активы)",
+            title = strings.scenarioPropertySaleTitle,
+            parametersText = strings.scenarioPropertySaleParam,
+            description = strings.scenarioPropertySaleDesc(
+                Formatters.formatMoney(20.0 * inputData.monthlyIncome, inputData.currencySymbol, lang)
+            ),
             icon = Icons.Default.AccountBalance,
             isChecked = scenarios.propertySale2000,
             isPositive = true
@@ -136,9 +153,11 @@ fun ScenarioTogglesPanel(
         ScenarioItemData(
             id = "pos_children_self_sufficient",
             number = 7,
-            title = "Выход детей на самообеспечение",
-            parametersText = "расходы −25% ежемесячно, после 18 лет",
-            description = "Снижение семейных расходов: -${Formatters.formatMoney(inputData.monthlyExpenses * 0.25, inputData.currencySymbol)}/мес. (после 18 лет)",
+            title = strings.scenarioChildrenSelfSufficientTitle,
+            parametersText = strings.scenarioChildrenSelfSufficientParam,
+            description = strings.scenarioChildrenSelfSufficientDesc(
+                Formatters.formatMoney(inputData.monthlyExpenses * 0.25, inputData.currencySymbol, lang)
+            ),
             icon = Icons.Default.School,
             isChecked = scenarios.childrenSelfSufficient18,
             isPositive = true
@@ -149,9 +168,9 @@ fun ScenarioTogglesPanel(
         ScenarioItemData(
             id = "job_loss",
             number = 1,
-            title = "Потеря работы",
-            parametersText = "доход = 0",
-            description = "Полная остановка притока дохода, покрытие всех расходов из резервов",
+            title = strings.scenarioJobLossTitle,
+            parametersText = strings.scenarioJobLossParam,
+            description = strings.scenarioJobLossDesc,
             icon = Icons.Default.WorkOff,
             isChecked = scenarios.jobLoss,
             isPositive = false
@@ -159,9 +178,11 @@ fun ScenarioTogglesPanel(
         ScenarioItemData(
             id = "market_crash",
             number = 2,
-            title = "Обвал рынка на 30%",
-            parametersText = "ETF −30%",
-            description = "Просадка финансового портфеля на 30% (${Formatters.formatMoney(inputData.financialAssets * 0.3, inputData.currencySymbol)})",
+            title = strings.scenarioMarketCrashTitle,
+            parametersText = strings.scenarioMarketCrashParam,
+            description = strings.scenarioMarketCrashDesc(
+                Formatters.formatMoney(inputData.financialAssets * 0.3, inputData.currencySymbol, lang)
+            ),
             icon = Icons.Default.TrendingDown,
             isChecked = scenarios.marketCrash30,
             isPositive = false
@@ -169,9 +190,12 @@ fun ScenarioTogglesPanel(
         ScenarioItemData(
             id = "mortgage",
             number = 3,
-            title = "Ипотека на квартиру",
-            parametersText = "35% дохода на 20 лет (+84 дохода в имущество)",
-            description = "Платеж: ${Formatters.formatMoney(inputData.monthlyIncome * 0.35, inputData.currencySymbol)}/мес. (20 лет). В конце срока: +${Formatters.formatMoney(84.0 * inputData.monthlyIncome, inputData.currencySymbol)} в имущество/активы",
+            title = strings.scenarioMortgageTitle,
+            parametersText = strings.scenarioMortgageParam,
+            description = strings.scenarioMortgageDesc(
+                Formatters.formatMoney(inputData.monthlyIncome * 0.35, inputData.currencySymbol, lang),
+                Formatters.formatMoney(84.0 * inputData.monthlyIncome, inputData.currencySymbol, lang)
+            ),
             icon = Icons.Default.Home,
             isChecked = scenarios.mortgage20Years35Income,
             isPositive = false
@@ -179,9 +203,12 @@ fun ScenarioTogglesPanel(
         ScenarioItemData(
             id = "car_loan",
             number = 4,
-            title = "Автомобиль в кредит",
-            parametersText = "20% дохода на 5 лет (+6 доходов в имущество)",
-            description = "Платеж: ${Formatters.formatMoney(inputData.monthlyIncome * 0.20, inputData.currencySymbol)}/мес. (5 лет). В конце срока: +${Formatters.formatMoney(6.0 * inputData.monthlyIncome, inputData.currencySymbol)} в имущество (50% стоимости)",
+            title = strings.scenarioCarLoanTitle,
+            parametersText = strings.scenarioCarLoanParam,
+            description = strings.scenarioCarLoanDesc(
+                Formatters.formatMoney(inputData.monthlyIncome * 0.20, inputData.currencySymbol, lang),
+                Formatters.formatMoney(6.0 * inputData.monthlyIncome, inputData.currencySymbol, lang)
+            ),
             icon = Icons.Default.DirectionsCar,
             isChecked = scenarios.carLoan5Years,
             isPositive = false
@@ -189,9 +216,11 @@ fun ScenarioTogglesPanel(
         ScenarioItemData(
             id = "large_expense",
             number = 5,
-            title = "Крупная разовая трата",
-            parametersText = "расход 500% мес. дохода",
-            description = "Трата ${Formatters.formatMoney(5.0 * inputData.monthlyIncome, inputData.currencySymbol)} (покрытие из ликвидных и фин. активов)",
+            title = strings.scenarioLargeExpenseTitle,
+            parametersText = strings.scenarioLargeExpenseParam,
+            description = strings.scenarioLargeExpenseDesc(
+                Formatters.formatMoney(5.0 * inputData.monthlyIncome, inputData.currencySymbol, lang)
+            ),
             icon = Icons.Default.Payments,
             isChecked = scenarios.largeOneOffExpense500,
             isPositive = false
@@ -199,9 +228,11 @@ fun ScenarioTogglesPanel(
         ScenarioItemData(
             id = "inflation_expense",
             number = 6,
-            title = "Рост инфляции",
-            parametersText = "+20% к расходам",
-            description = "Рост стоимости жизни: +${Formatters.formatMoney(inputData.monthlyExpenses * 0.20, inputData.currencySymbol)}/мес.",
+            title = strings.scenarioInflationTitle,
+            parametersText = strings.scenarioInflationParam,
+            description = strings.scenarioInflationDesc(
+                Formatters.formatMoney(inputData.monthlyExpenses * 0.20, inputData.currencySymbol, lang)
+            ),
             icon = Icons.Default.TrendingUp,
             isChecked = scenarios.inflation20Expenses,
             isPositive = false
@@ -209,9 +240,11 @@ fun ScenarioTogglesPanel(
         ScenarioItemData(
             id = "child_dependent",
             number = 7,
-            title = "Рождение ребенка",
-            parametersText = "+25% к расходам на 18 лет",
-            description = "Расходы на ребенка: +${Formatters.formatMoney(inputData.monthlyExpenses * 0.25, inputData.currencySymbol)}/мес. (период 18 лет)",
+            title = strings.scenarioChildTitle,
+            parametersText = strings.scenarioChildParam,
+            description = strings.scenarioChildDesc(
+                Formatters.formatMoney(inputData.monthlyExpenses * 0.25, inputData.currencySymbol, lang)
+            ),
             icon = Icons.Default.ChildCare,
             isChecked = scenarios.childOrDependent18Years,
             isPositive = false
@@ -227,11 +260,11 @@ fun ScenarioTogglesPanel(
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "Панель сценариев (стресс-тесты)",
+                    text = strings.scenarioHeaderTitle,
                     style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
                 )
                 Text(
-                    text = "Результат влияния разных ползунков и чекбоксов суммируется (накапливается и рассчитывается совместно). Итоговый результат отражается в числах и на графике:",
+                    text = strings.scenarioHeaderSubtitle,
                     style = MaterialTheme.typography.bodySmall.copy(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontSize = 11.sp
@@ -246,7 +279,7 @@ fun ScenarioTogglesPanel(
                     modifier = Modifier.padding(start = 6.dp)
                 ) {
                     Text(
-                        text = "Всего: ${scenarios.activeCount}",
+                        text = strings.scenarioTotalBadge(scenarios.activeCount),
                         style = MaterialTheme.typography.labelSmall.copy(
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary,
@@ -283,7 +316,7 @@ fun ScenarioTogglesPanel(
                     )
                 }
                 Text(
-                    text = "Позитивные события",
+                    text = strings.scenarioPositiveTitle,
                     style = MaterialTheme.typography.titleSmall.copy(
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
@@ -297,7 +330,7 @@ fun ScenarioTogglesPanel(
                     color = SuccessGreen.copy(alpha = 0.15f)
                 ) {
                     Text(
-                        text = "Активно: ${scenarios.positiveActiveCount}",
+                        text = strings.scenarioPositiveActive(scenarios.positiveActiveCount),
                         style = MaterialTheme.typography.labelSmall.copy(
                             fontWeight = FontWeight.Bold,
                             color = SuccessGreen,
@@ -310,7 +343,7 @@ fun ScenarioTogglesPanel(
         }
 
         Text(
-            text = "События, ускоряющие накопление капитала и выход на пенсию:",
+            text = strings.scenarioPositiveSubtitle,
             style = MaterialTheme.typography.bodySmall.copy(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontSize = 11.sp
@@ -322,6 +355,7 @@ fun ScenarioTogglesPanel(
             positiveItems.forEach { item ->
                 ScenarioToggleCard(
                     item = item,
+                    paramPrefix = strings.scenarioParamsPrefix,
                     onToggle = { onToggleScenario(item.id) }
                 )
             }
@@ -352,7 +386,7 @@ fun ScenarioTogglesPanel(
                     )
                 }
                 Text(
-                    text = "Негативные события",
+                    text = strings.scenarioNegativeTitle,
                     style = MaterialTheme.typography.titleSmall.copy(
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
@@ -366,7 +400,7 @@ fun ScenarioTogglesPanel(
                     color = AlertRed.copy(alpha = 0.15f)
                 ) {
                     Text(
-                        text = "Активно: ${scenarios.negativeActiveCount}",
+                        text = strings.scenarioNegativeActive(scenarios.negativeActiveCount),
                         style = MaterialTheme.typography.labelSmall.copy(
                             fontWeight = FontWeight.Bold,
                             color = AlertRed,
@@ -379,7 +413,7 @@ fun ScenarioTogglesPanel(
         }
 
         Text(
-            text = "Стресс-тесты, непредвиденные расходы и кризисные ситуации:",
+            text = strings.scenarioNegativeSubtitle,
             style = MaterialTheme.typography.bodySmall.copy(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontSize = 11.sp
@@ -391,6 +425,7 @@ fun ScenarioTogglesPanel(
             negativeItems.forEach { item ->
                 ScenarioToggleCard(
                     item = item,
+                    paramPrefix = strings.scenarioParamsPrefix,
                     onToggle = { onToggleScenario(item.id) }
                 )
             }
@@ -401,6 +436,7 @@ fun ScenarioTogglesPanel(
 @Composable
 private fun ScenarioToggleCard(
     item: ScenarioItemData,
+    paramPrefix: String,
     onToggle: () -> Unit
 ) {
     val accentColor = if (item.isPositive) SuccessGreen else AlertRed
@@ -484,7 +520,7 @@ private fun ScenarioToggleCard(
                     modifier = Modifier.padding(vertical = 2.dp)
                 ) {
                     Text(
-                        text = "Параметры: ${item.parametersText}",
+                        text = "$paramPrefix ${item.parametersText}",
                         style = MaterialTheme.typography.labelSmall.copy(
                             fontWeight = FontWeight.Medium,
                             color = badgeTextColor,

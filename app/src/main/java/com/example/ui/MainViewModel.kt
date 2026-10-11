@@ -12,17 +12,37 @@ import com.example.data.repository.FinanceRepository
 import com.example.data.repository.LocalPreferencesManager
 import com.example.domain.FinanceCalculator
 import kotlinx.coroutines.flow.MutableStateFlow
+import com.example.util.localization.AppLanguage
+import com.example.util.localization.AppStrings
+import com.example.util.localization.StringsRu
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-enum class AppTab(val title: String, val shortTitle: String) {
+enum class AppTab(val defaultTitle: String, val defaultShortTitle: String) {
     INPUT("Данные для расчетов", "Данные"),
     METRICS("Расчет показателей", "Показатели"),
     SCORES("Набранные баллы (итоги, суммирование результатов)", "Итоги & Баллы"),
-    FIRE("Финансовая свобода, пенсия, FIRE", "FIRE & Пенсия")
+    FIRE("Финансовая свобода, пенсия, FIRE", "FIRE & Пенсия");
+
+    val title: String get() = defaultTitle
+    val shortTitle: String get() = defaultShortTitle
+
+    fun localizedTitle(strings: AppStrings): String = when (this) {
+        INPUT -> strings.tabInputTitle
+        METRICS -> strings.tabMetricsTitle
+        SCORES -> strings.tabScoresTitle
+        FIRE -> strings.tabFireTitle
+    }
+
+    fun localizedShortTitle(strings: AppStrings): String = when (this) {
+        INPUT -> strings.tabInputShort
+        METRICS -> strings.tabMetricsShort
+        SCORES -> strings.tabScoresShort
+        FIRE -> strings.tabFireShort
+    }
 }
 
 data class FireScenarioToggles(
@@ -109,6 +129,15 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _currentTab = MutableStateFlow(AppTab.INPUT)
     val currentTab: StateFlow<AppTab> = _currentTab.asStateFlow()
+
+    // Автоматический фоновый выбор языковой версии приложения при старте (при запуске)
+    // Логика: если у пользователя установлена русская, украинская или белорусская локаль — русский язык; иначе английский.
+    private val _appLanguage = MutableStateFlow(AppLanguage.detectSystemLanguage())
+    val appLanguage: StateFlow<AppLanguage> = _appLanguage.asStateFlow()
+
+    fun setLanguage(language: AppLanguage) {
+        _appLanguage.value = language
+    }
 
     // Loaded from persistent on-device local storage (defaults to Russian average if first launch)
     private val _inputData = MutableStateFlow(localPrefs.loadData())
