@@ -1,6 +1,7 @@
 package com.example.ui.screens
 
 import android.content.Intent
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -44,6 +45,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.CalculatedMetrics
 import com.example.data.model.FinancialInputData
+import com.example.domain.AuditIndicatorStatus
+import com.example.domain.AuditorAnalysisGenerator
 import com.example.ui.components.ScoreGauge
 import com.example.ui.theme.AccentGold
 import com.example.ui.theme.AlertRed
@@ -245,8 +248,19 @@ fun AuditScoreScreen(
             )
         }
 
-        // Recommendations Card (Аудиторское заключение)
+        // Recommendations Card (Аудиторское заключение по всем показателям)
         item {
+            val opinion = AuditorAnalysisGenerator.generate(inputData, metrics)
+
+            val shareFullOpinion: () -> Unit = {
+                val sendIntent = Intent().apply {
+                    action = Intent.ACTION_SEND
+                    putExtra(Intent.EXTRA_TEXT, opinion.toFormattedShareText(inputData, metrics))
+                    type = "text/plain"
+                }
+                context.startActivity(Intent.createChooser(sendIntent, "Поделиться аудиторским заключением"))
+            }
+
             Card(
                 shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
@@ -255,99 +269,6 @@ fun AuditScoreScreen(
                     .testTag("auditor_opinion_card")
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    // 1. Подушка безопасности (проверенные пороги: >=12 мес, 6..12 мес, 3..6 мес, <3 мес)
-                    val recSafety = when {
-                        metrics.safetyMonths >= 12.0 ->
-                            "✅ Запас прочности (Подушка безопасности: ${Formatters.formatRatio(metrics.safetyMonths)} мес.): Полностью сформирована с большим запасом. Риски потери дохода нивелированы. Избыточную ликвидность сверх годового резерва целесообразно направить в доходные инвестиционные инструменты."
-                        metrics.safetyMonths >= 6.0 ->
-                            "✅ Запас прочности (Подушка безопасности: ${Formatters.formatRatio(metrics.safetyMonths)} мес.): Целевой норматив в 6 месяцев расходов успешно достигнут. Базовая финансовая безопасность семьи обеспечена."
-                        metrics.safetyMonths >= 3.0 ->
-                            "ℹ️ Запас прочности (Подушка безопасности: ${Formatters.formatRatio(metrics.safetyMonths)} мес.): Сформирован минимальный базовый резерв, однако рекомендуется постепенно нарастить его до комфортных 6 месяцев расходов для защиты от непредвиденных кризисов."
-                        else ->
-                            "⚠️ Запас прочности (Подушка безопасности: ${Formatters.formatRatio(metrics.safetyMonths)} мес.): Критически недостаточный резерв (менее 3 месяцев). Любой кассовый разрыв или непредвиденные траты создадут угрозу долговой ямы. Приоритетная задача — экстренно довести ликвидный резерв минимум до 6 месяцев расходов."
-                    }
-
-                    // 2. Долговая нагрузка и коэффициент задолженности (уточнение кредитного плеча + шкала тональности)
-                    val debtPct = metrics.debtRatio * 100.0
-                    val recDebt = when {
-                        metrics.debtRatio == 0.0 ->
-                            "✅ Долговая нагрузка (Коэффициент задолженности: 0,00): Абсолютная финансовая автономность — долги и кредиты отсутствуют, все активы принадлежат вам на 100%."
-                        metrics.debtRatio <= 0.30 ->
-                            "✅ Долговая нагрузка (Коэффициент задолженности: ${Formatters.formatRatio(metrics.debtRatio)}, долг ${Formatters.formatPercent(debtPct)} от активов): Кредитное плечо консервативное и безопасное. Обязательства полностью обеспечены ликвидным имуществом, кредитный риск минимален."
-                        metrics.debtRatio <= 0.60 ->
-                            "ℹ️ Долговая нагрузка (Коэффициент задолженности: ${Formatters.formatRatio(metrics.debtRatio)}, долг ${Formatters.formatPercent(debtPct)} от активов): Умеренный уровень заемного финансирования. Долговая нагрузка контролируема, но требует внимания при планировании крупных покупок и регулярных платежей."
-                        metrics.debtRatio <= 1.0 ->
-                            "⚠️ Внимание: Высокая закредитованность (Коэффициент задолженности: ${Formatters.formatRatio(metrics.debtRatio)}, долг ${Formatters.formatPercent(debtPct)} от активов)! Значительная зависимость от внешних кредиторов. Рекомендуется рефинансировать займы, сократить долги и воздержаться от новых обязательств."
-                        else ->
-                            "🚨 КРИТИЧЕСКИЙ РИСК: Дефицит капитала (Коэффициент задолженности: ${Formatters.formatRatio(metrics.debtRatio)}, долги превышают активы на ${Formatters.formatPercent(debtPct - 100.0)})! Объем финансовых обязательств превышает стоимость всего вашего имущества. Необходима экстренная реструктуризация долгов и финансовое оздоровление."
-                    }
-
-                    // 3. Норма сбережений и денежный поток (дополнительный ключевой финансовый показатель)
-                    val recSavings = when {
-                        metrics.savingsRate >= 35.0 ->
-                            "✅ Способность к накоплению (Норма сбережений: ${Formatters.formatPercent(metrics.savingsRate)}): Превосходный уровень! Высокая норма инвестирования денежного потока позволяет экспоненциально наращивать собственный капитал."
-                        metrics.savingsRate >= 15.0 ->
-                            "ℹ️ Способность к накоплению (Норма сбережений: ${Formatters.formatPercent(metrics.savingsRate)}): Здоровый рабочий темп (в рамках стандарта 15–20%). Обеспечивает стабильное регулярное пополнение активов."
-                        metrics.savingsRate > 0.0 ->
-                            "ℹ️ Способность к накоплению (Норма сбережений: ${Formatters.formatPercent(metrics.savingsRate)}): Низкий уровень сбережений (менее 15%). Формирование капитала идет медленно, рекомендуется оптимизировать структуру расходов."
-                        metrics.savingsRate == 0.0 ->
-                            "⚠️ Способность к накоплению: Нулевой свободный денежный поток (доходы равны расходам). Капитал не прирастает, резервы не пополняются."
-                        else ->
-                            "🚨 Способность к накоплению: Отрицательный денежный поток (дефицит бюджета)! Расходы превышают доходы, что ведет к быстрому истощению активов и росту долгов."
-                    }
-
-                    // 4. Достаточность капитала по возрасту (Бенчмарк Fidelity)
-                    val recFidelity = if (metrics.fidelityTarget > 0.0) {
-                        val fidelityRatio = metrics.totalAssets / metrics.fidelityTarget
-                        when {
-                            fidelityRatio >= 1.2 ->
-                                "✅ Возрастной ориентир капитала (Бенчмарк Fidelity): Капитал опережает целевой норматив для вашего возраста (${Formatters.formatPercent(fidelityRatio * 100.0)} от цели). Отличный задел для долгосрочного благосостояния."
-                            fidelityRatio >= 0.8 ->
-                                "ℹ️ Возрастной ориентир капитала (Бенчмарк Fidelity): Капитал соответствует рекомендуемым возрастным ориентирам накоплений (${Formatters.formatPercent(fidelityRatio * 100.0)} от целевого значения)."
-                            else ->
-                                "⚠️ Возрастной ориентир капитала (Бенчмарк Fidelity): Отставание от рекомендуемой возрастной планки капитала (${Formatters.formatPercent(fidelityRatio * 100.0)} от цели в ${Formatters.formatMoney(metrics.fidelityTarget, inputData.currencySymbol)}). Желательно ускорить темп капитализации."
-                        }
-                    } else null
-
-                    // 5. Финансовая свобода и горизонт FIRE (КФС)
-                    val recCfs = when {
-                        metrics.financialFreedomRatio >= 30.0 ->
-                            "🎉 Финансовая свобода (КФС: ${Formatters.formatRatio(metrics.financialFreedomRatio)}): Вы достигли полной финансовой независимости (FIRE)! Накопленные активы способны пожизненно обеспечивать текущий уровень жизни."
-                        metrics.financialFreedomRatio >= 15.0 ->
-                            "✅ Финансовая свобода (КФС: ${Formatters.formatRatio(metrics.financialFreedomRatio)}): Высокая степень автономии. Капитал генерирует существенный пассивный доход, закрывающий большую часть обязательных расходов."
-                        metrics.financialFreedomRatio >= 5.0 ->
-                            "ℹ️ Финансовая свобода (КФС: ${Formatters.formatRatio(metrics.financialFreedomRatio)}): Уверенная фаза роста капитала (${metrics.cfsStageDescription}). Следующая стратегическая цель — рубеж КФС > 15."
-                        else ->
-                            "📈 Финансовая свобода (КФС: ${Formatters.formatRatio(metrics.financialFreedomRatio)}): Начальный этап формирования инвестиционного капитала (${metrics.cfsStageDescription}). Основной упор на дисциплинированные регулярные сбережения."
-                    }
-
-                    val fullOpinion = buildList {
-                        add(recSafety)
-                        add(recDebt)
-                        add(recSavings)
-                        recFidelity?.let { add(it) }
-                        add(recCfs)
-                    }.joinToString(separator = "\n\n")
-
-                    val shareFullOpinion: () -> Unit = {
-                        val shareText = buildString {
-                            appendLine("📋 АУДИТОРСКОЕ ЗАКЛЮЧЕНИЕ И ФИНАНСОВЫЙ АУДИТ")
-                            appendLine("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-                            appendLine("⭐️ Итоговая оценка: ${Formatters.formatScore(scores.totalScore)} из 10 баллов")
-                            appendLine()
-                            appendLine(fullOpinion)
-                            appendLine()
-                            appendLine("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-                            appendLine("💡 Сформировано в приложении «Personal finance»")
-                        }
-                        val sendIntent = Intent().apply {
-                            action = Intent.ACTION_SEND
-                            putExtra(Intent.EXTRA_TEXT, shareText)
-                            type = "text/plain"
-                        }
-                        context.startActivity(Intent.createChooser(sendIntent, "Поделиться аудиторским заключением"))
-                    }
-
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -361,10 +282,19 @@ fun AuditScoreScreen(
                                 modifier = Modifier.size(22.dp)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = "Аудиторское заключение",
-                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
-                            )
+                            Column {
+                                Text(
+                                    text = "Аудиторское заключение",
+                                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                                )
+                                Text(
+                                    text = "Анализ по всем ${opinion.totalCount} показателям экрана «Показатели»",
+                                    style = MaterialTheme.typography.bodySmall.copy(
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        fontSize = 11.sp
+                                    )
+                                )
+                            }
                         }
 
                         IconButton(
@@ -379,15 +309,183 @@ fun AuditScoreScreen(
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
 
+                    // Быстрые плашки-счетчики по трем группам
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = SuccessGreen.copy(alpha = 0.12f),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                Text(
+                                    text = "🟢 ${opinion.positive.size} позит.",
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = SuccessGreen,
+                                        fontSize = 11.sp
+                                    ),
+                                    maxLines = 1
+                                )
+                            }
+                        }
+
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = WarningYellowBg,
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                Text(
+                                    text = "🟡 ${opinion.neutral.size} нейтр.",
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = AccentGold,
+                                        fontSize = 11.sp
+                                    ),
+                                    maxLines = 1
+                                )
+                            }
+                        }
+
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = AlertRed.copy(alpha = 0.12f),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                Text(
+                                    text = "🔴 ${opinion.negative.size} негатив.",
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = AlertRed,
+                                        fontSize = 11.sp
+                                    ),
+                                    maxLines = 1
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    // 1. Позитивные показатели
                     Text(
-                        text = fullOpinion,
-                        style = MaterialTheme.typography.bodyMedium.copy(
-                            lineHeight = 22.sp,
-                            color = MaterialTheme.colorScheme.onSurface
+                        text = "Позитивные показатели (${opinion.positive.size})",
+                        style = MaterialTheme.typography.titleSmall.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = SuccessGreen
                         )
                     )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    if (opinion.positive.isEmpty()) {
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = MaterialTheme.colorScheme.surface,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = "Позитивных показателей пока не выявлено. Рекомендуется оптимизировать доходы и расходы.",
+                                style = MaterialTheme.typography.bodySmall.copy(
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    fontSize = 11.sp
+                                ),
+                                modifier = Modifier.padding(10.dp)
+                            )
+                        }
+                    } else {
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            opinion.positive.forEach { item ->
+                                AuditOpinionIndicatorItem(text = item.text, status = item.status)
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    // 2. Нейтральные показатели
+                    Text(
+                        text = "Нейтральные показатели (${opinion.neutral.size})",
+                        style = MaterialTheme.typography.titleSmall.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = AccentGold
+                        )
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    if (opinion.neutral.isEmpty()) {
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = MaterialTheme.colorScheme.surface,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = "Нейтральных показателей нет — все метрики в позитивной или негативной зоне.",
+                                style = MaterialTheme.typography.bodySmall.copy(
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    fontSize = 11.sp
+                                ),
+                                modifier = Modifier.padding(10.dp)
+                            )
+                        }
+                    } else {
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            opinion.neutral.forEach { item ->
+                                AuditOpinionIndicatorItem(text = item.text, status = item.status)
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    // 3. Негативные показатели
+                    Text(
+                        text = "Негативные показатели (${opinion.negative.size})",
+                        style = MaterialTheme.typography.titleSmall.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = AlertRed
+                        )
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    if (opinion.negative.isEmpty()) {
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = SuccessGreen.copy(alpha = 0.08f),
+                            border = BorderStroke(1.dp, SuccessGreen.copy(alpha = 0.20f)),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = "🎉 Критических и негативных факторов не выявлено — все показатели в безопасной зоне!",
+                                style = MaterialTheme.typography.bodySmall.copy(
+                                    color = SuccessGreen,
+                                    fontWeight = FontWeight.Medium,
+                                    fontSize = 11.sp
+                                ),
+                                modifier = Modifier.padding(10.dp)
+                            )
+                        }
+                    } else {
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            opinion.negative.forEach { item ->
+                                AuditOpinionIndicatorItem(text = item.text, status = item.status)
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -483,5 +581,34 @@ fun ScoreItemCard(
                 )
             )
         }
+    }
+}
+
+@Composable
+private fun AuditOpinionIndicatorItem(
+    text: String,
+    status: AuditIndicatorStatus
+) {
+    val (bgColor, borderColor) = when (status) {
+        AuditIndicatorStatus.POSITIVE -> SuccessGreen.copy(alpha = 0.08f) to SuccessGreen.copy(alpha = 0.22f)
+        AuditIndicatorStatus.NEUTRAL -> WarningYellowBg to AccentGold.copy(alpha = 0.28f)
+        AuditIndicatorStatus.NEGATIVE -> AlertRed.copy(alpha = 0.08f) to AlertRed.copy(alpha = 0.25f)
+    }
+
+    Surface(
+        shape = RoundedCornerShape(10.dp),
+        color = bgColor,
+        border = BorderStroke(1.dp, borderColor),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Text(
+            text = text,
+            style = MaterialTheme.typography.bodyMedium.copy(
+                fontSize = 12.5.sp,
+                lineHeight = 18.sp,
+                color = MaterialTheme.colorScheme.onSurface
+            ),
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp)
+        )
     }
 }
