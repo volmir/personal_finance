@@ -506,8 +506,8 @@ val StringsRu = AppStrings(
     horizonValueFormat = { horizon, age -> "$horizon года (возраст $age лет)" },
 
     calculateButtonText = "Рассчитать показатели",
-    exportButtonText = "Экспорт",
-    exportChooserTitle = "Экспорт финансовых данных",
+    exportButtonText = "Экспорт результатов",
+    exportChooserTitle = "Экспорт результатов",
 
     metricsHeaderTitle = "Расчет показателей",
     metricsHeaderSubtitle = "Все ключевые метрики с формулами и оценкой",
@@ -925,8 +925,8 @@ val StringsEn = AppStrings(
     horizonValueFormat = { horizon, age -> "$horizon yrs (current age: $age yrs)" },
 
     calculateButtonText = "Calculate Metrics",
-    exportButtonText = "Export",
-    exportChooserTitle = "Export Financial Summary",
+    exportButtonText = "Export Results",
+    exportChooserTitle = "Export Results",
 
     metricsHeaderTitle = "Calculated Metrics",
     metricsHeaderSubtitle = "All key financial indicators with formulas & evaluation",
