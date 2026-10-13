@@ -359,7 +359,11 @@ fun InputDataScreen(
                     title = strings.realReturnTitle,
                     formula = strings.realReturnFormula,
                     value = Formatters.formatPercent(metrics.realReturnPercent, lang),
-                    valueColor = SuccessGreen
+                    valueColor = when {
+                        metrics.realReturnPercent > 0 -> SuccessGreen
+                        metrics.realReturnPercent == 0.0 -> Color(0xFFF59E0B)
+                        else -> AlertRed
+                    }
                 )
             }
         }

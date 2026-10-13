@@ -550,4 +550,21 @@ class ExampleUnitTest {
         assertEquals("КФС < 0 — Вы в долгах", FinanceCalculator.getCfsStageDescription(insolventMetrics.financialFreedomRatio, com.example.util.localization.AppLanguage.RU))
         assertEquals("CFS < 0 — You are in debt", FinanceCalculator.getCfsStageDescription(insolventMetrics.financialFreedomRatio, com.example.util.localization.AppLanguage.EN))
     }
+
+    @Test
+    fun testNegativeRealReturnCalculation() {
+        val input = FinancialInputData(
+            nominalReturnPercent = 5.0,
+            inflationPercent = 12.0
+        )
+        val metrics = FinanceCalculator.calculate(input)
+
+        // (1 + 0.05) / (1 + 0.12) - 1 = 1.05 / 1.12 - 1 = -0.0625 (-6.25%)
+        assertTrue(metrics.realReturnPercent < 0.0)
+        assertEquals(-6.25, metrics.realReturnPercent, 0.01)
+
+        val opinion = AuditorAnalysisGenerator.generate(input, metrics)
+        val realReturnOpinion = (opinion.positive + opinion.neutral + opinion.negative).first { it.id == "real_return" }
+        assertEquals(AuditIndicatorStatus.NEGATIVE, realReturnOpinion.status)
+    }
 }

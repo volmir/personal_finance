@@ -367,7 +367,11 @@ fun MetricsScreen(
                     formula = strings.metricRealReturnFormula,
                     description = strings.metricRealReturnDesc,
                     icon = Icons.Default.Percent,
-                    highlightColor = SuccessGreen,
+                    highlightColor = when {
+                        metrics.realReturnPercent > 0 -> SuccessGreen
+                        metrics.realReturnPercent == 0.0 -> WarningYellow
+                        else -> AlertRed
+                    },
                     subValue = strings.metricRealReturnSubFormat(
                         Formatters.formatPercent(inputData.nominalReturnPercent, lang),
                         Formatters.formatPercent(inputData.inflationPercent, lang)
