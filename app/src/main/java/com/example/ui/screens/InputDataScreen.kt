@@ -88,8 +88,8 @@ fun InputDataScreen(
     val lang = LocalAppLanguage.current
     val strings = LocalAppStrings.current
 
-    // Доллар ($) на 1-м месте, Евро (€) на 2-м месте, Гривна (₴) на 4-м месте
-    val currencies = listOf("$", "€", "₽", "₴", "₸", "Br")
+    // Доллар ($) на 1-м месте, Евро (€) на 2-м месте, Гривна (₴) на 4-м месте, Драм (֏) в конце
+    val currencies = listOf("$", "€", "₽", "₴", "₸", "Br", "֏")
 
     LazyColumn(
         modifier = modifier
@@ -312,7 +312,11 @@ fun InputDataScreen(
                     title = strings.netWorthTitle,
                     formula = strings.netWorthFormula,
                     value = Formatters.formatMoney(metrics.netWorth, inputData.currencySymbol, lang),
-                    valueColor = MaterialTheme.colorScheme.primary
+                    valueColor = when {
+                        metrics.netWorth > 0 -> MaterialTheme.colorScheme.primary
+                        metrics.netWorth == 0.0 -> Color(0xFFF59E0B)
+                        else -> AlertRed
+                    }
                 )
             }
         }

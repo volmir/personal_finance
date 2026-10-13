@@ -270,8 +270,16 @@ fun MetricsScreen(
                     formula = strings.metricNetWorthFormula,
                     description = strings.metricNetWorthDesc,
                     icon = Icons.Default.AccountBalance,
-                    highlightColor = MaterialTheme.colorScheme.primary,
-                    subValue = "${strings.metricNetWorthSubPrefix}: ${Formatters.formatMoney(metrics.totalAssets, inputData.currencySymbol, lang)}"
+                    highlightColor = when {
+                        metrics.netWorth > 0 -> SuccessGreen
+                        metrics.netWorth == 0.0 -> WarningYellow
+                        else -> AlertRed
+                    },
+                    subValue = if (metrics.netWorth >= 0) {
+                        "${strings.metricNetWorthSubPrefix}: ${Formatters.formatMoney(metrics.totalAssets, inputData.currencySymbol, lang)}"
+                    } else {
+                        "${strings.metricNetWorthSubPrefix}: ${Formatters.formatMoney(metrics.totalAssets, inputData.currencySymbol, lang)} (${strings.metricNetWorthNegativeSub})"
+                    }
                 )
             }
         }
@@ -339,7 +347,12 @@ fun MetricsScreen(
                     description = strings.metricCfsDesc,
                     icon = Icons.Default.CompassCalibration,
                     score = metrics.scores.cfsScore,
-                    highlightColor = AccentTeal,
+                    highlightColor = when {
+                        metrics.financialFreedomRatio < 0 -> AlertRed
+                        metrics.financialFreedomRatio <= 2.0 -> WarningYellow
+                        metrics.financialFreedomRatio <= 15.0 -> AccentTeal
+                        else -> SuccessGreen
+                    },
                     subValue = com.example.domain.FinanceCalculator.getCfsStageDescription(metrics.financialFreedomRatio, lang)
                 )
             }

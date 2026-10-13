@@ -220,7 +220,7 @@ fun AuditScoreScreen(
                 score = scores.savingsRateScore,
                 currentValue = Formatters.formatPercent(metrics.savingsRate, lang),
                 formula = strings.savingsRateFormula,
-                comment = strings.savingsRateScoreComment(Formatters.formatPercent(metrics.savingsRate, lang)),
+                comment = strings.savingsRateScoreComment(metrics.savingsRate, Formatters.formatPercent(metrics.savingsRate, lang)),
                 valuePrefix = strings.scoreValuePrefix,
                 scoreOutOfTen = strings.scoreOutOfTen(scores.savingsRateScore),
                 tag = "score_savings_rate"
@@ -239,7 +239,7 @@ fun AuditScoreScreen(
                 score = scores.safetyMonthsScore,
                 currentValue = monthsText,
                 formula = strings.metricSafetyMonthsFormula,
-                comment = strings.safetyMonthsScoreComment,
+                comment = strings.safetyMonthsScoreComment(metrics.safetyMonths, monthsText),
                 valuePrefix = strings.scoreValuePrefix,
                 scoreOutOfTen = strings.scoreOutOfTen(scores.safetyMonthsScore),
                 tag = "score_safety_months"

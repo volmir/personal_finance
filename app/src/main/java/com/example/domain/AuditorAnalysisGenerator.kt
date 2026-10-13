@@ -444,7 +444,7 @@ object AuditorAnalysisGenerator {
 
         // 7. Бенчмарк Fidelity
         val fidelityAnalysis = if (metrics.fidelityTarget > 0.0) {
-            val fidelityRatio = metrics.totalAssets / metrics.fidelityTarget
+            val fidelityRatio = metrics.netWorth / metrics.fidelityTarget
             if (isEn) {
                 when {
                     fidelityRatio >= 1.0 -> AuditIndicatorAnalysis(
@@ -458,6 +458,12 @@ object AuditorAnalysisGenerator {
                         title = "Fidelity Benchmark",
                         status = AuditIndicatorStatus.NEUTRAL,
                         text = "ℹ️ Age Capital Milestone (Fidelity Benchmark: ${Formatters.formatPercent(fidelityRatio * 100.0, lang)} of goal): Capital matches recommended age savings guidelines (${Formatters.formatMoney(metrics.fidelityTarget, currency, lang)})."
+                    )
+                    fidelityRatio < 0.0 -> AuditIndicatorAnalysis(
+                        id = "fidelity",
+                        title = "Fidelity Benchmark",
+                        status = AuditIndicatorStatus.NEGATIVE,
+                        text = "🚨 Age Capital Milestone (Fidelity Benchmark): Net capital is negative (${Formatters.formatMoney(metrics.netWorth, currency, lang)}). Outstanding liabilities prevent reaching recommended retirement milestone (${Formatters.formatMoney(metrics.fidelityTarget, currency, lang)})."
                     )
                     else -> AuditIndicatorAnalysis(
                         id = "fidelity",
@@ -479,6 +485,12 @@ object AuditorAnalysisGenerator {
                         title = "Бенчмарк Fidelity",
                         status = AuditIndicatorStatus.NEUTRAL,
                         text = "ℹ️ Возрастной ориентир капитала (Бенчмарк Fidelity: ${Formatters.formatPercent(fidelityRatio * 100.0, lang)} от цели): Капитал соответствует рекомендуемым возрастным ориентирам накоплений (${Formatters.formatMoney(metrics.fidelityTarget, currency, lang)})."
+                    )
+                    fidelityRatio < 0.0 -> AuditIndicatorAnalysis(
+                        id = "fidelity",
+                        title = "Бенчмарк Fidelity",
+                        status = AuditIndicatorStatus.NEGATIVE,
+                        text = "🚨 Возрастной ориентир капитала (Бенчмарк Fidelity): Чистый капитал отрицателен (${Formatters.formatMoney(metrics.netWorth, currency, lang)}). Наличие долговой нагрузки отдаляет достижение пенсионного норматива (${Formatters.formatMoney(metrics.fidelityTarget, currency, lang)})."
                     )
                     else -> AuditIndicatorAnalysis(
                         id = "fidelity",
@@ -514,13 +526,13 @@ object AuditorAnalysisGenerator {
                     id = "cfs",
                     title = "Financial Freedom Ratio",
                     status = AuditIndicatorStatus.POSITIVE,
-                    text = "🎉 Financial Freedom (CFS: ${Formatters.formatRatio(metrics.financialFreedomRatio, lang)}): You have achieved complete financial independence (FIRE)! Accumulated wealth can support your current living standards indefinitely."
+                    text = "🎉 Financial Freedom (CFS: ${Formatters.formatRatio(metrics.financialFreedomRatio, lang)}): You have achieved complete financial independence (FIRE)! Accumulated net assets can support your current living standards indefinitely."
                 )
                 metrics.financialFreedomRatio >= 15.0 -> AuditIndicatorAnalysis(
                     id = "cfs",
                     title = "Financial Freedom Ratio",
                     status = AuditIndicatorStatus.POSITIVE,
-                    text = "✅ Financial Freedom (CFS: ${Formatters.formatRatio(metrics.financialFreedomRatio, lang)}): High degree of autonomy. Capital yields substantial passive income covering most necessary living expenses."
+                    text = "✅ Financial Freedom (CFS: ${Formatters.formatRatio(metrics.financialFreedomRatio, lang)}): High degree of autonomy. Net assets yield substantial passive income covering most necessary living expenses."
                 )
                 metrics.financialFreedomRatio >= 5.0 -> AuditIndicatorAnalysis(
                     id = "cfs",
@@ -533,6 +545,12 @@ object AuditorAnalysisGenerator {
                     title = "Financial Freedom Ratio",
                     status = AuditIndicatorStatus.NEUTRAL,
                     text = "ℹ️ Financial Freedom (CFS: ${Formatters.formatRatio(metrics.financialFreedomRatio, lang)}): Initial stage of investment capital ($cfsDesc). Primary focus on disciplined regular savings."
+                )
+                metrics.financialFreedomRatio < 0.0 -> AuditIndicatorAnalysis(
+                    id = "cfs",
+                    title = "Financial Freedom Ratio",
+                    status = AuditIndicatorStatus.NEGATIVE,
+                    text = "🚨 Financial Freedom (CFS: ${Formatters.formatRatio(metrics.financialFreedomRatio, lang)}): Negative ratio ($cfsDesc). Total obligations exceed assets, resulting in negative net worth."
                 )
                 else -> AuditIndicatorAnalysis(
                     id = "cfs",
@@ -547,13 +565,13 @@ object AuditorAnalysisGenerator {
                     id = "cfs",
                     title = "Коэффициент финансовой свободы",
                     status = AuditIndicatorStatus.POSITIVE,
-                    text = "🎉 Финансовая свобода (КФС: ${Formatters.formatRatio(metrics.financialFreedomRatio, lang)}): Вы достигли полной финансовой независимости (FIRE)! Накопленные активы способны пожизненно обеспечивать текущий уровень жизни."
+                    text = "🎉 Финансовая свобода (КФС: ${Formatters.formatRatio(metrics.financialFreedomRatio, lang)}): Вы достигли полной финансовой независимости (FIRE)! Накопленные чистые активы способны пожизненно обеспечивать текущий уровень жизни."
                 )
                 metrics.financialFreedomRatio >= 15.0 -> AuditIndicatorAnalysis(
                     id = "cfs",
                     title = "Коэффициент финансовой свободы",
                     status = AuditIndicatorStatus.POSITIVE,
-                    text = "✅ Финансовая свобода (КФС: ${Formatters.formatRatio(metrics.financialFreedomRatio, lang)}): Высокая степень автономии. Капитал генерирует существенный пассивный доход, закрывающий большую часть обязательных расходов."
+                    text = "✅ Финансовая свобода (КФС: ${Formatters.formatRatio(metrics.financialFreedomRatio, lang)}): Высокая степень автономии. Чистые активы генерируют существенный пассивный доход, закрывающий большую часть обязательных расходов."
                 )
                 metrics.financialFreedomRatio >= 5.0 -> AuditIndicatorAnalysis(
                     id = "cfs",
@@ -566,6 +584,12 @@ object AuditorAnalysisGenerator {
                     title = "Коэффициент финансовой свободы",
                     status = AuditIndicatorStatus.NEUTRAL,
                     text = "ℹ️ Финансовая свобода (КФС: ${Formatters.formatRatio(metrics.financialFreedomRatio, lang)}): Начальный этап формирования инвестиционного капитала ($cfsDesc). Основной упор на дисциплинированные регулярные сбережения."
+                )
+                metrics.financialFreedomRatio < 0.0 -> AuditIndicatorAnalysis(
+                    id = "cfs",
+                    title = "Коэффициент финансовой свободы",
+                    status = AuditIndicatorStatus.NEGATIVE,
+                    text = "🚨 Финансовая свобода (КФС: ${Formatters.formatRatio(metrics.financialFreedomRatio, lang)}): Отрицательный показатель ($cfsDesc). Обязательства превышают стоимость активов, чистый капитал находится в дефиците."
                 )
                 else -> AuditIndicatorAnalysis(
                     id = "cfs",

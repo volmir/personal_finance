@@ -131,6 +131,7 @@ data class AppStrings(
     val metricNetWorthFormula: String,
     val metricNetWorthDesc: String,
     val metricNetWorthSubPrefix: String,
+    val metricNetWorthNegativeSub: String,
 
     val metricFidelityTitle: String,
     val metricFidelityFormula: String,
@@ -160,8 +161,8 @@ data class AppStrings(
     val scoresBreakdownTitle: String,
     val scoreValuePrefix: String,
     val scoreOutOfTen: (score: Int) -> String,
-    val savingsRateScoreComment: (sr: String) -> String,
-    val safetyMonthsScoreComment: String,
+    val savingsRateScoreComment: (rate: Double, sr: String) -> String,
+    val safetyMonthsScoreComment: (months: Double, monthsText: String) -> String,
     val debtComment0: String,
     val debtComment1: String,
     val debtComment2: String,
@@ -554,6 +555,7 @@ val StringsRu = AppStrings(
     metricNetWorthFormula = "(Активы - Пассивы)",
     metricNetWorthDesc = "Общая стоимость активов за вычетом всех обязательств. Это те средства, что останутся у собственника после продажи всех активов и погашения всех долгов.",
     metricNetWorthSubPrefix = "Активы: ",
+    metricNetWorthNegativeSub = "Отрицательный баланс (дефицит!)",
 
     metricFidelityTitle = "Бенчмарк: целевые показатели по Fidelity",
     metricFidelityFormula = "Годовой доход * Множитель",
@@ -562,8 +564,8 @@ val StringsRu = AppStrings(
     metricFidelityProgress = "Прогресс к ориентиру Fidelity:",
 
     metricCfsTitle = "Коэффициент финансовой свободы",
-    metricCfsFormula = "(Активы / Годовые расходы)",
-    metricCfsDesc = "Показывает, сколько годовых расходов покрывает ваш капитал.\n\n• КФС < 0 — Вы в долгах\n• КФС > 0 и КФС <= 0,5 — У вас есть минимальная «подушка безопасности»\n• КФС > 0,5 и КФС <= 2 — Вы начали формировать свой финансовый капитала\n• КФС > 2 и КФС <= 5 — Вы можете начать заниматься долгосрочными инвестициями\n• КФС > 5 и КФС <= 15 — Доходы от капитала могут приносить вам существенную прибавку. Инфляция все более значительно влияет на капитал\n• КФС > 15 и КФС <= 30 — Крепкая финансовая стабильность. На что вы тратите свой невосполнимый капитал времени?\n• КФС > 30 — Вы достигли финансовой независимости",
+    metricCfsFormula = "(Чистые активы / Годовые расходы)",
+    metricCfsDesc = "Показывает, сколько годовых расходов покрывают ваши чистые активы (чистый капитал).\n\n• КФС < 0 — Вы в долгах\n• КФС >= 0 и КФС <= 0,5 — У вас есть минимальная «подушка безопасности»\n• КФС > 0,5 и КФС <= 2 — Вы начали формировать свой финансовый капитал\n• КФС > 2 и КФС <= 5 — Вы можете начать заниматься долгосрочными инвестициями\n• КФС > 5 и КФС <= 15 — Доходы от капитала могут приносить вам существенную прибавку. Инфляция все более значительно влияет на капитал\n• КФС > 15 и КФС <= 30 — Крепкая финансовая стабильность. На что вы тратите свой невосполнимый капитал времени?\n• КФС > 30 — Вы достигли финансовой независимости",
 
     metricRealReturnTitle = "Реальная доходность капитала, %",
     metricRealReturnFormula = "(1 + Номинальная доходность) / (1 + Инфляция) - 1",
@@ -582,8 +584,22 @@ val StringsRu = AppStrings(
     scoresBreakdownTitle = "Детализация баллов по компонентам:",
     scoreValuePrefix = "Значение: ",
     scoreOutOfTen = { score -> "$score из 10" },
-    savingsRateScoreComment = { sr -> "Рекомендуется не менее 15-20%. У вас отличное значение ($sr)." },
-    safetyMonthsScoreComment = "Минимум 3-6 месяцев, идеал 12+ мес. Ваш запас превышает 12 месяцев (максимальный балл).",
+    savingsRateScoreComment = { rate, sr ->
+        when {
+            rate >= 20.0 -> "Рекомендуется не менее 15-20%. У вас отличное значение ($sr)."
+            rate >= 15.0 -> "Рекомендуется не менее 15-20%. У вас хорошее, рабочее значение ($sr)."
+            rate >= 0.0 -> "Рекомендуется не менее 15-20%. У вас низкое значение ($sr)."
+            else -> "Рекомендуется не менее 15-20%. У вас отрицательное значение ($sr), дефицит бюджета."
+        }
+    },
+    safetyMonthsScoreComment = { months, monthsText ->
+        when {
+            months >= 12.0 -> "Минимум 3-6 месяцев, идеал 12+ мес. Отличный результат: запас превышает 12 месяцев ($monthsText)."
+            months >= 6.0 -> "Минимум 3-6 месяцев, идеал 12+ мес. Хороший запас ($monthsText), норматив в 6 месяцев достигнут."
+            months >= 3.0 -> "Минимум 3-6 месяцев, идеал 12+ мес. Базовый запас ($monthsText), рекомендуется увеличить до 6-12 месяцев."
+            else -> "Минимум 3-6 месяцев, идеал 12+ мес. У вас недостаточный запас ($monthsText), высокий финансовый риск."
+        }
+    },
     debtComment0 = "0,0 - 0,3: Отличная устойчивость, активы финансируются собственными средствами.",
     debtComment1 = "0,3 - 0,6: Сбалансированное кредитное плечо, умеренная нагрузка.",
     debtComment2 = "0,6 - 1,0: Высокий риск, значительная зависимость от заемных средств.",
@@ -973,6 +989,7 @@ val StringsEn = AppStrings(
     metricNetWorthFormula = "(Assets - Liabilities)",
     metricNetWorthDesc = "The total value of all assets minus all outstanding liabilities. This represents what you truly own outright after settling all obligations.",
     metricNetWorthSubPrefix = "Total assets: ",
+    metricNetWorthNegativeSub = "Negative equity (deficit!)",
 
     metricFidelityTitle = "Benchmark: Fidelity Capital Milestones",
     metricFidelityFormula = "Annual Income * Multiplier",
@@ -981,8 +998,8 @@ val StringsEn = AppStrings(
     metricFidelityProgress = "Progress toward Fidelity goal:",
 
     metricCfsTitle = "Financial Freedom Ratio (CFS)",
-    metricCfsFormula = "(Assets / Annual Expenses)",
-    metricCfsDesc = "Measures how many years of baseline living expenses are covered by your total capital.\n\n• CFS < 0 — You are in net debt\n• CFS 0..0.5 — Minimal emergency cushion\n• CFS 0.5..2 — Initial capital accumulation stage\n• CFS 2..5 — Long-term investing stage\n• CFS 5..15 — Investment returns provide tangible income. Inflation impact grows\n• CFS 15..30 — Solid financial stability. How do you value your irreplaceable time?\n• CFS > 30 — Complete financial independence achieved",
+    metricCfsFormula = "(Net Assets / Annual Expenses)",
+    metricCfsDesc = "Measures how many years of baseline living expenses are covered by your net assets (net worth).\n\n• CFS < 0 — You are in net debt\n• CFS 0..0.5 — Minimal emergency cushion\n• CFS 0.5..2 — Initial capital accumulation stage\n• CFS 2..5 — Long-term investing stage\n• CFS 5..15 — Investment returns provide tangible income. Inflation impact grows\n• CFS 15..30 — Solid financial stability. How do you value your irreplaceable time?\n• CFS > 30 — Complete financial independence achieved",
 
     metricRealReturnTitle = "Real Return on Capital, %",
     metricRealReturnFormula = "(1 + Nominal Return) / (1 + Inflation) - 1",
@@ -1001,8 +1018,22 @@ val StringsEn = AppStrings(
     scoresBreakdownTitle = "Component Score Breakdown:",
     scoreValuePrefix = "Value: ",
     scoreOutOfTen = { score -> "$score of 10" },
-    savingsRateScoreComment = { sr -> "Recommended at least 15-20%. You maintain an excellent rate ($sr)." },
-    safetyMonthsScoreComment = "Minimum 3-6 months, ideal 12+ months. Your buffer exceeds 12 months (maximum score).",
+    savingsRateScoreComment = { rate, sr ->
+        when {
+            rate >= 20.0 -> "Recommended at least 15-20%. You maintain an excellent rate ($sr)."
+            rate >= 15.0 -> "Recommended at least 15-20%. You maintain a solid, working rate ($sr)."
+            rate >= 0.0 -> "Recommended at least 15-20%. You have a low rate ($sr)."
+            else -> "Recommended at least 15-20%. You have a negative rate ($sr), budget deficit."
+        }
+    },
+    safetyMonthsScoreComment = { months, monthsText ->
+        when {
+            months >= 12.0 -> "Minimum 3-6 months, ideal 12+ months. Excellent result: buffer exceeds 12 months ($monthsText)."
+            months >= 6.0 -> "Minimum 3-6 months, ideal 12+ months. Good buffer ($monthsText), 6-month benchmark achieved."
+            months >= 3.0 -> "Minimum 3-6 months, ideal 12+ months. Basic buffer ($monthsText), expanding to 6-12 months recommended."
+            else -> "Minimum 3-6 months, ideal 12+ months. You have an insufficient buffer ($monthsText), elevated financial risk."
+        }
+    },
     debtComment0 = "0.0 - 0.3: Excellent stability, assets funded almost entirely by own equity.",
     debtComment1 = "0.3 - 0.6: Balanced leverage, manageable borrowing level.",
     debtComment2 = "0.6 - 1.0: Elevated risk, substantial dependence on borrowed money.",

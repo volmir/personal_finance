@@ -474,4 +474,80 @@ class ExampleUnitTest {
         assertFalse(export.contains("Стресс-тест"))
         assertFalse(export.contains("чекбокс"))
     }
+
+    @Test
+    fun testSavingsRateScoreCommentsLocalization() {
+        val ruStrings = com.example.util.localization.StringsRu
+        val enStrings = com.example.util.localization.StringsEn
+
+        // При норме сбережений 8% (низкое значение)
+        val commentRu8 = ruStrings.savingsRateScoreComment(8.0, "8,0%")
+        assertTrue(commentRu8.contains("низкое значение (8,0%)"))
+
+        val commentEn8 = enStrings.savingsRateScoreComment(8.0, "8.0%")
+        assertTrue(commentEn8.contains("low rate (8.0%)"))
+
+        // При норме сбережений 25% (отличное значение)
+        val commentRu25 = ruStrings.savingsRateScoreComment(25.0, "25,0%")
+        assertTrue(commentRu25.contains("отличное значение (25,0%)"))
+
+        val commentEn25 = enStrings.savingsRateScoreComment(25.0, "25.0%")
+        assertTrue(commentEn25.contains("excellent rate (25.0%)"))
+
+        // При отрицательной норме сбережений (-10%)
+        val commentRuNeg = ruStrings.savingsRateScoreComment(-10.0, "-10,0%")
+        assertTrue(commentRuNeg.contains("отрицательное значение"))
+
+        val commentEnNeg = enStrings.savingsRateScoreComment(-10.0, "-10.0%")
+        assertTrue(commentEnNeg.contains("negative rate"))
+    }
+
+    @Test
+    fun testSafetyMonthsScoreCommentsLocalization() {
+        val ruStrings = com.example.util.localization.StringsRu
+        val enStrings = com.example.util.localization.StringsEn
+
+        // Запас 1.5 мес (недостаточный)
+        val commentRuLow = ruStrings.safetyMonthsScoreComment(1.5, "1,5 мес.")
+        assertTrue(commentRuLow.contains("недостаточный запас"))
+
+        val commentEnLow = enStrings.safetyMonthsScoreComment(1.5, "1.5 mo.")
+        assertTrue(commentEnLow.contains("insufficient buffer"))
+
+        // Запас 15 мес (отличный)
+        val commentRuHigh = ruStrings.safetyMonthsScoreComment(15.0, "15,0 мес.")
+        assertTrue(commentRuHigh.contains("запас превышает 12 месяцев"))
+
+        val commentEnHigh = enStrings.safetyMonthsScoreComment(15.0, "15.0 mo.")
+        assertTrue(commentEnHigh.contains("buffer exceeds 12 months"))
+    }
+
+    @Test
+    fun testCfsCalculatedWithNetAssets() {
+        // Проверка: КФС рассчитывается исходя из Чистых активов (netWorth), а не просто суммарных активов
+        val input = FinancialInputData(
+            monthlyIncome = 100_000.0,
+            monthlyExpenses = 50_000.0, // годовые расходы = 600 000
+            liquidAssets = 200_000.0,
+            financialAssets = 300_000.0,
+            propertyAssets = 1_500_000.0, // сумма активов = 2 000 000
+            liabilities = 800_000.0 // чистые активы = 1 200 000
+        )
+        val metrics = FinanceCalculator.calculate(input)
+
+        // Чистые активы = 1 200 000. Годовые расходы = 600 000. КФС = 1 200 000 / 600 000 = 2.0
+        assertEquals(1_200_000.0, metrics.netWorth, 0.01)
+        assertEquals(2.0, metrics.financialFreedomRatio, 0.01)
+
+        // При отрицательном чистом капитале КФС становится отрицательным
+        val insolventInput = input.copy(
+            liabilities = 3_000_000.0 // чистые активы = 2 000 000 - 3 000 000 = -1 000 000
+        )
+        val insolventMetrics = FinanceCalculator.calculate(insolventInput)
+        assertTrue(insolventMetrics.netWorth < 0)
+        assertTrue(insolventMetrics.financialFreedomRatio < 0)
+        assertEquals(0, insolventMetrics.scores.cfsScore)
+        assertEquals("КФС < 0 — Вы в долгах", FinanceCalculator.getCfsStageDescription(insolventMetrics.financialFreedomRatio, com.example.util.localization.AppLanguage.RU))
+        assertEquals("CFS < 0 — You are in debt", FinanceCalculator.getCfsStageDescription(insolventMetrics.financialFreedomRatio, com.example.util.localization.AppLanguage.EN))
+    }
 }

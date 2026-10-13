@@ -60,7 +60,7 @@ object FinanceCalculator {
         val fidelityTarget = annualIncome * fidelityMultiplier
 
         val cfs = if (annualExpenses > 0) {
-            totalAssets / annualExpenses
+            netWorth / annualExpenses
         } else 0.0
 
         val cfsStageDescription = getCfsStageDescription(cfs)
