@@ -53,6 +53,7 @@ import com.example.domain.AuditorAnalysisGenerator
 import com.example.ui.components.ScoreGauge
 import com.example.ui.theme.AccentGold
 import com.example.ui.theme.AlertRed
+import com.example.ui.theme.ScoreColorEvaluator
 import com.example.ui.theme.SuccessGreen
 import com.example.ui.theme.SuccessGreenBg
 import com.example.ui.theme.WarningYellow
@@ -169,11 +170,7 @@ fun AuditScoreScreen(
 
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    val totalScoreColor = when {
-                        scores.totalScore >= 8.0 -> SuccessGreen
-                        scores.totalScore >= 5.0 -> WarningYellow
-                        else -> AlertRed
-                    }
+                    val totalScoreColor = ScoreColorEvaluator.getTotalScoreColor(scores.totalScore)
 
                     Text(
                         text = strings.scoresTotalResult(Formatters.formatScore(scores.totalScore, lang = lang)),
@@ -183,12 +180,7 @@ fun AuditScoreScreen(
                         )
                     )
 
-                    val statusDesc = when {
-                        scores.totalScore >= 8.0 -> strings.scoresStatusExcellent
-                        scores.totalScore >= 6.0 -> strings.scoresStatusGood
-                        scores.totalScore >= 4.0 -> strings.scoresStatusModerate
-                        else -> strings.scoresStatusAttention
-                    }
+                    val statusDesc = ScoreColorEvaluator.getTotalScoreStatusDescription(scores.totalScore, strings)
 
                     Text(
                         text = statusDesc,

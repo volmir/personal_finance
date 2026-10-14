@@ -530,8 +530,8 @@ val StringsRu = AppStrings(
 
     metricSavingsRateTitle = "Норма сбережений",
     metricSavingsRateFormula = "(Денежный поток / Доходы) * 100%",
-    metricSavingsRateDesc = "Рекомендуется стремиться к норме сбережения не менее чем 15-20% от общего дохода.",
-    metricSavingsRateSub = "Целевой ориентир: ≥ 15-20%",
+    metricSavingsRateDesc = "Рекомендуется стремиться к норме сбережений более 20% от общего дохода.\n\n• Меньше 0%: Негативный показатель (дефицит)\n• 0% — 20%: Нейтральный показатель (умеренно)\n• Более 20%: Позитивный показатель (отлично)",
+    metricSavingsRateSub = "Целевой ориентир: > 20% (0–20% нейтрально)",
 
     metricEmergencyFundTitle = "Подушка безопасности",
     metricEmergencyFundFormula = "(Ликвидные активы)",
@@ -586,10 +586,9 @@ val StringsRu = AppStrings(
     scoreOutOfTen = { score -> "$score из 10" },
     savingsRateScoreComment = { rate, sr ->
         when {
-            rate >= 20.0 -> "Рекомендуется не менее 15-20%. У вас отличное значение ($sr)."
-            rate >= 15.0 -> "Рекомендуется не менее 15-20%. У вас хорошее, рабочее значение ($sr)."
-            rate >= 0.0 -> "Рекомендуется не менее 15-20%. У вас низкое значение ($sr)."
-            else -> "Рекомендуется не менее 15-20%. У вас отрицательное значение ($sr), дефицит бюджета."
+            rate > 20.0 -> "Ориентир более 20%. У вас отличное значение ($sr)."
+            rate >= 0.0 -> "Ориентир более 20%. У вас низкое значение ($sr)."
+            else -> "Ориентир более 20%. У вас отрицательное значение ($sr), дефицит бюджета."
         }
     },
     safetyMonthsScoreComment = { months, monthsText ->
@@ -964,8 +963,8 @@ val StringsEn = AppStrings(
 
     metricSavingsRateTitle = "Savings Rate",
     metricSavingsRateFormula = "(Cash Flow / Income) * 100%",
-    metricSavingsRateDesc = "It is recommended to aim for a savings rate of at least 15-20% of gross household income.",
-    metricSavingsRateSub = "Target benchmark: ≥ 15-20%",
+    metricSavingsRateDesc = "It is recommended to aim for a savings rate above 20% of gross household income.\n\n• Below 0%: Negative indicator (deficit)\n• 0% — 20%: Neutral indicator (moderate)\n• Above 20%: Positive indicator (excellent)",
+    metricSavingsRateSub = "Target benchmark: > 20% (0–20% neutral)",
 
     metricEmergencyFundTitle = "Emergency Fund",
     metricEmergencyFundFormula = "(Liquid Assets)",
@@ -1020,10 +1019,9 @@ val StringsEn = AppStrings(
     scoreOutOfTen = { score -> "$score of 10" },
     savingsRateScoreComment = { rate, sr ->
         when {
-            rate >= 20.0 -> "Recommended at least 15-20%. You maintain an excellent rate ($sr)."
-            rate >= 15.0 -> "Recommended at least 15-20%. You maintain a solid, working rate ($sr)."
-            rate >= 0.0 -> "Recommended at least 15-20%. You have a low rate ($sr)."
-            else -> "Recommended at least 15-20%. You have a negative rate ($sr), budget deficit."
+            rate > 20.0 -> "Recommended above 20%. You maintain an excellent rate ($sr)."
+            rate >= 0.0 -> "Recommended above 20%. You have a low rate ($sr)."
+            else -> "Recommended above 20%. You have a negative rate ($sr), budget deficit."
         }
     },
     safetyMonthsScoreComment = { months, monthsText ->

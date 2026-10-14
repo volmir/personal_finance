@@ -567,4 +567,60 @@ class ExampleUnitTest {
         val realReturnOpinion = (opinion.positive + opinion.neutral + opinion.negative).first { it.id == "real_return" }
         assertEquals(AuditIndicatorStatus.NEGATIVE, realReturnOpinion.status)
     }
+
+    @Test
+    fun testSavingsRateThresholds() {
+        // 1. Меньше 0: негативный показатель
+        val negInput = FinancialInputData(monthlyIncome = 50_000.0, monthlyExpenses = 60_000.0)
+        val negMetrics = FinanceCalculator.calculate(negInput)
+        assertTrue(negMetrics.savingsRate < 0.0)
+        assertEquals(0, negMetrics.scores.savingsRateScore)
+        val negOpinion = AuditorAnalysisGenerator.generate(negInput, negMetrics)
+        val negSr = (negOpinion.positive + negOpinion.neutral + negOpinion.negative).first { it.id == "savings_rate" }
+        assertEquals(AuditIndicatorStatus.NEGATIVE, negSr.status)
+
+        // 2. От 0 до 20: нейтральный показатель (например 8% и 20%)
+        val neutralInput8 = FinancialInputData(monthlyIncome = 100_000.0, monthlyExpenses = 92_000.0)
+        val neutralMetrics8 = FinanceCalculator.calculate(neutralInput8)
+        assertEquals(8.0, neutralMetrics8.savingsRate, 0.01)
+        assertEquals(6, neutralMetrics8.scores.savingsRateScore) // 5..7 диапазон (желтый)
+        val opinion8 = AuditorAnalysisGenerator.generate(neutralInput8, neutralMetrics8)
+        val sr8 = (opinion8.positive + opinion8.neutral + opinion8.negative).first { it.id == "savings_rate" }
+        assertEquals(AuditIndicatorStatus.NEUTRAL, sr8.status)
+
+        val neutralInput20 = FinancialInputData(monthlyIncome = 100_000.0, monthlyExpenses = 80_000.0)
+        val neutralMetrics20 = FinanceCalculator.calculate(neutralInput20)
+        assertEquals(20.0, neutralMetrics20.savingsRate, 0.01)
+        assertEquals(7, neutralMetrics20.scores.savingsRateScore)
+        val opinion20 = AuditorAnalysisGenerator.generate(neutralInput20, neutralMetrics20)
+        val sr20 = (opinion20.positive + opinion20.neutral + opinion20.negative).first { it.id == "savings_rate" }
+        assertEquals(AuditIndicatorStatus.NEUTRAL, sr20.status)
+
+        // 3. Больше 20: позитивный показатель (например 25%)
+        val posInput25 = FinancialInputData(monthlyIncome = 100_000.0, monthlyExpenses = 75_000.0)
+        val posMetrics25 = FinanceCalculator.calculate(posInput25)
+        assertEquals(25.0, posMetrics25.savingsRate, 0.01)
+        assertEquals(8, posMetrics25.scores.savingsRateScore) // 8..10 диапазон (зеленый)
+        val opinion25 = AuditorAnalysisGenerator.generate(posInput25, posMetrics25)
+        val sr25 = (opinion25.positive + opinion25.neutral + opinion25.negative).first { it.id == "savings_rate" }
+        assertEquals(AuditIndicatorStatus.POSITIVE, sr25.status)
+    }
+
+    @Test
+    fun testTotalScoreColorGradation() {
+        // >= 7.0: SuccessGreen
+        assertEquals(com.example.ui.theme.SuccessGreen, com.example.ui.theme.ScoreColorEvaluator.getTotalScoreColor(7.0))
+        assertEquals(com.example.ui.theme.SuccessGreen, com.example.ui.theme.ScoreColorEvaluator.getTotalScoreColor(8.5))
+        assertEquals(com.example.ui.theme.SuccessGreen, com.example.ui.theme.ScoreColorEvaluator.getTotalScoreColor(10.0))
+
+        // 3.5 .. < 7.0: WarningYellow
+        assertEquals(com.example.ui.theme.WarningYellow, com.example.ui.theme.ScoreColorEvaluator.getTotalScoreColor(3.5))
+        assertEquals(com.example.ui.theme.WarningYellow, com.example.ui.theme.ScoreColorEvaluator.getTotalScoreColor(5.0))
+        assertEquals(com.example.ui.theme.WarningYellow, com.example.ui.theme.ScoreColorEvaluator.getTotalScoreColor(6.9))
+
+        // < 3.5: AlertRed
+        assertEquals(com.example.ui.theme.AlertRed, com.example.ui.theme.ScoreColorEvaluator.getTotalScoreColor(3.4))
+        assertEquals(com.example.ui.theme.AlertRed, com.example.ui.theme.ScoreColorEvaluator.getTotalScoreColor(2.0))
+        assertEquals(com.example.ui.theme.AlertRed, com.example.ui.theme.ScoreColorEvaluator.getTotalScoreColor(0.0))
+    }
 }

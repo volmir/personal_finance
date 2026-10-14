@@ -70,6 +70,7 @@ import com.example.data.model.FinancialInputData
 import com.example.domain.AuditorAnalysisGenerator
 import com.example.ui.theme.AlertRed
 import com.example.ui.theme.SuccessGreen
+import com.example.ui.theme.WarningYellow
 import com.example.util.Formatters
 import com.example.util.localization.BreakdownCategory
 import com.example.util.localization.LocalAppLanguage
@@ -191,7 +192,11 @@ fun InputDataScreen(
                     title = strings.savingsRateTitle,
                     formula = strings.savingsRateFormula,
                     value = Formatters.formatPercent(metrics.savingsRate, lang),
-                    valueColor = MaterialTheme.colorScheme.primary
+                    valueColor = when {
+                        metrics.savingsRate > 20.0 -> SuccessGreen
+                        metrics.savingsRate >= 0.0 -> WarningYellow
+                        else -> AlertRed
+                    }
                 )
             }
         }

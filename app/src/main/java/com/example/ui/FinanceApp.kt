@@ -53,7 +53,10 @@ import com.example.ui.screens.AuditScoreScreen
 import com.example.ui.screens.FireRetirementScreen
 import com.example.ui.screens.InputDataScreen
 import com.example.ui.screens.MetricsScreen
+import com.example.ui.theme.AlertRed
+import com.example.ui.theme.ScoreColorEvaluator
 import com.example.ui.theme.SuccessGreen
+import com.example.ui.theme.WarningYellow
 import com.example.util.Formatters
 import com.example.util.localization.LocalAppLanguage
 import com.example.util.localization.LocalAppStrings
@@ -110,18 +113,21 @@ fun FinanceApp(viewModel: MainViewModel) {
                     },
                     actions = {
                         // Quick Score Pill
+                        val totalScore = metrics.scores.totalScore
+                        val totalScoreColor = ScoreColorEvaluator.getTotalScoreColor(totalScore)
+                        val totalScoreBg = ScoreColorEvaluator.getTotalScoreContainerColor(totalScore)
                         Surface(
                             shape = RoundedCornerShape(12.dp),
-                            color = SuccessGreen.copy(alpha = 0.15f),
+                            color = totalScoreBg,
                             modifier = Modifier
                                 .padding(end = 12.dp)
                                 .testTag("topbar_score_badge")
                         ) {
                             Text(
-                                text = "${Formatters.formatScore(metrics.scores.totalScore, lang = appLanguage)} / 10",
+                                text = "${Formatters.formatScore(totalScore, lang = appLanguage)} / 10",
                                 style = MaterialTheme.typography.labelMedium.copy(
                                     fontWeight = FontWeight.Bold,
-                                    color = SuccessGreen
+                                    color = totalScoreColor
                                 ),
                                 modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
                             )

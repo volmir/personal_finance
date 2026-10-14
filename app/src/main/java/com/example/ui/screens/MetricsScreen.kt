@@ -197,8 +197,8 @@ fun MetricsScreen(
                     icon = Icons.Default.Savings,
                     score = metrics.scores.savingsRateScore,
                     highlightColor = when {
-                        metrics.savingsRate >= 30.0 -> SuccessGreen
-                        metrics.savingsRate >= 15.0 -> WarningYellow
+                        metrics.savingsRate > 20.0 -> SuccessGreen
+                        metrics.savingsRate >= 0.0 -> WarningYellow
                         else -> AlertRed
                     },
                     subValue = strings.metricSavingsRateSub

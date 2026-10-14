@@ -244,16 +244,14 @@ object FinanceCalculator {
         debtRatio: Double,
         cfs: Double
     ): FinancialScores {
-        // 1. Savings Rate Score (0..10): In user sample 53.85% -> 8 points
+        // 1. Savings Rate Score (0..10): <0 is negative (red: 0), 0..20 is neutral (yellow: 5..7), >20 is positive (green: 8..10)
         val savingsScore = when {
             savingsRate < 0 -> 0
-            savingsRate < 5.0 -> 2
-            savingsRate < 10.0 -> 3
-            savingsRate < 15.0 -> 5
-            savingsRate < 20.0 -> 6
-            savingsRate < 35.0 -> 7
-            savingsRate < 60.0 -> 8
-            savingsRate < 75.0 -> 9
+            savingsRate < 8.0 -> 5
+            savingsRate < 15.0 -> 6
+            savingsRate <= 20.0 -> 7
+            savingsRate < 35.0 -> 8
+            savingsRate < 50.0 -> 9
             else -> 10
         }
 

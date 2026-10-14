@@ -817,7 +817,7 @@ fun FireRetirementScreen(
                                 )
                             )
                             Text(
-                                text = strings.fireSliderTo("+${Formatters.formatRatio(returnConfig.maxValue.toDouble(), lang)}%"),
+                                text = strings.fireSliderTo("${Formatters.formatRatio(returnConfig.maxValue.toDouble(), lang)}%"),
                                 style = MaterialTheme.typography.labelSmall.copy(
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     fontSize = 10.sp

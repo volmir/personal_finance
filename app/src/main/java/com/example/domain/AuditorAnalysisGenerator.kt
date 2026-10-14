@@ -159,29 +159,17 @@ object AuditorAnalysisGenerator {
         // 2. Норма сбережений
         val savingsRateAnalysis = if (isEn) {
             when {
-                metrics.savingsRate >= 35.0 -> AuditIndicatorAnalysis(
+                metrics.savingsRate > 20.0 -> AuditIndicatorAnalysis(
                     id = "savings_rate",
                     title = "Savings Rate",
                     status = AuditIndicatorStatus.POSITIVE,
-                    text = "✅ Savings Capacity (Savings Rate: ${Formatters.formatPercent(metrics.savingsRate, lang)}): Outstanding level! High savings rate allows exponential wealth compounding."
+                    text = "✅ Savings Capacity (Savings Rate: ${Formatters.formatPercent(metrics.savingsRate, lang)}): High savings rate (above 20%). Provides steady asset accumulation and exponential wealth compounding."
                 )
-                metrics.savingsRate >= 15.0 -> AuditIndicatorAnalysis(
-                    id = "savings_rate",
-                    title = "Savings Rate",
-                    status = AuditIndicatorStatus.POSITIVE,
-                    text = "✅ Savings Capacity (Savings Rate: ${Formatters.formatPercent(metrics.savingsRate, lang)}): Solid working pace (within 15–20% standard). Provides steady asset accumulation."
-                )
-                metrics.savingsRate > 0.0 -> AuditIndicatorAnalysis(
+                metrics.savingsRate >= 0.0 -> AuditIndicatorAnalysis(
                     id = "savings_rate",
                     title = "Savings Rate",
                     status = AuditIndicatorStatus.NEUTRAL,
-                    text = "ℹ️ Savings Capacity (Savings Rate: ${Formatters.formatPercent(metrics.savingsRate, lang)}): Low savings level (under 15%). Wealth formation progresses slowly; expense optimization recommended."
-                )
-                metrics.savingsRate == 0.0 -> AuditIndicatorAnalysis(
-                    id = "savings_rate",
-                    title = "Savings Rate",
-                    status = AuditIndicatorStatus.NEGATIVE,
-                    text = "⚠️ Savings Capacity: Zero free cash flow (income equals expenses). Capital is stagnant and reserves are not replenished."
+                    text = "ℹ️ Savings Capacity (Savings Rate: ${Formatters.formatPercent(metrics.savingsRate, lang)}): Neutral range (0–20%). Capital accumulation proceeds steadily; expense optimization can help reach the >20% target."
                 )
                 else -> AuditIndicatorAnalysis(
                     id = "savings_rate",
@@ -192,35 +180,23 @@ object AuditorAnalysisGenerator {
             }
         } else {
             when {
-                metrics.savingsRate >= 35.0 -> AuditIndicatorAnalysis(
+                metrics.savingsRate > 20.0 -> AuditIndicatorAnalysis(
                     id = "savings_rate",
                     title = "Норма сбережений",
                     status = AuditIndicatorStatus.POSITIVE,
-                    text = "✅ Способность к накоплению (Норма сбережений: ${Formatters.formatPercent(metrics.savingsRate, lang)}): Превосходный уровень! Высокая норма инвестирования денежного потока позволяет экспоненциально наращивать собственный капитал."
+                    text = "✅ Способность к накоплению (Норма сбережений: ${Formatters.formatPercent(metrics.savingsRate, lang)}): Высокий уровень сбережений (более 20%). Обеспечивает стабильное пополнение активов и долгосрочное благосостояние."
                 )
-                metrics.savingsRate >= 15.0 -> AuditIndicatorAnalysis(
-                    id = "savings_rate",
-                    title = "Норма сбережений",
-                    status = AuditIndicatorStatus.POSITIVE,
-                    text = "✅ Способность к накоплению (Норма сбережений: ${Formatters.formatPercent(metrics.savingsRate, lang)}): Здоровый рабочий темп (в рамках стандарта 15–20%). Обеспечивает стабильное регулярное пополнение активов."
-                )
-                metrics.savingsRate > 0.0 -> AuditIndicatorAnalysis(
+                metrics.savingsRate >= 0.0 -> AuditIndicatorAnalysis(
                     id = "savings_rate",
                     title = "Норма сбережений",
                     status = AuditIndicatorStatus.NEUTRAL,
-                    text = "ℹ️ Способность к накоплению (Норма сбережений: ${Formatters.formatPercent(metrics.savingsRate, lang)}): Низкий уровень сбережений (менее 15%). Формирование капитала идет медленно, рекомендуется оптимизировать структуру расходов."
-                )
-                metrics.savingsRate == 0.0 -> AuditIndicatorAnalysis(
-                    id = "savings_rate",
-                    title = "Норма сбережений",
-                    status = AuditIndicatorStatus.NEGATIVE,
-                    text = "⚠️ Способность к накоплению: Нулевой свободный денежный поток (доходы равны расходам). Капитал не прирастает, резервы не пополняются."
+                    text = "ℹ️ Способность к накоплению (Норма сбережений: ${Formatters.formatPercent(metrics.savingsRate, lang)}): Нейтральная зона (0–20%). Формирование капитала идет умеренными темпами; рекомендуется оптимизировать расходы для выхода в зону >20%."
                 )
                 else -> AuditIndicatorAnalysis(
                     id = "savings_rate",
                     title = "Норма сбережений",
                     status = AuditIndicatorStatus.NEGATIVE,
-                    text = "🚨 Способность к накоплению (Норма сбережений: ${Formatters.formatPercent(metrics.savingsRate, lang)}): Отрицательный денежный поток (дефицит бюджета)! Расходы превышают доходы, что ведет к быстрому истощению активов и росту долгов."
+                    text = "🚨 Способность к накоплению (Норма сбережений: ${Formatters.formatPercent(metrics.savingsRate, lang)}): Отрицательный денежный поток (дефицит бюджета)! Расходы превышают доходы, что ведет к истощению активов и росту долгов."
                 )
             }
         }

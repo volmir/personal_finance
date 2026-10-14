@@ -23,7 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ui.theme.AlertRed
 import com.example.ui.theme.SuccessGreen
-import com.example.ui.theme.WarningYellow
+import com.example.ui.theme.ScoreColorEvaluator
 import com.example.util.Formatters
 import com.example.util.localization.LocalAppLanguage
 import com.example.util.localization.LocalAppStrings
@@ -45,11 +45,7 @@ fun ScoreGauge(
         label = "score_progress"
     )
 
-    val scoreColor = when {
-        score >= 8.0 -> SuccessGreen
-        score >= 5.0 -> WarningYellow
-        else -> AlertRed
-    }
+    val scoreColor = ScoreColorEvaluator.getTotalScoreColor(score)
 
     Box(
         contentAlignment = Alignment.Center,
