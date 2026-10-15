@@ -59,11 +59,8 @@ object FinanceCalculator {
         val fidelityMultiplier = calculateFidelityMultiplier(currentAge)
         val fidelityTarget = annualIncome * fidelityMultiplier
 
-        val cfs = if (annualExpenses > 0) {
-            netWorth / annualExpenses
-        } else 0.0
-
-        val cfsStageDescription = getCfsStageDescription(cfs)
+        val cfs = FinancialMetricEvaluator.calculateCfs(netWorth, annualExpenses)
+        val cfsStageDescription = FinancialMetricEvaluator.getCfsStageDescription(cfs)
 
         val nominalRate = input.nominalReturnPercent / 100.0
         val inflRate = input.inflationPercent / 100.0
@@ -215,27 +212,7 @@ object FinanceCalculator {
     }
 
     fun getCfsStageDescription(cfs: Double, lang: com.example.util.localization.AppLanguage = com.example.util.localization.AppLanguage.RU): String {
-        return if (lang == com.example.util.localization.AppLanguage.EN) {
-            when {
-                cfs < 0 -> "CFS < 0 — You are in debt"
-                cfs <= 0.5 -> "CFS 0..0.5 — You have a minimal emergency buffer"
-                cfs <= 2.0 -> "CFS 0.5..2 — You have started building financial capital"
-                cfs <= 5.0 -> "CFS 2..5 — You can begin engaging in long-term investing"
-                cfs <= 15.0 -> "CFS 5..15 — Investment returns provide significant income. Inflation affects capital more"
-                cfs <= 30.0 -> "CFS 15..30 — Solid financial stability. How do you spend your irreplaceable time?"
-                else -> "CFS > 30 — You have achieved financial independence"
-            }
-        } else {
-            when {
-                cfs < 0 -> "КФС < 0 — Вы в долгах"
-                cfs <= 0.5 -> "КФС 0..0,5 — У вас есть минимальная «подушка безопасности»"
-                cfs <= 2.0 -> "КФС 0,5..2 — Вы начали формировать свой финансовый капитал"
-                cfs <= 5.0 -> "КФС 2..5 — Вы можете начать заниматься долгосрочными инвестициями"
-                cfs <= 15.0 -> "КФС 5..15 — Доходы от капитала могут приносить вам существенную прибавку. Инфляция все более значительно влияет на капитал"
-                cfs <= 30.0 -> "КФС 15..30 — Крепкая финансовая стабильность. На что вы тратите свой невосполнимый капитал времени?"
-                else -> "КФС > 30 — Вы достигли финансовой независимости"
-            }
-        }
+        return FinancialMetricEvaluator.getCfsStageDescription(cfs, lang)
     }
 
     fun calculateScores(
@@ -244,49 +221,10 @@ object FinanceCalculator {
         debtRatio: Double,
         cfs: Double
     ): FinancialScores {
-        // 1. Savings Rate Score (0..10): <0 is negative (red: 0), 0..20 is neutral (yellow: 5..7), >20 is positive (green: 8..10)
-        val savingsScore = when {
-            savingsRate < 0 -> 0
-            savingsRate < 8.0 -> 5
-            savingsRate < 15.0 -> 6
-            savingsRate <= 20.0 -> 7
-            savingsRate < 35.0 -> 8
-            savingsRate < 50.0 -> 9
-            else -> 10
-        }
-
-        // 2. Safety Months Score (0..10): In user sample 57.57 -> 10 points
-        val safetyScore = when {
-            safetyMonths < 0.5 -> 0
-            safetyMonths < 1.0 -> 2
-            safetyMonths < 3.0 -> 4
-            safetyMonths < 6.0 -> 7
-            safetyMonths < 12.0 -> 9
-            else -> 10
-        }
-
-        // 3. Debt Ratio Score (0..10): In user sample 0.00 -> 10 points
-        val debtScore = when {
-            debtRatio <= 0.05 -> 10
-            debtRatio <= 0.15 -> 9
-            debtRatio <= 0.30 -> 8
-            debtRatio <= 0.45 -> 7
-            debtRatio <= 0.60 -> 6
-            debtRatio <= 0.80 -> 4
-            debtRatio <= 1.0 -> 2
-            else -> 0
-        }
-
-        // 4. CFS Score (0..10): In user sample 4.80 (2..5 range) -> 6 points
-        val cfsScore = when {
-            cfs < 0 -> 0
-            cfs <= 0.5 -> 2
-            cfs <= 2.0 -> 4
-            cfs <= 5.0 -> 6
-            cfs <= 15.0 -> 8
-            cfs <= 30.0 -> 9
-            else -> 10
-        }
+        val savingsScore = FinancialMetricEvaluator.getSavingsRateScore(savingsRate)
+        val safetyScore = FinancialMetricEvaluator.getSafetyMonthsScore(safetyMonths)
+        val debtScore = FinancialMetricEvaluator.getDebtRatioScore(debtRatio)
+        val cfsScore = FinancialMetricEvaluator.getCfsScore(cfs)
 
         val total = (savingsScore + safetyScore + debtScore + cfsScore) / 4.0
         return FinancialScores(

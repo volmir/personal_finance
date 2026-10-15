@@ -68,6 +68,7 @@ import androidx.compose.ui.unit.sp
 import com.example.data.model.CalculatedMetrics
 import com.example.data.model.FinancialInputData
 import com.example.domain.AuditorAnalysisGenerator
+import com.example.domain.FinancialMetricEvaluator
 import com.example.ui.theme.AlertRed
 import com.example.ui.theme.SuccessGreen
 import com.example.ui.theme.WarningYellow
@@ -182,7 +183,7 @@ fun InputDataScreen(
                     title = strings.cashFlowTitle,
                     formula = strings.cashFlowFormula,
                     value = Formatters.formatMoney(metrics.cashFlow, inputData.currencySymbol, lang),
-                    valueColor = if (metrics.cashFlow >= 0) SuccessGreen else AlertRed
+                    valueColor = FinancialMetricEvaluator.getCashFlowColor(metrics.cashFlow)
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -192,11 +193,7 @@ fun InputDataScreen(
                     title = strings.savingsRateTitle,
                     formula = strings.savingsRateFormula,
                     value = Formatters.formatPercent(metrics.savingsRate, lang),
-                    valueColor = when {
-                        metrics.savingsRate > 20.0 -> SuccessGreen
-                        metrics.savingsRate >= 0.0 -> WarningYellow
-                        else -> AlertRed
-                    }
+                    valueColor = FinancialMetricEvaluator.getSavingsRateColor(metrics.savingsRate)
                 )
             }
         }
@@ -317,11 +314,7 @@ fun InputDataScreen(
                     title = strings.netWorthTitle,
                     formula = strings.netWorthFormula,
                     value = Formatters.formatMoney(metrics.netWorth, inputData.currencySymbol, lang),
-                    valueColor = when {
-                        metrics.netWorth > 0 -> MaterialTheme.colorScheme.primary
-                        metrics.netWorth == 0.0 -> Color(0xFFF59E0B)
-                        else -> AlertRed
-                    }
+                    valueColor = FinancialMetricEvaluator.getNetWorthColor(metrics.netWorth)
                 )
             }
         }
@@ -357,6 +350,15 @@ fun InputDataScreen(
                     }
                 }
 
+                CategoryBreakdownHint(
+                    metricName = strings.investmentsBreakdownName,
+                    hintCollapsed = strings.investmentsHintCollapsed,
+                    hintExpanded = strings.investmentsHintExpanded,
+                    instruction = strings.breakdownInstruction,
+                    categories = strings.investmentsCategories,
+                    modifier = Modifier.padding(top = 6.dp)
+                )
+
                 Spacer(modifier = Modifier.height(12.dp))
 
                 // Шаблон отображения "Реальная доходность капитала"
@@ -364,11 +366,7 @@ fun InputDataScreen(
                     title = strings.realReturnTitle,
                     formula = strings.realReturnFormula,
                     value = Formatters.formatPercent(metrics.realReturnPercent, lang),
-                    valueColor = when {
-                        metrics.realReturnPercent > 0 -> SuccessGreen
-                        metrics.realReturnPercent == 0.0 -> Color(0xFFF59E0B)
-                        else -> AlertRed
-                    }
+                    valueColor = FinancialMetricEvaluator.getRealReturnColor(metrics.realReturnPercent)
                 )
             }
         }
@@ -416,6 +414,15 @@ fun InputDataScreen(
                             .testTag("input_life_expectancy")
                     )
                 }
+
+                CategoryBreakdownHint(
+                    metricName = strings.fireHorizonBreakdownName,
+                    hintCollapsed = strings.fireHorizonHintCollapsed,
+                    hintExpanded = strings.fireHorizonHintExpanded,
+                    instruction = strings.breakdownInstruction,
+                    categories = strings.fireHorizonCategories,
+                    modifier = Modifier.padding(top = 6.dp)
+                )
 
                 Spacer(modifier = Modifier.height(12.dp))
 

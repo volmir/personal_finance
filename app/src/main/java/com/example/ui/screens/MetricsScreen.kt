@@ -44,6 +44,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.CalculatedMetrics
 import com.example.data.model.FinancialInputData
+import com.example.domain.FinancialMetricEvaluator
 import com.example.ui.components.MetricCard
 import com.example.ui.theme.AccentGold
 import com.example.ui.theme.AccentTeal
@@ -180,7 +181,7 @@ fun MetricsScreen(
                     formula = strings.metricCashFlowFormula,
                     description = strings.metricCashFlowDesc,
                     icon = Icons.Default.MonetizationOn,
-                    highlightColor = if (metrics.cashFlow >= 0) SuccessGreen else AlertRed,
+                    highlightColor = FinancialMetricEvaluator.getCashFlowColor(metrics.cashFlow),
                     subValue = if (metrics.cashFlow >= 0) strings.metricCashFlowPositiveSub else strings.metricCashFlowNegativeSub
                 )
             }
@@ -196,11 +197,7 @@ fun MetricsScreen(
                     description = strings.metricSavingsRateDesc,
                     icon = Icons.Default.Savings,
                     score = metrics.scores.savingsRateScore,
-                    highlightColor = when {
-                        metrics.savingsRate > 20.0 -> SuccessGreen
-                        metrics.savingsRate >= 0.0 -> WarningYellow
-                        else -> AlertRed
-                    },
+                    highlightColor = FinancialMetricEvaluator.getSavingsRateColor(metrics.savingsRate),
                     subValue = strings.metricSavingsRateSub
                 )
             }
@@ -231,11 +228,7 @@ fun MetricsScreen(
                     description = strings.metricSafetyMonthsDesc,
                     icon = Icons.Default.AvTimer,
                     score = metrics.scores.safetyMonthsScore,
-                    highlightColor = when {
-                        metrics.safetyMonths >= 12.0 -> SuccessGreen
-                        metrics.safetyMonths >= 3.0 -> WarningYellow
-                        else -> AlertRed
-                    },
+                    highlightColor = FinancialMetricEvaluator.getSafetyMonthsColor(metrics.safetyMonths),
                     subValue = strings.metricSafetyMonthsSub
                 )
             }
@@ -251,11 +244,7 @@ fun MetricsScreen(
                     description = strings.metricDebtRatioDesc,
                     icon = Icons.Default.AccountBalanceWallet,
                     score = metrics.scores.debtRatioScore,
-                    highlightColor = when {
-                        metrics.debtRatio <= 0.3 -> SuccessGreen
-                        metrics.debtRatio <= 0.6 -> WarningYellow
-                        else -> AlertRed
-                    },
+                    highlightColor = FinancialMetricEvaluator.getDebtRatioColor(metrics.debtRatio),
                     subValue = if (metrics.debtRatio <= 0.3) strings.metricDebtRatioLowSub else strings.metricDebtRatioHighSub
                 )
             }
@@ -270,11 +259,7 @@ fun MetricsScreen(
                     formula = strings.metricNetWorthFormula,
                     description = strings.metricNetWorthDesc,
                     icon = Icons.Default.AccountBalance,
-                    highlightColor = when {
-                        metrics.netWorth > 0 -> SuccessGreen
-                        metrics.netWorth == 0.0 -> WarningYellow
-                        else -> AlertRed
-                    },
+                    highlightColor = FinancialMetricEvaluator.getNetWorthColor(metrics.netWorth),
                     subValue = if (metrics.netWorth >= 0) {
                         "${strings.metricNetWorthSubPrefix}: ${Formatters.formatMoney(metrics.totalAssets, inputData.currencySymbol, lang)}"
                     } else {
@@ -347,13 +332,8 @@ fun MetricsScreen(
                     description = strings.metricCfsDesc,
                     icon = Icons.Default.CompassCalibration,
                     score = metrics.scores.cfsScore,
-                    highlightColor = when {
-                        metrics.financialFreedomRatio < 0 -> AlertRed
-                        metrics.financialFreedomRatio <= 2.0 -> WarningYellow
-                        metrics.financialFreedomRatio <= 15.0 -> AccentTeal
-                        else -> SuccessGreen
-                    },
-                    subValue = com.example.domain.FinanceCalculator.getCfsStageDescription(metrics.financialFreedomRatio, lang)
+                    highlightColor = FinancialMetricEvaluator.getCfsColor(metrics.financialFreedomRatio),
+                    subValue = FinancialMetricEvaluator.getCfsStageDescription(metrics.financialFreedomRatio, lang)
                 )
             }
         }
@@ -367,11 +347,7 @@ fun MetricsScreen(
                     formula = strings.metricRealReturnFormula,
                     description = strings.metricRealReturnDesc,
                     icon = Icons.Default.Percent,
-                    highlightColor = when {
-                        metrics.realReturnPercent > 0 -> SuccessGreen
-                        metrics.realReturnPercent == 0.0 -> WarningYellow
-                        else -> AlertRed
-                    },
+                    highlightColor = FinancialMetricEvaluator.getRealReturnColor(metrics.realReturnPercent),
                     subValue = strings.metricRealReturnSubFormat(
                         Formatters.formatPercent(inputData.nominalReturnPercent, lang),
                         Formatters.formatPercent(inputData.inflationPercent, lang)

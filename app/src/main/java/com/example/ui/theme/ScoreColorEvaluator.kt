@@ -14,14 +14,8 @@ object ScoreColorEvaluator {
     const val TOTAL_SCORE_GREEN_MIN = 7.0
     const val TOTAL_SCORE_YELLOW_MIN = 3.5
 
-    /**
-     * Возвращает цвет для итогового суммирующего показателя (overall total score).
-     */
-    fun getTotalScoreColor(score: Double): Color = when {
-        score >= TOTAL_SCORE_GREEN_MIN -> SuccessGreen
-        score >= TOTAL_SCORE_YELLOW_MIN -> WarningYellow
-        else -> AlertRed
-    }
+    fun getTotalScoreColor(score: Double): Color =
+        com.example.domain.FinancialMetricEvaluator.getTotalScoreColor(score)
 
     /**
      * Возвращает полупрозрачный цвет фона для плашки итогового суммирующего показателя.

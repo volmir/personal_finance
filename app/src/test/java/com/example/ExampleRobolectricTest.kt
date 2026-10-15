@@ -17,7 +17,7 @@ class ExampleRobolectricTest {
   fun `read russian string from context`() {
     val context = ApplicationProvider.getApplicationContext<Context>()
     val appName = context.getString(R.string.app_name)
-    assertEquals("Личные финансы", appName)
+    assertEquals("Личные финансы & FIRE аудит", appName)
   }
 
   @Test
@@ -25,6 +25,6 @@ class ExampleRobolectricTest {
   fun `read english string from context`() {
     val context = ApplicationProvider.getApplicationContext<Context>()
     val appName = context.getString(R.string.app_name)
-    assertEquals("Personal Finance", appName)
+    assertEquals("Personal Finance & FIRE Audit", appName)
   }
 }

@@ -50,6 +50,7 @@ import com.example.data.model.CalculatedMetrics
 import com.example.data.model.FinancialInputData
 import com.example.domain.AuditIndicatorStatus
 import com.example.domain.AuditorAnalysisGenerator
+import com.example.domain.FinancialMetricEvaluator
 import com.example.ui.components.ScoreGauge
 import com.example.ui.theme.AccentGold
 import com.example.ui.theme.AlertRed
@@ -579,11 +580,7 @@ fun ScoreItemCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                val scoreColor = when {
-                    score >= 8 -> SuccessGreen
-                    score >= 5 -> WarningYellow
-                    else -> AlertRed
-                }
+                val scoreColor = FinancialMetricEvaluator.getComponentScoreColor(score)
 
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
@@ -621,11 +618,7 @@ fun ScoreItemCard(
 
             LinearProgressIndicator(
                 progress = { (score / 10f).coerceIn(0f, 1f) },
-                color = when {
-                    score >= 8 -> SuccessGreen
-                    score >= 5 -> WarningYellow
-                    else -> AlertRed
-                },
+                color = FinancialMetricEvaluator.getComponentScoreColor(score),
                 trackColor = MaterialTheme.colorScheme.surface,
                 strokeCap = StrokeCap.Round,
                 modifier = Modifier
