@@ -729,8 +729,8 @@ val StringsRu: AppStrings = object : AppStrings {
     override val fireSliderFrom: (v: String) -> String = { v -> "от $v" }
     override val fireSliderStep: (v: String) -> String = { v -> "шаг $v" }
     override val fireSliderTo: (v: String) -> String = { v -> "до +${v.trim().trimStart('+')}" }
-    override val fireSliderInc: String = " (рост)"
-    override val fireSliderDec: String = " (сниж.)"
+    override val fireSliderInc: String = "рост"
+    override val fireSliderDec: String = "сниж."
 
     override val scenarioHeaderTitle: String = "Панель сценариев (стресс-тесты)"
     override val scenarioHeaderSubtitle: String = "Результат влияния разных ползунков и чекбоксов суммируется (накапливается и рассчитывается совместно). Итоговый результат отражается в числах и на графике:"
@@ -792,8 +792,8 @@ val StringsRu: AppStrings = object : AppStrings {
     override val scenarioLargeExpenseDesc: (amt: String) -> String = { amt -> "Трата $amt (покрытие из ликвидных и фин. активов)" }
 
     override val scenarioInflationTitle: String = "Рост инфляции"
-    override val scenarioInflationParam: String = "+20% к расходам"
-    override val scenarioInflationDesc: (amt: String) -> String = { amt -> "Рост стоимости жизни: +$amt/мес." }
+    override val scenarioInflationParam: String = "+5% к инфляции"
+    override val scenarioInflationDesc: (rate: String) -> String = { rate -> "Инфляция возрастает до $rate (снижает реальную доходность капитала)" }
 
     override val scenarioChildTitle: String = "Рождение ребенка"
     override val scenarioChildParam: String = "+25% к расходам на 18 лет"
@@ -1224,8 +1224,8 @@ val StringsEn: AppStrings = object : AppStrings {
     override val fireSliderFrom: (v: String) -> String = { v -> "from $v" }
     override val fireSliderStep: (v: String) -> String = { v -> "step $v" }
     override val fireSliderTo: (v: String) -> String = { v -> "up to +${v.trim().trimStart('+')}" }
-    override val fireSliderInc: String = " (growth)"
-    override val fireSliderDec: String = " (red.)"
+    override val fireSliderInc: String = "growth"
+    override val fireSliderDec: String = "red."
 
     override val scenarioHeaderTitle: String = "Scenario Panel (Stress Tests)"
     override val scenarioHeaderSubtitle: String = "The collective impact of sliders and checkboxes accumulates and is calculated together. The final result reflects in numbers and on the trajectory chart:"
@@ -1287,8 +1287,8 @@ val StringsEn: AppStrings = object : AppStrings {
     override val scenarioLargeExpenseDesc: (amt: String) -> String = { amt -> "Outflow of $amt (covered from liquid and financial assets)" }
 
     override val scenarioInflationTitle: String = "Inflation Surge"
-    override val scenarioInflationParam: String = "+20% to expenses"
-    override val scenarioInflationDesc: (amt: String) -> String = { amt -> "Cost of living increase: +$amt/mo." }
+    override val scenarioInflationParam: String = "+5% to inflation"
+    override val scenarioInflationDesc: (rate: String) -> String = { rate -> "Inflation increases to $rate (reduces real return on capital)" }
 
     override val scenarioChildTitle: String = "Child Birth"
     override val scenarioChildParam: String = "+25% to expenses for 18 yrs"

@@ -61,7 +61,7 @@ data class FireScenarioToggles(
     val mortgage20Years35Income: Boolean = false,   // 3. Ипотека на квартиру: 35% от ежемесячного дохода на период 20 лет
     val carLoan5Years: Boolean = false,             // 4. Автомобиль в кредит: ежемесячные расходы +20% на 5 лет
     val largeOneOffExpense500: Boolean = false,     // 5. Крупная разовая трата: расход 500% мес. дохода (покрытие из активов)
-    val inflation20Expenses: Boolean = false,       // 6. Рост инфляции: +20% к расходам
+    val inflation5Percent: Boolean = false,         // 6. Рост инфляции: +5% к инфляции
     val childOrDependent18Years: Boolean = false    // 7. Рождение ребенка: +25% к расходам на период в 18 лет
 ) {
     // Backward compatibility aliases
@@ -69,7 +69,8 @@ data class FireScenarioToggles(
     val mortgage: Boolean get() = mortgage20Years35Income
     val carLoan4Years: Boolean get() = carLoan5Years
     val consumerLoan200: Boolean get() = carLoan5Years
-    val inflation25Expenses: Boolean get() = inflation20Expenses
+    val inflation20Expenses: Boolean get() = inflation5Percent
+    val inflation25Expenses: Boolean get() = inflation5Percent
     val childOrDependent25: Boolean get() = childOrDependent18Years
 
     val positiveActiveCount: Int
@@ -90,7 +91,7 @@ data class FireScenarioToggles(
             mortgage20Years35Income,
             carLoan5Years,
             largeOneOffExpense500,
-            inflation20Expenses,
+            inflation5Percent,
             childOrDependent18Years
         ).count { it }
 
@@ -231,7 +232,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             "mortgage", "mortgage_20_years", "mortgage_72" -> current.copy(mortgage20Years35Income = !current.mortgage20Years35Income)
             "consumer_loan", "car_loan" -> current.copy(carLoan5Years = !current.carLoan5Years)
             "large_expense" -> current.copy(largeOneOffExpense500 = !current.largeOneOffExpense500)
-            "inflation_expense", "inflation_20" -> current.copy(inflation20Expenses = !current.inflation20Expenses)
+            "inflation", "inflation_5", "inflation_expense", "inflation_20" -> current.copy(inflation5Percent = !current.inflation5Percent)
             "child_dependent", "child_18_years" -> current.copy(childOrDependent18Years = !current.childOrDependent18Years)
             else -> current
         }
@@ -283,11 +284,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         val totalPositiveLumpSum = inheritanceAmount + propertySaleAmount
 
         // 4. Постоянные ежемесячные расходы:
-        // Негативное: Рост инфляции (+20%)
         // Позитивное: Оптимизация расходов (-15%)
         // Позитивное: Переезд в регион с более низкой стоимостью (-30%)
         var ongoingExpenseMultiplier = 1.0
-        if (sc.inflation20Expenses) ongoingExpenseMultiplier += 0.20
         if (sc.expenseOptimization15) ongoingExpenseMultiplier -= 0.15
         if (sc.relocationLowerCost30) ongoingExpenseMultiplier -= 0.30
         val baseOngoingExpenses = baseInput.monthlyExpenses * ongoingExpenseMultiplier.coerceAtLeast(0.10)
@@ -383,15 +382,21 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         // 8. Долги: непокрытая часть разовой траты (ипотека учитывается как аннуитетный платеж 35% дохода на 20 лет)
         val effectiveLiabilities = baseInput.liabilities + uncoveredExpenseDebt
 
-        // 9. Реальная доходность капитала (3-й ползунок)
+        // 9. Инфляция и реальная доходность капитала (3-й ползунок + стресс-тест инфляции):
+        // Негативное 6: Рост инфляции (+5% к инфляции)
+        val effectiveInflationPercent = baseInput.inflationPercent + (if (sc.inflation5Percent) 5.0 else 0.0)
+        val effInfl = effectiveInflationPercent / 100.0
         val baseNominal = baseInput.nominalReturnPercent / 100.0
-        val baseInfl = baseInput.inflationPercent / 100.0
-        val baseRealReturn = if (baseInfl != -1.0) {
-            ((1.0 + baseNominal) / (1.0 + baseInfl) - 1.0)
+
+        // Базовая реальная доходность с учетом эффекта стресс-теста инфляции (+5%)
+        val baseRealReturn = if (effInfl != -1.0) {
+            ((1.0 + baseNominal) / (1.0 + effInfl) - 1.0)
         } else 0.0
+
+        // Целевая реальная доходность с учетом ползунка настройки realReturnAdjustment
         val targetRealReturn = baseRealReturn + (sim.realReturnAdjustment / 100.0)
-        val effectiveNominal = if (baseInfl != -1.0) {
-            ((1.0 + targetRealReturn) * (1.0 + baseInfl) - 1.0) * 100.0
+        val effectiveNominal = if (effInfl != -1.0) {
+            ((1.0 + targetRealReturn) * (1.0 + effInfl) - 1.0) * 100.0
         } else {
             baseInput.nominalReturnPercent + sim.realReturnAdjustment
         }
@@ -402,6 +407,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             liquidAssets = effLiquidAssets,
             financialAssets = effFinAssets,
             liabilities = effectiveLiabilities,
+            inflationPercent = effectiveInflationPercent,
             nominalReturnPercent = effectiveNominal
         )
 

@@ -662,14 +662,13 @@ fun FireRetirementScreen(
                                         Text(
                                             text = buildString {
                                                 append(if (netExpChange > 0) "+" else "")
-                                                append(Formatters.formatMoney(netExpChange, inputData.currencySymbol, lang))
-                                                append(" (${if (isReduced) strings.fireSliderDec else strings.fireSliderInc})")
+                                                val decOrInc = (if (isReduced) strings.fireSliderDec else strings.fireSliderInc).trim(' ', '(', ')')
+                                                append(" ($decOrInc)")
                                                 val factors = mutableListOf<String>()
                                                 if (simulationState.scenarios.expenseOptimization15) factors.add(strings.scenarioExpenseOptTitle.lowercase())
                                                 if (simulationState.scenarios.relocationLowerCost30) factors.add(strings.scenarioRelocationTitle.lowercase())
                                                 if (simulationState.scenarios.mortgage20Years35Income) factors.add(strings.scenarioMortgageTitle.lowercase())
                                                 if (simulationState.scenarios.carLoan5Years) factors.add(strings.scenarioCarLoanTitle.lowercase())
-                                                if (simulationState.scenarios.inflation20Expenses) factors.add(strings.scenarioInflationTitle.lowercase())
                                                 if (simulationState.scenarios.childOrDependent18Years) factors.add(strings.scenarioChildTitle.lowercase())
                                                 if (simulationState.expenseReduction != 0.0) {
                                                     val red = simulationState.expenseReduction
@@ -722,7 +721,7 @@ fun FireRetirementScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "${Formatters.formatMoney(expensesConfig.minValue.toDouble(), inputData.currencySymbol, lang)} (${strings.fireSliderInc})",
+                                text = "${Formatters.formatMoney(expensesConfig.minValue.toDouble(), inputData.currencySymbol, lang)} (${strings.fireSliderInc.trim(' ', '(', ')')})",
                                 style = MaterialTheme.typography.labelSmall.copy(
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     fontSize = 10.sp
@@ -737,7 +736,7 @@ fun FireRetirementScreen(
                                 )
                             )
                             Text(
-                                text = "+${Formatters.formatMoney(expensesConfig.maxValue.toDouble(), inputData.currencySymbol, lang)} (${strings.fireSliderDec})",
+                                text = "+${Formatters.formatMoney(expensesConfig.maxValue.toDouble(), inputData.currencySymbol, lang)} (${strings.fireSliderDec.trim(' ', '(', ')')})",
                                 style = MaterialTheme.typography.labelSmall.copy(
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     fontSize = 10.sp
@@ -760,11 +759,21 @@ fun FireRetirementScreen(
                                     text = strings.fireSliderReturn,
                                     style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium)
                                 )
-                                if (simulationState.realReturnAdjustment != 0.0) {
+                                val returnDiff = currentEffectiveReturn - metrics.realReturnPercent
+                                if (kotlin.math.abs(returnDiff) > 0.005) {
+                                    val isGain = returnDiff > 0
                                     Text(
-                                        text = "${if (simulationState.realReturnAdjustment > 0) "+" else ""}${Formatters.formatRatio(simulationState.realReturnAdjustment, lang)}% ${strings.fireSliderBaseReturnSuffix}",
+                                        text = buildString {
+                                            append(if (isGain) "+" else "")
+                                            append(Formatters.formatRatio(returnDiff, lang))
+                                            append("% ${strings.fireSliderBaseReturnSuffix}")
+                                            if (simulationState.scenarios.inflation5Percent) {
+                                                append(" • ")
+                                                append(strings.scenarioInflationTitle.lowercase())
+                                            }
+                                        },
                                         style = MaterialTheme.typography.labelSmall.copy(
-                                            color = MaterialTheme.colorScheme.primary,
+                                            color = if (isGain) SuccessGreen else AlertRed,
                                             fontSize = 10.sp
                                         )
                                     )

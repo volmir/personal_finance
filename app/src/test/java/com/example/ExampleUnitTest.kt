@@ -195,10 +195,11 @@ class ExampleUnitTest {
         val largeExpenseMetrics = FinanceCalculator.calculate(largeExpenseInput)
         assertTrue(largeExpenseMetrics.yearsToRetirement > baseMetrics.yearsToRetirement)
 
-        // 6. Рост инфляции (+20% к расходам)
-        val inflationInput = baseInput.copy(monthlyExpenses = baseInput.monthlyExpenses * 1.20)
+        // 6. Рост инфляции (+5% к инфляции)
+        val inflationInput = baseInput.copy(inflationPercent = baseInput.inflationPercent + 5.0)
         val inflationMetrics = FinanceCalculator.calculate(inflationInput)
         assertTrue(inflationMetrics.yearsToRetirement > baseMetrics.yearsToRetirement)
+        assertTrue(inflationMetrics.realReturnPercent < baseMetrics.realReturnPercent)
 
         // 7. Рождение ребенка (+25% на 18 лет)
         val childAnnual = baseInput.monthlyExpenses * 0.25 * 12.0
@@ -209,8 +210,11 @@ class ExampleUnitTest {
         )
         assertTrue(childMetrics.yearsToRetirement > baseMetrics.yearsToRetirement)
 
-        // Кумулятивное совместное влияние: Рост инфляции (+20%) + Ребёнок (+25% на 18 лет)
-        val combinedExpensesInput = baseInput.copy(monthlyExpenses = baseInput.monthlyExpenses * 1.45)
+        // Кумулятивное совместное влияние: Рост инфляции (+5%) + Ребёнок (+25% на 18 лет)
+        val combinedExpensesInput = baseInput.copy(
+            monthlyExpenses = baseInput.monthlyExpenses * 1.25,
+            inflationPercent = baseInput.inflationPercent + 5.0
+        )
         val combinedExpensesMetrics = FinanceCalculator.calculate(
             combinedExpensesInput,
             listOf(com.example.domain.TemporaryExpense(annualAmount = childAnnual, durationYears = 18.0))
@@ -622,5 +626,70 @@ class ExampleUnitTest {
         assertEquals(com.example.ui.theme.AlertRed, com.example.ui.theme.ScoreColorEvaluator.getTotalScoreColor(3.4))
         assertEquals(com.example.ui.theme.AlertRed, com.example.ui.theme.ScoreColorEvaluator.getTotalScoreColor(2.0))
         assertEquals(com.example.ui.theme.AlertRed, com.example.ui.theme.ScoreColorEvaluator.getTotalScoreColor(0.0))
+    }
+
+    @Test
+    fun testSimulatorSliderLabelsNoDuplicateParentheses() {
+        val ru = com.example.util.localization.StringsRu
+        val en = com.example.util.localization.StringsEn
+
+        // Проверяем русские строки: чистые слова без скобок и пробелов
+        assertEquals("рост", ru.fireSliderInc)
+        assertEquals("сниж.", ru.fireSliderDec)
+        assertFalse(ru.fireSliderInc.contains("("))
+        assertFalse(ru.fireSliderInc.contains(")"))
+        assertFalse(ru.fireSliderDec.contains("("))
+        assertFalse(ru.fireSliderDec.contains(")"))
+        assertEquals(ru.fireSliderInc.trim(), ru.fireSliderInc)
+        assertEquals(ru.fireSliderDec.trim(), ru.fireSliderDec)
+
+        // Проверяем английские строки: чистые слова без скобок и пробелов
+        assertEquals("growth", en.fireSliderInc)
+        assertEquals("red.", en.fireSliderDec)
+        assertFalse(en.fireSliderInc.contains("("))
+        assertFalse(en.fireSliderInc.contains(")"))
+        assertFalse(en.fireSliderDec.contains("("))
+        assertFalse(en.fireSliderDec.contains(")"))
+        assertEquals(en.fireSliderInc.trim(), en.fireSliderInc)
+        assertEquals(en.fireSliderDec.trim(), en.fireSliderDec)
+
+        // Проверяем форматирование "до +"
+        assertEquals("до +10,50%", ru.fireSliderTo("10,50%"))
+        assertEquals("до +10,50%", ru.fireSliderTo("+10,50%"))
+        assertEquals("up to +10.50%", en.fireSliderTo("10.50%"))
+        assertEquals("up to +10.50%", en.fireSliderTo("+10.50%"))
+    }
+
+    @Test
+    fun testInflationScenario5PercentLogic() {
+        val ru = com.example.util.localization.StringsRu
+        val en = com.example.util.localization.StringsEn
+
+        assertEquals("+5% к инфляции", ru.scenarioInflationParam)
+        assertEquals("+5% to inflation", en.scenarioInflationParam)
+        assertTrue(ru.scenarioInflationDesc("13,0%").contains("13,0%"))
+        assertTrue(en.scenarioInflationDesc("13.0%").contains("13.0%"))
+
+        // Базовые параметры: 12% доходность, 8% инфляция
+        val baseInput = FinancialInputData(
+            monthlyIncome = 100_000.0,
+            monthlyExpenses = 50_000.0,
+            nominalReturnPercent = 12.0,
+            inflationPercent = 8.0
+        )
+        val baseMetrics = FinanceCalculator.calculate(baseInput)
+        // (1 + 0.12) / (1 + 0.08) - 1 = 1.12 / 1.08 - 1 = +3.7037%
+        assertEquals(3.70, baseMetrics.realReturnPercent, 0.02)
+
+        // Стресс-тест инфляции (+5%): инфляция становится 13%
+        val stressInput = baseInput.copy(inflationPercent = baseInput.inflationPercent + 5.0)
+        val stressMetrics = FinanceCalculator.calculate(stressInput)
+        // Расходы не должны увеличиваться (+20% удалено)
+        assertEquals(baseInput.monthlyExpenses, stressInput.monthlyExpenses, 0.01)
+        assertEquals(baseMetrics.cashFlow, stressMetrics.cashFlow, 0.01)
+
+        // (1 + 0.12) / (1 + 0.13) - 1 = 1.12 / 1.13 - 1 = -0.885%
+        assertEquals(-0.88, stressMetrics.realReturnPercent, 0.02)
+        assertTrue(stressMetrics.yearsToRetirement > baseMetrics.yearsToRetirement)
     }
 }

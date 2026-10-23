@@ -226,15 +226,15 @@ fun ScenarioTogglesPanel(
             isPositive = false
         ),
         ScenarioItemData(
-            id = "inflation_expense",
+            id = "inflation",
             number = 6,
             title = strings.scenarioInflationTitle,
             parametersText = strings.scenarioInflationParam,
             description = strings.scenarioInflationDesc(
-                Formatters.formatMoney(inputData.monthlyExpenses * 0.20, inputData.currencySymbol, lang)
+                Formatters.formatPercent(inputData.inflationPercent + 5.0, lang)
             ),
             icon = Icons.Default.TrendingUp,
-            isChecked = scenarios.inflation20Expenses,
+            isChecked = scenarios.inflation5Percent,
             isPositive = false
         ),
         ScenarioItemData(
