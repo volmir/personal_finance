@@ -510,20 +510,22 @@ val StringsRu: AppStrings = object : AppStrings {
         BreakdownCategory(
             title = "Номинальная доходность капитала (% годовых)",
             items = listOf(
-                "Средневзвешенная доходность всего вашего инвестпортфеля",
+                "Средневзвешенная доходность всего вашего инвестиционного портфеля",
                 "Проценты по банковским вкладам и накопительным счетам",
                 "Купоны по облигациям и ожидаемые дивиденды по акциям",
-                "Доходность от сдачи недвижимости или оборудования в аренду",
-                "Консервативный ориентир: 8–14% в национальной валюте"
+                "Чистый арендный доход от сдачи недвижимости или оборудования",
+                "Ориентир для развитых стран (США, ЕС и др.): 6–9% в твердой валюте",
+                "Ориентир для развивающихся рынков: 10–16% в национальной валюте"
             )
         ),
         BreakdownCategory(
             title = "Ожидаемая среднегодовая инфляция (% годовых)",
             items = listOf(
-                "Официальный прогноз ЦБ и целевой уровень инфляции",
-                "Личная инфляция по вашей структуре регулярных трат",
-                "Историческая инфляция за последние 5–10 лет",
-                "Консервативный долгосрочный ориентир: 5–8% в рублях или 2–4% в твердой валюте"
+                "Официальные ориентиры центральных банков и финансовых регуляторов",
+                "Личная потребительская инфляция по вашей структуре регулярных трат",
+                "Историческая средняя инфляция за последние 5–10 лет",
+                "Ориентир для развитых стран: 2–3% в год (исторически 2–4%)",
+                "Ориентир для развивающихся рынков: в среднем 5–9% в год"
             )
         ),
         BreakdownCategory(
@@ -531,7 +533,8 @@ val StringsRu: AppStrings = object : AppStrings {
             items = listOf(
                 "Формула: ((1 + Номинальная доходность) / (1 + Инфляция) - 1) * 100%",
                 "Очищенный от инфляции прирост реальной покупательной способности",
-                "Значение выше 0% защищает деньги от обесценивания и приумножает богатство"
+                "Типовой ориентир реальной доходности: 3–5% для развитых стран и 3–6% для развивающихся рынков",
+                "Положительное значение (> 0%) приумножает богатство и защищает от обесценивания"
             )
         )
     )
@@ -1006,27 +1009,30 @@ val StringsEn: AppStrings = object : AppStrings {
             title = "Nominal Capital Return (% p.a.)",
             items = listOf(
                 "Weighted average expected return of your total investment portfolio",
-                "Interest yields from savings accounts and bank deposits",
+                "Interest yields from bank deposits and savings accounts",
                 "Bond coupons and anticipated stock dividend yields",
                 "Net rental yield from real estate or leased equipment",
-                "Conservative baseline target: 7–12% in local currency or 5–9% in USD/EUR"
+                "Developed markets benchmark (US, EU, etc.): 6–9% in hard currency",
+                "Emerging markets benchmark: 10–16% in local national currency"
             )
         ),
         BreakdownCategory(
             title = "Expected Annual Inflation (% p.a.)",
             items = listOf(
-                "Central Bank official inflation forecast and medium-term target",
+                "Central banks' official targets and economic forecasts",
                 "Personal household inflation based on your living expenditure basket",
                 "Historical average inflation rate over the past 5–10 years",
-                "Conservative long-term baseline: 2–4% in hard currency (USD/EUR) or 4–7% in emerging markets"
+                "Developed markets benchmark: 2–3% annually (historically 2–4%)",
+                "Emerging markets benchmark: typically 5–9% annually"
             )
         ),
         BreakdownCategory(
             title = "Real Capital Return (Fisher Equation)",
             items = listOf(
                 "Formula: ((1 + Nominal Return) / (1 + Inflation) - 1) * 100%",
-                "Inflation-adjusted purchasing power expansion rate",
-                "A positive rate (> 0%) protects wealth against depreciation and fuels growth"
+                "Inflation-adjusted growth of real purchasing power",
+                "Typical real return benchmark: 3–5% p.a. for developed markets and 3–6% for emerging markets",
+                "A positive rate (> 0%) protects wealth against depreciation and grows capital"
             )
         )
     )

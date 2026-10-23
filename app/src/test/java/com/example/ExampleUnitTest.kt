@@ -692,4 +692,24 @@ class ExampleUnitTest {
         assertEquals(-0.88, stressMetrics.realReturnPercent, 0.02)
         assertTrue(stressMetrics.yearsToRetirement > baseMetrics.yearsToRetirement)
     }
+
+    @Test
+    fun testInvestmentsCategoriesDevelopedAndEmergingBenchmarks() {
+        val ru = com.example.util.localization.StringsRu
+        val en = com.example.util.localization.StringsEn
+
+        val ruAllText = ru.investmentsCategories.flatMap { it.items }.joinToString(" ")
+        val enAllText = en.investmentsCategories.flatMap { it.items }.joinToString(" ")
+
+        // Проверяем наличие ориентиров для развитых и развивающихся стран
+        assertTrue(ruAllText.contains("развитых стран"))
+        assertTrue(ruAllText.contains("развивающихся рынков"))
+        assertTrue(enAllText.contains("Developed markets"))
+        assertTrue(enAllText.contains("Emerging markets"))
+
+        // Проверяем отсутствие специфичной привязки к рублям / РФ
+        assertFalse(ruAllText.contains("рублях"))
+        assertFalse(enAllText.contains("rubles"))
+        assertFalse(ruAllText.contains("ЦБ"))
+    }
 }
