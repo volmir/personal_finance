@@ -128,20 +128,41 @@ object FinancialMetricEvaluator {
 
     // =========================================================================
     // 7. Бенчмарк Fidelity (Fidelity Ratio)
-    // >= 1.0: позитивный (зелёный)
-    // 0.7 .. < 1.0: нейтральный (жёлтый)
-    // < 0.7: негативный (красный)
+    // >= 1.0 (>= 100% от цели): позитивный (зелёный)
+    // 0.7 .. < 1.0 (70%..99% от цели): нейтральный (жёлтый)
+    // < 0.7 (< 70% от цели): негативный (красный)
     // =========================================================================
 
-    fun getFidelityStatus(netWorth: Double, target: Double): AuditIndicatorStatus {
-        if (target <= 0.0) return AuditIndicatorStatus.NEUTRAL
-        val ratio = netWorth / target
-        return when {
-            ratio >= 1.0 -> AuditIndicatorStatus.POSITIVE
-            ratio >= 0.7 -> AuditIndicatorStatus.NEUTRAL
-            else -> AuditIndicatorStatus.NEGATIVE
+    const val FIDELITY_POSITIVE_THRESHOLD = 1.0
+    const val FIDELITY_NEUTRAL_THRESHOLD = 0.7
+
+    fun calculateFidelityRatio(netWorth: Double, target: Double): Double {
+        return if (target > 0.0) {
+            netWorth / target
+        } else {
+            if (netWorth >= 0.0) 1.0 else 0.0
         }
     }
+
+    fun calculateFidelityPercent(netWorth: Double, target: Double): Double {
+        return calculateFidelityRatio(netWorth, target) * 100.0
+    }
+
+    fun getFidelityStatus(ratio: Double): AuditIndicatorStatus = when {
+        ratio >= FIDELITY_POSITIVE_THRESHOLD -> AuditIndicatorStatus.POSITIVE
+        ratio >= FIDELITY_NEUTRAL_THRESHOLD -> AuditIndicatorStatus.NEUTRAL
+        else -> AuditIndicatorStatus.NEGATIVE
+    }
+
+    fun getFidelityStatus(netWorth: Double, target: Double): AuditIndicatorStatus {
+        if (target <= 0.0) {
+            return if (netWorth >= 0.0) AuditIndicatorStatus.POSITIVE else AuditIndicatorStatus.NEGATIVE
+        }
+        val ratio = netWorth / target
+        return getFidelityStatus(ratio)
+    }
+
+    fun getFidelityColor(ratio: Double): Color = getColorForStatus(getFidelityStatus(ratio))
 
     fun getFidelityColor(netWorth: Double, target: Double): Color =
         getColorForStatus(getFidelityStatus(netWorth, target))

@@ -712,4 +712,59 @@ class ExampleUnitTest {
         assertFalse(enAllText.contains("rubles"))
         assertFalse(ruAllText.contains("ЦБ"))
     }
+
+    @Test
+    fun testFidelityCalculationAndColorGradation() {
+        // 1. Проверка расчета % и коэффициента (может быть больше 100%)
+        val target = 2_000_000.0
+
+        // 150% от цели (капитал 3 000 000)
+        val ratio150 = com.example.domain.FinancialMetricEvaluator.calculateFidelityRatio(3_000_000.0, target)
+        val percent150 = com.example.domain.FinancialMetricEvaluator.calculateFidelityPercent(3_000_000.0, target)
+        assertEquals(1.5, ratio150, 0.001)
+        assertEquals(150.0, percent150, 0.001)
+        assertEquals(com.example.domain.AuditIndicatorStatus.POSITIVE, com.example.domain.FinancialMetricEvaluator.getFidelityStatus(3_000_000.0, target))
+        assertEquals(com.example.ui.theme.SuccessGreen, com.example.domain.FinancialMetricEvaluator.getFidelityColor(3_000_000.0, target))
+
+        // 80% от цели (капитал 1 600 000) - нейтральный (желтый)
+        val ratio80 = com.example.domain.FinancialMetricEvaluator.calculateFidelityRatio(1_600_000.0, target)
+        val percent80 = com.example.domain.FinancialMetricEvaluator.calculateFidelityPercent(1_600_000.0, target)
+        assertEquals(0.8, ratio80, 0.001)
+        assertEquals(80.0, percent80, 0.001)
+        assertEquals(com.example.domain.AuditIndicatorStatus.NEUTRAL, com.example.domain.FinancialMetricEvaluator.getFidelityStatus(1_600_000.0, target))
+        assertEquals(com.example.ui.theme.WarningYellow, com.example.domain.FinancialMetricEvaluator.getFidelityColor(1_600_000.0, target))
+
+        // 40% от цели (капитал 800 000) - негативный (красный)
+        val ratio40 = com.example.domain.FinancialMetricEvaluator.calculateFidelityRatio(800_000.0, target)
+        val percent40 = com.example.domain.FinancialMetricEvaluator.calculateFidelityPercent(800_000.0, target)
+        assertEquals(0.4, ratio40, 0.001)
+        assertEquals(40.0, percent40, 0.001)
+        assertEquals(com.example.domain.AuditIndicatorStatus.NEGATIVE, com.example.domain.FinancialMetricEvaluator.getFidelityStatus(800_000.0, target))
+        assertEquals(com.example.ui.theme.AlertRed, com.example.domain.FinancialMetricEvaluator.getFidelityColor(800_000.0, target))
+
+        // Отрицательный капитал (-200 000)
+        val ratioNeg = com.example.domain.FinancialMetricEvaluator.calculateFidelityRatio(-200_000.0, target)
+        val percentNeg = com.example.domain.FinancialMetricEvaluator.calculateFidelityPercent(-200_000.0, target)
+        assertEquals(-0.1, ratioNeg, 0.001)
+        assertEquals(-10.0, percentNeg, 0.001)
+        assertEquals(com.example.domain.AuditIndicatorStatus.NEGATIVE, com.example.domain.FinancialMetricEvaluator.getFidelityStatus(-200_000.0, target))
+        assertEquals(com.example.ui.theme.AlertRed, com.example.domain.FinancialMetricEvaluator.getFidelityColor(-200_000.0, target))
+
+        // 2. Интеграция в модель и аудит: капитал выше 100% отображается в отчете и аудите
+        val input = FinancialInputData(
+            birthDate = "1990-01-01", // возраст ~36 лет, множитель Fidelity = 1.0 (или 2.0 в зависимости от сетки)
+            monthlyIncome = 100_000.0,
+            monthlyExpenses = 50_000.0,
+            liquidAssets = 2_000_000.0,
+            financialAssets = 3_000_000.0 // netWorth = 5 000 000
+        )
+        val metrics = com.example.domain.FinanceCalculator.calculate(input)
+        assertTrue(metrics.fidelityTarget > 0.0)
+        // Капитал 5 млн превышает цель (1.2 млн или 2.4 млн)
+        assertTrue(metrics.fidelityPercent > 100.0)
+        val opinion = com.example.domain.AuditorAnalysisGenerator.generate(input, metrics, com.example.util.localization.AppLanguage.RU)
+        val fidelityItem = (opinion.positive + opinion.neutral + opinion.negative).first { it.id == "fidelity" }
+        assertEquals(com.example.domain.AuditIndicatorStatus.POSITIVE, fidelityItem.status)
+        assertTrue(fidelityItem.text.contains("% от цели"))
+    }
 }

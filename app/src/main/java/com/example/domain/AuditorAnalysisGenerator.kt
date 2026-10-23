@@ -420,60 +420,74 @@ object AuditorAnalysisGenerator {
 
         // 7. Бенчмарк Fidelity
         val fidelityAnalysis = if (metrics.fidelityTarget > 0.0) {
-            val fidelityRatio = metrics.netWorth / metrics.fidelityTarget
+            val fidelityPercent = FinancialMetricEvaluator.calculateFidelityPercent(metrics.netWorth, metrics.fidelityTarget)
+            val fidelityStatus = FinancialMetricEvaluator.getFidelityStatus(metrics.netWorth, metrics.fidelityTarget)
+            val formattedPercent = Formatters.formatPercent(fidelityPercent, lang)
+            val formattedTarget = Formatters.formatMoney(metrics.fidelityTarget, currency, lang)
+            val formattedNetWorth = Formatters.formatMoney(metrics.netWorth, currency, lang)
             if (isEn) {
-                when {
-                    fidelityRatio >= 1.0 -> AuditIndicatorAnalysis(
+                when (fidelityStatus) {
+                    AuditIndicatorStatus.POSITIVE -> AuditIndicatorAnalysis(
                         id = "fidelity",
                         title = "Fidelity Benchmark",
                         status = AuditIndicatorStatus.POSITIVE,
-                        text = "✅ Age Capital Milestone (Fidelity Benchmark: ${Formatters.formatPercent(fidelityRatio * 100.0, lang)} of goal): Capital exceeds target milestone for your age (${Formatters.formatMoney(metrics.fidelityTarget, currency, lang)}). Excellent long-term trajectory."
+                        text = "✅ Age Capital Milestone (Fidelity Benchmark: $formattedPercent of goal): Capital exceeds target milestone for your age ($formattedTarget). Excellent long-term trajectory."
                     )
-                    fidelityRatio >= 0.7 -> AuditIndicatorAnalysis(
+                    AuditIndicatorStatus.NEUTRAL -> AuditIndicatorAnalysis(
                         id = "fidelity",
                         title = "Fidelity Benchmark",
                         status = AuditIndicatorStatus.NEUTRAL,
-                        text = "ℹ️ Age Capital Milestone (Fidelity Benchmark: ${Formatters.formatPercent(fidelityRatio * 100.0, lang)} of goal): Capital matches recommended age savings guidelines (${Formatters.formatMoney(metrics.fidelityTarget, currency, lang)})."
+                        text = "ℹ️ Age Capital Milestone (Fidelity Benchmark: $formattedPercent of goal): Capital matches recommended age savings guidelines ($formattedTarget)."
                     )
-                    fidelityRatio < 0.0 -> AuditIndicatorAnalysis(
-                        id = "fidelity",
-                        title = "Fidelity Benchmark",
-                        status = AuditIndicatorStatus.NEGATIVE,
-                        text = "🚨 Age Capital Milestone (Fidelity Benchmark): Net capital is negative (${Formatters.formatMoney(metrics.netWorth, currency, lang)}). Outstanding liabilities prevent reaching recommended retirement milestone (${Formatters.formatMoney(metrics.fidelityTarget, currency, lang)})."
-                    )
-                    else -> AuditIndicatorAnalysis(
-                        id = "fidelity",
-                        title = "Fidelity Benchmark",
-                        status = AuditIndicatorStatus.NEGATIVE,
-                        text = "⚠️ Age Capital Milestone (Fidelity Benchmark: ${Formatters.formatPercent(fidelityRatio * 100.0, lang)} of goal): Lagging behind recommended age benchmark (${Formatters.formatMoney(metrics.fidelityTarget, currency, lang)}). Accelerating savings pace advised."
-                    )
+                    AuditIndicatorStatus.NEGATIVE -> {
+                        if (metrics.netWorth < 0.0) {
+                            AuditIndicatorAnalysis(
+                                id = "fidelity",
+                                title = "Fidelity Benchmark",
+                                status = AuditIndicatorStatus.NEGATIVE,
+                                text = "🚨 Age Capital Milestone (Fidelity Benchmark): Net capital is negative ($formattedNetWorth). Outstanding liabilities prevent reaching recommended retirement milestone ($formattedTarget)."
+                            )
+                        } else {
+                            AuditIndicatorAnalysis(
+                                id = "fidelity",
+                                title = "Fidelity Benchmark",
+                                status = AuditIndicatorStatus.NEGATIVE,
+                                text = "⚠️ Age Capital Milestone (Fidelity Benchmark: $formattedPercent of goal): Lagging behind recommended age benchmark ($formattedTarget). Accelerating savings pace advised."
+                            )
+                        }
+                    }
                 }
             } else {
-                when {
-                    fidelityRatio >= 1.0 -> AuditIndicatorAnalysis(
+                when (fidelityStatus) {
+                    AuditIndicatorStatus.POSITIVE -> AuditIndicatorAnalysis(
                         id = "fidelity",
                         title = "Бенчмарк Fidelity",
                         status = AuditIndicatorStatus.POSITIVE,
-                        text = "✅ Возрастной ориентир капитала (Бенчмарк Fidelity: ${Formatters.formatPercent(fidelityRatio * 100.0, lang)} от цели): Капитал опережает целевой норматив для вашего возраста (${Formatters.formatMoney(metrics.fidelityTarget, currency, lang)}). Отличный задел для долгосрочного благосостояния."
+                        text = "✅ Возрастной ориентир капитала (Бенчмарк Fidelity: $formattedPercent от цели): Капитал опережает целевой норматив для вашего возраста ($formattedTarget). Отличный задел для долгосрочного благосостояния."
                     )
-                    fidelityRatio >= 0.7 -> AuditIndicatorAnalysis(
+                    AuditIndicatorStatus.NEUTRAL -> AuditIndicatorAnalysis(
                         id = "fidelity",
                         title = "Бенчмарк Fidelity",
                         status = AuditIndicatorStatus.NEUTRAL,
-                        text = "ℹ️ Возрастной ориентир капитала (Бенчмарк Fidelity: ${Formatters.formatPercent(fidelityRatio * 100.0, lang)} от цели): Капитал соответствует рекомендуемым возрастным ориентирам накоплений (${Formatters.formatMoney(metrics.fidelityTarget, currency, lang)})."
+                        text = "ℹ️ Возрастной ориентир капитала (Бенчмарк Fidelity: $formattedPercent от цели): Капитал соответствует рекомендуемым возрастным ориентирам накоплений ($formattedTarget)."
                     )
-                    fidelityRatio < 0.0 -> AuditIndicatorAnalysis(
-                        id = "fidelity",
-                        title = "Бенчмарк Fidelity",
-                        status = AuditIndicatorStatus.NEGATIVE,
-                        text = "🚨 Возрастной ориентир капитала (Бенчмарк Fidelity): Чистый капитал отрицателен (${Formatters.formatMoney(metrics.netWorth, currency, lang)}). Наличие долговой нагрузки отдаляет достижение пенсионного норматива (${Formatters.formatMoney(metrics.fidelityTarget, currency, lang)})."
-                    )
-                    else -> AuditIndicatorAnalysis(
-                        id = "fidelity",
-                        title = "Бенчмарк Fidelity",
-                        status = AuditIndicatorStatus.NEGATIVE,
-                        text = "⚠️ Возрастной ориентир капитала (Бенчмарк Fidelity: ${Formatters.formatPercent(fidelityRatio * 100.0, lang)} от цели): Отставание от рекомендуемой возрастной планки капитала (${Formatters.formatMoney(metrics.fidelityTarget, currency, lang)}). Желательно ускорить темп капитализации."
-                    )
+                    AuditIndicatorStatus.NEGATIVE -> {
+                        if (metrics.netWorth < 0.0) {
+                            AuditIndicatorAnalysis(
+                                id = "fidelity",
+                                title = "Бенчмарк Fidelity",
+                                status = AuditIndicatorStatus.NEGATIVE,
+                                text = "🚨 Возрастной ориентир капитала (Бенчмарк Fidelity): Чистый капитал отрицателен ($formattedNetWorth). Наличие долговой нагрузки отдаляет достижение пенсионного норматива ($formattedTarget)."
+                            )
+                        } else {
+                            AuditIndicatorAnalysis(
+                                id = "fidelity",
+                                title = "Бенчмарк Fidelity",
+                                status = AuditIndicatorStatus.NEGATIVE,
+                                text = "⚠️ Возрастной ориентир капитала (Бенчмарк Fidelity: $formattedPercent от цели): Отставание от рекомендуемой возрастной планки капитала ($formattedTarget). Желательно ускорить темп капитализации."
+                            )
+                        }
+                    }
                 }
             }
         } else {
@@ -689,7 +703,7 @@ object AuditorAnalysisGenerator {
                 appendLine("• CFS: ${Formatters.formatRatio(metrics.financialFreedomRatio, lang)} ($cfsDesc)")
                 appendLine("• Target FIRE capital: ${Formatters.formatMoney(metrics.retirementTargetCapital, currency, lang)}")
                 appendLine("• Time to retirement: ${Formatters.formatRatio(metrics.yearsToRetirement, lang)} yrs (at age ${Formatters.formatRatio(metrics.retirementAge, lang)} yrs)")
-                appendLine("• Fidelity benchmark: ${Formatters.formatMoney(metrics.fidelityTarget, currency, lang)} (${Formatters.formatRatio(metrics.fidelityMultiplier, lang)}x annual income)")
+                appendLine("• Fidelity benchmark: ${Formatters.formatMoney(metrics.fidelityTarget, currency, lang)} (${Formatters.formatRatio(metrics.fidelityMultiplier, lang)}x annual income) — ${Formatters.formatPercent(metrics.fidelityPercent, lang)} of goal")
                 appendLine("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
                 appendLine("💡 Generated in \"Personal Finance\" app")
             } else {
@@ -724,7 +738,7 @@ object AuditorAnalysisGenerator {
                 appendLine("• КФС: ${Formatters.formatRatio(metrics.financialFreedomRatio, lang)} ($cfsDesc)")
                 appendLine("• Капитал для FIRE: ${Formatters.formatMoney(metrics.retirementTargetCapital, currency, lang)}")
                 appendLine("• Срок до пенсии FIRE: ${Formatters.formatRatio(metrics.yearsToRetirement, lang)} лет (в возрасте ${Formatters.formatRatio(metrics.retirementAge, lang)} лет)")
-                appendLine("• Бенчмарк Fidelity: ${Formatters.formatMoney(metrics.fidelityTarget, currency, lang)} (${Formatters.formatRatio(metrics.fidelityMultiplier, lang)}x годового дохода)")
+                appendLine("• Бенчмарк Fidelity: ${Formatters.formatMoney(metrics.fidelityTarget, currency, lang)} (${Formatters.formatRatio(metrics.fidelityMultiplier, lang)}x годового дохода) — ${Formatters.formatPercent(metrics.fidelityPercent, lang)} от цели")
                 appendLine("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
                 appendLine("💡 Сформировано в приложении «Личные финансы»")
             }

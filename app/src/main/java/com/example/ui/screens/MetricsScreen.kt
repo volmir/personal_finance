@@ -272,9 +272,9 @@ fun MetricsScreen(
         // 7. Бенчмарк Fidelity
         if (selectedCategory == MetricFilterCategory.ALL || selectedCategory == MetricFilterCategory.BENCHMARKS) {
             item {
-                val fidelityRatio = if (metrics.fidelityTarget > 0) {
-                    (metrics.netWorth / metrics.fidelityTarget).coerceIn(0.0, 1.0).toFloat()
-                } else 0f
+                val fidelityRatio = metrics.fidelityRatio
+                val fidelityPercent = metrics.fidelityPercent
+                val fidelityColor = FinancialMetricEvaluator.getFidelityColor(fidelityRatio)
 
                 MetricCard(
                     title = strings.metricFidelityTitle,
@@ -282,13 +282,14 @@ fun MetricsScreen(
                     formula = strings.metricFidelityFormula,
                     description = strings.metricFidelityDesc,
                     icon = Icons.Default.Flag,
-                    highlightColor = AccentGold,
+                    highlightColor = fidelityColor,
                     subValue = strings.metricFidelitySubFormat(metrics.currentAge, Formatters.formatRatio(metrics.fidelityMultiplier, lang)),
                     extraContent = {
                         Column {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
                                     text = strings.metricFidelityProgress,
@@ -298,18 +299,26 @@ fun MetricsScreen(
                                     )
                                 )
                                 Text(
-                                    text = "${(fidelityRatio * 100).toInt()}%",
+                                    text = if (metrics.fidelityTarget > 0.0) {
+                                        Formatters.formatPercent(fidelityPercent, lang)
+                                    } else {
+                                        "—"
+                                    },
                                     style = MaterialTheme.typography.labelSmall.copy(
                                         fontWeight = FontWeight.Bold,
-                                        color = AccentGold,
-                                        fontSize = 11.sp
+                                        color = fidelityColor,
+                                        fontSize = 12.sp
                                     )
                                 )
                             }
-                            Spacer(modifier = Modifier.height(4.dp))
+                            Spacer(modifier = Modifier.height(6.dp))
                             LinearProgressIndicator(
-                                progress = { fidelityRatio },
-                                color = AccentGold,
+                                progress = {
+                                    if (metrics.fidelityTarget > 0.0) {
+                                        (fidelityRatio.toFloat()).coerceIn(0f, 1f)
+                                    } else 1f
+                                },
+                                color = fidelityColor,
                                 trackColor = MaterialTheme.colorScheme.surface,
                                 strokeCap = StrokeCap.Round,
                                 modifier = Modifier

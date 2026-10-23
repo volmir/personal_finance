@@ -60,7 +60,10 @@ data class CalculatedMetrics(
     val retirementAge: Double,
     val retirementTargetCapital: Double,
     val scores: FinancialScores
-)
+) {
+    val fidelityRatio: Double get() = com.example.domain.FinancialMetricEvaluator.calculateFidelityRatio(netWorth, fidelityTarget)
+    val fidelityPercent: Double get() = com.example.domain.FinancialMetricEvaluator.calculateFidelityPercent(netWorth, fidelityTarget)
+}
 
 data class TrajectoryPoint(
     val age: Double,
