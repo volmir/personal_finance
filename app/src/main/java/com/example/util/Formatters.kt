@@ -28,7 +28,7 @@ object Formatters {
     private val scoreFormatRu = DecimalFormat("#,##0.0", symbolsRu)
     private val scoreFormatEn = DecimalFormat("#,##0.0", symbolsEn)
 
-    fun formatMoney(amount: Double, currency: String = "₽", lang: AppLanguage = AppLanguage.RU): String {
+    fun formatMoney(amount: Double, currency: String = "$", lang: AppLanguage = AppLanguage.RU): String {
         val formatter = if (lang == AppLanguage.EN) moneyFormatEn else moneyFormatRu
         return if (lang == AppLanguage.EN && (currency == "$" || currency == "€" || currency == "£")) {
             "$currency${formatter.format(amount)}"

@@ -303,6 +303,9 @@ interface AppStrings {
     val scenarioChildTitle: String
     val scenarioChildParam: String
     val scenarioChildDesc: (amt: String) -> String
+
+    val disclaimerTitle: String
+    val disclaimerText: String
 }
 
 val StringsRu: AppStrings = object : AppStrings {
@@ -632,7 +635,7 @@ val StringsRu: AppStrings = object : AppStrings {
 
     override val metricFidelityTitle: String = "Бенчмарк: целевые показатели по Fidelity"
     override val metricFidelityFormula: String = "Годовой доход * Множитель"
-    override val metricFidelityDesc: String = "Методика Fidelity показывает, во сколько раз ваши текущие пенсионные накопления должны превышать ваш годовой заработок на определенном жизненном этапе.\n\nШкала Fidelity дискретна (задана конкретными точками для 30, 40, 50, 60 и 67 лет).\nПример: Если вам 40 лет и вы зарабатываете ($100,000) в год, то, согласно Fidelity, на ваших инвестиционных и пенсионных счетах должно быть накоплено не менее ($300,000)."
+    override val metricFidelityDesc: String = "Методика Fidelity показывает, во сколько раз ваши текущие пенсионные накопления должны превышать ваш годовой заработок на определенном жизненном этапе.\n\nШкала Fidelity дискретна (задана конкретными точками для 30, 40, 50, 60 и 67 лет).\nПример: Если вам 40 лет и вы зарабатываете ($100,000) в год, то, согласно Fidelity, на ваших инвестиционных и пенсионных счетах должно быть накоплено не менее ($300,000).\n\nПримечание: Данное приложение не связано с компанией Fidelity Investments и использует исключительно открытые исследовательские ориентиры и общедоступную финансовую методологию."
     override val metricFidelitySubFormat: (age: Int, mult: String) -> String = { age, mult -> "Возраст: $age лет | Множитель: ${mult}x" }
     override val metricFidelityProgress: String = "Прогресс к ориентиру Fidelity:"
 
@@ -801,6 +804,9 @@ val StringsRu: AppStrings = object : AppStrings {
     override val scenarioChildTitle: String = "Рождение ребенка"
     override val scenarioChildParam: String = "+25% к расходам на 18 лет"
     override val scenarioChildDesc: (amt: String) -> String = { amt -> "Расходы на ребенка: +$amt/мес. (период 18 лет)" }
+
+    override val disclaimerTitle: String = "Отказ от отвествености"
+    override val disclaimerText: String = "Важно: Проект является персональной разработкой и предоставляется исключительно в ознакомительных целях «как есть». Автор не несет ответственности за возможные сбои, потерю данных или иной ущерб, возникший в ходе использования данного ПО. Все расчеты, формулы, метрики и симуляции носят исключительно информационно-ознакомительный характер и не являются индивидуальной финансовой, инвестиционной или налоговой рекомендацией. Вы используете этот инструмент на свой собственный страх и риск."
 }
 
 val StringsEn: AppStrings = object : AppStrings {
@@ -1130,7 +1136,7 @@ val StringsEn: AppStrings = object : AppStrings {
 
     override val metricFidelityTitle: String = "Benchmark: Fidelity Capital Milestones"
     override val metricFidelityFormula: String = "Annual Income * Multiplier"
-    override val metricFidelityDesc: String = "Fidelity's rule of thumb outlines how many times your current retirement portfolio should exceed your annual salary at specific life stages.\n\nCheckpoints: 1x by age 30, 3x by 40, 6x by 50, 8x by 60, and 10x by 67.\nExample: At age 40 with $100,000 annual income, Fidelity recommends having at least $300,000 saved."
+    override val metricFidelityDesc: String = "Fidelity's rule of thumb outlines how many times your current retirement portfolio should exceed your annual salary at specific life stages.\n\nCheckpoints: 1x by age 30, 3x by 40, 6x by 50, 8x by 60, and 10x by 67.\nExample: At age 40 with $100,000 annual income, Fidelity recommends having at least $300,000 saved.\n\nNote: This application is not affiliated with or endorsed by Fidelity Investments and solely uses publicly available research milestones and educational benchmarks."
     override val metricFidelitySubFormat: (age: Int, mult: String) -> String = { age, mult -> "Age: $age yrs | Multiplier: ${mult}x" }
     override val metricFidelityProgress: String = "Progress toward Fidelity goal:"
 
@@ -1299,6 +1305,9 @@ val StringsEn: AppStrings = object : AppStrings {
     override val scenarioChildTitle: String = "Child Birth"
     override val scenarioChildParam: String = "+25% to expenses for 18 yrs"
     override val scenarioChildDesc: (amt: String) -> String = { amt -> "Childcare costs: +$amt/mo. (for 18 years)" }
+
+    override val disclaimerTitle: String = "Disclaimer"
+    override val disclaimerText: String = "Important: This project is a personal development and is provided solely for informational purposes \"as is\". The author is not responsible for any malfunctions, data loss, or other damages arising from the use of this software. All calculations, formulas, metrics, and simulations are for informational purposes only and do not constitute individual financial, investment, or tax advice. You use this tool at your own risk."
 }
 
 

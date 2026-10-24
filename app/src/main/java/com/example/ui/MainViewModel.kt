@@ -128,26 +128,30 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val savedScenarios: StateFlow<List<ScenarioEntity>> = repository.getAllScenarios()
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
-    private val _currentTab = MutableStateFlow(AppTab.INPUT)
+    private val _currentTab = MutableStateFlow(localPrefs.loadCurrentTab() ?: AppTab.INPUT)
     val currentTab: StateFlow<AppTab> = _currentTab.asStateFlow()
 
-    // Автоматический фоновый выбор языковой версии приложения при старте (при запуске)
-    // Логика: если у пользователя установлена русская, украинская или белорусская локаль — русский язык; иначе английский.
-    private val _appLanguage = MutableStateFlow(AppLanguage.detectSystemLanguage())
+    // Языковая версия: восстанавливается из настроек, либо фоновый выбор при самом первом запуске
+    private val _appLanguage = MutableStateFlow(
+        localPrefs.loadLanguage() ?: AppLanguage.detectSystemLanguage().also {
+            localPrefs.saveLanguage(it)
+        }
+    )
     val appLanguage: StateFlow<AppLanguage> = _appLanguage.asStateFlow()
 
     fun setLanguage(language: AppLanguage) {
         _appLanguage.value = language
+        localPrefs.saveLanguage(language)
     }
 
-    // Loaded from persistent on-device local storage (defaults to Russian average if first launch)
+    // Загрузка из локального хранилища (дефолтные значения только при первом запуске)
     private val _inputData = MutableStateFlow(localPrefs.loadData())
     val inputData: StateFlow<FinancialInputData> = _inputData.asStateFlow()
 
     private val _metrics = MutableStateFlow(FinanceCalculator.calculate(_inputData.value))
     val metrics: StateFlow<CalculatedMetrics> = _metrics.asStateFlow()
 
-    private val _fireSimulation = MutableStateFlow(FireSimulationState())
+    private val _fireSimulation = MutableStateFlow(localPrefs.loadSimulationState())
     val fireSimulation: StateFlow<FireSimulationState> = _fireSimulation.asStateFlow()
 
     private val _simulatedMetrics = MutableStateFlow(_metrics.value)
@@ -165,6 +169,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun selectTab(tab: AppTab) {
         _currentTab.value = tab
+        localPrefs.saveCurrentTab(tab)
     }
 
     fun updateInputData(transform: (FinancialInputData) -> FinancialInputData) {
@@ -176,32 +181,26 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         recalculate()
     }
 
-    fun loadRussiaAverage() {
-        val sample = FinancialInputData.russiaAverageData()
+    fun loadUsAverage() {
+        val sample = FinancialInputData.usAverageData()
         _inputData.value = sample
         localPrefs.saveData(sample)
-        _fireSimulation.value = FireSimulationState()
+        val resetSim = FireSimulationState()
+        _fireSimulation.value = resetSim
+        localPrefs.saveSimulationState(resetSim)
         recalculate()
     }
 
+    fun loadDefaultAverage() = loadUsAverage()
+
+    fun loadRussiaAverage() = loadUsAverage()
+
     fun clearData() {
-        val empty = FinancialInputData(
-            monthlyIncome = 0.0,
-            monthlyExpenses = 0.0,
-            liquidAssets = 0.0,
-            financialAssets = 0.0,
-            propertyAssets = 0.0,
-            liabilities = 0.0,
-            birthDate = "1990-01-01",
-            lifeExpectancy = 80,
-            nominalReturnPercent = 10.0,
-            inflationPercent = 8.0,
-            currencySymbol = "₽",
-            includeFinancialInEmergencyFund = true
-        )
-        _inputData.value = empty
-        localPrefs.saveData(empty)
-        _fireSimulation.value = FireSimulationState()
+        localPrefs.clearData()
+        _inputData.value = localPrefs.loadData()
+        val resetSim = FireSimulationState()
+        _fireSimulation.value = resetSim
+        localPrefs.saveSimulationState(resetSim)
         recalculate()
     }
 
@@ -211,6 +210,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             realReturnAdjustment = realReturnDelta,
             expenseReduction = expReduction
         )
+        localPrefs.saveSimulationState(_fireSimulation.value)
         recalculateSimulation()
     }
 
@@ -237,11 +237,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             else -> current
         }
         _fireSimulation.value = _fireSimulation.value.copy(scenarios = updated)
+        localPrefs.saveSimulationState(_fireSimulation.value)
         recalculateSimulation()
     }
 
     fun resetSimulation() {
-        _fireSimulation.value = FireSimulationState()
+        val resetState = FireSimulationState()
+        _fireSimulation.value = resetState
+        localPrefs.saveSimulationState(resetState)
         recalculateSimulation()
     }
 

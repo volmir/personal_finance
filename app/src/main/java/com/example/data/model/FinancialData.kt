@@ -1,25 +1,27 @@
 package com.example.data.model
 
 data class FinancialInputData(
-    // Среднестатистические данные по РФ (Росстат / ЦБ РФ)
-    val monthlyIncome: Double = 85_000.0,
-    val monthlyExpenses: Double = 68_000.0,
-    val liquidAssets: Double = 200_000.0,
-    val financialAssets: Double = 450_000.0,
-    val propertyAssets: Double = 3_800_000.0,
-    val liabilities: Double = 480_000.0,
-    val birthDate: String = "1985-06-15",
-    val lifeExpectancy: Int = 78,
-    val nominalReturnPercent: Double = 4.0,
-    val inflationPercent: Double = 2.0,
-    val currencySymbol: String = "₽",
+    // Среднестатистические данные жителя США (US Federal Reserve / BLS)
+    val monthlyIncome: Double = 6_000.0,
+    val monthlyExpenses: Double = 4_800.0,
+    val liquidAssets: Double = 15_000.0,
+    val financialAssets: Double = 40_000.0,
+    val propertyAssets: Double = 280_000.0,
+    val liabilities: Double = 180_000.0,
+    val birthDate: String = "1988-06-15",
+    val lifeExpectancy: Int = 82,
+    val nominalReturnPercent: Double = 7.5,
+    val inflationPercent: Double = 2.5,
+    val currencySymbol: String = "$",
     val includeFinancialInEmergencyFund: Boolean = true
 ) {
     companion object {
-        // Средние показатели гражданина по РФ
-        fun russiaAverageData(): FinancialInputData = FinancialInputData()
+        // Средние показатели жителя США (US Average Data)
+        fun usAverageData(): FinancialInputData = FinancialInputData()
 
-        fun sampleData(): FinancialInputData = russiaAverageData()
+        fun defaultData(): FinancialInputData = usAverageData()
+        fun sampleData(): FinancialInputData = usAverageData()
+        fun russiaAverageData(): FinancialInputData = usAverageData()
     }
 }
 

@@ -40,7 +40,7 @@ fun FireTrajectoryChart(
     trajectory: List<TrajectoryPoint>,
     yearsToRetire: Double,
     currentAge: Int,
-    currencySymbol: String = "₽",
+    currencySymbol: String = "$",
     modifier: Modifier = Modifier
 ) {
     if (trajectory.isEmpty()) return

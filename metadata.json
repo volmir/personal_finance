@@ -1,5 +1,5 @@
 {
-  "name": "Личные финансы & FIRE аудит",
+  "name": "Personal finance and FIRE",
   "description": "Аудит личных финансов и капитала: расчет денежного потока, нормы сбережений, подушки безопасности, коэффициента финансовой свободы (КФС), бенчмарка Fidelity и модели выхода на пенсию FIRE.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]

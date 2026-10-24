@@ -64,6 +64,7 @@ data class GroupedAuditOpinion(
                 appendLine()
                 appendLine("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
                 appendLine("💡 Generated in \"Personal Finance\" app")
+                appendLine("⚠️ Disclaimer: For educational purposes only; does not constitute financial advice. Use at your own risk.")
             } else {
                 appendLine("📋 АУДИТОРСКОЕ ЗАКЛЮЧЕНИЕ ПО ВСЕМ ПОКАЗАТЕЛЯМ")
                 appendLine("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
@@ -96,6 +97,7 @@ data class GroupedAuditOpinion(
                 appendLine()
                 appendLine("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
                 appendLine("💡 Сформировано в приложении «Личные финансы»")
+                appendLine("⚠️ Отказ от ответственности: Исключительно для образовательных целей, не является финансовой рекомендацией. Все действия вы совершаете на свой страх и риск.")
             }
         }
     }
@@ -706,6 +708,7 @@ object AuditorAnalysisGenerator {
                 appendLine("• Fidelity benchmark: ${Formatters.formatMoney(metrics.fidelityTarget, currency, lang)} (${Formatters.formatRatio(metrics.fidelityMultiplier, lang)}x annual income) — ${Formatters.formatPercent(metrics.fidelityPercent, lang)} of goal")
                 appendLine("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
                 appendLine("💡 Generated in \"Personal Finance\" app")
+                appendLine("⚠️ Disclaimer: For educational purposes only; does not constitute financial advice. Use at your own risk.")
             } else {
                 appendLine("📊 ФИНАНСОВЫЙ ОТЧЕТ — ЛИЧНЫЕ ФИНАНСЫ")
                 appendLine("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
@@ -741,6 +744,7 @@ object AuditorAnalysisGenerator {
                 appendLine("• Бенчмарк Fidelity: ${Formatters.formatMoney(metrics.fidelityTarget, currency, lang)} (${Formatters.formatRatio(metrics.fidelityMultiplier, lang)}x годового дохода) — ${Formatters.formatPercent(metrics.fidelityPercent, lang)} от цели")
                 appendLine("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
                 appendLine("💡 Сформировано в приложении «Личные финансы»")
+                appendLine("⚠️ Отказ от ответственности: Исключительно для образовательных целей, не является финансовой рекомендацией. Все действия вы совершаете на свой страх и риск.")
             }
         }
     }

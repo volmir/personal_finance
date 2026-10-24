@@ -12,18 +12,23 @@ import org.junit.Test
 
 class ExampleUnitTest {
     @Test
-    fun testRussiaAverageDefaults() {
-        val input = FinancialInputData.russiaAverageData()
+    fun testUSAverageDefaults() {
+        val input = FinancialInputData.usAverageData()
         val metrics = FinanceCalculator.calculate(input)
 
-        assertEquals(85_000.0, input.monthlyIncome, 0.01)
-        assertEquals(68_000.0, input.monthlyExpenses, 0.01)
-        assertEquals(17_000.0, metrics.cashFlow, 0.01)
+        assertEquals(6_000.0, input.monthlyIncome, 0.01)
+        assertEquals(4_800.0, input.monthlyExpenses, 0.01)
+        assertEquals(1_200.0, metrics.cashFlow, 0.01)
         assertEquals(20.0, metrics.savingsRate, 0.01)
-        assertEquals(4_450_000.0, metrics.totalAssets, 0.01)
-        assertEquals(3_970_000.0, metrics.netWorth, 0.01)
-        assertEquals(4.0, input.nominalReturnPercent, 0.01)
-        assertEquals(2.0, input.inflationPercent, 0.01)
+        assertEquals(15_000.0, input.liquidAssets, 0.01)
+        assertEquals(40_000.0, input.financialAssets, 0.01)
+        assertEquals(280_000.0, input.propertyAssets, 0.01)
+        assertEquals(180_000.0, input.liabilities, 0.01)
+        assertEquals(335_000.0, metrics.totalAssets, 0.01)
+        assertEquals(155_000.0, metrics.netWorth, 0.01)
+        assertEquals(7.5, input.nominalReturnPercent, 0.01)
+        assertEquals(2.5, input.inflationPercent, 0.01)
+        assertEquals("$", input.currencySymbol)
         assertTrue(metrics.realReturnPercent > 0.0)
     }
 
@@ -766,5 +771,16 @@ class ExampleUnitTest {
         val fidelityItem = (opinion.positive + opinion.neutral + opinion.negative).first { it.id == "fidelity" }
         assertEquals(com.example.domain.AuditIndicatorStatus.POSITIVE, fidelityItem.status)
         assertTrue(fidelityItem.text.contains("% от цели"))
+    }
+
+    @Test
+    fun testFidelityDescriptionFootnote() {
+        val ruStrings = com.example.util.localization.getAppStrings(com.example.util.localization.AppLanguage.RU)
+        assertTrue(ruStrings.metricFidelityDesc.contains("не связано с компанией Fidelity Investments"))
+        assertTrue(ruStrings.metricFidelityDesc.contains("открытые исследовательские ориентиры"))
+
+        val enStrings = com.example.util.localization.getAppStrings(com.example.util.localization.AppLanguage.EN)
+        assertTrue(enStrings.metricFidelityDesc.contains("not affiliated with or endorsed by Fidelity Investments"))
+        assertTrue(enStrings.metricFidelityDesc.contains("publicly available research milestones"))
     }
 }

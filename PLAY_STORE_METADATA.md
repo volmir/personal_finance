@@ -61,6 +61,9 @@
 
 КОНФИДЕНЦИАЛЬНОСТЬ И БЕЗОПАСНОСТЬ:
 Приложение не требует регистрации, не подключается к банковским API и работает полностью локально на вашем устройстве. Ваши персональные финансовые данные принадлежат исключительно вам.
+
+ОТКАЗ ОТ ОТВЕТСТВЕННОСТИ (DISCLAIMER):
+Использование программы предназначено исключительно для образовательных целей и не является персональной финансовой рекомендацией. Автор не несет ответственности за любые финансовые результаты, убытки или последствия использования данного программного обеспечения и предоставленной информации. Все действия вы совершаете на свой собственный страх и риск.
 ```
 
 ### 4. Ключевые слова для поисковой оптимизации (ASO Keywords)
@@ -72,8 +75,8 @@
 
 ### 1. App Title
 > **Google Play Limit:** max 30 characters.  
-**Value (29 characters):**  
-`Personal Finance & FIRE Audit`
+**Value (25 characters):**  
+`Personal finance and FIRE`
 
 ### 2. Short Description
 > **Google Play Limit:** max 80 characters.  
@@ -127,6 +130,9 @@ KEY FEATURES & TABS:
 
 PRIVACY FOCUSED:
 No bank logins required. No cloud account tracking. All calculations run strictly on-device ensuring total financial privacy.
+
+DISCLAIMER:
+Use of this program is intended solely for educational purposes and does not constitute personal financial advice. The author is not responsible for any financial results, losses, or consequences resulting from the use of this software and the information provided. All actions are taken at your own risk.
 ```
 
 ### 4. ASO Keywords / Search Tags
