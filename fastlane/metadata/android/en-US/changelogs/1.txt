@@ -1,0 +1,4 @@
+• Initial release of Personal Finance & FIRE Audit
+• 9 comprehensive capital metrics
+• FIRE retirement modeling & What-if simulator
+• 100% offline and privacy-first

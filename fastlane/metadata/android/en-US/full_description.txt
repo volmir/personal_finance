@@ -1,0 +1,18 @@
+"Personal Finance & FIRE Audit" is an offline, privacy-first wealth diagnostic tool and capital calculator designed to audit your financial health, calculate key wealth metrics, and model your path to early retirement using the FIRE (Financial Independence, Retire Early) methodology.
+
+KEY FEATURES:
+• Comprehensive Capital Audit: Real-time calculation of Net Worth, Savings Rate, Cash Flow, Emergency Buffer, and Debt Ratio.
+• Financial Freedom Ratio (CFS): Measure how many years of living expenses are supported by your investment capital.
+• Fidelity Age Milestones: Compare your portfolio against age-based accumulation benchmarks.
+• Real Return on Capital: Fisher equation accounting for nominal yield and inflation.
+• "What-If?" Scenario Simulator: 14 life and economic stress-tests (market crashes, job loss, inflation surge, mortgage, child care, inheritances) with interactive sliders.
+• Dynamic FIRE Projection: Wealth accumulation and decumulation trajectory up to life expectancy horizon with safe withdrawal rate modeling.
+• One-Click Shareable Audit Reports: Export structured financial audits.
+
+PRIVACY & FREEDOM:
+• 100% Offline: No internet permission requested.
+• Zero Data Collection: All data remains securely stored on your local device.
+• Open Source: Licensed under MIT.
+
+DISCLAIMER:
+Important: This project is a personal development and is provided solely for informational and educational purposes "as is". The author is not responsible for any malfunctions, data loss, or other damages arising from the use of this software. All calculations, formulas, metrics, and simulations are for informational purposes only and do not constitute personal financial, investment, or tax advice. You use this tool at your own risk.
