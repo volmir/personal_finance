@@ -350,6 +350,16 @@ fun InputDataScreen(
                     }
                 }
 
+                Spacer(modifier = Modifier.height(10.dp))
+
+                NumberInputField(
+                    label = strings.capitalGainsTaxLabel,
+                    value = inputData.capitalGainsTaxPercent,
+                    currency = "%",
+                    onValueChange = { newVal -> onUpdate { it.copy(capitalGainsTaxPercent = newVal) } },
+                    testTag = "input_capital_gains_tax"
+                )
+
                 CategoryBreakdownHint(
                     metricName = strings.investmentsBreakdownName,
                     hintCollapsed = strings.investmentsHintCollapsed,
@@ -357,6 +367,15 @@ fun InputDataScreen(
                     instruction = strings.breakdownInstruction,
                     categories = strings.investmentsCategories,
                     modifier = Modifier.padding(top = 6.dp)
+                )
+
+                CategoryBreakdownHint(
+                    metricName = strings.capitalGainsTaxBreakdownName,
+                    hintCollapsed = strings.capitalGainsTaxHintCollapsed,
+                    hintExpanded = strings.capitalGainsTaxHintExpanded,
+                    instruction = strings.breakdownInstruction,
+                    categories = strings.capitalGainsTaxCategories,
+                    modifier = Modifier.padding(top = 4.dp)
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))

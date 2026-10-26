@@ -70,6 +70,13 @@ interface AppStrings {
     val block4Subtitle: String
     val nominalReturnLabel: String
     val inflationLabel: String
+    val capitalGainsTaxLabel: String
+    val capitalGainsTaxBreakdownName: String
+    val capitalGainsTaxHintCollapsed: String
+    val capitalGainsTaxHintExpanded: String
+    val capitalGainsTaxEffectiveFormat: (tax: String, eff: String) -> String
+    val capitalGainsTaxFormula: String
+    val capitalGainsTaxCategories: List<BreakdownCategory>
     val investmentsBreakdownName: String
     val investmentsHintCollapsed: String
     val investmentsHintExpanded: String
@@ -502,10 +509,40 @@ val StringsRu: AppStrings = object : AppStrings {
     override val netWorthTitle: String = "Чистый капитал:"
     override val netWorthFormula: String = "(Активы - Пассивы)"
 
-    override val block4Title: String = "4. Инвестиции & Инфляция"
-    override val block4Subtitle: String = "Параметры доходности капитала и покупательской способности"
+    override val block4Title: String = "4. Инвестиции, Инфляция & Налоги"
+    override val block4Subtitle: String = "Параметры доходности, инфляции и налога на прирост капитала"
     override val nominalReturnLabel: String = "Номинальная %"
     override val inflationLabel: String = "Инфляция %"
+    override val capitalGainsTaxLabel: String = "Налог на прирост капитала (%)"
+    override val capitalGainsTaxBreakdownName: String = "Налог на прирост капитала"
+    override val capitalGainsTaxHintCollapsed: String = "Как устроен налог на прирост капитала и расчет? (подсказка)"
+    override val capitalGainsTaxHintExpanded: String = "Скрыть информацию о налоге на прирост капитала"
+    override val capitalGainsTaxEffectiveFormat: (tax: String, eff: String) -> String = { tax, eff -> "Ставка: $tax | Эффективный налог с вывода: $eff" }
+    override val capitalGainsTaxFormula: String = "Ставка * Доля прибыли в выводе * Доля фин. активов"
+    override val capitalGainsTaxCategories: List<BreakdownCategory> = listOf(
+        BreakdownCategory(
+            title = "Суть и база налогообложения",
+            items = listOf(
+                "Налогом облагается не вся сумма от продажи, а положительная разница между доходом от продажи и документально подтверждёнными расходами на приобретение (цена покупки, комиссии, связанные с покупкой).",
+                "Ставка применяется к прибыли от продажи акций и облигаций (разница между ценой продажи и покупки)."
+            )
+        ),
+        BreakdownCategory(
+            title = "Реалистичный смешанный расчет (Blended Model)",
+            items = listOf(
+                "Обычно при продаже часть суммы — это ваш первоначальный вклад, а часть — накопленная прибыль. Налогом облагается только прибыль.",
+                "В программе индивидуальные доли прибыли (прироста капитала) и возврата тела капитала рассчитываются динамически для каждого пользователя исходя из горизонта накопления, сложных процентов, структуры активов и планируемых расходов на пенсии.",
+                "Пример: если налог на прирост капитала составляет 23%, а индивидуальная расчетная доля прибыли в выводе равна 60%, то эффективный налог с вывода = 23% × 60% = 13,8%."
+            )
+        ),
+        BreakdownCategory(
+            title = "Учет в расчетах и влияние на FIRE",
+            items = listOf(
+                "Влияет на необходимый капитал и срок выхода на пенсию, если в структуре капитала есть акции и облигации (финансовые активы), которые нужно регулярно выводить для покрытия расходов.",
+                "Дефолтное значение: средняя ставка по развитым странам Северной Америки и ЕС (20%)."
+            )
+        )
+    )
     override val investmentsBreakdownName: String = "Инвестиции & Инфляция"
     override val investmentsHintCollapsed: String = "Что учитывать в «Инвестициях и инфляции»? (подсказка)"
     override val investmentsHintExpanded: String = "Скрыть подсказку по инвестициям и инфляции"
@@ -1003,10 +1040,40 @@ val StringsEn: AppStrings = object : AppStrings {
     override val netWorthTitle: String = "Net Worth:"
     override val netWorthFormula: String = "(Assets - Liabilities)"
 
-    override val block4Title: String = "4. Investments & Inflation"
-    override val block4Subtitle: String = "Parameters of capital return and purchasing power"
+    override val block4Title: String = "4. Investments, Inflation & Taxes"
+    override val block4Subtitle: String = "Parameters of return, purchasing power, and capital gains tax"
     override val nominalReturnLabel: String = "Nominal return %"
     override val inflationLabel: String = "Inflation %"
+    override val capitalGainsTaxLabel: String = "Capital gains tax (%)"
+    override val capitalGainsTaxBreakdownName: String = "Capital Gains Tax"
+    override val capitalGainsTaxHintCollapsed: String = "How is capital gains tax calculated? (hint)"
+    override val capitalGainsTaxHintExpanded: String = "Hide capital gains tax details"
+    override val capitalGainsTaxEffectiveFormat: (tax: String, eff: String) -> String = { tax, eff -> "Tax rate: $tax | Effective withdrawal tax: $eff" }
+    override val capitalGainsTaxFormula: String = "Tax Rate * Individual Gain Share * Financial Assets Ratio"
+    override val capitalGainsTaxCategories: List<BreakdownCategory> = listOf(
+        BreakdownCategory(
+            title = "Tax Principle & Taxable Base",
+            items = listOf(
+                "Tax is levied not on the total sale proceeds, but on the net gain between sale price and documented acquisition costs (purchase price, commissions).",
+                "The rate applies to profits from selling stocks and bonds (difference between selling and purchase price)."
+            )
+        ),
+        BreakdownCategory(
+            title = "Realistic Blended Model",
+            items = listOf(
+                "When liquidating assets, part of the withdrawal is your original cost basis and part is accumulated capital gains. Only the gains are taxable.",
+                "The individual shares of capital gain and return of principal are calculated dynamically for each user based on your investment horizon, compound returns, asset structure, and retirement living expenses.",
+                "Example: If capital gains tax is 23% and the user's calculated gain share in withdrawal is 60%, effective withdrawal tax = 23% × 60% = 13.8%."
+            )
+        ),
+        BreakdownCategory(
+            title = "Impact on FIRE & Retirement Horizon",
+            items = listOf(
+                "Extends time to retirement and increases target capital if capital structure contains stocks and bonds that must be periodically liquidated for living expenses.",
+                "Default is set to the benchmark average for developed North American & EU economies (20%)."
+            )
+        )
+    )
     override val investmentsBreakdownName: String = "Investments & Inflation"
     override val investmentsHintCollapsed: String = "What to consider in \"Investments & Inflation\"? (hint)"
     override val investmentsHintExpanded: String = "Hide hint for investments and inflation"

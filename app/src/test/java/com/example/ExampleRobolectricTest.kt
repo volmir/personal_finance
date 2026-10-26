@@ -49,6 +49,7 @@ class ExampleRobolectricTest {
         assertEquals(6000.0, initialData.monthlyIncome, 0.01)
         assertEquals(4800.0, initialData.monthlyExpenses, 0.01)
         assertEquals("$", initialData.currencySymbol)
+        assertEquals(20.0, initialData.capitalGainsTaxPercent, 0.01)
         assertFalse(prefsManager.isFirstLaunch())
 
         // 2. User modifies indicators and settings
@@ -56,7 +57,8 @@ class ExampleRobolectricTest {
             monthlyIncome = 12000.0,
             monthlyExpenses = 7500.0,
             currencySymbol = "€",
-            inflationPercent = 3.2
+            inflationPercent = 3.2,
+            capitalGainsTaxPercent = 25.0
         )
         prefsManager.saveData(customData)
         prefsManager.saveLanguage(AppLanguage.EN)
@@ -80,6 +82,7 @@ class ExampleRobolectricTest {
         assertEquals(7500.0, loadedData.monthlyExpenses, 0.01)
         assertEquals("€", loadedData.currencySymbol)
         assertEquals(3.2, loadedData.inflationPercent, 0.01)
+        assertEquals(25.0, loadedData.capitalGainsTaxPercent, 0.01)
 
         assertEquals(AppLanguage.EN, restartedPrefsManager.loadLanguage())
         assertEquals(AppTab.FIRE, restartedPrefsManager.loadCurrentTab())

@@ -783,4 +783,56 @@ class ExampleUnitTest {
         assertTrue(enStrings.metricFidelityDesc.contains("not affiliated with or endorsed by Fidelity Investments"))
         assertTrue(enStrings.metricFidelityDesc.contains("publicly available research milestones"))
     }
+
+    @Test
+    fun testCapitalGainsTaxCalculationsAndImpact() {
+        val baseInput = FinancialInputData(
+            monthlyIncome = 100_000.0,
+            monthlyExpenses = 50_000.0,
+            liquidAssets = 100_000.0,
+            financialAssets = 1_000_000.0,
+            propertyAssets = 0.0,
+            liabilities = 0.0,
+            birthDate = "1990-01-01",
+            lifeExpectancy = 80,
+            nominalReturnPercent = 10.0,
+            inflationPercent = 5.0,
+            capitalGainsTaxPercent = 20.0
+        )
+
+        // 1. Dynamic individual calculation: gain share and effective tax rate are computed from individual user data
+        val metrics20 = FinanceCalculator.calculate(baseInput)
+        assertEquals(20.0, metrics20.capitalGainsTaxPercent, 0.01)
+        assertTrue(metrics20.capitalGainsGainSharePercent > 0.0)
+        assertTrue(metrics20.effectiveCapitalGainsTaxRate > 0.0)
+
+        // 2. Custom rate: 23% scales effective tax proportionally
+        val input23 = baseInput.copy(capitalGainsTaxPercent = 23.0)
+        val metrics23 = FinanceCalculator.calculate(input23)
+        assertEquals(23.0, metrics23.capitalGainsTaxPercent, 0.01)
+        assertTrue(metrics23.effectiveCapitalGainsTaxRate > metrics20.effectiveCapitalGainsTaxRate)
+
+        // 3. Higher capital gains tax increases required FIRE capital and years to retirement
+        val input0 = baseInput.copy(capitalGainsTaxPercent = 0.0)
+        val metrics0 = FinanceCalculator.calculate(input0)
+        assertEquals(0.0, metrics0.effectiveCapitalGainsTaxRate, 0.01)
+        assertTrue(metrics23.retirementTargetCapital > metrics0.retirementTargetCapital)
+        assertTrue(metrics23.yearsToRetirement >= metrics0.yearsToRetirement)
+
+        // 4. If user has no financial assets (stocks/bonds), effective tax rate is 0
+        val inputNoFin = baseInput.copy(financialAssets = 0.0, liquidAssets = 1_100_000.0)
+        val metricsNoFin = FinanceCalculator.calculate(inputNoFin)
+        assertEquals(0.0, metricsNoFin.effectiveCapitalGainsTaxRate, 0.01)
+
+        // 5. Export summary includes capital gains tax in Block 1 and full effective rate in Block 2 (both RU and EN)
+        val exportRu = AuditorAnalysisGenerator.generateExportSummary(baseInput, metrics20, com.example.util.localization.AppLanguage.RU)
+        assertTrue(exportRu.contains("Налог на прирост капитала: 20"))
+        assertTrue(exportRu.contains("Эффективная ставка налога с вывода капитала:"))
+        assertFalse(exportRu.contains("эфф."))
+
+        val exportEn = AuditorAnalysisGenerator.generateExportSummary(baseInput, metrics20, com.example.util.localization.AppLanguage.EN)
+        assertTrue(exportEn.contains("Capital gains tax: 20"))
+        assertTrue(exportEn.contains("Effective capital gains tax on withdrawal:"))
+        assertFalse(exportEn.contains("eff."))
+    }
 }

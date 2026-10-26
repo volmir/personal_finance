@@ -12,6 +12,7 @@ data class FinancialInputData(
     val lifeExpectancy: Int = 82,
     val nominalReturnPercent: Double = 7.5,
     val inflationPercent: Double = 2.5,
+    val capitalGainsTaxPercent: Double = 20.0,
     val currencySymbol: String = "$",
     val includeFinancialInEmergencyFund: Boolean = true
 ) {
@@ -61,7 +62,10 @@ data class CalculatedMetrics(
     val yearsToRetirement: Double,
     val retirementAge: Double,
     val retirementTargetCapital: Double,
-    val scores: FinancialScores
+    val scores: FinancialScores,
+    val capitalGainsTaxPercent: Double = 20.0,
+    val effectiveCapitalGainsTaxRate: Double = 12.0,
+    val capitalGainsGainSharePercent: Double = 60.0
 ) {
     val fidelityRatio: Double get() = com.example.domain.FinancialMetricEvaluator.calculateFidelityRatio(netWorth, fidelityTarget)
     val fidelityPercent: Double get() = com.example.domain.FinancialMetricEvaluator.calculateFidelityPercent(netWorth, fidelityTarget)

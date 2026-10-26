@@ -23,6 +23,7 @@ class LocalPreferencesManager(context: Context) {
         private const val KEY_LIFE_EXPECTANCY = "life_expectancy"
         private const val KEY_NOMINAL_RETURN = "nominal_return"
         private const val KEY_INFLATION = "inflation"
+        private const val KEY_CAPITAL_GAINS_TAX = "capital_gains_tax"
         private const val KEY_CURRENCY = "currency"
         private const val KEY_INCLUDE_FINANCIAL_EMERGENCY = "include_financial_emergency"
 
@@ -75,6 +76,7 @@ class LocalPreferencesManager(context: Context) {
             lifeExpectancy = prefs.getInt(KEY_LIFE_EXPECTANCY, 82),
             nominalReturnPercent = prefs.getString(KEY_NOMINAL_RETURN, "7.5")?.toDoubleOrNull() ?: 7.5,
             inflationPercent = prefs.getString(KEY_INFLATION, "2.5")?.toDoubleOrNull() ?: 2.5,
+            capitalGainsTaxPercent = prefs.getString(KEY_CAPITAL_GAINS_TAX, "20.0")?.toDoubleOrNull() ?: 20.0,
             currencySymbol = prefs.getString(KEY_CURRENCY, "$") ?: "$",
             includeFinancialInEmergencyFund = prefs.getBoolean(KEY_INCLUDE_FINANCIAL_EMERGENCY, true)
         )
@@ -93,6 +95,7 @@ class LocalPreferencesManager(context: Context) {
             putInt(KEY_LIFE_EXPECTANCY, data.lifeExpectancy)
             putString(KEY_NOMINAL_RETURN, data.nominalReturnPercent.toString())
             putString(KEY_INFLATION, data.inflationPercent.toString())
+            putString(KEY_CAPITAL_GAINS_TAX, data.capitalGainsTaxPercent.toString())
             putString(KEY_CURRENCY, data.currencySymbol)
             putBoolean(KEY_INCLUDE_FINANCIAL_EMERGENCY, data.includeFinancialInEmergencyFund)
             apply()
@@ -188,6 +191,7 @@ class LocalPreferencesManager(context: Context) {
             lifeExpectancy = 82,
             nominalReturnPercent = 7.5,
             inflationPercent = 2.5,
+            capitalGainsTaxPercent = 20.0,
             currencySymbol = "$",
             includeFinancialInEmergencyFund = true
         )

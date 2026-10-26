@@ -75,6 +75,10 @@ object FinanceCalculator {
             cfs = cfs
         )
 
+        // Динамический расчет эффективной ставки налога на прирост капитала с вывода
+        // Учет в расчетах: применяется к выводу, если в структуре капитала есть финансовые активы (акции/облигации)
+        val hasFinancialAssets = input.financialAssets > 0.0
+
         val yearsToRetire = calculateYearsToRetirement(
             currentAge = currentAge,
             lifeExpectancy = input.lifeExpectancy,
@@ -85,15 +89,36 @@ object FinanceCalculator {
             temporaryExpenses = temporaryExpenses,
             deferredAnnualExpenseReduction = deferredAnnualExpenseReduction,
             deferredStartYears = deferredStartYears,
-            deferredAssets = deferredAssets
+            deferredAssets = deferredAssets,
+            effectiveTaxRate = 0.0,
+            financialAssets = input.financialAssets,
+            liquidAssets = input.liquidAssets,
+            capitalGainsTaxPercent = input.capitalGainsTaxPercent
         )
 
         val retirementAge = currentAge + yearsToRetire
         val remainingYearsInRetirement = (input.lifeExpectancy - retirementAge).coerceAtLeast(0.0)
         val r = realReturnPercent / 100.0
         val ongoingAnnualExpenses = (annualExpenses - temporaryExpenses.sumOf { it.annualAmount }).coerceAtLeast(0.0)
-        val targetRetirementCapital = if (remainingYearsInRetirement > 0) {
-            val baseReq = if (yearsToRetire >= deferredStartYears) {
+
+        // Индивидуальный расчет Blended Model для конкретного пользователя:
+        // 1. Доля финансовых активов (акции/облигации) в структуре ликвидных/инвестиционных активов
+        val liquidatableAssets = input.financialAssets + input.liquidAssets
+        val financialAssetRatio = if (liquidatableAssets > 0.0) {
+            (input.financialAssets / liquidatableAssets).coerceIn(0.0, 1.0)
+        } else {
+            0.0
+        }
+
+        // 2. Совокупные расходы на пенсии на всем горизонте дожития
+        val totalRetirementExpenses = ongoingAnnualExpenses * remainingYearsInRetirement
+
+        // 3. Совокупные собственные вложения (тело капитала = текущие финансовые активы + пополнения до пенсии)
+        val contributedPrincipal = input.financialAssets + maxOf(0.0, cashFlow * 12.0) * yearsToRetire
+
+        // Базовый капитал до налогообложения
+        val baseReq = if (remainingYearsInRetirement > 0) {
+            if (yearsToRetire >= deferredStartYears) {
                 val exp = (ongoingAnnualExpenses - deferredAnnualExpenseReduction).coerceAtLeast(0.0)
                 if (r > 0.0001) {
                     exp * (1.0 - (1.0 + r).pow(-remainingYearsInRetirement)) / r
@@ -121,6 +146,35 @@ object FinanceCalculator {
                 }
                 (reqFull - discountedSavings).coerceAtLeast(0.0)
             }
+        } else 0.0
+
+        // 4. Индивидуальный накопленный инвестиционный доход (прирост капитала)
+        val totalGain = maxOf(
+            (totalRetirementExpenses - contributedPrincipal).coerceAtLeast(0.0),
+            (totalRetirementExpenses - baseReq).coerceAtLeast(0.0)
+        )
+
+        // 5. Индивидуальная расчетная доля прибыли в выводе (вместо жестко закодированных 60%)
+        val individualGainShare = if (totalRetirementExpenses > 0.0 && hasFinancialAssets) {
+            (totalGain / totalRetirementExpenses).coerceIn(0.0, 0.95)
+        } else {
+            0.0
+        }
+
+        // 6. Индивидуальная эффективная ставка налога с вывода
+        val effectiveCapitalGainsTaxRate = if (hasFinancialAssets && input.capitalGainsTaxPercent > 0.0) {
+            ((input.capitalGainsTaxPercent / 100.0) * individualGainShare * financialAssetRatio).coerceIn(0.0, 0.50)
+        } else {
+            0.0
+        }
+
+        val taxMultiplier = if (effectiveCapitalGainsTaxRate > 0.0 && effectiveCapitalGainsTaxRate < 0.99) {
+            1.0 / (1.0 - effectiveCapitalGainsTaxRate)
+        } else {
+            1.0
+        }
+
+        val targetRetirementCapital = if (remainingYearsInRetirement > 0) {
             var tempReq = 0.0
             for (temp in temporaryExpenses) {
                 if (yearsToRetire < temp.durationYears) {
@@ -145,7 +199,7 @@ object FinanceCalculator {
                     }
                 }
             }
-            (baseReq + tempReq - deferredAssetDiscounted).coerceAtLeast(0.0)
+            ((baseReq + tempReq) * taxMultiplier - deferredAssetDiscounted).coerceAtLeast(0.0)
         } else 0.0
 
         return CalculatedMetrics(
@@ -169,7 +223,10 @@ object FinanceCalculator {
             yearsToRetirement = yearsToRetire,
             retirementAge = retirementAge,
             retirementTargetCapital = targetRetirementCapital,
-            scores = scores
+            scores = scores,
+            capitalGainsTaxPercent = input.capitalGainsTaxPercent,
+            effectiveCapitalGainsTaxRate = effectiveCapitalGainsTaxRate * 100.0,
+            capitalGainsGainSharePercent = individualGainShare * 100.0
         )
     }
 
@@ -256,7 +313,11 @@ object FinanceCalculator {
         temporaryExpenses: List<TemporaryExpense> = emptyList(),
         deferredAnnualExpenseReduction: Double = 0.0,
         deferredStartYears: Double = 18.0,
-        deferredAssets: List<DeferredAsset> = emptyList()
+        deferredAssets: List<DeferredAsset> = emptyList(),
+        effectiveTaxRate: Double = 0.0,
+        financialAssets: Double = 0.0,
+        liquidAssets: Double = 0.0,
+        capitalGainsTaxPercent: Double = 0.0
     ): Double {
         val maxYears = (lifeExpectancy - currentAge).toDouble()
         if (maxYears <= 0) return 0.0
@@ -267,6 +328,31 @@ object FinanceCalculator {
         val ongoingAnnualCashFlow = annualCashFlow + temporaryExpenses.sumOf { it.annualAmount }
         val R = deferredAnnualExpenseReduction
         val T_def = deferredStartYears
+
+        val liquidatableAssets = financialAssets + liquidAssets
+        val finRatio = if (liquidatableAssets > 0.0) {
+            (financialAssets / liquidatableAssets).coerceIn(0.0, 1.0)
+        } else 0.0
+
+        fun getTaxFactorAt(t: Double, yearsInRetirement: Double, baseReq: Double): Double {
+            if (capitalGainsTaxPercent <= 0.0 || financialAssets <= 0.0 || yearsInRetirement <= 0.0) {
+                return if (effectiveTaxRate > 0.0 && effectiveTaxRate < 0.99) 1.0 / (1.0 - effectiveTaxRate) else 1.0
+            }
+            val totalRetirementSpend = ongoingAnnualExpenses * yearsInRetirement
+            val contributedPrincipal = financialAssets + maxOf(0.0, ongoingAnnualCashFlow) * t
+            val totalGain = maxOf(
+                (totalRetirementSpend - contributedPrincipal).coerceAtLeast(0.0),
+                (totalRetirementSpend - baseReq).coerceAtLeast(0.0)
+            )
+            val individualGainShare = if (totalRetirementSpend > 0.0) {
+                (totalGain / totalRetirementSpend).coerceIn(0.0, 0.95)
+            } else 0.0
+
+            val dynamicEffectiveTax = ((capitalGainsTaxPercent / 100.0) * individualGainShare * finRatio).coerceIn(0.0, 0.50)
+            return if (dynamicEffectiveTax > 0.0 && dynamicEffectiveTax < 0.99) {
+                1.0 / (1.0 - dynamicEffectiveTax)
+            } else 1.0
+        }
 
         // Function to compute required capital at retirement year t
         fun requiredCapital(t: Double): Double {
@@ -316,6 +402,8 @@ object FinanceCalculator {
                 }
             }
 
+            val taxFactor = getTaxFactorAt(t, yearsInRetirement, baseReq)
+
             var deferredAssetDiscounted = 0.0
             for (asset in deferredAssets) {
                 if (t < asset.afterYears && asset.afterYears < maxYears) {
@@ -327,7 +415,7 @@ object FinanceCalculator {
                     }
                 }
             }
-            return (baseReq + tempReq - deferredAssetDiscounted).coerceAtLeast(0.0)
+            return ((baseReq + tempReq) * taxFactor - deferredAssetDiscounted).coerceAtLeast(0.0)
         }
 
         // Function to compute accumulated capital at year t
@@ -426,6 +514,12 @@ object FinanceCalculator {
         val startCapital = metrics.netWorth
         val R = deferredAnnualExpenseReduction
         val T_def = deferredStartYears
+        val effectiveCapitalGainsTaxRate = (metrics.effectiveCapitalGainsTaxRate / 100.0).coerceIn(0.0, 0.50)
+        val taxFactor = if (effectiveCapitalGainsTaxRate > 0.0 && effectiveCapitalGainsTaxRate < 0.99) {
+            1.0 / (1.0 - effectiveCapitalGainsTaxRate)
+        } else {
+            1.0
+        }
 
         fun requiredCapitalAt(t: Double): Double {
             val yearsInRetireLeft = (totalYears.toDouble() - t).coerceAtLeast(0.0)
@@ -485,7 +579,7 @@ object FinanceCalculator {
                     }
                 }
             }
-            return (baseReq + tempReq - deferredAssetDiscounted).coerceAtLeast(0.0)
+            return ((baseReq + tempReq) * taxFactor - deferredAssetDiscounted).coerceAtLeast(0.0)
         }
 
         fun accumulatedCapitalWorking(t: Double): Double {
@@ -602,7 +696,7 @@ object FinanceCalculator {
                     }
                 }
 
-                capCompounded - (baseDraw - savingsDraw) - tempDraw + deferredAssetsInRetirement
+                capCompounded - (baseDraw - savingsDraw + tempDraw) * taxFactor + deferredAssetsInRetirement
             }
 
             list.add(
