@@ -1,0 +1,24 @@
+# Local F-Droid build configuration file
+# Can be tested locally using the `fdroid build` command
+Categories:
+  - Money
+License: MIT
+AuthorName: Personal Finance & FIRE
+SourceCode: https://github.com/USERNAME/REPO
+IssueTracker: https://github.com/USERNAME/REPO/issues
+Changelog: https://github.com/USERNAME/REPO/releases
+
+AutoUpdateMode: Version
+UpdateCheckMode: Tags
+CurrentVersion: '1.0'
+CurrentVersionCode: 1
+
+Builds:
+  - versionName: '1.0'
+    versionCode: 1
+    commit: v1.0
+    subdir: app
+    gradle:
+      - yes
+
+AutoName: Personal finance and FIRE

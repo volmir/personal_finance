@@ -511,7 +511,7 @@ val StringsRu: AppStrings = object : AppStrings {
 
     override val block4Title: String = "4. Инвестиции, Инфляция & Налоги"
     override val block4Subtitle: String = "Параметры доходности, инфляции и налога на прирост капитала"
-    override val nominalReturnLabel: String = "Номинальная %"
+    override val nominalReturnLabel: String = "Номинальная доходность %"
     override val inflationLabel: String = "Инфляция %"
     override val capitalGainsTaxLabel: String = "Налог на прирост капитала (%)"
     override val capitalGainsTaxBreakdownName: String = "Налог на прирост капитала"

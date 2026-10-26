@@ -168,13 +168,14 @@ The APK will be generated at: `app/build/outputs/apk/release/app-release.apk`.
 
 ---
 
-## 🏪 F-Droid / IzzyOnDroid Compatibility
+## 🏪 Distribution / Публикация в каталогах
 
-The repository includes pre-configured **Fastlane** metadata structure compatible with F-Droid and IzzyOnDroid:
-- Metadata path: `fastlane/metadata/android/`
-  - `en-US/`: `title.txt`, `short_description.txt`, `full_description.txt`, `changelogs/1.txt`
-  - `ru-RU/`: `title.txt`, `short_description.txt`, `full_description.txt`, `changelogs/1.txt`
-- OSI-Approved License: `LICENSE` (MIT) included in project root.
+Подготовлены все необходимые файлы конфигураций и пошаговые инструкции для публикации:
+- 🤖 **[F-Droid Inclusion Guide (Официальный каталог F-Droid)](./FDROID_SETUP.md):** Манифест сборки `metadata/com.aistudio.finhealthfire.kzqpv.yml`, полная инструкция по созданию Merge Request в `fdroiddata` на GitLab.
+- 📦 **[IzzyOnDroid Distribution Guide](./IZZYON_DROID_SETUP.md):** Публикация готовых APK через GitHub Releases и авто-трекинг репозитория.
+- 🚀 **[GitHub Actions CI/CD Workflow](./.github/workflows/build-and-release.yml):** Автоматическая сборка подписанного релизного APK при публикации Git-тегов.
+- 📁 **Fastlane Metadata:** Локализованные метаданные `fastlane/metadata/android/` (`ru-RU`, `en-US`), иконки и описания для каталогов.
+- 📄 **OSI-Approved License:** [MIT License](./LICENSE) в корне проекта.
 
 ---
 

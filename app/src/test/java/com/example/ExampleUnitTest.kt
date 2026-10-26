@@ -826,12 +826,14 @@ class ExampleUnitTest {
 
         // 5. Export summary includes capital gains tax in Block 1 and full effective rate in Block 2 (both RU and EN)
         val exportRu = AuditorAnalysisGenerator.generateExportSummary(baseInput, metrics20, com.example.util.localization.AppLanguage.RU)
-        assertTrue(exportRu.contains("Налог на прирост капитала: 20"))
+        assertTrue(exportRu.contains("Номинальная доходность:"))
+        assertTrue(exportRu.contains("• Налог на прирост капитала: 20"))
         assertTrue(exportRu.contains("Эффективная ставка налога с вывода капитала:"))
         assertFalse(exportRu.contains("эфф."))
 
         val exportEn = AuditorAnalysisGenerator.generateExportSummary(baseInput, metrics20, com.example.util.localization.AppLanguage.EN)
-        assertTrue(exportEn.contains("Capital gains tax: 20"))
+        assertTrue(exportEn.contains("Nominal return:"))
+        assertTrue(exportEn.contains("• Capital gains tax: 20"))
         assertTrue(exportEn.contains("Effective capital gains tax on withdrawal:"))
         assertFalse(exportEn.contains("eff."))
     }
