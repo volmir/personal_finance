@@ -19,3 +19,13 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+# Room database rules
+-keep class androidx.room.RoomDatabase
+-dontwarn androidx.room.paging.**
+-keep class * extends androidx.room.RoomDatabase
+-keep @androidx.room.Entity class * { *; }
+-keepclassmembers class * extends androidx.room.RoomDatabase { *; }
+-keep class com.example.data.db.** { *; }
+-keep class com.example.data.model.** { *; }
+

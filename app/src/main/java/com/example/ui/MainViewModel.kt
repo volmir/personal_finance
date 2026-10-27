@@ -131,6 +131,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _currentTab = MutableStateFlow(localPrefs.loadCurrentTab() ?: AppTab.INPUT)
     val currentTab: StateFlow<AppTab> = _currentTab.asStateFlow()
 
+    private val _userFeedbackMessage = MutableStateFlow<String?>(null)
+    val userFeedbackMessage: StateFlow<String?> = _userFeedbackMessage.asStateFlow()
+
+    fun clearFeedbackMessage() {
+        _userFeedbackMessage.value = null
+    }
+
     // Языковая версия: восстанавливается из настроек, либо фоновый выбор при самом первом запуске
     private val _appLanguage = MutableStateFlow(
         localPrefs.loadLanguage() ?: AppLanguage.detectSystemLanguage().also {
@@ -435,19 +442,60 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun saveCurrentAsScenario(name: String) {
         viewModelScope.launch {
             repository.saveScenario(name = name, data = _inputData.value)
+                .onSuccess {
+                    _userFeedbackMessage.value = if (_appLanguage.value == AppLanguage.EN) {
+                        "Scenario \"$name\" saved successfully"
+                    } else {
+                        "Сценарий «$name» успешно сохранен"
+                    }
+                }
+                .onFailure { error ->
+                    _userFeedbackMessage.value = if (_appLanguage.value == AppLanguage.EN) {
+                        "Failed to save scenario: ${error.localizedMessage ?: "database error"}"
+                    } else {
+                        "Ошибка сохранения сценария: ${error.localizedMessage ?: "ошибка базы данных"}"
+                    }
+                }
         }
     }
 
     fun loadScenario(scenario: ScenarioEntity) {
-        val data = scenario.toInputData()
-        _inputData.value = data
-        localPrefs.saveData(data)
-        recalculate()
+        try {
+            val data = scenario.toInputData()
+            _inputData.value = data
+            localPrefs.saveData(data)
+            recalculate()
+            _userFeedbackMessage.value = if (_appLanguage.value == AppLanguage.EN) {
+                "Scenario \"${scenario.name}\" loaded"
+            } else {
+                "Сценарий «${scenario.name}» загружен"
+            }
+        } catch (e: Exception) {
+            _userFeedbackMessage.value = if (_appLanguage.value == AppLanguage.EN) {
+                "Failed to load scenario: ${e.localizedMessage ?: "corrupted data"}"
+            } else {
+                "Ошибка загрузки сценария: ${e.localizedMessage ?: "поврежденные данные"}"
+            }
+        }
     }
 
     fun deleteScenario(scenario: ScenarioEntity) {
         viewModelScope.launch {
             repository.deleteScenario(scenario)
+                .onSuccess {
+                    _userFeedbackMessage.value = if (_appLanguage.value == AppLanguage.EN) {
+                        "Scenario \"${scenario.name}\" deleted"
+                    } else {
+                        "Сценарий «${scenario.name}» удален"
+                    }
+                }
+                .onFailure { error ->
+                    _userFeedbackMessage.value = if (_appLanguage.value == AppLanguage.EN) {
+                        "Failed to delete scenario: ${error.localizedMessage ?: "database error"}"
+                    } else {
+                        "Ошибка удаления сценария: ${error.localizedMessage ?: "ошибка базы данных"}"
+                    }
+                }
         }
     }
 }

@@ -90,7 +90,6 @@ object FinanceCalculator {
             deferredAnnualExpenseReduction = deferredAnnualExpenseReduction,
             deferredStartYears = deferredStartYears,
             deferredAssets = deferredAssets,
-            effectiveTaxRate = 0.0,
             financialAssets = input.financialAssets,
             liquidAssets = input.liquidAssets,
             capitalGainsTaxPercent = input.capitalGainsTaxPercent
@@ -314,7 +313,6 @@ object FinanceCalculator {
         deferredAnnualExpenseReduction: Double = 0.0,
         deferredStartYears: Double = 18.0,
         deferredAssets: List<DeferredAsset> = emptyList(),
-        effectiveTaxRate: Double = 0.0,
         financialAssets: Double = 0.0,
         liquidAssets: Double = 0.0,
         capitalGainsTaxPercent: Double = 0.0
@@ -336,7 +334,7 @@ object FinanceCalculator {
 
         fun getTaxFactorAt(t: Double, yearsInRetirement: Double, baseReq: Double): Double {
             if (capitalGainsTaxPercent <= 0.0 || financialAssets <= 0.0 || yearsInRetirement <= 0.0) {
-                return if (effectiveTaxRate > 0.0 && effectiveTaxRate < 0.99) 1.0 / (1.0 - effectiveTaxRate) else 1.0
+                return 1.0
             }
             val totalRetirementSpend = ongoingAnnualExpenses * yearsInRetirement
             val contributedPrincipal = financialAssets + maxOf(0.0, ongoingAnnualCashFlow) * t

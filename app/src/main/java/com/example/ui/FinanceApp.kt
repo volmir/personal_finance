@@ -29,6 +29,8 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.ScrollableTabRow
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
@@ -38,7 +40,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -74,6 +78,15 @@ fun FinanceApp(viewModel: MainViewModel) {
     val trajectory by viewModel.trajectory.collectAsStateWithLifecycle()
     val simulatedTrajectory by viewModel.simulatedTrajectory.collectAsStateWithLifecycle()
     val savedScenarios by viewModel.savedScenarios.collectAsStateWithLifecycle()
+    val feedbackMessage by viewModel.userFeedbackMessage.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(feedbackMessage) {
+        feedbackMessage?.let { msg ->
+            snackbarHostState.showSnackbar(msg)
+            viewModel.clearFeedbackMessage()
+        }
+    }
 
     val strings = getAppStrings(appLanguage)
     val tabs = AppTab.values()
@@ -83,6 +96,7 @@ fun FinanceApp(viewModel: MainViewModel) {
         LocalAppStrings provides strings
     ) {
         Scaffold(
+            snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
             topBar = {
                 TopAppBar(
                     title = {
