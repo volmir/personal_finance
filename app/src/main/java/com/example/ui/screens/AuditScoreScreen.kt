@@ -649,8 +649,8 @@ fun ScoreItemCard(
     currentValue: String,
     formula: String,
     comment: String,
-    valuePrefix: String = "Значение:",
-    scoreOutOfTen: String = "$score из 10",
+    valuePrefix: String,
+    scoreOutOfTen: String,
     tag: String
 ) {
     Card(

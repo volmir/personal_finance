@@ -262,9 +262,16 @@ fun MetricsScreen(
                     icon = Icons.Default.AccountBalance,
                     highlightColor = StatusColors.getColor(FinancialMetricEvaluator.getNetWorthStatus(metrics.netWorth)),
                     subValue = if (metrics.netWorth >= 0) {
-                        "${strings.metricNetWorthSubPrefix}: ${Formatters.formatMoney(metrics.totalAssets, inputData.currencySymbol, lang)}"
+                        strings.metricNetWorthAssetsFormat(
+                            strings.metricNetWorthSubPrefix,
+                            Formatters.formatMoney(metrics.totalAssets, inputData.currencySymbol, lang)
+                        )
                     } else {
-                        "${strings.metricNetWorthSubPrefix}: ${Formatters.formatMoney(metrics.totalAssets, inputData.currencySymbol, lang)} (${strings.metricNetWorthNegativeSub})"
+                        strings.metricNetWorthNegativeAssetsFormat(
+                            strings.metricNetWorthSubPrefix,
+                            Formatters.formatMoney(metrics.totalAssets, inputData.currencySymbol, lang),
+                            strings.metricNetWorthNegativeSub
+                        )
                     }
                 )
             }
@@ -303,7 +310,7 @@ fun MetricsScreen(
                                     text = if (metrics.fidelityTarget > 0.0) {
                                         Formatters.formatPercent(fidelityPercent, lang)
                                     } else {
-                                        "—"
+                                        strings.metricUnavailableValue
                                     },
                                     style = MaterialTheme.typography.labelSmall.copy(
                                         fontWeight = FontWeight.Bold,

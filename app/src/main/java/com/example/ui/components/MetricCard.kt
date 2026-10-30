@@ -148,7 +148,7 @@ fun MetricCard(
                         modifier = Modifier.padding(start = 6.dp)
                     ) {
                         Text(
-                            text = "$score / 10",
+                            text = strings.scoreSlashOutOfTen(score.toString()),
                             style = MaterialTheme.typography.labelSmall.copy(
                                 fontWeight = FontWeight.Bold,
                                 color = scoreText,

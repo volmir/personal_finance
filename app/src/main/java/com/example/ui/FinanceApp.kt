@@ -138,7 +138,7 @@ fun FinanceApp(viewModel: MainViewModel) {
                                 .testTag("topbar_score_badge")
                         ) {
                             Text(
-                                text = "${Formatters.formatScore(totalScore, lang = appLanguage)} / 10",
+                                text = strings.scoreSlashOutOfTen(Formatters.formatScore(totalScore, lang = appLanguage)),
                                 style = MaterialTheme.typography.labelMedium.copy(
                                     fontWeight = FontWeight.Bold,
                                     color = totalScoreColor

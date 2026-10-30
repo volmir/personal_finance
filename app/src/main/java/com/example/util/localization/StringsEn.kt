@@ -25,6 +25,9 @@ val StringsEn: AppStrings = object : AppStrings {
     override val expensesHintCollapsed: String = "What is included in \"Expenses\"? (hint)"
     override val expensesHintExpanded: String = "Hide structure of \"Expenses\""
     override val breakdownInstruction: String = "Calculate and add up your items from the list below yourself, and enter the resulting total in the field above."
+    override val breakdownInstructionIcon: String = "💡 "
+    override val breakdownCategoryTitleFormat: (title: String) -> String = { title -> "• $title" }
+    override val breakdownCategoryItemFormat: (item: String) -> String = { item -> "    – $item" }
     override val incomeCategories: List<BreakdownCategory> = listOf(
         BreakdownCategory(
             title = "Employment & Salary",
@@ -358,6 +361,8 @@ val StringsEn: AppStrings = object : AppStrings {
     override val metricNetWorthDesc: String = "The total value of all assets minus all outstanding liabilities. This represents what you truly own outright after settling all obligations."
     override val metricNetWorthSubPrefix: String = "Total assets: "
     override val metricNetWorthNegativeSub: String = "Negative equity (deficit!)"
+    override val metricNetWorthAssetsFormat: (prefix: String, amount: String) -> String = { prefix, amount -> "$prefix: $amount" }
+    override val metricNetWorthNegativeAssetsFormat: (prefix: String, amount: String, negative: String) -> String = { prefix, amount, negative -> "$prefix: $amount ($negative)" }
 
     override val metricFidelityTitle: String = "Benchmark: Fidelity Capital Milestones"
     override val metricFidelityFormula: String = "Annual Income * Multiplier"
@@ -373,6 +378,7 @@ val StringsEn: AppStrings = object : AppStrings {
     override val metricRealReturnFormula: String = "(1 + Nominal Return) / (1 + Inflation) - 1"
     override val metricRealReturnDesc: String = "The net real expansion of purchasing power after deducting inflation from nominal investment yields. Shows real wealth creation."
     override val metricRealReturnSubFormat: (nom: String, infl: String) -> String = { nom, infl -> "Nominal: $nom | Inflation: $infl" }
+    override val metricUnavailableValue: String = "—"
 
     override val scoresHeaderTitle: String = "Score Summary"
     override val scoresHeaderSubtitle: String = "Overall audit score & breakdown"
@@ -386,6 +392,7 @@ val StringsEn: AppStrings = object : AppStrings {
     override val scoresBreakdownTitle: String = "Component Score Breakdown:"
     override val scoreValuePrefix: String = "Value: "
     override val scoreOutOfTen: (score: Int) -> String = { score -> "$score of 10" }
+    override val scoreSlashOutOfTen: (score: String) -> String = { score -> "$score / 10" }
     override val savingsRateScoreComment: (rate: Double, sr: String) -> String = { rate, sr ->
         when {
             rate > 20.0 -> "Recommended above 20%. You maintain an excellent rate ($sr)."
@@ -470,9 +477,11 @@ val StringsEn: AppStrings = object : AppStrings {
     override val scenarioHeaderSubtitle: String = "The collective impact of sliders and checkboxes accumulates and is calculated together. The final result reflects in numbers and on the trajectory chart:"
     override val scenarioTotalBadge: (count: Int) -> String = { count -> "Total: $count" }
     override val scenarioPositiveTitle: String = "Positive Events"
+    override val scenarioPositiveSectionNumber: String = "2.1"
     override val scenarioPositiveActive: (count: Int) -> String = { count -> "Active: $count" }
     override val scenarioPositiveSubtitle: String = "Events that accelerate capital accumulation and retirement:"
     override val scenarioNegativeTitle: String = "Negative Events"
+    override val scenarioNegativeSectionNumber: String = "2.2"
     override val scenarioNegativeActive: (count: Int) -> String = { count -> "Active: $count" }
     override val scenarioNegativeSubtitle: String = "Stress tests, unforeseen expenses and crisis scenarios:"
     override val scenarioParamsPrefix: String = "Parameters: "

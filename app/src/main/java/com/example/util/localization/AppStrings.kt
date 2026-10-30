@@ -34,6 +34,9 @@ interface AppStrings {
     val expensesHintCollapsed: String
     val expensesHintExpanded: String
     val breakdownInstruction: String
+    val breakdownInstructionIcon: String
+    val breakdownCategoryTitleFormat: (title: String) -> String
+    val breakdownCategoryItemFormat: (item: String) -> String
     val incomeCategories: List<BreakdownCategory>
     val expensesCategories: List<BreakdownCategory>
     val cashFlowTitle: String
@@ -151,6 +154,8 @@ interface AppStrings {
     val metricNetWorthDesc: String
     val metricNetWorthSubPrefix: String
     val metricNetWorthNegativeSub: String
+    val metricNetWorthAssetsFormat: (prefix: String, amount: String) -> String
+    val metricNetWorthNegativeAssetsFormat: (prefix: String, amount: String, negative: String) -> String
 
     val metricFidelityTitle: String
     val metricFidelityFormula: String
@@ -166,6 +171,7 @@ interface AppStrings {
     val metricRealReturnFormula: String
     val metricRealReturnDesc: String
     val metricRealReturnSubFormat: (nom: String, infl: String) -> String
+    val metricUnavailableValue: String
 
     // Scores Screen
     val scoresHeaderTitle: String
@@ -180,6 +186,7 @@ interface AppStrings {
     val scoresBreakdownTitle: String
     val scoreValuePrefix: String
     val scoreOutOfTen: (score: Int) -> String
+    val scoreSlashOutOfTen: (score: String) -> String
     val savingsRateScoreComment: (rate: Double, sr: String) -> String
     val safetyMonthsScoreComment: (months: Double, monthsText: String) -> String
     val debtComment0: String
@@ -253,9 +260,11 @@ interface AppStrings {
     val scenarioHeaderSubtitle: String
     val scenarioTotalBadge: (count: Int) -> String
     val scenarioPositiveTitle: String
+    val scenarioPositiveSectionNumber: String
     val scenarioPositiveActive: (count: Int) -> String
     val scenarioPositiveSubtitle: String
     val scenarioNegativeTitle: String
+    val scenarioNegativeSectionNumber: String
     val scenarioNegativeActive: (count: Int) -> String
     val scenarioNegativeSubtitle: String
     val scenarioParamsPrefix: String

@@ -25,6 +25,9 @@ val StringsRu: AppStrings = object : AppStrings {
     override val expensesHintCollapsed: String = "Что входит в «Расходы»? (подсказка)"
     override val expensesHintExpanded: String = "Скрыть структуру показателя «Расходы»"
     override val breakdownInstruction: String = "Посчитайте и сложите ваши статьи из списка ниже самостоятельно, а полученную итоговую сумму укажите в поле выше."
+    override val breakdownInstructionIcon: String = "💡 "
+    override val breakdownCategoryTitleFormat: (title: String) -> String = { title -> "• $title" }
+    override val breakdownCategoryItemFormat: (item: String) -> String = { item -> "    – $item" }
     override val incomeCategories: List<BreakdownCategory> = listOf(
         BreakdownCategory(
             title = "Заработная плата",
@@ -358,6 +361,8 @@ val StringsRu: AppStrings = object : AppStrings {
     override val metricNetWorthDesc: String = "Общая стоимость активов за вычетом всех обязательств. Это те средства, что останутся у собственника после продажи всех активов и погашения всех долгов."
     override val metricNetWorthSubPrefix: String = "Активы: "
     override val metricNetWorthNegativeSub: String = "Отрицательный баланс (дефицит!)"
+    override val metricNetWorthAssetsFormat: (prefix: String, amount: String) -> String = { prefix, amount -> "$prefix: $amount" }
+    override val metricNetWorthNegativeAssetsFormat: (prefix: String, amount: String, negative: String) -> String = { prefix, amount, negative -> "$prefix: $amount ($negative)" }
 
     override val metricFidelityTitle: String = "Бенчмарк: целевые показатели по Fidelity"
     override val metricFidelityFormula: String = "Годовой доход * Множитель"
@@ -373,6 +378,7 @@ val StringsRu: AppStrings = object : AppStrings {
     override val metricRealReturnFormula: String = "(1 + Номинальная доходность) / (1 + Инфляция) - 1"
     override val metricRealReturnDesc: String = "Фактический прирост ваших сбережений после того, как из начисленной прибыли вычли уровень инфляции. Показывает, на сколько увеличилась ваша реальная покупательная способность."
     override val metricRealReturnSubFormat: (nom: String, infl: String) -> String = { nom, infl -> "Номинал: $nom | Инфляция: $infl" }
+    override val metricUnavailableValue: String = "—"
 
     override val scoresHeaderTitle: String = "Набранные баллы"
     override val scoresHeaderSubtitle: String = "Итоги и суммирование результатов"
@@ -386,6 +392,7 @@ val StringsRu: AppStrings = object : AppStrings {
     override val scoresBreakdownTitle: String = "Детализация баллов по компонентам:"
     override val scoreValuePrefix: String = "Значение: "
     override val scoreOutOfTen: (score: Int) -> String = { score -> "$score из 10" }
+    override val scoreSlashOutOfTen: (score: String) -> String = { score -> "$score / 10" }
     override val savingsRateScoreComment: (rate: Double, sr: String) -> String = { rate, sr ->
         when {
             rate > 20.0 -> "Ориентир более 20%. У вас отличное значение ($sr)."
@@ -470,9 +477,11 @@ val StringsRu: AppStrings = object : AppStrings {
     override val scenarioHeaderSubtitle: String = "Результат влияния разных ползунков и чекбоксов суммируется (накапливается и рассчитывается совместно). Итоговый результат отражается в числах и на графике:"
     override val scenarioTotalBadge: (count: Int) -> String = { count -> "Всего: $count" }
     override val scenarioPositiveTitle: String = "Позитивные события"
+    override val scenarioPositiveSectionNumber: String = "2.1"
     override val scenarioPositiveActive: (count: Int) -> String = { count -> "Активно: $count" }
     override val scenarioPositiveSubtitle: String = "События, ускоряющие накопление капитала и выход на пенсию:"
     override val scenarioNegativeTitle: String = "Негативные события"
+    override val scenarioNegativeSectionNumber: String = "2.2"
     override val scenarioNegativeActive: (count: Int) -> String = { count -> "Активно: $count" }
     override val scenarioNegativeSubtitle: String = "Стресс-тесты, непредвиденные расходы и кризисные ситуации:"
     override val scenarioParamsPrefix: String = "Параметры: "

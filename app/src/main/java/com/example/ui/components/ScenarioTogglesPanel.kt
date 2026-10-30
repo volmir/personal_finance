@@ -304,7 +304,7 @@ fun ScenarioTogglesPanel(
                     modifier = Modifier.padding(end = 6.dp)
                 ) {
                     Text(
-                        text = "2.1",
+                        text = strings.scenarioPositiveSectionNumber,
                         style = MaterialTheme.typography.labelSmall.copy(
                             fontWeight = FontWeight.Bold,
                             color = SuccessGreen,
@@ -374,7 +374,7 @@ fun ScenarioTogglesPanel(
                     modifier = Modifier.padding(end = 6.dp)
                 ) {
                     Text(
-                        text = "2.2",
+                        text = strings.scenarioNegativeSectionNumber,
                         style = MaterialTheme.typography.labelSmall.copy(
                             fontWeight = FontWeight.Bold,
                             color = AlertRed,

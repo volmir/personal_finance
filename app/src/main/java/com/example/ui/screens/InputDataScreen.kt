@@ -743,7 +743,7 @@ fun CategoryBreakdownHint(
                         verticalAlignment = Alignment.Top
                     ) {
                         Text(
-                            text = "💡 ",
+                            text = strings.breakdownInstructionIcon,
                             fontSize = 12.sp
                         )
                         Text(
@@ -768,7 +768,7 @@ fun CategoryBreakdownHint(
                             .padding(vertical = 4.dp)
                     ) {
                         Text(
-                            text = "• ${cat.title}",
+                            text = strings.breakdownCategoryTitleFormat(cat.title),
                             style = MaterialTheme.typography.labelSmall.copy(
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurface,
@@ -777,7 +777,7 @@ fun CategoryBreakdownHint(
                         )
                         cat.items.forEach { itemText ->
                             Text(
-                                text = "    – $itemText",
+                                text = strings.breakdownCategoryItemFormat(itemText),
                                 style = MaterialTheme.typography.bodySmall.copy(
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     fontSize = 11.sp,
