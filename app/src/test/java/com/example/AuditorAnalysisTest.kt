@@ -73,7 +73,7 @@ class AuditorAnalysisTest {
         assertFalse(export.contains("чекбокс"))
         assertTrue(export.contains("Дисклеймер"))
         assertTrue(export.contains("Расчёты основаны на постоянной доходности"))
-        assertTrue(export.contains("2,5%"))
+        assertTrue(export.contains("2,50%"))
     }
 
     @Test
