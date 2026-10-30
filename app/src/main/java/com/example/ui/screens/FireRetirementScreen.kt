@@ -519,25 +519,6 @@ fun FireRetirementScreen(
                                         )
                                     )
                                 }
-                                val futurePropertySum = (if (simulationState.scenarios.carLoan5Years) 6.0 * inputData.monthlyIncome else 0.0) +
-                                        (if (simulationState.scenarios.mortgage20Years35Income) 84.0 * inputData.monthlyIncome else 0.0)
-                                if (futurePropertySum > 0.0) {
-                                    Spacer(modifier = Modifier.height(3.dp))
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween
-                                    ) {
-                                        Text(strings.fireSimPropertyRow, style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp))
-                                        Text(
-                                            "+${Formatters.formatMoney(futurePropertySum, inputData.currencySymbol, lang)}",
-                                            style = MaterialTheme.typography.bodySmall.copy(
-                                                fontWeight = FontWeight.SemiBold,
-                                                fontSize = 11.sp,
-                                                color = SuccessGreen
-                                            )
-                                        )
-                                    }
-                                }
                             }
                         }
                     }
@@ -900,6 +881,21 @@ fun FireRetirementScreen(
 
         item {
             Spacer(modifier = Modifier.height(14.dp))
+        }
+
+        item {
+            Text(
+                text = "${strings.assumptionsDisclaimerTitle}\n${strings.assumptionsDisclaimerBody(
+                    Formatters.formatPercent(inputData.nominalReturnPercent, lang),
+                    Formatters.formatPercent(inputData.inflationPercent, lang)
+                )}",
+                style = MaterialTheme.typography.bodySmall.copy(
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp)
+            )
         }
     }
 }

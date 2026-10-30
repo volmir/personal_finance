@@ -57,12 +57,12 @@ data class FireScenarioToggles(
     val childrenSelfSufficient18: Boolean = false,  // 7. Выход детей на самообеспечение: расходы -25% ежемесячно после 18 лет
 
     // 2.2. Негативные события (стресс-тесты)
-    val jobLoss: Boolean = false,                   // 1. Потеря работы: доход = 0
+    val jobLoss: Boolean = false,                   // 1. Потеря работы: потеря 12 месяцев дохода из накоплений
     val marketCrash30: Boolean = false,             // 2. Обвал рынка на 30%: ETF -30%
     val mortgage20Years35Income: Boolean = false,   // 3. Ипотека на квартиру: 35% от ежемесячного дохода на период 20 лет
     val carLoan5Years: Boolean = false,             // 4. Автомобиль в кредит: ежемесячные расходы +20% на 5 лет
     val largeOneOffExpense500: Boolean = false,     // 5. Крупная разовая трата: расход 500% мес. дохода (покрытие из активов)
-    val inflation5Percent: Boolean = false,         // 6. Рост инфляции: +5% к инфляции
+    val inflation5Percent: Boolean = false,         // 6. Рост расходов: +25% к расходам
     val childOrDependent18Years: Boolean = false    // 7. Рождение ребенка: +25% к расходам на период в 18 лет
 ) {
     // Backward compatibility aliases
@@ -272,8 +272,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         // 1. Доход:
         // Базовый доход с учетом "Повышение зарплаты" (+20% постоянно)
         val incomeMultiplier = 1.0 + (if (sc.salaryIncrease20) 0.20 else 0.0)
-        // Негативный сценарий "Потеря работы" (доход = 0)
-        val baseIncome = if (sc.jobLoss) 0.0 else (baseInput.monthlyIncome * incomeMultiplier)
+        // Потеря работы моделируется разовым изъятием накоплений, доход сохраняется.
+        val baseIncome = baseInput.monthlyIncome * incomeMultiplier
         // Ползунок ежемесячных сбережений (extraMonthlySavings)
         val rawEffectiveIncome = baseIncome + sim.extraMonthlySavings
         val effectiveIncome = maxOf(0.0, rawEffectiveIncome)
@@ -282,9 +282,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         // 2. Рынок и финансовые активы:
         // Негативное: Обвал рынка на 30% (-30%)
         // Позитивное: Рост рынка на 25% (+25%)
-        var marketMultiplier = 1.0
-        if (sc.marketCrash30) marketMultiplier -= 0.30
-        if (sc.marketGrowth25) marketMultiplier += 0.25
+        val marketMultiplier =
+            (if (sc.marketCrash30) 0.70 else 1.0) * (if (sc.marketGrowth25) 1.25 else 1.0)
         val afterMarketFinAssets = (baseInput.financialAssets * marketMultiplier.coerceAtLeast(0.0))
 
         // 3. Разовые поступления капитала (Позитивные события):
@@ -298,9 +297,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         // 4. Постоянные ежемесячные расходы:
         // Позитивное: Оптимизация расходов (-15%)
         // Позитивное: Переезд в регион с более низкой стоимостью (-30%)
-        var ongoingExpenseMultiplier = 1.0
-        if (sc.expenseOptimization15) ongoingExpenseMultiplier -= 0.15
-        if (sc.relocationLowerCost30) ongoingExpenseMultiplier -= 0.30
+        val ongoingExpenseMultiplier =
+            (if (sc.expenseOptimization15) 0.85 else 1.0) *
+                (if (sc.relocationLowerCost30) 0.70 else 1.0) *
+                (if (sc.inflation5Percent) 1.25 else 1.0)
         val baseOngoingExpenses = baseInput.monthlyExpenses * ongoingExpenseMultiplier.coerceAtLeast(0.10)
 
         // Влияние ползунка сокращения/роста расходов (sim.expenseReduction) и дефицита дохода
@@ -351,33 +351,16 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             )
         }
 
-        // Накопление имущества (активы, приобретаемые по окончании выплат кредита/ипотеки)
-        val deferredAssets = mutableListOf<com.example.domain.DeferredAsset>()
-        if (sc.carLoan5Years) {
-            deferredAssets.add(
-                com.example.domain.DeferredAsset(
-                    amount = 6.0 * baseInput.monthlyIncome,
-                    afterYears = 5.0
-                )
-            )
-        }
-        if (sc.mortgage20Years35Income) {
-            deferredAssets.add(
-                com.example.domain.DeferredAsset(
-                    amount = 84.0 * baseInput.monthlyIncome,
-                    afterYears = 20.0
-                )
-            )
-        }
-
         // 7. Крупная разовая трата: 500% месячного дохода, покрытие из ликвидных и финансовых активов
         // Стартовые ликвидные активы пополняются разовыми поступлениями (наследство, продажа имущества)
         var effLiquidAssets = baseInput.liquidAssets + totalPositiveLumpSum
         var effFinAssets = afterMarketFinAssets
         var uncoveredExpenseDebt = 0.0
 
-        if (sc.largeOneOffExpense500) {
-            val expenseTarget = 5.0 * baseInput.monthlyIncome
+        if (sc.largeOneOffExpense500 || sc.jobLoss) {
+            val expenseTarget =
+                (if (sc.largeOneOffExpense500) 5.0 else 0.0) * baseInput.monthlyIncome +
+                    (if (sc.jobLoss) 12.0 else 0.0) * baseInput.monthlyIncome
             var remainingToCover = expenseTarget
 
             val coveredFromLiquid = minOf(effLiquidAssets, remainingToCover)
@@ -394,13 +377,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         // 8. Долги: непокрытая часть разовой траты (ипотека учитывается как аннуитетный платеж 35% дохода на 20 лет)
         val effectiveLiabilities = baseInput.liabilities + uncoveredExpenseDebt
 
-        // 9. Инфляция и реальная доходность капитала (3-й ползунок + стресс-тест инфляции):
-        // Негативное 6: Рост инфляции (+5% к инфляции)
-        val effectiveInflationPercent = baseInput.inflationPercent + (if (sc.inflation5Percent) 5.0 else 0.0)
+        // 9. Реальная доходность капитала (3-й ползунок).
+        val effectiveInflationPercent = baseInput.inflationPercent
         val effInfl = effectiveInflationPercent / 100.0
         val baseNominal = baseInput.nominalReturnPercent / 100.0
 
-        // Базовая реальная доходность с учетом эффекта стресс-теста инфляции (+5%)
+        // Базовая реальная доходность с учетом заданной пользователем инфляции.
         val baseRealReturn = if (effInfl != -1.0) {
             ((1.0 + baseNominal) / (1.0 + effInfl) - 1.0)
         } else 0.0
@@ -429,7 +411,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             temporaryExpenses = temporaryExpenses,
             deferredAnnualExpenseReduction = deferredReductionAnnual,
             deferredStartYears = 18.0,
-            deferredAssets = deferredAssets
         )
         _simulatedMetrics.value = simCalc
         _simulatedTrajectory.value = FinanceCalculator.generateTrajectory(
@@ -438,7 +419,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             temporaryExpenses = temporaryExpenses,
             deferredAnnualExpenseReduction = deferredReductionAnnual,
             deferredStartYears = 18.0,
-            deferredAssets = deferredAssets
         )
     }
 

@@ -174,6 +174,21 @@ class FinancialMetricEvaluatorTest {
             assertEquals("Status mismatch for debtRatio=$ratio", expectedStatus, status)
             assertEquals("Component score status mismatch for debtRatio=$ratio", expectedStatus, componentStatus)
         }
+
+        val noAssetsWithDebt = FinanceCalculator.calculate(
+            FinancialInputData(
+                liquidAssets = 0.0,
+                financialAssets = 0.0,
+                propertyAssets = 0.0,
+                liabilities = 100_000.0
+            )
+        )
+        assertEquals(Double.POSITIVE_INFINITY, noAssetsWithDebt.debtRatio, 0.0)
+        assertEquals(0, noAssetsWithDebt.scores.debtRatioScore)
+        assertEquals(
+            AuditIndicatorStatus.NEGATIVE,
+            FinancialMetricEvaluator.getDebtRatioStatus(noAssetsWithDebt.debtRatio)
+        )
     }
 
     @Test
@@ -186,6 +201,15 @@ class FinancialMetricEvaluatorTest {
         val negOpinion = AuditorAnalysisGenerator.generate(negInput, negMetrics)
         val negSr = (negOpinion.positive + negOpinion.neutral + negOpinion.negative).first { it.id == "savings_rate" }
         assertEquals(AuditIndicatorStatus.NEGATIVE, negSr.status)
+
+        val noIncomeInput = FinancialInputData(monthlyIncome = 0.0, monthlyExpenses = 50_000.0)
+        val noIncomeMetrics = FinanceCalculator.calculate(noIncomeInput)
+        assertEquals(-100.0, noIncomeMetrics.savingsRate, 0.0)
+        assertEquals(0, noIncomeMetrics.scores.savingsRateScore)
+        val noIncomeOpinion = AuditorAnalysisGenerator.generate(noIncomeInput, noIncomeMetrics)
+        val noIncomeSr = (noIncomeOpinion.positive + noIncomeOpinion.neutral + noIncomeOpinion.negative)
+            .first { it.id == "savings_rate" }
+        assertEquals(AuditIndicatorStatus.NEGATIVE, noIncomeSr.status)
 
         // 2. От 0 до 20: нейтральный показатель (например 8% и 20%)
         val neutralInput8 = FinancialInputData(monthlyIncome = 100_000.0, monthlyExpenses = 92_000.0)

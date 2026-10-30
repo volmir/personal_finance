@@ -193,8 +193,7 @@ fun ScenarioTogglesPanel(
             title = strings.scenarioMortgageTitle,
             parametersText = strings.scenarioMortgageParam,
             description = strings.scenarioMortgageDesc(
-                Formatters.formatMoney(inputData.monthlyIncome * 0.35, inputData.currencySymbol, lang),
-                Formatters.formatMoney(84.0 * inputData.monthlyIncome, inputData.currencySymbol, lang)
+                Formatters.formatMoney(inputData.monthlyIncome * 0.35, inputData.currencySymbol, lang)
             ),
             icon = Icons.Default.Home,
             isChecked = scenarios.mortgage20Years35Income,
@@ -206,8 +205,7 @@ fun ScenarioTogglesPanel(
             title = strings.scenarioCarLoanTitle,
             parametersText = strings.scenarioCarLoanParam,
             description = strings.scenarioCarLoanDesc(
-                Formatters.formatMoney(inputData.monthlyIncome * 0.20, inputData.currencySymbol, lang),
-                Formatters.formatMoney(6.0 * inputData.monthlyIncome, inputData.currencySymbol, lang)
+                Formatters.formatMoney(inputData.monthlyIncome * 0.20, inputData.currencySymbol, lang)
             ),
             icon = Icons.Default.DirectionsCar,
             isChecked = scenarios.carLoan5Years,
@@ -231,7 +229,7 @@ fun ScenarioTogglesPanel(
             title = strings.scenarioInflationTitle,
             parametersText = strings.scenarioInflationParam,
             description = strings.scenarioInflationDesc(
-                Formatters.formatPercent(inputData.inflationPercent + 5.0, lang)
+                Formatters.formatMoney(inputData.monthlyExpenses * 0.25, inputData.currencySymbol, lang)
             ),
             icon = Icons.Default.TrendingUp,
             isChecked = scenarios.inflation5Percent,

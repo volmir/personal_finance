@@ -14,6 +14,13 @@ import org.junit.Test
 class FinanceCalculatorTest {
 
     @Test
+    fun `total score weights CFS and caps low CFS`() {
+        assertEquals(6.0, FinanceCalculator.calculateTotalScore(10, 10, 10, 2), 0.001)
+        assertEquals(10.0, FinanceCalculator.calculateTotalScore(10, 10, 10, 10), 0.001)
+        assertEquals(5.0, FinanceCalculator.calculateTotalScore(5, 5, 5, 5), 0.001)
+    }
+
+    @Test
     fun testUSAverageDefaultsAndBaselineMetrics() {
         val input = FinancialInputData.usAverageData()
         val metrics = FinanceCalculator.calculate(input)
@@ -265,7 +272,7 @@ class FinanceCalculatorTest {
         val metrics = FinanceCalculator.calculate(input)
 
         assertEquals(0.0, metrics.annualIncome, 0.001)
-        assertEquals(0.0, metrics.savingsRate, 0.001)
+        assertEquals(-100.0, metrics.savingsRate, 0.001)
         assertEquals(-50_000.0, metrics.cashFlow, 0.001)
         assertEquals(0.0, metrics.fidelityTarget, 0.001)
         assertFalse(metrics.cashFlow.isNaN())

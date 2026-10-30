@@ -591,6 +591,21 @@ fun AuditScoreScreen(
             }
             Spacer(modifier = Modifier.height(24.dp))
         }
+
+        item {
+            Text(
+                text = "${strings.assumptionsDisclaimerTitle}\n${strings.assumptionsDisclaimerBody(
+                    Formatters.formatPercent(inputData.nominalReturnPercent, lang),
+                    Formatters.formatPercent(inputData.inflationPercent, lang)
+                )}",
+                style = MaterialTheme.typography.bodySmall.copy(
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp)
+            )
+        }
     }
 }
 

@@ -501,33 +501,33 @@ val StringsEn: AppStrings = object : AppStrings {
     override val scenarioPropertySaleParam: String = "one-time windfall 2000% monthly income"
     override val scenarioPropertySaleDesc: (amt: String) -> String = { amt -> "Sale proceeds: +$amt (into liquid assets)" }
 
-    override val scenarioChildrenSelfSufficientTitle: String = "Children Independent"
-    override val scenarioChildrenSelfSufficientParam: String = "expenses −25% monthly, after 18 yrs"
-    override val scenarioChildrenSelfSufficientDesc: (amt: String) -> String = { amt -> "Family expense reduction: -$amt/mo. (after 18 yrs)" }
+    override val scenarioChildrenSelfSufficientTitle: String = "Children Become Independent"
+    override val scenarioChildrenSelfSufficientParam: String = "expenses −25% in 18 yrs (child costs already in your expenses)"
+    override val scenarioChildrenSelfSufficientDesc: (amt: String) -> String = { amt -> "Family expense reduction: -$amt/mo. (in 18 yrs)" }
 
     override val scenarioJobLossTitle: String = "Job Loss"
-    override val scenarioJobLossParam: String = "income = 0"
-    override val scenarioJobLossDesc: String = "Complete income stoppage, covering all living expenses from emergency reserves"
+    override val scenarioJobLossParam: String = "12 months of lost income"
+    override val scenarioJobLossDesc: String = "12 months of income lost, covered from savings"
 
     override val scenarioMarketCrashTitle: String = "Market Crash −30%"
     override val scenarioMarketCrashParam: String = "ETF −30%"
     override val scenarioMarketCrashDesc: (amt: String) -> String = { amt -> "Portfolio drawdown of 30% ($amt)" }
 
     override val scenarioMortgageTitle: String = "Home Mortgage"
-    override val scenarioMortgageParam: String = "35% income for 20 yrs (+84 incomes into property)"
-    override val scenarioMortgageDesc: (pay: String, asset: String) -> String = { pay, asset -> "Payment: $pay/mo. (20 yrs). At completion: +$asset in property assets" }
+    override val scenarioMortgageParam: String = "35% income for 20 yrs"
+    override val scenarioMortgageDesc: (pay: String) -> String = { pay -> "Payment: $pay/mo. (20 yrs)" }
 
     override val scenarioCarLoanTitle: String = "Car Loan"
-    override val scenarioCarLoanParam: String = "20% income for 5 yrs (+6 incomes into property)"
-    override val scenarioCarLoanDesc: (pay: String, asset: String) -> String = { pay, asset -> "Payment: $pay/mo. (5 yrs). At completion: +$asset in property assets (50% value)" }
+    override val scenarioCarLoanParam: String = "20% income for 5 yrs"
+    override val scenarioCarLoanDesc: (pay: String) -> String = { pay -> "Payment: $pay/mo. (5 yrs)" }
 
     override val scenarioLargeExpenseTitle: String = "Major One-Off Expense"
     override val scenarioLargeExpenseParam: String = "expense 500% monthly income"
     override val scenarioLargeExpenseDesc: (amt: String) -> String = { amt -> "Outflow of $amt (covered from liquid and financial assets)" }
 
-    override val scenarioInflationTitle: String = "Inflation Surge"
-    override val scenarioInflationParam: String = "+5% to inflation"
-    override val scenarioInflationDesc: (rate: String) -> String = { rate -> "Inflation increases to $rate (reduces real return on capital)" }
+    override val scenarioInflationTitle: String = "Expense Increase (Inflation)"
+    override val scenarioInflationParam: String = "+25% to monthly expenses"
+    override val scenarioInflationDesc: (amt: String) -> String = { amt -> "Expenses increase: +$amt/mo." }
 
     override val scenarioChildTitle: String = "Child Birth"
     override val scenarioChildParam: String = "+25% to expenses for 18 yrs"
@@ -535,6 +535,8 @@ val StringsEn: AppStrings = object : AppStrings {
 
     override val disclaimerTitle: String = "Disclaimer"
     override val disclaimerText: String = "Important: This project is a personal development and is provided solely for informational purposes \"as is\". The author is not responsible for any malfunctions, data loss, or other damages arising from the use of this software. All calculations, formulas, metrics, and simulations are for informational purposes only and do not constitute individual financial, investment, or tax advice. You use this tool at your own risk."
+    override val assumptionsDisclaimerTitle: String = "Disclaimer"
+    override val assumptionsDisclaimerBody: (returnRate: String, inflation: String) -> String = { returnRate, inflation -> "Calculations assume a constant return of $returnRate and inflation of $inflation, without taxes or sequence-of-returns effects. This is a model, not a forecast.\n\nThe model does not account for taxes, sequence-of-returns effects, or income inflation. This is a guide, not a guarantee." }
 
     override fun scenarioSavedSuccess(name: String): String = "Scenario \"$name\" saved successfully"
     override fun scenarioSaveError(error: String): String = "Failed to save scenario: $error"
@@ -631,6 +633,9 @@ val StringsEn: AppStrings = object : AppStrings {
     override val auditCfsInitial: String = "ℹ️ Financial Freedom (CFS: %1${'$'}s): Initial stage of investment capital (%2${'$'}s). Primary focus on disciplined regular savings."
     override val auditCfsNegative: String = "🚨 Financial Freedom (CFS: %1${'$'}s): Negative ratio (%2${'$'}s). Total obligations exceed assets, resulting in negative net worth."
     override val auditCfsBuffer: String = "📈 Financial Freedom (CFS: %1${'$'}s): Early stage of capital accumulation (%2${'$'}s). Current volume is insufficient for financial autonomy; disciplined saving required."
+    override val auditCfsPathToIndependence: String = "You are on the path to independence, but still far from the goal."
+    override val auditCfsCloseToIndependence: (percent: Int) -> String = { percent -> "You are close: capital covers $percent% of the target." }
+    override val auditCfsFinanciallyIndependent: String = "You are financially independent under the 4% rule."
 
     override val auditRealReturnTitle: String = "Real Return on Capital"
     override val auditRealReturnPositive: String = "✅ Real Return on Capital (+%1${'$'}s): Asset yield outpaces inflation (%2${'$'}s vs %3${'$'}s). Capital is protected against erosion and expands purchasing power."

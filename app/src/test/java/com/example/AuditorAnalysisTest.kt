@@ -71,5 +71,31 @@ class AuditorAnalysisTest {
         assertFalse(export.contains("Симуляция"))
         assertFalse(export.contains("Стресс-тест"))
         assertFalse(export.contains("чекбокс"))
+        assertTrue(export.contains("Дисклеймер"))
+        assertTrue(export.contains("Расчёты основаны на постоянной доходности"))
+        assertTrue(export.contains("2,5%"))
+    }
+
+    @Test
+    fun testCfsFireReadinessMessagesUseFourPercentTarget() {
+        fun cfsOpinion(cfs: Double): String {
+            val input = FinancialInputData(
+                monthlyIncome = 1_000.0,
+                monthlyExpenses = 1_000.0,
+                liquidAssets = cfs * 12_000.0,
+                financialAssets = 0.0,
+                propertyAssets = 0.0,
+                liabilities = 0.0
+            )
+            val metrics = FinanceCalculator.calculate(input)
+            val opinion = AuditorAnalysisGenerator.generate(input, metrics)
+            return (opinion.positive + opinion.neutral + opinion.negative)
+                .first { it.id == "cfs" }.text
+        }
+
+        assertEquals("Вы на пути к независимости, но пока далеко от цели.", cfsOpinion(14.0))
+        assertEquals("Вы близки: капитал покрывает 60% от целевого.", cfsOpinion(15.0))
+        assertEquals("Вы близки: капитал покрывает 96% от целевого.", cfsOpinion(24.0))
+        assertEquals("Вы финансово независимы по правилу 4%.", cfsOpinion(25.0))
     }
 }

@@ -50,7 +50,7 @@ The application is structured into 4 cohesive functional tabs:
 9. **Реальная доходность капитала (Real Return):** Fisher equation `r = (1 + R) / (1 + i) - 1`, accounting for inflation drag.
 
 ### 3. Набранные баллы и аудит (Scores & Auditor Opinion)
-- **Financial Health Score:** Итоговый балл равен среднему арифметическому четырёх оценок (не «взвешенный»): норма сбережений, подушка безопасности, долговая нагрузка и финансовая свобода (от **0 до 10 баллов**). / Overall score is calculated as the simple arithmetic mean of four key ratings (not weighted).
+- **Financial Health Score:** Итоговый балл взвешен: CFS 45%, норма сбережений 25%, подушка и долг по 15% (от **0 до 10 баллов**). / Overall score uses weighted ratings: CFS 45%, savings rate 25%, emergency fund and debt ratio 15% each.
 - **Component Progress Indicators:** Individual ratings for each key pillar.
 - **Automated Auditor Opinion:** Full qualitative analysis classifying indicators into **Positive (🟢)**, **Neutral (🟡)**, and **Risk/Negative (🔴)** zones.
 - **One-Click Export:** Generate and share complete textual audit reports to clipboard, messaging apps, or email.

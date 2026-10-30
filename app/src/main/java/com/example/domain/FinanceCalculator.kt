@@ -47,7 +47,7 @@ object FinanceCalculator {
         val cashFlow = input.monthlyIncome - input.monthlyExpenses
         val savingsRate = if (input.monthlyIncome > 0) {
             (cashFlow / input.monthlyIncome) * 100.0
-        } else 0.0
+        } else if (cashFlow < 0.0) -100.0 else 0.0
 
         val emergencyFund = if (input.includeFinancialInEmergencyFund) {
             input.liquidAssets + input.financialAssets
@@ -61,7 +61,7 @@ object FinanceCalculator {
 
         val debtRatio = if (totalAssets > 0) {
             input.liabilities / totalAssets
-        } else 0.0
+        } else if (input.liabilities > 0.0) Double.POSITIVE_INFINITY else 0.0
 
         val netWorth = totalAssets - input.liabilities
         val annualIncome = input.monthlyIncome * 12.0
@@ -244,7 +244,7 @@ object FinanceCalculator {
         val debtScore = FinancialMetricEvaluator.getDebtRatioScore(debtRatio)
         val cfsScore = FinancialMetricEvaluator.getCfsScore(cfs)
 
-        val total = (savingsScore + safetyScore + debtScore + cfsScore) / 4.0
+        val total = calculateTotalScore(savingsScore, safetyScore, debtScore, cfsScore)
         return FinancialScores(
             savingsRateScore = savingsScore,
             safetyMonthsScore = safetyScore,
@@ -252,6 +252,16 @@ object FinanceCalculator {
             cfsScore = cfsScore,
             totalScore = total
         )
+    }
+
+    internal fun calculateTotalScore(
+        savingsScore: Int,
+        safetyScore: Int,
+        debtScore: Int,
+        cfsScore: Int
+    ): Double {
+        val total = savingsScore * 0.25 + safetyScore * 0.15 + debtScore * 0.15 + cfsScore * 0.45
+        return if (cfsScore < 5) minOf(total, 6.0) else total
     }
 
     /**

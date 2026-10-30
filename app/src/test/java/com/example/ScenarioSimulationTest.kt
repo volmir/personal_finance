@@ -1,7 +1,6 @@
 package com.example
 
 import com.example.data.model.FinancialInputData
-import com.example.domain.DeferredAsset
 import com.example.domain.FinanceCalculator
 import com.example.domain.SimulatorScaleCalculator
 import com.example.domain.TemporaryExpense
@@ -116,11 +115,7 @@ class ScenarioSimulationTest {
         )
         val baseMetrics = FinanceCalculator.calculate(baseInput)
 
-        // 1. Потеря работы (доход = 0)
-        val jobLossInput = baseInput.copy(monthlyIncome = 0.0)
-        val jobLossMetrics = FinanceCalculator.calculate(jobLossInput)
-        assertTrue(jobLossMetrics.yearsToRetirement > baseMetrics.yearsToRetirement)
-        assertEquals(0.0, jobLossMetrics.annualIncome, 0.01)
+        // Потеря работы в симуляторе списывает 12 доходов из накоплений; базовый расчет не меняется.
 
         // 2. Обвал рынка на 30% (ETF -30%)
         val marketCrashInput = baseInput.copy(financialAssets = baseInput.financialAssets * 0.70)
@@ -128,43 +123,34 @@ class ScenarioSimulationTest {
         assertEquals(700_000.0, marketCrashInput.financialAssets, 0.01)
         assertTrue(marketCrashMetrics.yearsToRetirement >= baseMetrics.yearsToRetirement)
 
-        // 3. Ипотека на квартиру (35% от ежемесячного дохода на 20 лет, +84 дохода в имущество)
+        // 3. Ипотека: временный платеж 35% дохода на 20 лет, без отложенного актива.
         val mortgageMonthly = 0.35 * baseInput.monthlyIncome
         val mortgageAnnual = mortgageMonthly * 12.0
-        val mortgageAsset = 84.0 * baseInput.monthlyIncome
         val mortgageInput = baseInput.copy(monthlyExpenses = baseInput.monthlyExpenses + mortgageMonthly)
         val mortgageMetrics = FinanceCalculator.calculate(
             mortgageInput,
-            temporaryExpenses = listOf(TemporaryExpense(annualAmount = mortgageAnnual, durationYears = 20.0)),
-            deferredAssets = listOf(DeferredAsset(amount = mortgageAsset, afterYears = 20.0))
-        )
-        assertEquals(85_000.0, mortgageInput.monthlyExpenses, 0.01)
-
-        val mortgageWithoutAssetMetrics = FinanceCalculator.calculate(
-            mortgageInput,
             temporaryExpenses = listOf(TemporaryExpense(annualAmount = mortgageAnnual, durationYears = 20.0))
         )
-        assertTrue(mortgageMetrics.yearsToRetirement <= mortgageWithoutAssetMetrics.yearsToRetirement)
+        assertEquals(85_000.0, mortgageInput.monthlyExpenses, 0.01)
+        assertEquals(7.0, mortgageMetrics.yearsToRetirement - baseMetrics.yearsToRetirement, 0.3)
 
-        // 4. Автомобиль в кредит (20% от ежемесячного дохода на 5 лет, +6 доходов в имущество / 50% стоимости)
+        // 4. Автомобиль в кредит: временный платеж 20% дохода на 5 лет, без отложенного актива.
         val carLoanMonthly = 0.20 * baseInput.monthlyIncome
         val carLoanAnnual = carLoanMonthly * 12.0
-        val carLoanAsset = 6.0 * baseInput.monthlyIncome
         val carLoanInput = baseInput.copy(monthlyExpenses = baseInput.monthlyExpenses + carLoanMonthly)
         val carLoanMetrics = FinanceCalculator.calculate(
             carLoanInput,
-            temporaryExpenses = listOf(TemporaryExpense(annualAmount = carLoanAnnual, durationYears = 5.0)),
-            deferredAssets = listOf(DeferredAsset(amount = carLoanAsset, afterYears = 5.0))
+            temporaryExpenses = listOf(TemporaryExpense(annualAmount = carLoanAnnual, durationYears = 5.0))
         )
         assertEquals(70_000.0, carLoanInput.monthlyExpenses, 0.01)
 
         val carTrajectory = FinanceCalculator.generateTrajectory(
             carLoanMetrics,
             carLoanInput,
-            temporaryExpenses = listOf(TemporaryExpense(annualAmount = carLoanAnnual, durationYears = 5.0)),
-            deferredAssets = listOf(DeferredAsset(amount = carLoanAsset, afterYears = 5.0))
+            temporaryExpenses = listOf(TemporaryExpense(annualAmount = carLoanAnnual, durationYears = 5.0))
         )
         assertTrue(carTrajectory.any { it.yearOffset >= 5.0 && it.accumulatedCapital > 0 })
+        assertEquals(1.2, carLoanMetrics.yearsToRetirement - baseMetrics.yearsToRetirement, 0.2)
 
         // 5. Крупная разовая трата (500% дохода = 500 000, покрытие из ликвидных/фин. активов)
         val largeExpenseInput = baseInput.copy(liquidAssets = 0.0)
@@ -233,7 +219,7 @@ class ScenarioSimulationTest {
         )
         val baseMetrics = FinanceCalculator.calculate(baseInput)
 
-        // Тест 1: Чекбокс Потеря работы (доход = 0) + Ползунок сбережений (+15 000 подработка)
+        // Потеря работы моделируется списанием накоплений, а не обнулением дохода.
         val jobLossOnly = baseInput.copy(monthlyIncome = 0.0)
         val jobLossMetrics = FinanceCalculator.calculate(jobLossOnly)
 
@@ -350,7 +336,13 @@ class ScenarioSimulationTest {
             deferredAnnualExpenseReduction = deferredReduction,
             deferredStartYears = 18.0
         )
-        assertTrue(childSelfSufficientMetrics.yearsToRetirement <= baseMetrics.yearsToRetirement)
+        assertEquals(0.6, baseMetrics.yearsToRetirement - childSelfSufficientMetrics.yearsToRetirement, 0.15)
+        assertEquals("Дети станут самостоятельными", StringsRu.scenarioChildrenSelfSufficientTitle)
+        assertEquals("расходы −25% через 18 лет (расходы на детей уже в ваших расходах)", StringsRu.scenarioChildrenSelfSufficientParam)
+        assertEquals("Снижение семейных расходов: -AMOUNT/мес. (через 18 лет)", StringsRu.scenarioChildrenSelfSufficientDesc("AMOUNT"))
+        assertEquals("Children Become Independent", StringsEn.scenarioChildrenSelfSufficientTitle)
+        assertEquals("expenses −25% in 18 yrs (child costs already in your expenses)", StringsEn.scenarioChildrenSelfSufficientParam)
+        assertEquals("Family expense reduction: -AMOUNT/mo. (in 18 yrs)", StringsEn.scenarioChildrenSelfSufficientDesc("AMOUNT"))
 
         // Совместное кумулятивное влияние: Зарплата +20% + Оптимизация расходов -15% + Рост рынка +25%
         val combinedPositiveInput = baseInput.copy(
@@ -372,14 +364,14 @@ class ScenarioSimulationTest {
     }
 
     @Test
-    fun testInflationScenario5PercentLogic() {
+    fun testInflationScenarioRaisesExpensesWithoutChangingRealReturn() {
         val ru = StringsRu
         val en = StringsEn
 
-        assertEquals("+5% к инфляции", ru.scenarioInflationParam)
-        assertEquals("+5% to inflation", en.scenarioInflationParam)
-        assertTrue(ru.scenarioInflationDesc("13,0%").contains("13,0%"))
-        assertTrue(en.scenarioInflationDesc("13.0%").contains("13.0%"))
+        assertEquals("+25% к ежемесячным расходам", ru.scenarioInflationParam)
+        assertEquals("+25% to monthly expenses", en.scenarioInflationParam)
+        assertEquals("Расходы растут: +13,0/мес.", ru.scenarioInflationDesc("13,0"))
+        assertEquals("Expenses increase: +13.0/mo.", en.scenarioInflationDesc("13.0"))
 
         val baseInput = FinancialInputData(
             monthlyIncome = 100_000.0,
@@ -390,13 +382,17 @@ class ScenarioSimulationTest {
         val baseMetrics = FinanceCalculator.calculate(baseInput)
         assertEquals(3.70, baseMetrics.realReturnPercent, 0.02)
 
-        val stressInput = baseInput.copy(inflationPercent = baseInput.inflationPercent + 5.0)
+        val stressInput = baseInput.copy(monthlyExpenses = baseInput.monthlyExpenses * 1.25)
         val stressMetrics = FinanceCalculator.calculate(stressInput)
-        assertEquals(baseInput.monthlyExpenses, stressInput.monthlyExpenses, 0.01)
-        assertEquals(baseMetrics.cashFlow, stressMetrics.cashFlow, 0.01)
-
-        assertEquals(-0.88, stressMetrics.realReturnPercent, 0.02)
+        assertEquals(62_500.0, stressInput.monthlyExpenses, 0.01)
+        assertEquals(baseMetrics.realReturnPercent, stressMetrics.realReturnPercent, 0.01)
         assertTrue(stressMetrics.yearsToRetirement > baseMetrics.yearsToRetirement)
+        assertEquals(2.5, stressMetrics.yearsToRetirement - baseMetrics.yearsToRetirement, 0.2)
+
+        assertEquals("Рост расходов (инфляция)", ru.scenarioInflationTitle)
+        assertEquals("Expense Increase (Inflation)", en.scenarioInflationTitle)
+        val optimizedRelocationExpenses = 60_000.0 * 0.85 * 0.70
+        assertEquals(35_700.0, optimizedRelocationExpenses, 0.01)
     }
 
     @Test
@@ -441,7 +437,7 @@ class ScenarioSimulationTest {
             monthlyIncome = 120_000.0,
             monthlyExpenses = 60_000.0,
             liquidAssets = 300_000.0,
-            financialAssets = 800_000.0,
+            financialAssets = 3_414_389.0,
             propertyAssets = 2_000_000.0,
             liabilities = 200_000.0,
             birthDate = "1990-01-01",
@@ -453,22 +449,22 @@ class ScenarioSimulationTest {
 
         // Воспроизводим вычисление симуляции для всех 14 сценариев:
         val incomeMultiplier = 1.0 + (if (allScenarios.salaryIncrease20) 0.20 else 0.0)
-        val baseIncome = if (allScenarios.jobLoss) 0.0 else (baseInput.monthlyIncome * incomeMultiplier)
+        val baseIncome = baseInput.monthlyIncome * incomeMultiplier
         val effectiveIncome = maxOf(0.0, baseIncome)
 
-        var marketMultiplier = 1.0
-        if (allScenarios.marketCrash30) marketMultiplier -= 0.30
-        if (allScenarios.marketGrowth25) marketMultiplier += 0.25
+        val marketMultiplier = (if (allScenarios.marketCrash30) 0.70 else 1.0) *
+            (if (allScenarios.marketGrowth25) 1.25 else 1.0)
         val afterMarketFinAssets = baseInput.financialAssets * marketMultiplier.coerceAtLeast(0.0)
+        assertEquals(3_414_389.0 * 0.70 * 1.25, afterMarketFinAssets, 1.0)
 
         val inheritanceAmount = if (allScenarios.inheritance1200) 12.0 * baseInput.monthlyIncome else 0.0
         val propertySaleAmount = if (allScenarios.propertySale2000) minOf(20.0 * baseInput.monthlyIncome, baseInput.propertyAssets) else 0.0
         val effectivePropertyAssets = baseInput.propertyAssets - propertySaleAmount
         val totalPositiveLumpSum = inheritanceAmount + propertySaleAmount
 
-        var ongoingExpenseMultiplier = 1.0
-        if (allScenarios.expenseOptimization15) ongoingExpenseMultiplier -= 0.15
-        if (allScenarios.relocationLowerCost30) ongoingExpenseMultiplier -= 0.30
+        val ongoingExpenseMultiplier = (if (allScenarios.expenseOptimization15) 0.85 else 1.0) *
+            (if (allScenarios.relocationLowerCost30) 0.70 else 1.0) *
+            (if (allScenarios.inflation5Percent) 1.25 else 1.0)
         val baseOngoingExpenses = baseInput.monthlyExpenses * ongoingExpenseMultiplier.coerceAtLeast(0.10)
 
         val mortgageMonthlyExpense = if (allScenarios.mortgage20Years35Income) 0.35 * baseInput.monthlyIncome else 0.0
@@ -503,8 +499,10 @@ class ScenarioSimulationTest {
         var effFinAssets = afterMarketFinAssets
         var uncoveredExpenseDebt = 0.0
 
-        if (allScenarios.largeOneOffExpense500) {
-            val expenseTarget = 5.0 * baseInput.monthlyIncome
+        if (allScenarios.largeOneOffExpense500 || allScenarios.jobLoss) {
+            val expenseTarget =
+                (if (allScenarios.largeOneOffExpense500) 5.0 else 0.0) * baseInput.monthlyIncome +
+                    (if (allScenarios.jobLoss) 12.0 else 0.0) * baseInput.monthlyIncome
             var remainingToCover = expenseTarget
 
             val coveredFromLiquid = minOf(effLiquidAssets, remainingToCover)
@@ -519,7 +517,7 @@ class ScenarioSimulationTest {
         }
 
         val effectiveLiabilities = baseInput.liabilities + uncoveredExpenseDebt
-        val effectiveInflationPercent = baseInput.inflationPercent + (if (allScenarios.inflation5Percent) 5.0 else 0.0)
+        val effectiveInflationPercent = baseInput.inflationPercent
 
         val simulatedInput = baseInput.copy(
             monthlyIncome = effectiveIncome,

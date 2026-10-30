@@ -299,11 +299,11 @@ interface AppStrings {
 
     val scenarioMortgageTitle: String
     val scenarioMortgageParam: String
-    val scenarioMortgageDesc: (pay: String, asset: String) -> String
+    val scenarioMortgageDesc: (pay: String) -> String
 
     val scenarioCarLoanTitle: String
     val scenarioCarLoanParam: String
-    val scenarioCarLoanDesc: (pay: String, asset: String) -> String
+    val scenarioCarLoanDesc: (pay: String) -> String
 
     val scenarioLargeExpenseTitle: String
     val scenarioLargeExpenseParam: String
@@ -311,7 +311,7 @@ interface AppStrings {
 
     val scenarioInflationTitle: String
     val scenarioInflationParam: String
-    val scenarioInflationDesc: (rate: String) -> String
+    val scenarioInflationDesc: (amt: String) -> String
 
     val scenarioChildTitle: String
     val scenarioChildParam: String
@@ -319,6 +319,8 @@ interface AppStrings {
 
     val disclaimerTitle: String
     val disclaimerText: String
+    val assumptionsDisclaimerTitle: String
+    val assumptionsDisclaimerBody: (returnRate: String, inflation: String) -> String
 
     // Scenario feedback messages
     fun scenarioSavedSuccess(name: String): String
@@ -416,6 +418,9 @@ interface AppStrings {
     val auditCfsInitial: String
     val auditCfsNegative: String
     val auditCfsBuffer: String
+    val auditCfsPathToIndependence: String
+    val auditCfsCloseToIndependence: (percent: Int) -> String
+    val auditCfsFinanciallyIndependent: String
 
     val auditRealReturnTitle: String
     val auditRealReturnPositive: String

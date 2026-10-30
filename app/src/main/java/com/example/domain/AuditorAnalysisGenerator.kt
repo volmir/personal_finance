@@ -6,6 +6,7 @@ import com.example.domain.model.AuditIndicatorStatus
 import com.example.util.Formatters
 import com.example.util.localization.AppLanguage
 import com.example.util.localization.getAppStrings
+import kotlin.math.roundToInt
 
 typealias AuditIndicatorStatus = com.example.domain.model.AuditIndicatorStatus
 
@@ -62,6 +63,12 @@ data class GroupedAuditOpinion(
             appendLine("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
             appendLine(strings.auditShareGeneratedBy)
             appendLine(strings.auditShareDisclaimer)
+            appendLine()
+            appendLine(strings.assumptionsDisclaimerTitle)
+            appendLine(strings.assumptionsDisclaimerBody(
+                Formatters.formatPercent(inputData.nominalReturnPercent, lang),
+                Formatters.formatPercent(inputData.inflationPercent, lang)
+            ))
         }
     }
 }
@@ -291,43 +298,25 @@ object AuditorAnalysisGenerator {
         }
 
         // 8. Коэффициент финансовой свободы (КФС)
-        val cfsDesc = FinanceCalculator.getCfsStageDescription(metrics.financialFreedomRatio, lang)
+        val cfs = metrics.financialFreedomRatio
         val cfsAnalysis = when {
-            metrics.financialFreedomRatio >= FinancialMetricEvaluator.CFS_THRESHOLD_INDEPENDENCE -> AuditIndicatorAnalysis(
+            cfs >= 25.0 -> AuditIndicatorAnalysis(
                 id = "cfs",
                 title = strings.auditCfsTitle,
                 status = AuditIndicatorStatus.POSITIVE,
-                text = String.format(strings.auditCfsIndependence, Formatters.formatRatio(metrics.financialFreedomRatio, lang))
+                text = strings.auditCfsFinanciallyIndependent
             )
-            metrics.financialFreedomRatio >= FinancialMetricEvaluator.CFS_THRESHOLD_STABILITY -> AuditIndicatorAnalysis(
+            cfs >= 15.0 -> AuditIndicatorAnalysis(
                 id = "cfs",
                 title = strings.auditCfsTitle,
                 status = AuditIndicatorStatus.POSITIVE,
-                text = String.format(strings.auditCfsStability, Formatters.formatRatio(metrics.financialFreedomRatio, lang))
-            )
-            metrics.financialFreedomRatio >= FinancialMetricEvaluator.CFS_POSITIVE_THRESHOLD -> AuditIndicatorAnalysis(
-                id = "cfs",
-                title = strings.auditCfsTitle,
-                status = AuditIndicatorStatus.POSITIVE,
-                text = String.format(strings.auditCfsGrowth, Formatters.formatRatio(metrics.financialFreedomRatio, lang), cfsDesc)
-            )
-            metrics.financialFreedomRatio >= FinancialMetricEvaluator.CFS_NEUTRAL_THRESHOLD -> AuditIndicatorAnalysis(
-                id = "cfs",
-                title = strings.auditCfsTitle,
-                status = AuditIndicatorStatus.NEUTRAL,
-                text = String.format(strings.auditCfsInitial, Formatters.formatRatio(metrics.financialFreedomRatio, lang), cfsDesc)
-            )
-            metrics.financialFreedomRatio < 0.0 -> AuditIndicatorAnalysis(
-                id = "cfs",
-                title = strings.auditCfsTitle,
-                status = AuditIndicatorStatus.NEGATIVE,
-                text = String.format(strings.auditCfsNegative, Formatters.formatRatio(metrics.financialFreedomRatio, lang), cfsDesc)
+                text = strings.auditCfsCloseToIndependence((cfs / 25.0 * 100.0).roundToInt())
             )
             else -> AuditIndicatorAnalysis(
                 id = "cfs",
                 title = strings.auditCfsTitle,
-                status = AuditIndicatorStatus.NEGATIVE,
-                text = String.format(strings.auditCfsBuffer, Formatters.formatRatio(metrics.financialFreedomRatio, lang), cfsDesc)
+                status = FinancialMetricEvaluator.getCfsStatus(cfs),
+                text = strings.auditCfsPathToIndependence
             )
         }
 
@@ -436,6 +425,12 @@ object AuditorAnalysisGenerator {
             appendLine("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
             appendLine(strings.auditShareGeneratedBy)
             appendLine(strings.auditShareDisclaimer)
+            appendLine()
+            appendLine(strings.assumptionsDisclaimerTitle)
+            appendLine(strings.assumptionsDisclaimerBody(
+                Formatters.formatPercent(inputData.nominalReturnPercent, lang),
+                Formatters.formatPercent(inputData.inflationPercent, lang)
+            ))
         }
     }
 }

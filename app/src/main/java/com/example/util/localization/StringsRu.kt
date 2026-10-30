@@ -501,33 +501,33 @@ val StringsRu: AppStrings = object : AppStrings {
     override val scenarioPropertySaleParam: String = "разовое поступление 2000% мес. дохода"
     override val scenarioPropertySaleDesc: (amt: String) -> String = { amt -> "Выручка от продажи: +$amt (в ликвидные активы)" }
 
-    override val scenarioChildrenSelfSufficientTitle: String = "Выход детей на самообеспечение"
-    override val scenarioChildrenSelfSufficientParam: String = "расходы −25% ежемесячно, после 18 лет"
-    override val scenarioChildrenSelfSufficientDesc: (amt: String) -> String = { amt -> "Снижение семейных расходов: -$amt/мес. (после 18 лет)" }
+    override val scenarioChildrenSelfSufficientTitle: String = "Дети станут самостоятельными"
+    override val scenarioChildrenSelfSufficientParam: String = "расходы −25% через 18 лет (расходы на детей уже в ваших расходах)"
+    override val scenarioChildrenSelfSufficientDesc: (amt: String) -> String = { amt -> "Снижение семейных расходов: -$amt/мес. (через 18 лет)" }
 
     override val scenarioJobLossTitle: String = "Потеря работы"
-    override val scenarioJobLossParam: String = "доход = 0"
-    override val scenarioJobLossDesc: String = "Полная остановка притока дохода, покрытие всех расходов из резервов"
+    override val scenarioJobLossParam: String = "потеря дохода на 12 месяцев"
+    override val scenarioJobLossDesc: String = "Недополучено 12 мес. дохода, покрытие из накоплений"
 
     override val scenarioMarketCrashTitle: String = "Обвал рынка на 30%"
     override val scenarioMarketCrashParam: String = "ETF −30%"
     override val scenarioMarketCrashDesc: (amt: String) -> String = { amt -> "Просадка финансового портфеля на 30% ($amt)" }
 
     override val scenarioMortgageTitle: String = "Ипотека на квартиру"
-    override val scenarioMortgageParam: String = "35% дохода на 20 лет (+84 дохода в имущество)"
-    override val scenarioMortgageDesc: (pay: String, asset: String) -> String = { pay, asset -> "Платеж: $pay/мес. (20 лет). В конце срока: +$asset в имущество/активы" }
+    override val scenarioMortgageParam: String = "35% дохода на 20 лет"
+    override val scenarioMortgageDesc: (pay: String) -> String = { pay -> "Платеж: $pay/мес. (20 лет)" }
 
     override val scenarioCarLoanTitle: String = "Автомобиль в кредит"
-    override val scenarioCarLoanParam: String = "20% дохода на 5 лет (+6 доходов в имущество)"
-    override val scenarioCarLoanDesc: (pay: String, asset: String) -> String = { pay, asset -> "Платеж: $pay/мес. (5 лет). В конце срока: +$asset в имущество (50% стоимости)" }
+    override val scenarioCarLoanParam: String = "20% дохода на 5 лет"
+    override val scenarioCarLoanDesc: (pay: String) -> String = { pay -> "Платеж: $pay/мес. (5 лет)" }
 
     override val scenarioLargeExpenseTitle: String = "Крупная разовая трата"
     override val scenarioLargeExpenseParam: String = "расход 500% мес. дохода"
     override val scenarioLargeExpenseDesc: (amt: String) -> String = { amt -> "Трата $amt (покрытие из ликвидных и фин. активов)" }
 
-    override val scenarioInflationTitle: String = "Рост инфляции"
-    override val scenarioInflationParam: String = "+5% к инфляции"
-    override val scenarioInflationDesc: (rate: String) -> String = { rate -> "Инфляция возрастает до $rate (снижает реальную доходность капитала)" }
+    override val scenarioInflationTitle: String = "Рост расходов (инфляция)"
+    override val scenarioInflationParam: String = "+25% к ежемесячным расходам"
+    override val scenarioInflationDesc: (amt: String) -> String = { amt -> "Расходы растут: +$amt/мес." }
 
     override val scenarioChildTitle: String = "Рождение ребенка"
     override val scenarioChildParam: String = "+25% к расходам на 18 лет"
@@ -535,6 +535,8 @@ val StringsRu: AppStrings = object : AppStrings {
 
     override val disclaimerTitle: String = "Отказ от отвествености"
     override val disclaimerText: String = "Важно: Проект является персональной разработкой и предоставляется исключительно в ознакомительных целях «как есть». Автор не несет ответственности за возможные сбои, потерю данных или иной ущерб, возникший в ходе использования данного ПО. Все расчеты, формулы, метрики и симуляции носят исключительно информационно-ознакомительный характер и не являются индивидуальной финансовой, инвестиционной или налоговой рекомендацией. Вы используете этот инструмент на свой собственный страх и риск."
+    override val assumptionsDisclaimerTitle: String = "Дисклеймер"
+    override val assumptionsDisclaimerBody: (returnRate: String, inflation: String) -> String = { returnRate, inflation -> "Расчёты основаны на постоянной доходности $returnRate и инфляции $inflation, без учёта налогов и порядка рыночных событий. Это модель, а не прогноз.\n\nМодель не учитывает налоги, порядок рыночных событий и инфляцию доходов. Это ориентир, а не гарантия." }
 
     override fun scenarioSavedSuccess(name: String): String = "Сценарий «$name» успешно сохранен"
     override fun scenarioSaveError(error: String): String = "Ошибка сохранения сценария: $error"
@@ -631,6 +633,9 @@ val StringsRu: AppStrings = object : AppStrings {
     override val auditCfsInitial: String = "ℹ️ Финансовая свобода (КФС: %1${'$'}s): Начальный этап формирования инвестиционного капитала (%2${'$'}s). Основной упор на дисциплинированные регулярные сбережения."
     override val auditCfsNegative: String = "🚨 Финансовая свобода (КФС: %1${'$'}s): Отрицательный показатель (%2${'$'}s). Обязательства превышают стоимость активов, чистый капитал находится в дефиците."
     override val auditCfsBuffer: String = "📈 Финансовая свобода (КФС: %1${'$'}s): Начальный этап формирования капитала (%2${'$'}s). Накопленного объема недостаточно для финансовой автономии, требуется дисциплинированное сбережение."
+    override val auditCfsPathToIndependence: String = "Вы на пути к независимости, но пока далеко от цели."
+    override val auditCfsCloseToIndependence: (percent: Int) -> String = { percent -> "Вы близки: капитал покрывает $percent% от целевого." }
+    override val auditCfsFinanciallyIndependent: String = "Вы финансово независимы по правилу 4%."
 
     override val auditRealReturnTitle: String = "Реальная доходность капитала"
     override val auditRealReturnPositive: String = "✅ Реальная доходность капитала (+%1${'$'}s): Доходность активов опережает инфляцию (%2${'$'}s против %3${'$'}s). Капитал защищен от обесценивания и наращивает реальную покупательную способность."

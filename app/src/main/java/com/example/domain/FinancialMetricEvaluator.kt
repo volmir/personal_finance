@@ -36,6 +36,7 @@ object FinancialMetricEvaluator {
     const val SAVINGS_RATE_TIER_EXCELLENT = 50.0
 
     fun getSavingsRateStatus(savingsRate: Double): AuditIndicatorStatus = when {
+        savingsRate < 0.0 -> AuditIndicatorStatus.NEGATIVE
         savingsRate > SAVINGS_RATE_POSITIVE_THRESHOLD -> AuditIndicatorStatus.POSITIVE
         savingsRate >= SAVINGS_RATE_NEUTRAL_THRESHOLD -> AuditIndicatorStatus.NEUTRAL
         else -> AuditIndicatorStatus.NEGATIVE
@@ -97,12 +98,14 @@ object FinancialMetricEvaluator {
     const val DEBT_RATIO_TIER_CRITICAL = 1.0
 
     fun getDebtRatioStatus(debtRatio: Double): AuditIndicatorStatus = when {
+        debtRatio.isInfinite() -> AuditIndicatorStatus.NEGATIVE
         debtRatio <= DEBT_RATIO_POSITIVE_THRESHOLD -> AuditIndicatorStatus.POSITIVE
         debtRatio <= DEBT_RATIO_NEUTRAL_THRESHOLD -> AuditIndicatorStatus.NEUTRAL
         else -> AuditIndicatorStatus.NEGATIVE
     }
 
     fun getDebtRatioScore(debtRatio: Double): Int = when {
+        debtRatio.isInfinite() -> 0
         debtRatio <= DEBT_RATIO_TIER_EXCELLENT -> 10
         debtRatio <= DEBT_RATIO_TIER_VERY_GOOD -> 9
         debtRatio <= DEBT_RATIO_POSITIVE_THRESHOLD -> 8
