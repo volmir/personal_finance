@@ -680,6 +680,7 @@ fun CategoryBreakdownHint(
     categories: List<BreakdownCategory>,
     modifier: Modifier = Modifier
 ) {
+    val strings = LocalAppStrings.current
     var isExpanded by remember { mutableStateOf(false) }
 
     Surface(
