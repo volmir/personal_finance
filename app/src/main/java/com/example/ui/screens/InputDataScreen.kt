@@ -70,12 +70,19 @@ import com.example.data.model.FinancialInputData
 import com.example.domain.AuditorAnalysisGenerator
 import com.example.domain.FinancialMetricEvaluator
 import com.example.ui.theme.AlertRed
+import com.example.ui.theme.StatusColors
 import com.example.ui.theme.SuccessGreen
 import com.example.ui.theme.WarningYellow
 import com.example.util.Formatters
 import com.example.util.localization.BreakdownCategory
 import com.example.util.localization.LocalAppLanguage
 import com.example.util.localization.LocalAppStrings
+
+private data class CurrencyOption(
+    val symbol: String,
+    val display: String,
+    val aliases: List<String> = emptyList()
+)
 
 @Composable
 fun InputDataScreen(
@@ -90,8 +97,22 @@ fun InputDataScreen(
     val lang = LocalAppLanguage.current
     val strings = LocalAppStrings.current
 
-    // Доллар ($) на 1-м месте, Евро (€) на 2-м месте, Гривна (₴) на 4-м месте, Драм (֏) в конце
-    val currencies = listOf("$", "€", "₽", "₴", "₸", "Br", "֏")
+    // Список поддерживаемых валют: базовые ($ на 1-м месте, € на 2-м, ₴ на 4-м, ֏), а новые валюты (GBP, JPY, CHF, CAD, AUD, INR) в конце без трехбуквенных описаний
+    val currencies = listOf(
+        CurrencyOption("$", "$", listOf("USD")),
+        CurrencyOption("€", "€", listOf("EUR")),
+        CurrencyOption("₽", "₽", listOf("RUB")),
+        CurrencyOption("₴", "₴", listOf("UAH")),
+        CurrencyOption("₸", "₸", listOf("KZT")),
+        CurrencyOption("Br", "Br", listOf("BYN")),
+        CurrencyOption("֏", "֏", listOf("AMD")),
+        CurrencyOption("£", "£", listOf("GBP")),
+        CurrencyOption("¥", "¥", listOf("JPY")),
+        CurrencyOption("CHF", "CHF", listOf("Fr")),
+        CurrencyOption("C$", "C$", listOf("CAD")),
+        CurrencyOption("A$", "A$", listOf("AUD")),
+        CurrencyOption("₹", "₹", listOf("INR"))
+    )
 
     LazyColumn(
         modifier = modifier
@@ -99,7 +120,7 @@ fun InputDataScreen(
             .padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
-        // Компактная панель выбора валюты
+        // Компактная горизонтальная панель выбора валюты
         item {
             Spacer(modifier = Modifier.height(6.dp))
             Row(
@@ -109,7 +130,6 @@ fun InputDataScreen(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                // Валюты: $, €, ₽, ₴ (№4), ₸, Br
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -118,15 +138,17 @@ fun InputDataScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     currencies.forEach { cur ->
+                        val isSelected = inputData.currencySymbol == cur.symbol ||
+                            cur.aliases.any { it.equals(inputData.currencySymbol, ignoreCase = true) }
                         FilterChip(
-                            selected = inputData.currencySymbol == cur,
-                            onClick = { onUpdate { it.copy(currencySymbol = cur) } },
-                            label = { Text(cur, fontWeight = FontWeight.Bold, fontSize = 13.sp) },
+                            selected = isSelected,
+                            onClick = { onUpdate { it.copy(currencySymbol = cur.symbol) } },
+                            label = { Text(cur.display, fontWeight = FontWeight.Bold, fontSize = 13.sp) },
                             colors = FilterChipDefaults.filterChipColors(
                                 selectedContainerColor = MaterialTheme.colorScheme.primary,
                                 selectedLabelColor = MaterialTheme.colorScheme.onPrimary
                             ),
-                            modifier = Modifier.testTag("currency_chip_$cur")
+                            modifier = Modifier.testTag("currency_chip_${cur.symbol}")
                         )
                     }
                 }
@@ -183,7 +205,7 @@ fun InputDataScreen(
                     title = strings.cashFlowTitle,
                     formula = strings.cashFlowFormula,
                     value = Formatters.formatMoney(metrics.cashFlow, inputData.currencySymbol, lang),
-                    valueColor = FinancialMetricEvaluator.getCashFlowColor(metrics.cashFlow)
+                    valueColor = StatusColors.getColor(FinancialMetricEvaluator.getCashFlowStatus(metrics.cashFlow))
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -193,7 +215,7 @@ fun InputDataScreen(
                     title = strings.savingsRateTitle,
                     formula = strings.savingsRateFormula,
                     value = Formatters.formatPercent(metrics.savingsRate, lang),
-                    valueColor = FinancialMetricEvaluator.getSavingsRateColor(metrics.savingsRate)
+                    valueColor = StatusColors.getColor(FinancialMetricEvaluator.getSavingsRateStatus(metrics.savingsRate))
                 )
             }
         }
@@ -314,7 +336,7 @@ fun InputDataScreen(
                     title = strings.netWorthTitle,
                     formula = strings.netWorthFormula,
                     value = Formatters.formatMoney(metrics.netWorth, inputData.currencySymbol, lang),
-                    valueColor = FinancialMetricEvaluator.getNetWorthColor(metrics.netWorth)
+                    valueColor = StatusColors.getColor(FinancialMetricEvaluator.getNetWorthStatus(metrics.netWorth))
                 )
             }
         }
@@ -385,7 +407,7 @@ fun InputDataScreen(
                     title = strings.realReturnTitle,
                     formula = strings.realReturnFormula,
                     value = Formatters.formatPercent(metrics.realReturnPercent, lang),
-                    valueColor = FinancialMetricEvaluator.getRealReturnColor(metrics.realReturnPercent)
+                    valueColor = StatusColors.getColor(FinancialMetricEvaluator.getRealReturnStatus(metrics.realReturnPercent))
                 )
             }
         }
@@ -399,16 +421,22 @@ fun InputDataScreen(
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.Top
                 ) {
                     OutlinedTextField(
                         value = inputData.birthDate,
                         onValueChange = { newDate -> onUpdate { it.copy(birthDate = newDate) } },
                         label = { Text(strings.birthDateLabel) },
+                        isError = !metrics.isAgeValid,
+                        supportingText = if (!metrics.isAgeValid) {
+                            { Text(strings.invalidBirthDateError, color = MaterialTheme.colorScheme.error, fontSize = 11.sp) }
+                        } else null,
                         singleLine = true,
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = MaterialTheme.colorScheme.primary,
-                            unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                            errorBorderColor = MaterialTheme.colorScheme.error
                         ),
                         modifier = Modifier
                             .weight(1.3f)

@@ -48,13 +48,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.CalculatedMetrics
 import com.example.data.model.FinancialInputData
-import com.example.domain.AuditIndicatorStatus
 import com.example.domain.AuditorAnalysisGenerator
 import com.example.domain.FinancialMetricEvaluator
+import com.example.domain.model.AuditIndicatorStatus
 import com.example.ui.components.ScoreGauge
 import com.example.ui.theme.AccentGold
 import com.example.ui.theme.AlertRed
 import com.example.ui.theme.ScoreColorEvaluator
+import com.example.ui.theme.StatusColors
 import com.example.ui.theme.SuccessGreen
 import com.example.ui.theme.SuccessGreenBg
 import com.example.ui.theme.WarningYellow
@@ -121,27 +122,20 @@ fun AuditScoreScreen(
 
                         IconButton(
                             onClick = {
-                                val reportText = if (lang == com.example.util.localization.AppLanguage.EN) {
-                                    buildString {
-                                        appendLine("📊 Financial Report & Capital Audit:")
-                                        appendLine("• Overall Score: ${Formatters.formatScore(scores.totalScore, lang = lang)} of 10")
-                                        appendLine("• Savings Rate: ${scores.savingsRateScore}/10 (${Formatters.formatPercent(metrics.savingsRate, lang)})")
-                                        appendLine("• Expense Buffer: ${scores.safetyMonthsScore}/10 (${Formatters.formatRatio(metrics.safetyMonths, lang)} mo.)")
-                                        appendLine("• Debt Ratio: ${scores.debtRatioScore}/10 (${Formatters.formatRatio(metrics.debtRatio, lang)})")
-                                        appendLine("• Financial Freedom Ratio: ${scores.cfsScore}/10 (${Formatters.formatRatio(metrics.financialFreedomRatio, lang)})")
-                                        appendLine("• Time to Retirement (FIRE): ${Formatters.formatRatio(metrics.yearsToRetirement, lang)} yrs (at age ${Formatters.formatRatio(metrics.retirementAge, lang)} yrs)")
-                                    }
-                                } else {
-                                    buildString {
-                                        appendLine("📊 Финансовый отчет и аудит капитала:")
-                                        appendLine("• Итоговый результат: ${Formatters.formatScore(scores.totalScore, lang = lang)} из 10")
-                                        appendLine("• Норма сбережений: ${scores.savingsRateScore}/10 (${Formatters.formatPercent(metrics.savingsRate, lang)})")
-                                        appendLine("• Запас расходов: ${scores.safetyMonthsScore}/10 (${Formatters.formatRatio(metrics.safetyMonths, lang)} мес.)")
-                                        appendLine("• Коэффициент задолженности: ${scores.debtRatioScore}/10 (${Formatters.formatRatio(metrics.debtRatio, lang)})")
-                                        appendLine("• Коэффициент фин. свободы: ${scores.cfsScore}/10 (${Formatters.formatRatio(metrics.financialFreedomRatio, lang)})")
-                                        appendLine("• До пенсии (FIRE): ${Formatters.formatRatio(metrics.yearsToRetirement, lang)} лет (в ${Formatters.formatRatio(metrics.retirementAge, lang)} лет)")
-                                    }
-                                }
+                                val reportText = String.format(
+                                    strings.shareScoreReportTemplate,
+                                    Formatters.formatScore(scores.totalScore, lang = lang),
+                                    scores.savingsRateScore,
+                                    Formatters.formatPercent(metrics.savingsRate, lang),
+                                    scores.safetyMonthsScore,
+                                    Formatters.formatRatio(metrics.safetyMonths, lang),
+                                    scores.debtRatioScore,
+                                    Formatters.formatRatio(metrics.debtRatio, lang),
+                                    scores.cfsScore,
+                                    Formatters.formatRatio(metrics.financialFreedomRatio, lang),
+                                    Formatters.formatRatio(metrics.yearsToRetirement, lang),
+                                    Formatters.formatRatio(metrics.retirementAge, lang)
+                                )
                                 val sendIntent = Intent().apply {
                                     action = Intent.ACTION_SEND
                                     putExtra(Intent.EXTRA_TEXT, reportText)
@@ -222,11 +216,7 @@ fun AuditScoreScreen(
 
         // 2. Запас месячных расходов Score
         item {
-            val monthsText = if (lang == com.example.util.localization.AppLanguage.EN) {
-                "${Formatters.formatRatio(metrics.safetyMonths, lang)} mo."
-            } else {
-                "${Formatters.formatRatio(metrics.safetyMonths, lang)} мес."
-            }
+            val monthsText = String.format(strings.safetyMonthsValueFormat, Formatters.formatRatio(metrics.safetyMonths, lang))
             ScoreItemCard(
                 title = strings.metricSafetyMonthsTitle,
                 score = scores.safetyMonthsScore,
@@ -623,12 +613,13 @@ fun ScoreItemCard(
             .testTag(tag)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
+            val scoreColor = StatusColors.getColor(FinancialMetricEvaluator.getComponentScoreStatus(score))
+
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                val scoreColor = FinancialMetricEvaluator.getComponentScoreColor(score)
 
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
@@ -666,7 +657,7 @@ fun ScoreItemCard(
 
             LinearProgressIndicator(
                 progress = { (score / 10f).coerceIn(0f, 1f) },
-                color = FinancialMetricEvaluator.getComponentScoreColor(score),
+                color = scoreColor,
                 trackColor = MaterialTheme.colorScheme.surface,
                 strokeCap = StrokeCap.Round,
                 modifier = Modifier

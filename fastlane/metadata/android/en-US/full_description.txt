@@ -6,7 +6,7 @@ KEY FEATURES:
 • Fidelity Age Milestones: Compare your portfolio against age-based accumulation benchmarks.
 • Real Return on Capital: Fisher equation accounting for nominal yield and inflation.
 • "What-If?" Scenario Simulator: 14 life and economic stress-tests (market crashes, job loss, inflation surge, mortgage, child care, inheritances) with interactive sliders.
-• Dynamic FIRE Projection: Wealth accumulation and decumulation trajectory up to life expectancy horizon with safe withdrawal rate modeling.
+• Dynamic FIRE Projection: Wealth accumulation and decumulation trajectory up to life expectancy horizon under constant real return, without the 4% rule.
 • One-Click Shareable Audit Reports: Export structured financial audits.
 
 PRIVACY & FREEDOM:

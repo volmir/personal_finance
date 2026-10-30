@@ -1,20 +1,153 @@
-name: Build and Release APK
+name: Build, Test and Release
 
 on:
   push:
+    branches:
+      - main
+      - master
     tags:
       - 'v*'
+  pull_request:
   workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
-  build:
+  test:
+    name: Run Unit Tests
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout code
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Grant execute permission for gradlew
+        run: |
+          if [ -f gradlew ]; then
+            chmod +x gradlew
+          else
+            gradle wrapper
+            chmod +x gradlew
+          fi
+
+      - name: Run unit tests
+        run: ./gradlew testDebugUnitTest
+
+  release:
+    name: Build & Publish Release APK
+    needs: test
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Grant execute permission for gradlew
+        run: |
+          if [ -f gradlew ]; then
+            chmod +x gradlew
+          else
+            gradle wrapper
+            chmod +x gradlew
+          fi
+
+      - name: Validate Release Secrets
+        run: |
+          MISSING=""
+          if [ -z "${{ secrets.KEYSTORE_BASE64 }}" ]; then MISSING="$MISSING KEYSTORE_BASE64"; fi
+          if [ -z "${{ secrets.STORE_PASSWORD }}" ]; then MISSING="$MISSING STORE_PASSWORD"; fi
+          if [ -z "${{ secrets.KEY_PASSWORD }}" ]; then MISSING="$MISSING KEY_PASSWORD"; fi
+          if [ -z "${{ secrets.KEY_ALIAS }}" ]; then MISSING="$MISSING KEY_ALIAS"; fi
+          if [ -n "$MISSING" ]; then
+            echo "::error::Не заданы обязательные секреты репозитория для релизной подписи:$MISSING."
+            echo "Пожалуйста, добавьте KEYSTORE_BASE64, STORE_PASSWORD, KEY_PASSWORD и KEY_ALIAS в Settings -> Secrets and variables -> Actions."
+            exit 1
+          fi
+
+      - name: Decode Keystore
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > "${{ runner.temp }}/release.keystore"
+
+      - name: Build Release APK
+        env:
+          KEYSTORE_PATH: ${{ runner.temp }}/release.keystore
+          STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+        run: ./gradlew assembleRelease
+
+      - name: Verify Release APK Signature & Certificate
+        run: |
+          BUILD_TOOLS_DIR=$(find "$ANDROID_HOME/build-tools" -maxdepth 1 -mindepth 1 | sort -V | tail -n 1)
+          export PATH="$BUILD_TOOLS_DIR:$PATH"
+
+          APK_FILE=$(find app/build/outputs/apk/release -name "*.apk" ! -name "*unsigned*" | head -n 1)
+          if [ -z "$APK_FILE" ]; then
+            echo "::error::Релизный подписанный APK не найден в app/build/outputs/apk/release!"
+            exit 1
+          fi
+          echo "Found signed release APK: $APK_FILE"
+
+          echo "Verifying APK signature..."
+          CERTS_OUTPUT=$(apksigner verify --print-certs "$APK_FILE")
+          echo "$CERTS_OUTPUT"
+
+          echo "=== Certificate SHA-256 Digest ==="
+          echo "$CERTS_OUTPUT" | grep -i "SHA-256 digest" || true
+
+          if echo "$CERTS_OUTPUT" | grep -q "CN=Android Debug"; then
+            echo "::error::Релизный APK подписан debug-ключом (CN=Android Debug)! Публикация в Releases запрещена."
+            exit 1
+          fi
+
+      - name: Verify APK is not debuggable or testOnly
+        run: |
+          BUILD_TOOLS_DIR=$(find "$ANDROID_HOME/build-tools" -maxdepth 1 -mindepth 1 | sort -V | tail -n 1)
+          export PATH="$BUILD_TOOLS_DIR:$PATH"
+
+          APK_FILE=$(find app/build/outputs/apk/release -name "*.apk" ! -name "*unsigned*" | head -n 1)
+          BADGING_OUTPUT=$(aapt2 dump badging "$APK_FILE" 2>&1 || true)
+          DEBUG_FLAGS=$(echo "$BADGING_OUTPUT" | grep -E "debuggable|testOnly" || true)
+          if [ -n "$DEBUG_FLAGS" ]; then
+            echo "::error::Обнаружены недопустимые флаги в релизном APK: $DEBUG_FLAGS"
+            exit 1
+          fi
+          echo "APK successfully verified: no debuggable or testOnly flags found."
+
+      - name: Prepare Release Artifact
+        run: |
+          mkdir -p release-artifacts
+          TAG_NAME="${{ github.ref_name }}"
+          APK_FILE=$(find app/build/outputs/apk/release -name "*.apk" ! -name "*unsigned*" | head -n 1)
+          cp "$APK_FILE" "release-artifacts/PersonalFinance-${TAG_NAME}.apk"
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: release-artifacts/PersonalFinance-*.apk
+          generate_release_notes: true
+          name: Release ${{ github.ref_name }}
+
+  debug-artifact:
+    name: Build Debug APK Artifact (workflow_dispatch only)
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Set up JDK 17
@@ -39,18 +172,12 @@ jobs:
             base64 -d debug.keystore.base64 > debug.keystore
           fi
 
-      - name: Build APK
+      - name: Build Debug APK
         run: ./gradlew assembleDebug
 
-      - name: Rename APK
-        run: |
-          mkdir -p release-artifacts
-          cp app/build/outputs/apk/debug/app-debug.apk release-artifacts/PersonalFinance-${{ github.ref_name }}.apk || cp app/build/outputs/apk/debug/app-debug.apk release-artifacts/PersonalFinance.apk
-
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        if: startsWith(github.ref, 'refs/tags/')
+      - name: Upload Debug APK Artifact
+        uses: actions/upload-artifact@v4
         with:
-          files: release-artifacts/*.apk
-          generate_release_notes: true
-          name: Release ${{ github.ref_name }}
+          name: PersonalFinance-debug
+          path: app/build/outputs/apk/debug/*.apk
+          retention-days: 7

@@ -14,7 +14,8 @@ data class FinancialInputData(
     val inflationPercent: Double = 2.5,
     val capitalGainsTaxPercent: Double = 20.0,
     val currencySymbol: String = "$",
-    val includeFinancialInEmergencyFund: Boolean = true
+    val includeFinancialInEmergencyFund: Boolean = true,
+    val includePropertyInFireCapital: Boolean = false
 ) {
     companion object {
         // Средние показатели жителя США (US Average Data)
@@ -65,7 +66,8 @@ data class CalculatedMetrics(
     val scores: FinancialScores,
     val capitalGainsTaxPercent: Double = 20.0,
     val effectiveCapitalGainsTaxRate: Double = 12.0,
-    val capitalGainsGainSharePercent: Double = 60.0
+    val capitalGainsGainSharePercent: Double = 60.0,
+    val isAgeValid: Boolean = true
 ) {
     val fidelityRatio: Double get() = com.example.domain.FinancialMetricEvaluator.calculateFidelityRatio(netWorth, fidelityTarget)
     val fidelityPercent: Double get() = com.example.domain.FinancialMetricEvaluator.calculateFidelityPercent(netWorth, fidelityTarget)

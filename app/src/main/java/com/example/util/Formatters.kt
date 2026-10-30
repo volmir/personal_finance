@@ -28,9 +28,14 @@ object Formatters {
     private val scoreFormatRu = DecimalFormat("#,##0.0", symbolsRu)
     private val scoreFormatEn = DecimalFormat("#,##0.0", symbolsEn)
 
+    private val prefixCurrencies = setOf(
+        "$", "€", "£", "¥", "₹", "C$", "A$",
+        "USD", "EUR", "GBP", "JPY", "INR", "CAD", "AUD"
+    )
+
     fun formatMoney(amount: Double, currency: String = "$", lang: AppLanguage = AppLanguage.RU): String {
         val formatter = if (lang == AppLanguage.EN) moneyFormatEn else moneyFormatRu
-        return if (lang == AppLanguage.EN && (currency == "$" || currency == "€" || currency == "£")) {
+        return if (lang == AppLanguage.EN && currency in prefixCurrencies) {
             "$currency${formatter.format(amount)}"
         } else {
             "${formatter.format(amount)} $currency"
@@ -70,38 +75,130 @@ object Formatters {
      * EN: 1 checkbox, 2 checkboxes
      */
     fun formatCheckboxesCount(count: Int, lang: AppLanguage = AppLanguage.RU): String {
-        return if (lang == AppLanguage.EN) {
-            val word = if (count == 1) "checkbox" else "checkboxes"
-            "$count\u00A0$word"
-        } else {
-            val mod10 = count % 10
-            val mod100 = count % 100
-            val word = when {
-                mod100 in 11..14 -> "чекбоксов"
-                mod10 == 1 -> "чекбокс"
-                mod10 in 2..4 -> "чекбокса"
-                else -> "чекбоксов"
-            }
-            "$count\u00A0$word"
-        }
+        val strings = com.example.util.localization.getAppStrings(lang)
+        val word = strings.plural(count, strings.checkboxOne, strings.checkboxFew, strings.checkboxMany)
+        return "$count\u00A0$word"
     }
 
     /**
      * Формирует бейдж активных параметров симуляции в одну строку с неразрывными пробелами.
      */
     fun formatSimulationBadge(activeCount: Int, hasSliders: Boolean, lang: AppLanguage = AppLanguage.RU): String {
-        return if (lang == AppLanguage.EN) {
-            when {
-                activeCount > 0 && hasSliders -> "${formatCheckboxesCount(activeCount, lang)}\u00A0+\u00A0sliders"
-                activeCount > 0 -> formatCheckboxesCount(activeCount, lang)
-                else -> "Adjustment sliders"
-            }
+        val strings = com.example.util.localization.getAppStrings(lang)
+        return when {
+            activeCount > 0 && hasSliders -> "${formatCheckboxesCount(activeCount, lang)}\u00A0+\u00A0${strings.simulationBadgeSlidersSuffix}"
+            activeCount > 0 -> formatCheckboxesCount(activeCount, lang)
+            else -> strings.simulationBadgeOnlySliders
+        }
+    }
+
+    /**
+     * Проверяет, недостижим ли FIRE при текущих параметрах:
+     * retirementAge >= lifeExpectancy - 0.01
+     */
+    fun isFireUnreachable(retirementAge: Double, lifeExpectancy: Int): Boolean {
+        return retirementAge >= lifeExpectancy - 0.01
+    }
+
+    fun isFireUnreachable(retirementAge: Double, lifeExpectancy: Double): Boolean {
+        return retirementAge >= lifeExpectancy - 0.01
+    }
+
+    /**
+     * Форматирует срок до пенсии в годах:
+     * Если недостижимо -> «Недостижимо при текущих параметрах»
+     * Иначе -> число лет с форматированием ratio
+     */
+    fun formatFireYearsToRetirement(
+        yearsToRetirement: Double,
+        retirementAge: Double,
+        lifeExpectancy: Int,
+        lang: AppLanguage = AppLanguage.RU
+    ): String {
+        val strings = com.example.util.localization.getAppStrings(lang)
+        return if (isFireUnreachable(retirementAge, lifeExpectancy)) {
+            strings.fireUnreachableText
         } else {
-            when {
-                activeCount > 0 && hasSliders -> "${formatCheckboxesCount(activeCount, lang)}\u00A0+\u00A0ползунки"
-                activeCount > 0 -> formatCheckboxesCount(activeCount, lang)
-                else -> "Ползунки настройки"
+            formatRatio(yearsToRetirement, lang)
+        }
+    }
+
+    /**
+     * Форматирует возраст выхода на пенсию:
+     * Если недостижимо -> «Недостижимо при текущих параметрах»
+     * Иначе -> возраст с суффиксом лет/yrs
+     */
+    fun formatFireRetirementAge(
+        retirementAge: Double,
+        lifeExpectancy: Int,
+        lang: AppLanguage = AppLanguage.RU
+    ): String {
+        val strings = com.example.util.localization.getAppStrings(lang)
+        return if (isFireUnreachable(retirementAge, lifeExpectancy)) {
+            strings.fireUnreachableText
+        } else {
+            strings.fireRetirementAgeValue(formatRatio(retirementAge, lang))
+        }
+    }
+
+    /**
+     * Форматирует сводный текст симуляции:
+     * Если симуляция недостижима -> «Недостижимо при текущих параметрах» (скрывая разницу в годах с базой)
+     * Если база недостижима, но симуляция достижима -> скрывает разницу в годах с базой
+     * Иначе -> показывает стандартную разницу в годах с базой
+     */
+    fun formatFireSimulationSummary(
+        baseYearsToRetirement: Double,
+        baseRetirementAge: Double,
+        simulatedYearsToRetirement: Double,
+        simulatedRetirementAge: Double,
+        lifeExpectancy: Int,
+        lang: AppLanguage = AppLanguage.RU
+    ): String {
+        val strings = com.example.util.localization.getAppStrings(lang)
+        val isSimUnreachable = isFireUnreachable(simulatedRetirementAge, lifeExpectancy)
+        val isBaseUnreachable = isFireUnreachable(baseRetirementAge, lifeExpectancy)
+
+        return when {
+            isSimUnreachable -> strings.fireUnreachableText
+            isBaseUnreachable -> strings.fireSimWithoutBase(
+                formatRatio(simulatedYearsToRetirement, lang),
+                formatRatio(simulatedRetirementAge, lang)
+            )
+            else -> {
+                val yearsDiff = baseYearsToRetirement - simulatedYearsToRetirement
+                when {
+                    yearsDiff > 0 -> strings.fireSimEarlier(
+                        formatRatio(yearsDiff, lang),
+                        formatRatio(simulatedYearsToRetirement, lang),
+                        formatRatio(simulatedRetirementAge, lang)
+                    )
+                    yearsDiff < 0 -> strings.fireSimLater(
+                        formatRatio(-yearsDiff, lang),
+                        formatRatio(simulatedYearsToRetirement, lang),
+                        formatRatio(simulatedRetirementAge, lang)
+                    )
+                    else -> strings.fireSimSame(
+                        formatRatio(simulatedYearsToRetirement, lang)
+                    )
+                }
             }
         }
+    }
+
+    fun formatFireSimulationSummary(
+        baseMetrics: com.example.data.model.CalculatedMetrics,
+        simulatedMetrics: com.example.data.model.CalculatedMetrics,
+        lifeExpectancy: Int,
+        lang: AppLanguage = AppLanguage.RU
+    ): String {
+        return formatFireSimulationSummary(
+            baseYearsToRetirement = baseMetrics.yearsToRetirement,
+            baseRetirementAge = baseMetrics.retirementAge,
+            simulatedYearsToRetirement = simulatedMetrics.yearsToRetirement,
+            simulatedRetirementAge = simulatedMetrics.retirementAge,
+            lifeExpectancy = lifeExpectancy,
+            lang = lang
+        )
     }
 }

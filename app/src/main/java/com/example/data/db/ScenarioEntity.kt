@@ -1,5 +1,6 @@
 package com.example.data.db
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.example.data.model.FinancialInputData
@@ -21,6 +22,10 @@ data class ScenarioEntity(
     val inflationPercent: Double,
     val currencySymbol: String,
     val includeFinancialInEmergencyFund: Boolean,
+    @ColumnInfo(defaultValue = "20.0")
+    val capitalGainsTaxPercent: Double = 20.0,
+    @ColumnInfo(defaultValue = "0")
+    val includePropertyInFireCapital: Boolean = false,
     val updatedAt: Long = System.currentTimeMillis()
 ) {
     fun toInputData(): FinancialInputData = FinancialInputData(
@@ -35,7 +40,9 @@ data class ScenarioEntity(
         nominalReturnPercent = nominalReturnPercent,
         inflationPercent = inflationPercent,
         currencySymbol = currencySymbol,
-        includeFinancialInEmergencyFund = includeFinancialInEmergencyFund
+        includeFinancialInEmergencyFund = includeFinancialInEmergencyFund,
+        capitalGainsTaxPercent = capitalGainsTaxPercent,
+        includePropertyInFireCapital = includePropertyInFireCapital
     )
 
     companion object {
@@ -54,7 +61,9 @@ data class ScenarioEntity(
                 nominalReturnPercent = data.nominalReturnPercent,
                 inflationPercent = data.inflationPercent,
                 currencySymbol = data.currencySymbol,
-                includeFinancialInEmergencyFund = data.includeFinancialInEmergencyFund
+                includeFinancialInEmergencyFund = data.includeFinancialInEmergencyFund,
+                capitalGainsTaxPercent = data.capitalGainsTaxPercent,
+                includePropertyInFireCapital = data.includePropertyInFireCapital
             )
     }
 }

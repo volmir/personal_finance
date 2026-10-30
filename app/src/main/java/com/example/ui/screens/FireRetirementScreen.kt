@@ -16,6 +16,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.filled.WorkspacePremium
 import androidx.compose.material3.ButtonDefaults
@@ -68,6 +69,7 @@ fun FireRetirementScreen(
     val isSimulating = simulationState.isSimulating
 
     val displayMetrics = if (isSimulating) simulatedMetrics else metrics
+    val isUnreachable = Formatters.isFireUnreachable(displayMetrics.retirementAge, inputData.lifeExpectancy)
 
     // Динамический расчет шкал и шагов симулятора исходя из текущих значений показателей
     val savingsConfig = remember(metrics.cashFlow, inputData.monthlyIncome, inputData.monthlyExpenses) {
@@ -102,6 +104,39 @@ fun FireRetirementScreen(
             .padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
+        if (!displayMetrics.isAgeValid) {
+            item {
+                Spacer(modifier = Modifier.height(4.dp))
+                Surface(
+                    shape = RoundedCornerShape(14.dp),
+                    color = MaterialTheme.colorScheme.errorContainer,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("fire_invalid_age_banner")
+                ) {
+                    Row(
+                        modifier = Modifier.padding(14.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Info,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Text(
+                            text = strings.invalidBirthDateError,
+                            style = MaterialTheme.typography.bodyMedium.copy(
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onErrorContainer
+                            )
+                        )
+                    }
+                }
+            }
+        }
+
         item {
             Spacer(modifier = Modifier.height(4.dp))
             // Главный баннер FIRE
@@ -163,22 +198,35 @@ fun FireRetirementScreen(
                         )
                     )
 
-                    Row(verticalAlignment = Alignment.Bottom) {
+                    if (isUnreachable) {
                         Text(
-                            text = Formatters.formatRatio(displayMetrics.yearsToRetirement, lang),
-                            style = MaterialTheme.typography.displayMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = SuccessGreen
-                            )
-                        )
-                        Text(
-                            text = strings.fireYearsSuffix,
+                            text = strings.fireUnreachableText,
                             style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.SemiBold,
-                                color = MaterialTheme.colorScheme.onSurface
+                                fontWeight = FontWeight.Bold,
+                                color = AlertRed
                             ),
-                            modifier = Modifier.padding(bottom = 8.dp, start = 6.dp)
+                            modifier = Modifier
+                                .padding(vertical = 8.dp)
+                                .testTag("fire_unreachable_title")
                         )
+                    } else {
+                        Row(verticalAlignment = Alignment.Bottom) {
+                            Text(
+                                text = Formatters.formatRatio(displayMetrics.yearsToRetirement, lang),
+                                style = MaterialTheme.typography.displayMedium.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    color = SuccessGreen
+                                )
+                            )
+                            Text(
+                                text = strings.fireYearsSuffix,
+                                style = MaterialTheme.typography.titleMedium.copy(
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                ),
+                                modifier = Modifier.padding(bottom = 8.dp, start = 6.dp)
+                            )
+                        }
                     }
 
                     Text(
@@ -203,8 +251,11 @@ fun FireRetirementScreen(
                             ) {
                                 Text(strings.fireRetirementAgeLabel, style = MaterialTheme.typography.bodySmall)
                                 Text(
-                                    text = strings.fireRetirementAgeValue(Formatters.formatRatio(displayMetrics.retirementAge, lang)),
-                                    style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold)
+                                    text = Formatters.formatFireRetirementAge(displayMetrics.retirementAge, inputData.lifeExpectancy, lang),
+                                    style = MaterialTheme.typography.bodySmall.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (isUnreachable) AlertRed else MaterialTheme.colorScheme.onSurface
+                                    )
                                 )
                             }
                             Spacer(modifier = Modifier.height(4.dp))
@@ -339,15 +390,26 @@ fun FireRetirementScreen(
                         trajectory = trajectory,
                         yearsToRetire = displayMetrics.yearsToRetirement,
                         currentAge = metrics.currentAge,
-                        currencySymbol = inputData.currencySymbol
+                        currencySymbol = inputData.currencySymbol,
+                        isUnreachable = isUnreachable
                     )
 
                     // Блок "Итог симуляции (совместное влияние)" непосредственно под сам график
                     if (isSimulating) {
+                        val isSimUnreachable = Formatters.isFireUnreachable(simulatedMetrics.retirementAge, inputData.lifeExpectancy)
+                        val isBaseUnreachable = Formatters.isFireUnreachable(metrics.retirementAge, inputData.lifeExpectancy)
                         val yearsDiff = metrics.yearsToRetirement - simulatedMetrics.yearsToRetirement
-                        val isPositive = yearsDiff > 0
-                        val isNegative = yearsDiff < 0
-                        val alertColor = if (isPositive) SuccessGreen else if (isNegative) AlertRed else MaterialTheme.colorScheme.primary
+                        val isPositive = !isSimUnreachable && (isBaseUnreachable || yearsDiff > 0)
+                        val isNegative = !isBaseUnreachable && (isSimUnreachable || yearsDiff < 0)
+                        val alertColor = if (isSimUnreachable) {
+                            AlertRed
+                        } else if (isPositive) {
+                            SuccessGreen
+                        } else if (isNegative) {
+                            AlertRed
+                        } else {
+                            MaterialTheme.colorScheme.primary
+                        }
 
                         val activeScenariosCount = simulationState.scenarios.activeCount
                         val hasSliders = simulationState.extraMonthlySavings != 0.0 ||
@@ -399,23 +461,12 @@ fun FireRetirementScreen(
 
                                 Spacer(modifier = Modifier.height(8.dp))
 
-                                val summaryDiffText = if (isPositive) {
-                                    strings.fireSimEarlier(
-                                        Formatters.formatRatio(yearsDiff, lang),
-                                        Formatters.formatRatio(simulatedMetrics.yearsToRetirement, lang),
-                                        Formatters.formatRatio(simulatedMetrics.retirementAge, lang)
-                                    )
-                                } else if (isNegative) {
-                                    strings.fireSimLater(
-                                        Formatters.formatRatio(-yearsDiff, lang),
-                                        Formatters.formatRatio(simulatedMetrics.yearsToRetirement, lang),
-                                        Formatters.formatRatio(simulatedMetrics.retirementAge, lang)
-                                    )
-                                } else {
-                                    strings.fireSimSame(
-                                        Formatters.formatRatio(simulatedMetrics.yearsToRetirement, lang)
-                                    )
-                                }
+                                val summaryDiffText = Formatters.formatFireSimulationSummary(
+                                    baseMetrics = metrics,
+                                    simulatedMetrics = simulatedMetrics,
+                                    lifeExpectancy = inputData.lifeExpectancy,
+                                    lang = lang
+                                )
 
                                 Text(
                                     text = summaryDiffText,

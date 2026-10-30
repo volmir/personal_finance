@@ -22,19 +22,37 @@ android {
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
 
+  val keystorePath = System.getenv("KEYSTORE_PATH")
+  val storePassword = System.getenv("STORE_PASSWORD")
+  val keyPassword = System.getenv("KEY_PASSWORD")
+  val keyAlias = System.getenv("KEY_ALIAS") ?: "upload"
+  val keystoreFile = keystorePath?.let { file(it) }
+  val hasReleaseSigning = !keystorePath.isNullOrBlank() &&
+      !storePassword.isNullOrBlank() &&
+      !keyPassword.isNullOrBlank() &&
+      keystoreFile != null &&
+      keystoreFile.exists()
+
+  // стабильный debug-ключ для локальных и CI-сборок, на публикацию не влияет
+  val customDebugKeystore = file("${rootDir}/debug.keystore")
+  val hasDebugKeystore = customDebugKeystore.exists()
+
   signingConfigs {
     create("release") {
-      val keystorePath = System.getenv("KEYSTORE_PATH") ?: "${rootDir}/my-upload-key.jks"
-      storeFile = file(keystorePath)
-      storePassword = System.getenv("STORE_PASSWORD")
-      keyAlias = "upload"
-      keyPassword = System.getenv("KEY_PASSWORD")
+      if (hasReleaseSigning) {
+        storeFile = keystoreFile
+        this.storePassword = storePassword
+        this.keyAlias = keyAlias
+        this.keyPassword = keyPassword
+      }
     }
     create("debugConfig") {
-      storeFile = file("${rootDir}/debug.keystore")
-      storePassword = "android"
-      keyAlias = "androiddebugkey"
-      keyPassword = "android"
+      if (hasDebugKeystore) {
+        storeFile = customDebugKeystore
+        this.storePassword = "android"
+        this.keyAlias = "androiddebugkey"
+        this.keyPassword = "android"
+      }
     }
   }
 
@@ -44,9 +62,15 @@ android {
       isMinifyEnabled = true
       isShrinkResources = true
       proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-      signingConfig = signingConfigs.getByName("release")
+      if (hasReleaseSigning) {
+        signingConfig = signingConfigs.getByName("release")
+      }
     }
-    debug { signingConfig = signingConfigs.getByName("debugConfig") }
+    debug {
+      if (hasDebugKeystore) {
+        signingConfig = signingConfigs.getByName("debugConfig")
+      }
+    }
   }
   compileOptions {
     sourceCompatibility = JavaVersion.VERSION_11
@@ -69,6 +93,10 @@ secrets {
   propertiesFileName = ".env"
   defaultPropertiesFileName = ".env.example"
   ignoreList.add("FIREBASE_APPCHECK_DEBUG_TOKEN")
+}
+
+ksp {
+  arg("room.schemaLocation", "$projectDir/schemas")
 }
 
 // googleServices { missingGoogleServicesStrategy = MissingGoogleServicesStrategy.WARN }

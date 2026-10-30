@@ -2,14 +2,12 @@ package com.example.domain
 
 import com.example.data.model.CalculatedMetrics
 import com.example.data.model.FinancialInputData
+import com.example.domain.model.AuditIndicatorStatus
 import com.example.util.Formatters
 import com.example.util.localization.AppLanguage
+import com.example.util.localization.getAppStrings
 
-enum class AuditIndicatorStatus {
-    POSITIVE,
-    NEUTRAL,
-    NEGATIVE
-}
+typealias AuditIndicatorStatus = com.example.domain.model.AuditIndicatorStatus
 
 data class AuditIndicatorAnalysis(
     val id: String,
@@ -30,75 +28,40 @@ data class GroupedAuditOpinion(
         metrics: CalculatedMetrics,
         lang: AppLanguage = AppLanguage.RU
     ): String {
-        val isEn = lang == AppLanguage.EN
+        val strings = getAppStrings(lang)
         return buildString {
-            if (isEn) {
-                appendLine("📋 AUDITOR OPINION ACROSS ALL INDICATORS")
-                appendLine("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-                appendLine("⭐️ Overall score: ${Formatters.formatScore(metrics.scores.totalScore, lang = lang)} of 10 points")
-                appendLine("Total indicators analyzed: $totalCount")
-                appendLine()
+            appendLine(strings.auditShareHeaderTitle)
+            appendLine("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+            appendLine(String.format(strings.auditShareScoreLine, Formatters.formatScore(metrics.scores.totalScore, lang = lang)))
+            appendLine(String.format(strings.auditShareTotalCountLine, totalCount))
+            appendLine()
 
-                appendLine("🟢 POSITIVE INDICATORS (${positive.size}):")
-                if (positive.isEmpty()) {
-                    appendLine("• No positive indicators identified")
-                } else {
-                    positive.forEach { appendLine(it.text) }
-                }
-                appendLine()
-
-                appendLine("🟡 NEUTRAL INDICATORS (${neutral.size}):")
-                if (neutral.isEmpty()) {
-                    appendLine("• No neutral indicators")
-                } else {
-                    neutral.forEach { appendLine(it.text) }
-                }
-                appendLine()
-
-                appendLine("🔴 NEGATIVE INDICATORS (${negative.size}):")
-                if (negative.isEmpty()) {
-                    appendLine("• No critical or negative factors detected 🎉")
-                } else {
-                    negative.forEach { appendLine(it.text) }
-                }
-                appendLine()
-                appendLine("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-                appendLine("💡 Generated in \"Personal Finance\" app")
-                appendLine("⚠️ Important: This project is a personal development and is provided solely for informational purposes \"as is\". The author is not responsible for any malfunctions, data loss, or other damages arising from the use of this software. All calculations, formulas, metrics, and simulations are for informational purposes only and do not constitute individual financial, investment, or tax advice. You use this tool at your own risk.")
+            appendLine(String.format(strings.auditSharePositiveHeader, positive.size))
+            if (positive.isEmpty()) {
+                appendLine(strings.auditSharePositiveEmpty)
             } else {
-                appendLine("📋 АУДИТОРСКОЕ ЗАКЛЮЧЕНИЕ ПО ВСЕМ ПОКАЗАТЕЛЯМ")
-                appendLine("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-                appendLine("⭐️ Итоговая оценка: ${Formatters.formatScore(metrics.scores.totalScore, lang = lang)} из 10 баллов")
-                appendLine("Всего показателей проанализировано: $totalCount")
-                appendLine()
-
-                appendLine("🟢 ПОЗИТИВНЫЕ ПОКАЗАТЕЛИ (${positive.size}):")
-                if (positive.isEmpty()) {
-                    appendLine("• Нет позитивных показателей")
-                } else {
-                    positive.forEach { appendLine(it.text) }
-                }
-                appendLine()
-
-                appendLine("🟡 НЕЙТРАЛЬНЫЕ ПОКАЗАТЕЛИ (${neutral.size}):")
-                if (neutral.isEmpty()) {
-                    appendLine("• Нет нейтральных показателей")
-                } else {
-                    neutral.forEach { appendLine(it.text) }
-                }
-                appendLine()
-
-                appendLine("🔴 НЕГАТИВНЫЕ ПОКАЗАТЕЛИ (${negative.size}):")
-                if (negative.isEmpty()) {
-                    appendLine("• Критических и негативных факторов не выявлено 🎉")
-                } else {
-                    negative.forEach { appendLine(it.text) }
-                }
-                appendLine()
-                appendLine("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-                appendLine("💡 Сформировано в приложении «Личные финансы»")
-                appendLine("⚠️ Важно: Проект является персональной разработкой и предоставляется исключительно в ознакомительных целях «как есть». Автор не несет ответственности за возможные сбои, потерю данных или иной ущерб, возникший в ходе использования данного ПО. Все расчеты, формулы, метрики и симуляции носят исключительно информационно-ознакомительный характер и не являются индивидуальной финансовой, инвестиционной или налоговой рекомендацией. Вы используете этот инструмент на свой собственный страх и риск.")
+                positive.forEach { appendLine(it.text) }
             }
+            appendLine()
+
+            appendLine(String.format(strings.auditShareNeutralHeader, neutral.size))
+            if (neutral.isEmpty()) {
+                appendLine(strings.auditShareNeutralEmpty)
+            } else {
+                neutral.forEach { appendLine(it.text) }
+            }
+            appendLine()
+
+            appendLine(String.format(strings.auditShareNegativeHeader, negative.size))
+            if (negative.isEmpty()) {
+                appendLine(strings.auditShareNegativeEmpty)
+            } else {
+                negative.forEach { appendLine(it.text) }
+            }
+            appendLine()
+            appendLine("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+            appendLine(strings.auditShareGeneratedBy)
+            appendLine(strings.auditShareDisclaimer)
         }
     }
 }
@@ -111,313 +74,173 @@ object AuditorAnalysisGenerator {
         lang: AppLanguage = AppLanguage.RU
     ): GroupedAuditOpinion {
         val currency = inputData.currencySymbol
-        val isEn = lang == AppLanguage.EN
+        val strings = getAppStrings(lang)
 
         // 1. Денежный поток (Cash Flow)
-        val cashFlowAnalysis = if (isEn) {
-            when {
-                metrics.cashFlow > 0.0 -> AuditIndicatorAnalysis(
-                    id = "cash_flow",
-                    title = "Cash Flow",
-                    status = AuditIndicatorStatus.POSITIVE,
-                    text = "✅ Cash Flow (+${Formatters.formatMoney(metrics.cashFlow, currency, lang)}/mo.): Budget surplus. Your income exceeds expenses, generating a regular investment resource for wealth accumulation."
-                )
-                metrics.cashFlow == 0.0 -> AuditIndicatorAnalysis(
-                    id = "cash_flow",
-                    title = "Cash Flow",
-                    status = AuditIndicatorStatus.NEUTRAL,
-                    text = "ℹ️ Cash Flow (0 $currency/mo.): Balanced budget (income equals expenses). You do not accumulate debt, but lack a surplus to build capital."
-                )
-                else -> AuditIndicatorAnalysis(
-                    id = "cash_flow",
-                    title = "Cash Flow",
-                    status = AuditIndicatorStatus.NEGATIVE,
-                    text = "🚨 Cash Flow (${Formatters.formatMoney(metrics.cashFlow, currency, lang)}/mo.): Budget deficit! Current expenses exceed income, depleting reserves or raising debt."
-                )
-            }
-        } else {
-            when {
-                metrics.cashFlow > 0.0 -> AuditIndicatorAnalysis(
-                    id = "cash_flow",
-                    title = "Денежный поток",
-                    status = AuditIndicatorStatus.POSITIVE,
-                    text = "✅ Денежный поток (Cash Flow: +${Formatters.formatMoney(metrics.cashFlow, currency, lang)}/мес.): Профицит бюджета. Ваши доходы превышают расходы, формируя регулярный инвестиционный ресурс для приумножения капитала."
-                )
-                metrics.cashFlow == 0.0 -> AuditIndicatorAnalysis(
-                    id = "cash_flow",
-                    title = "Денежный поток",
-                    status = AuditIndicatorStatus.NEUTRAL,
-                    text = "ℹ️ Денежный поток (Cash Flow: 0 $currency/мес.): Нулевой баланс бюджета (доходы равны расходам). Вы не накапливаете долги, однако свободный ресурс для создания и приумножения капитала отсутствует."
-                )
-                else -> AuditIndicatorAnalysis(
-                    id = "cash_flow",
-                    title = "Денежный поток",
-                    status = AuditIndicatorStatus.NEGATIVE,
-                    text = "🚨 Денежный поток (Cash Flow: ${Formatters.formatMoney(metrics.cashFlow, currency, lang)}/мес.): Дефицит бюджета! Текущие расходы превышают доходы, что ведет к быстрому истощению резервов или росту долговых обязательств."
-                )
-            }
+        val cashFlowAnalysis = when {
+            metrics.cashFlow > 0.0 -> AuditIndicatorAnalysis(
+                id = "cash_flow",
+                title = strings.auditCashFlowTitle,
+                status = AuditIndicatorStatus.POSITIVE,
+                text = String.format(strings.auditCashFlowPositive, Formatters.formatMoney(metrics.cashFlow, currency, lang))
+            )
+            metrics.cashFlow == 0.0 -> AuditIndicatorAnalysis(
+                id = "cash_flow",
+                title = strings.auditCashFlowTitle,
+                status = AuditIndicatorStatus.NEUTRAL,
+                text = String.format(strings.auditCashFlowNeutral, currency)
+            )
+            else -> AuditIndicatorAnalysis(
+                id = "cash_flow",
+                title = strings.auditCashFlowTitle,
+                status = AuditIndicatorStatus.NEGATIVE,
+                text = String.format(strings.auditCashFlowNegative, Formatters.formatMoney(metrics.cashFlow, currency, lang))
+            )
         }
 
         // 2. Норма сбережений
-        val savingsRateAnalysis = if (isEn) {
-            when {
-                metrics.savingsRate > 20.0 -> AuditIndicatorAnalysis(
-                    id = "savings_rate",
-                    title = "Savings Rate",
-                    status = AuditIndicatorStatus.POSITIVE,
-                    text = "✅ Savings Capacity (Savings Rate: ${Formatters.formatPercent(metrics.savingsRate, lang)}): High savings rate (above 20%). Provides steady asset accumulation and exponential wealth compounding."
-                )
-                metrics.savingsRate >= 0.0 -> AuditIndicatorAnalysis(
-                    id = "savings_rate",
-                    title = "Savings Rate",
-                    status = AuditIndicatorStatus.NEUTRAL,
-                    text = "ℹ️ Savings Capacity (Savings Rate: ${Formatters.formatPercent(metrics.savingsRate, lang)}): Neutral range (0–20%). Capital accumulation proceeds steadily; expense optimization can help reach the >20% target."
-                )
-                else -> AuditIndicatorAnalysis(
-                    id = "savings_rate",
-                    title = "Savings Rate",
-                    status = AuditIndicatorStatus.NEGATIVE,
-                    text = "🚨 Savings Capacity (Savings Rate: ${Formatters.formatPercent(metrics.savingsRate, lang)}): Negative cash flow (budget deficit)! Expenses exceed income, depleting assets and increasing debt."
-                )
-            }
-        } else {
-            when {
-                metrics.savingsRate > 20.0 -> AuditIndicatorAnalysis(
-                    id = "savings_rate",
-                    title = "Норма сбережений",
-                    status = AuditIndicatorStatus.POSITIVE,
-                    text = "✅ Способность к накоплению (Норма сбережений: ${Formatters.formatPercent(metrics.savingsRate, lang)}): Высокий уровень сбережений (более 20%). Обеспечивает стабильное пополнение активов и долгосрочное благосостояние."
-                )
-                metrics.savingsRate >= 0.0 -> AuditIndicatorAnalysis(
-                    id = "savings_rate",
-                    title = "Норма сбережений",
-                    status = AuditIndicatorStatus.NEUTRAL,
-                    text = "ℹ️ Способность к накоплению (Норма сбережений: ${Formatters.formatPercent(metrics.savingsRate, lang)}): Нейтральная зона (0–20%). Формирование капитала идет умеренными темпами; рекомендуется оптимизировать расходы для выхода в зону >20%."
-                )
-                else -> AuditIndicatorAnalysis(
-                    id = "savings_rate",
-                    title = "Норма сбережений",
-                    status = AuditIndicatorStatus.NEGATIVE,
-                    text = "🚨 Способность к накоплению (Норма сбережений: ${Formatters.formatPercent(metrics.savingsRate, lang)}): Отрицательный денежный поток (дефицит бюджета)! Расходы превышают доходы, что ведет к истощению активов и росту долгов."
-                )
-            }
+        val savingsRateAnalysis = when {
+            metrics.savingsRate > 20.0 -> AuditIndicatorAnalysis(
+                id = "savings_rate",
+                title = strings.auditSavingsRateTitle,
+                status = AuditIndicatorStatus.POSITIVE,
+                text = String.format(strings.auditSavingsRatePositive, Formatters.formatPercent(metrics.savingsRate, lang))
+            )
+            metrics.savingsRate >= 0.0 -> AuditIndicatorAnalysis(
+                id = "savings_rate",
+                title = strings.auditSavingsRateTitle,
+                status = AuditIndicatorStatus.NEUTRAL,
+                text = String.format(strings.auditSavingsRateNeutral, Formatters.formatPercent(metrics.savingsRate, lang))
+            )
+            else -> AuditIndicatorAnalysis(
+                id = "savings_rate",
+                title = strings.auditSavingsRateTitle,
+                status = AuditIndicatorStatus.NEGATIVE,
+                text = String.format(strings.auditSavingsRateNegative, Formatters.formatPercent(metrics.savingsRate, lang))
+            )
         }
 
         // 3. Подушка безопасности (сумма)
-        val emergencyFundAnalysis = if (isEn) {
-            when {
-                metrics.safetyMonths >= 6.0 -> AuditIndicatorAnalysis(
-                    id = "emergency_fund",
-                    title = "Emergency Fund",
-                    status = AuditIndicatorStatus.POSITIVE,
-                    text = "✅ Emergency Fund (Reserve Volume: ${Formatters.formatMoney(metrics.emergencyFund, currency, lang)}): Liquid reserve is fully sufficient to cover unexpected emergencies and crises without borrowing."
-                )
-                metrics.safetyMonths >= 3.0 -> AuditIndicatorAnalysis(
-                    id = "emergency_fund",
-                    title = "Emergency Fund",
-                    status = AuditIndicatorStatus.NEUTRAL,
-                    text = "ℹ️ Emergency Fund (Reserve Volume: ${Formatters.formatMoney(metrics.emergencyFund, currency, lang)}): Baseline minimal reserve established. Recommended to gradually expand to 6 months of living expenses."
-                )
-                else -> AuditIndicatorAnalysis(
-                    id = "emergency_fund",
-                    title = "Emergency Fund",
-                    status = AuditIndicatorStatus.NEGATIVE,
-                    text = "⚠️ Emergency Fund (Reserve Volume: ${Formatters.formatMoney(metrics.emergencyFund, currency, lang)}): Critically low reserve. High vulnerability to unforeseen costs and forced borrowing."
-                )
-            }
-        } else {
-            when {
-                metrics.safetyMonths >= 6.0 -> AuditIndicatorAnalysis(
-                    id = "emergency_fund",
-                    title = "Подушка безопасности",
-                    status = AuditIndicatorStatus.POSITIVE,
-                    text = "✅ Подушка безопасности (Объем резерва: ${Formatters.formatMoney(metrics.emergencyFund, currency, lang)}): Ликвидный резерв полностью достаточен для покрытия непредвиденных кризисов и экстренных ситуаций без обращения к кредитам."
-                )
-                metrics.safetyMonths >= 3.0 -> AuditIndicatorAnalysis(
-                    id = "emergency_fund",
-                    title = "Подушка безопасности",
-                    status = AuditIndicatorStatus.NEUTRAL,
-                    text = "ℹ️ Подушка безопасности (Объем резерва: ${Formatters.formatMoney(metrics.emergencyFund, currency, lang)}): Сформирован базовый минимальный резерв. Рекомендуется постепенно довести его до комфортных 6 месяцев расходов."
-                )
-                else -> AuditIndicatorAnalysis(
-                    id = "emergency_fund",
-                    title = "Подушка безопасности",
-                    status = AuditIndicatorStatus.NEGATIVE,
-                    text = "⚠️ Подушка безопасности (Объем резерва: ${Formatters.formatMoney(metrics.emergencyFund, currency, lang)}): Критически низкий объем резерва. При непредвиденных тратах высок риск кассового разрыва и необходимости брать кредиты."
-                )
-            }
+        val emergencyFundAnalysis = when {
+            metrics.safetyMonths >= 6.0 -> AuditIndicatorAnalysis(
+                id = "emergency_fund",
+                title = strings.auditEmergencyFundTitle,
+                status = AuditIndicatorStatus.POSITIVE,
+                text = String.format(strings.auditEmergencyFundPositive, Formatters.formatMoney(metrics.emergencyFund, currency, lang))
+            )
+            metrics.safetyMonths >= 3.0 -> AuditIndicatorAnalysis(
+                id = "emergency_fund",
+                title = strings.auditEmergencyFundTitle,
+                status = AuditIndicatorStatus.NEUTRAL,
+                text = String.format(strings.auditEmergencyFundNeutral, Formatters.formatMoney(metrics.emergencyFund, currency, lang))
+            )
+            else -> AuditIndicatorAnalysis(
+                id = "emergency_fund",
+                title = strings.auditEmergencyFundTitle,
+                status = AuditIndicatorStatus.NEGATIVE,
+                text = String.format(strings.auditEmergencyFundNegative, Formatters.formatMoney(metrics.emergencyFund, currency, lang))
+            )
         }
 
         // 4. Запас месячных расходов
-        val safetyMonthsAnalysis = if (isEn) {
-            when {
-                metrics.safetyMonths >= 12.0 -> AuditIndicatorAnalysis(
-                    id = "safety_months",
-                    title = "Emergency Buffer (Months)",
-                    status = AuditIndicatorStatus.POSITIVE,
-                    text = "✅ Financial Cushion (Emergency Buffer: ${Formatters.formatRatio(metrics.safetyMonths, lang)} mo.): Fully formed with ample margin. Income loss risks are mitigated. Excess liquidity above 12 months should be deployed into productive investments."
-                )
-                metrics.safetyMonths >= 6.0 -> AuditIndicatorAnalysis(
-                    id = "safety_months",
-                    title = "Emergency Buffer (Months)",
-                    status = AuditIndicatorStatus.POSITIVE,
-                    text = "✅ Financial Cushion (Emergency Buffer: ${Formatters.formatRatio(metrics.safetyMonths, lang)} mo.): Target 6-month norm achieved. Baseline family financial security is assured."
-                )
-                metrics.safetyMonths >= 3.0 -> AuditIndicatorAnalysis(
-                    id = "safety_months",
-                    title = "Emergency Buffer (Months)",
-                    status = AuditIndicatorStatus.NEUTRAL,
-                    text = "ℹ️ Financial Cushion (Emergency Buffer: ${Formatters.formatRatio(metrics.safetyMonths, lang)} mo.): Minimal baseline reserve created; recommended to expand to 6 months for better crisis resilience."
-                )
-                else -> AuditIndicatorAnalysis(
-                    id = "safety_months",
-                    title = "Emergency Buffer (Months)",
-                    status = AuditIndicatorStatus.NEGATIVE,
-                    text = "⚠️ Financial Cushion (Emergency Buffer: ${Formatters.formatRatio(metrics.safetyMonths, lang)} mo.): Critically insufficient reserve (under 3 months). Cash crunch risks creating debt traps. Priority: build a 6-month reserve urgently."
-                )
-            }
-        } else {
-            when {
-                metrics.safetyMonths >= 12.0 -> AuditIndicatorAnalysis(
-                    id = "safety_months",
-                    title = "Запас месячных расходов",
-                    status = AuditIndicatorStatus.POSITIVE,
-                    text = "✅ Запас прочности (Подушка безопасности: ${Formatters.formatRatio(metrics.safetyMonths, lang)} мес.): Полностью сформирована с большим запасом. Риски потери дохода нивелированы. Избыточную ликвидность сверх годового резерва целесообразно направить в доходные инвестиционные инструменты."
-                )
-                metrics.safetyMonths >= 6.0 -> AuditIndicatorAnalysis(
-                    id = "safety_months",
-                    title = "Запас месячных расходов",
-                    status = AuditIndicatorStatus.POSITIVE,
-                    text = "✅ Запас прочности (Подушка безопасности: ${Formatters.formatRatio(metrics.safetyMonths, lang)} мес.): Целевой норматив в 6 месяцев расходов успешно достигнут. Базовая финансовая безопасность семьи обеспечена."
-                )
-                metrics.safetyMonths >= 3.0 -> AuditIndicatorAnalysis(
-                    id = "safety_months",
-                    title = "Запас месячных расходов",
-                    status = AuditIndicatorStatus.NEUTRAL,
-                    text = "ℹ️ Запас прочности (Подушка безопасности: ${Formatters.formatRatio(metrics.safetyMonths, lang)} мес.): Сформирован минимальный базовый резерв, однако рекомендуется постепенно нарастить его до комфортных 6 месяцев расходов для защиты от непредвиденных кризисов."
-                )
-                else -> AuditIndicatorAnalysis(
-                    id = "safety_months",
-                    title = "Запас месячных расходов",
-                    status = AuditIndicatorStatus.NEGATIVE,
-                    text = "⚠️ Запас прочности (Подушка безопасности: ${Formatters.formatRatio(metrics.safetyMonths, lang)} мес.): Критически недостаточный резерв (менее 3 месяцев). Любой кассовый разрыв или непредвиденные траты создадут угрозу долговой ямы. Приоритетная задача — экстренно довести ликвидный резерв минимум до 6 месяцев расходов."
-                )
-            }
+        val safetyMonthsAnalysis = when {
+            metrics.safetyMonths >= 12.0 -> AuditIndicatorAnalysis(
+                id = "safety_months",
+                title = strings.auditSafetyMonthsTitle,
+                status = AuditIndicatorStatus.POSITIVE,
+                text = String.format(strings.auditSafetyMonthsHigh, Formatters.formatRatio(metrics.safetyMonths, lang))
+            )
+            metrics.safetyMonths >= 6.0 -> AuditIndicatorAnalysis(
+                id = "safety_months",
+                title = strings.auditSafetyMonthsTitle,
+                status = AuditIndicatorStatus.POSITIVE,
+                text = String.format(strings.auditSafetyMonthsTarget, Formatters.formatRatio(metrics.safetyMonths, lang))
+            )
+            metrics.safetyMonths >= 3.0 -> AuditIndicatorAnalysis(
+                id = "safety_months",
+                title = strings.auditSafetyMonthsTitle,
+                status = AuditIndicatorStatus.NEUTRAL,
+                text = String.format(strings.auditSafetyMonthsNeutral, Formatters.formatRatio(metrics.safetyMonths, lang))
+            )
+            else -> AuditIndicatorAnalysis(
+                id = "safety_months",
+                title = strings.auditSafetyMonthsTitle,
+                status = AuditIndicatorStatus.NEGATIVE,
+                text = String.format(strings.auditSafetyMonthsNegative, Formatters.formatRatio(metrics.safetyMonths, lang))
+            )
         }
 
         // 5. Коэффициент задолженности
         val debtPct = metrics.debtRatio * 100.0
-        val debtRatioAnalysis = if (isEn) {
-            when {
-                metrics.debtRatio == 0.0 -> AuditIndicatorAnalysis(
-                    id = "debt_ratio",
-                    title = "Debt Ratio",
-                    status = AuditIndicatorStatus.POSITIVE,
-                    text = "✅ Debt Load (Debt Ratio: 0.00): Absolute financial autonomy — no debts or loans, 100% of assets are owned outright."
+        val debtRatioAnalysis = when {
+            metrics.debtRatio == 0.0 -> AuditIndicatorAnalysis(
+                id = "debt_ratio",
+                title = strings.auditDebtRatioTitle,
+                status = AuditIndicatorStatus.POSITIVE,
+                text = strings.auditDebtRatioZero
+            )
+            metrics.debtRatio <= 0.30 -> AuditIndicatorAnalysis(
+                id = "debt_ratio",
+                title = strings.auditDebtRatioTitle,
+                status = AuditIndicatorStatus.POSITIVE,
+                text = String.format(
+                    strings.auditDebtRatioConservative,
+                    Formatters.formatRatio(metrics.debtRatio, lang),
+                    Formatters.formatPercent(debtPct, lang)
                 )
-                metrics.debtRatio <= 0.30 -> AuditIndicatorAnalysis(
-                    id = "debt_ratio",
-                    title = "Debt Ratio",
-                    status = AuditIndicatorStatus.POSITIVE,
-                    text = "✅ Debt Load (Debt Ratio: ${Formatters.formatRatio(metrics.debtRatio, lang)}, debt ${Formatters.formatPercent(debtPct, lang)} of assets): Conservative and safe leverage. Obligations are fully backed by assets; credit risk is minimal."
+            )
+            metrics.debtRatio <= 0.60 -> AuditIndicatorAnalysis(
+                id = "debt_ratio",
+                title = strings.auditDebtRatioTitle,
+                status = AuditIndicatorStatus.NEUTRAL,
+                text = String.format(
+                    strings.auditDebtRatioModerate,
+                    Formatters.formatRatio(metrics.debtRatio, lang),
+                    Formatters.formatPercent(debtPct, lang)
                 )
-                metrics.debtRatio <= 0.60 -> AuditIndicatorAnalysis(
-                    id = "debt_ratio",
-                    title = "Debt Ratio",
-                    status = AuditIndicatorStatus.NEUTRAL,
-                    text = "ℹ️ Debt Load (Debt Ratio: ${Formatters.formatRatio(metrics.debtRatio, lang)}, debt ${Formatters.formatPercent(debtPct, lang)} of assets): Moderate borrowing level. Debt is controlled but requires discipline during major purchases."
+            )
+            metrics.debtRatio <= 1.0 -> AuditIndicatorAnalysis(
+                id = "debt_ratio",
+                title = strings.auditDebtRatioTitle,
+                status = AuditIndicatorStatus.NEGATIVE,
+                text = String.format(
+                    strings.auditDebtRatioHigh,
+                    Formatters.formatRatio(metrics.debtRatio, lang),
+                    Formatters.formatPercent(debtPct, lang)
                 )
-                metrics.debtRatio <= 1.0 -> AuditIndicatorAnalysis(
-                    id = "debt_ratio",
-                    title = "Debt Ratio",
-                    status = AuditIndicatorStatus.NEGATIVE,
-                    text = "⚠️ Warning: High Debt Load (Debt Ratio: ${Formatters.formatRatio(metrics.debtRatio, lang)}, debt ${Formatters.formatPercent(debtPct, lang)} of assets)! Heavy reliance on creditors. Refinancing and debt repayment advised."
+            )
+            else -> AuditIndicatorAnalysis(
+                id = "debt_ratio",
+                title = strings.auditDebtRatioTitle,
+                status = AuditIndicatorStatus.NEGATIVE,
+                text = String.format(
+                    strings.auditDebtRatioCritical,
+                    Formatters.formatRatio(metrics.debtRatio, lang),
+                    Formatters.formatPercent(debtPct - 100.0, lang)
                 )
-                else -> AuditIndicatorAnalysis(
-                    id = "debt_ratio",
-                    title = "Debt Ratio",
-                    status = AuditIndicatorStatus.NEGATIVE,
-                    text = "🚨 CRITICAL RISK: Negative Equity Margin (Debt Ratio: ${Formatters.formatRatio(metrics.debtRatio, lang)}, debts exceed assets by ${Formatters.formatPercent(debtPct - 100.0, lang)})! Obligations exceed total asset value. Emergency restructuring required."
-                )
-            }
-        } else {
-            when {
-                metrics.debtRatio == 0.0 -> AuditIndicatorAnalysis(
-                    id = "debt_ratio",
-                    title = "Коэффициент задолженности",
-                    status = AuditIndicatorStatus.POSITIVE,
-                    text = "✅ Долговая нагрузка (Коэффициент задолженности: 0,00): Абсолютная финансовая автономность — долги и кредиты отсутствуют, все активы принадлежат вам на 100%."
-                )
-                metrics.debtRatio <= 0.30 -> AuditIndicatorAnalysis(
-                    id = "debt_ratio",
-                    title = "Коэффициент задолженности",
-                    status = AuditIndicatorStatus.POSITIVE,
-                    text = "✅ Долговая нагрузка (Коэффициент задолженности: ${Formatters.formatRatio(metrics.debtRatio, lang)}, долг ${Formatters.formatPercent(debtPct, lang)} от активов): Кредитное плечо консервативное и безопасное. Обязательства полностью обеспечены ликвидным имуществом, кредитный риск минимален."
-                )
-                metrics.debtRatio <= 0.60 -> AuditIndicatorAnalysis(
-                    id = "debt_ratio",
-                    title = "Коэффициент задолженности",
-                    status = AuditIndicatorStatus.NEUTRAL,
-                    text = "ℹ️ Долговая нагрузка (Коэффициент задолженности: ${Formatters.formatRatio(metrics.debtRatio, lang)}, долг ${Formatters.formatPercent(debtPct, lang)} от активов): Умеренный уровень заемного финансирования. Долговая нагрузка контролируема, но требует внимания при планировании крупных покупок и регулярных платежей."
-                )
-                metrics.debtRatio <= 1.0 -> AuditIndicatorAnalysis(
-                    id = "debt_ratio",
-                    title = "Коэффициент задолженности",
-                    status = AuditIndicatorStatus.NEGATIVE,
-                    text = "⚠️ Внимание: Высокая закредитованность (Коэффициент задолженности: ${Formatters.formatRatio(metrics.debtRatio, lang)}, долг ${Formatters.formatPercent(debtPct, lang)} от активов)! Значительная зависимость от внешних кредиторов. Рекомендуется рефинансировать займы, сократить долги и воздержаться от новых обязательств."
-                )
-                else -> AuditIndicatorAnalysis(
-                    id = "debt_ratio",
-                    title = "Коэффициент задолженности",
-                    status = AuditIndicatorStatus.NEGATIVE,
-                    text = "🚨 КРИТИЧЕСКИЙ РИСК: Дефицит капитала (Коэффициент задолженности: ${Formatters.formatRatio(metrics.debtRatio, lang)}, долги превышают активы на ${Formatters.formatPercent(debtPct - 100.0, lang)})! Объем финансовых обязательств превышает стоимость всего вашего имущества. Необходима экстренная реструктуризация долгов и финансовое оздоровление."
-                )
-            }
+            )
         }
 
         // 6. Чистый капитал
-        val netWorthAnalysis = if (isEn) {
-            when {
-                metrics.netWorth > 0.0 && (metrics.totalAssets == 0.0 || metrics.netWorth / metrics.totalAssets >= 0.5) -> AuditIndicatorAnalysis(
-                    id = "net_worth",
-                    title = "Net Worth",
-                    status = AuditIndicatorStatus.POSITIVE,
-                    text = "✅ Net Worth (Own Capital: ${Formatters.formatMoney(metrics.netWorth, currency, lang)}): Strong positive balance. Aggregate assets comfortably exceed financial liabilities, providing a solid foundation."
-                )
-                metrics.netWorth >= 0.0 -> AuditIndicatorAnalysis(
-                    id = "net_worth",
-                    title = "Net Worth",
-                    status = AuditIndicatorStatus.NEUTRAL,
-                    text = "ℹ️ Net Worth (Own Capital: ${Formatters.formatMoney(metrics.netWorth, currency, lang)}): Assets and liabilities are closely matched. Value is positive, but significant assets are encumbered by debts."
-                )
-                else -> AuditIndicatorAnalysis(
-                    id = "net_worth",
-                    title = "Net Worth",
-                    status = AuditIndicatorStatus.NEGATIVE,
-                    text = "🚨 Net Worth (Negative Balance: ${Formatters.formatMoney(metrics.netWorth, currency, lang)}): Negative net worth (technical insolvency). Total liabilities exceed all possessed assets."
-                )
-            }
-        } else {
-            when {
-                metrics.netWorth > 0.0 && (metrics.totalAssets == 0.0 || metrics.netWorth / metrics.totalAssets >= 0.5) -> AuditIndicatorAnalysis(
-                    id = "net_worth",
-                    title = "Чистый капитал",
-                    status = AuditIndicatorStatus.POSITIVE,
-                    text = "✅ Чистый капитал (Собственные средства: ${Formatters.formatMoney(metrics.netWorth, currency, lang)}): Положительный чистый баланс. Ваши совокупные активы уверенно превышают финансовые обязательства, формируя прочный финансовый фундамент."
-                )
-                metrics.netWorth >= 0.0 -> AuditIndicatorAnalysis(
-                    id = "net_worth",
-                    title = "Чистый капитал",
-                    status = AuditIndicatorStatus.NEUTRAL,
-                    text = "ℹ️ Чистый капитал (Собственные средства: ${Formatters.formatMoney(metrics.netWorth, currency, lang)}): Активы и обязательства находятся в близком балансе. Ваша финансовая стоимость положительна, но существенная часть активов обременена долгами."
-                )
-                else -> AuditIndicatorAnalysis(
-                    id = "net_worth",
-                    title = "Чистый капитал",
-                    status = AuditIndicatorStatus.NEGATIVE,
-                    text = "🚨 Чистый капитал (Отрицательный баланс: ${Formatters.formatMoney(metrics.netWorth, currency, lang)}): Отрицательный чистый капитал (техническая неплатежеспособность). Обязательства превышают стоимость всего имеющегося имущества."
-                )
-            }
+        val netWorthAnalysis = when {
+            metrics.netWorth > 0.0 && (metrics.totalAssets == 0.0 || metrics.netWorth / metrics.totalAssets >= 0.5) -> AuditIndicatorAnalysis(
+                id = "net_worth",
+                title = strings.auditNetWorthTitle,
+                status = AuditIndicatorStatus.POSITIVE,
+                text = String.format(strings.auditNetWorthStrong, Formatters.formatMoney(metrics.netWorth, currency, lang))
+            )
+            metrics.netWorth >= 0.0 -> AuditIndicatorAnalysis(
+                id = "net_worth",
+                title = strings.auditNetWorthTitle,
+                status = AuditIndicatorStatus.NEUTRAL,
+                text = String.format(strings.auditNetWorthBalanced, Formatters.formatMoney(metrics.netWorth, currency, lang))
+            )
+            else -> AuditIndicatorAnalysis(
+                id = "net_worth",
+                title = strings.auditNetWorthTitle,
+                status = AuditIndicatorStatus.NEGATIVE,
+                text = String.format(strings.auditNetWorthNegative, Formatters.formatMoney(metrics.netWorth, currency, lang))
+            )
         }
 
         // 7. Бенчмарк Fidelity
@@ -427,214 +250,117 @@ object AuditorAnalysisGenerator {
             val formattedPercent = Formatters.formatPercent(fidelityPercent, lang)
             val formattedTarget = Formatters.formatMoney(metrics.fidelityTarget, currency, lang)
             val formattedNetWorth = Formatters.formatMoney(metrics.netWorth, currency, lang)
-            if (isEn) {
-                when (fidelityStatus) {
-                    AuditIndicatorStatus.POSITIVE -> AuditIndicatorAnalysis(
-                        id = "fidelity",
-                        title = "Fidelity Benchmark",
-                        status = AuditIndicatorStatus.POSITIVE,
-                        text = "✅ Age Capital Milestone (Fidelity Benchmark: $formattedPercent of goal): Capital exceeds target milestone for your age ($formattedTarget). Excellent long-term trajectory."
-                    )
-                    AuditIndicatorStatus.NEUTRAL -> AuditIndicatorAnalysis(
-                        id = "fidelity",
-                        title = "Fidelity Benchmark",
-                        status = AuditIndicatorStatus.NEUTRAL,
-                        text = "ℹ️ Age Capital Milestone (Fidelity Benchmark: $formattedPercent of goal): Capital matches recommended age savings guidelines ($formattedTarget)."
-                    )
-                    AuditIndicatorStatus.NEGATIVE -> {
-                        if (metrics.netWorth < 0.0) {
-                            AuditIndicatorAnalysis(
-                                id = "fidelity",
-                                title = "Fidelity Benchmark",
-                                status = AuditIndicatorStatus.NEGATIVE,
-                                text = "🚨 Age Capital Milestone (Fidelity Benchmark): Net capital is negative ($formattedNetWorth). Outstanding liabilities prevent reaching recommended retirement milestone ($formattedTarget)."
-                            )
-                        } else {
-                            AuditIndicatorAnalysis(
-                                id = "fidelity",
-                                title = "Fidelity Benchmark",
-                                status = AuditIndicatorStatus.NEGATIVE,
-                                text = "⚠️ Age Capital Milestone (Fidelity Benchmark: $formattedPercent of goal): Lagging behind recommended age benchmark ($formattedTarget). Accelerating savings pace advised."
-                            )
-                        }
-                    }
-                }
-            } else {
-                when (fidelityStatus) {
-                    AuditIndicatorStatus.POSITIVE -> AuditIndicatorAnalysis(
-                        id = "fidelity",
-                        title = "Бенчмарк Fidelity",
-                        status = AuditIndicatorStatus.POSITIVE,
-                        text = "✅ Возрастной ориентир капитала (Бенчмарк Fidelity: $formattedPercent от цели): Капитал опережает целевой норматив для вашего возраста ($formattedTarget). Отличный задел для долгосрочного благосостояния."
-                    )
-                    AuditIndicatorStatus.NEUTRAL -> AuditIndicatorAnalysis(
-                        id = "fidelity",
-                        title = "Бенчмарк Fidelity",
-                        status = AuditIndicatorStatus.NEUTRAL,
-                        text = "ℹ️ Возрастной ориентир капитала (Бенчмарк Fidelity: $formattedPercent от цели): Капитал соответствует рекомендуемым возрастным ориентирам накоплений ($formattedTarget)."
-                    )
-                    AuditIndicatorStatus.NEGATIVE -> {
-                        if (metrics.netWorth < 0.0) {
-                            AuditIndicatorAnalysis(
-                                id = "fidelity",
-                                title = "Бенчмарк Fidelity",
-                                status = AuditIndicatorStatus.NEGATIVE,
-                                text = "🚨 Возрастной ориентир капитала (Бенчмарк Fidelity): Чистый капитал отрицателен ($formattedNetWorth). Наличие долговой нагрузки отдаляет достижение пенсионного норматива ($formattedTarget)."
-                            )
-                        } else {
-                            AuditIndicatorAnalysis(
-                                id = "fidelity",
-                                title = "Бенчмарк Fidelity",
-                                status = AuditIndicatorStatus.NEGATIVE,
-                                text = "⚠️ Возрастной ориентир капитала (Бенчмарк Fidelity: $formattedPercent от цели): Отставание от рекомендуемой возрастной планки капитала ($formattedTarget). Желательно ускорить темп капитализации."
-                            )
-                        }
+            when (fidelityStatus) {
+                AuditIndicatorStatus.POSITIVE -> AuditIndicatorAnalysis(
+                    id = "fidelity",
+                    title = strings.auditFidelityTitle,
+                    status = AuditIndicatorStatus.POSITIVE,
+                    text = String.format(strings.auditFidelityPositive, formattedPercent, formattedTarget)
+                )
+                AuditIndicatorStatus.NEUTRAL -> AuditIndicatorAnalysis(
+                    id = "fidelity",
+                    title = strings.auditFidelityTitle,
+                    status = AuditIndicatorStatus.NEUTRAL,
+                    text = String.format(strings.auditFidelityNeutral, formattedPercent, formattedTarget)
+                )
+                AuditIndicatorStatus.NEGATIVE -> {
+                    if (metrics.netWorth < 0.0) {
+                        AuditIndicatorAnalysis(
+                            id = "fidelity",
+                            title = strings.auditFidelityTitle,
+                            status = AuditIndicatorStatus.NEGATIVE,
+                            text = String.format(strings.auditFidelityNegativeInsolvent, formattedNetWorth, formattedTarget)
+                        )
+                    } else {
+                        AuditIndicatorAnalysis(
+                            id = "fidelity",
+                            title = strings.auditFidelityTitle,
+                            status = AuditIndicatorStatus.NEGATIVE,
+                            text = String.format(strings.auditFidelityNegativeLagging, formattedPercent, formattedTarget)
+                        )
                     }
                 }
             }
         } else {
-            if (isEn) {
-                AuditIndicatorAnalysis(
-                    id = "fidelity",
-                    title = "Fidelity Benchmark",
-                    status = AuditIndicatorStatus.POSITIVE,
-                    text = "✅ Age Capital Milestone (Fidelity Benchmark): Under age 30, the primary focus is laying down early savings foundations. Fidelity multiplier milestones begin at age 30 (1x annual salary)."
-                )
-            } else {
-                AuditIndicatorAnalysis(
-                    id = "fidelity",
-                    title = "Бенчмарк Fidelity",
-                    status = AuditIndicatorStatus.POSITIVE,
-                    text = "✅ Возрастной ориентир капитала (Бенчмарк Fidelity): В возрасте до 30 лет основной задачей является закладка фундамента накоплений. Целевые множители Fidelity начинаются с 30 лет (1x годовой доход)."
-                )
-            }
+            AuditIndicatorAnalysis(
+                id = "fidelity",
+                title = strings.auditFidelityTitle,
+                status = AuditIndicatorStatus.POSITIVE,
+                text = strings.auditFidelityUnder30
+            )
         }
 
         // 8. Коэффициент финансовой свободы (КФС)
         val cfsDesc = FinanceCalculator.getCfsStageDescription(metrics.financialFreedomRatio, lang)
-        val cfsAnalysis = if (isEn) {
-            when {
-                metrics.financialFreedomRatio >= 30.0 -> AuditIndicatorAnalysis(
-                    id = "cfs",
-                    title = "Financial Freedom Ratio",
-                    status = AuditIndicatorStatus.POSITIVE,
-                    text = "🎉 Financial Freedom (CFS: ${Formatters.formatRatio(metrics.financialFreedomRatio, lang)}): You have achieved complete financial independence (FIRE)! Accumulated net assets can support your current living standards indefinitely."
-                )
-                metrics.financialFreedomRatio >= 15.0 -> AuditIndicatorAnalysis(
-                    id = "cfs",
-                    title = "Financial Freedom Ratio",
-                    status = AuditIndicatorStatus.POSITIVE,
-                    text = "✅ Financial Freedom (CFS: ${Formatters.formatRatio(metrics.financialFreedomRatio, lang)}): High degree of autonomy. Net assets yield substantial passive income covering most necessary living expenses."
-                )
-                metrics.financialFreedomRatio >= 5.0 -> AuditIndicatorAnalysis(
-                    id = "cfs",
-                    title = "Financial Freedom Ratio",
-                    status = AuditIndicatorStatus.POSITIVE,
-                    text = "✅ Financial Freedom (CFS: ${Formatters.formatRatio(metrics.financialFreedomRatio, lang)}): Solid capital compounding phase ($cfsDesc). Investment returns yield noticeable impact. Next target: CFS > 15."
-                )
-                metrics.financialFreedomRatio >= 2.0 -> AuditIndicatorAnalysis(
-                    id = "cfs",
-                    title = "Financial Freedom Ratio",
-                    status = AuditIndicatorStatus.NEUTRAL,
-                    text = "ℹ️ Financial Freedom (CFS: ${Formatters.formatRatio(metrics.financialFreedomRatio, lang)}): Initial stage of investment capital ($cfsDesc). Primary focus on disciplined regular savings."
-                )
-                metrics.financialFreedomRatio < 0.0 -> AuditIndicatorAnalysis(
-                    id = "cfs",
-                    title = "Financial Freedom Ratio",
-                    status = AuditIndicatorStatus.NEGATIVE,
-                    text = "🚨 Financial Freedom (CFS: ${Formatters.formatRatio(metrics.financialFreedomRatio, lang)}): Negative ratio ($cfsDesc). Total obligations exceed assets, resulting in negative net worth."
-                )
-                else -> AuditIndicatorAnalysis(
-                    id = "cfs",
-                    title = "Financial Freedom Ratio",
-                    status = AuditIndicatorStatus.NEGATIVE,
-                    text = "📈 Financial Freedom (CFS: ${Formatters.formatRatio(metrics.financialFreedomRatio, lang)}): Early stage of capital accumulation ($cfsDesc). Current volume is insufficient for financial autonomy; disciplined saving required."
-                )
-            }
-        } else {
-            when {
-                metrics.financialFreedomRatio >= 30.0 -> AuditIndicatorAnalysis(
-                    id = "cfs",
-                    title = "Коэффициент финансовой свободы",
-                    status = AuditIndicatorStatus.POSITIVE,
-                    text = "🎉 Финансовая свобода (КФС: ${Formatters.formatRatio(metrics.financialFreedomRatio, lang)}): Вы достигли полной финансовой независимости (FIRE)! Накопленные чистые активы способны пожизненно обеспечивать текущий уровень жизни."
-                )
-                metrics.financialFreedomRatio >= 15.0 -> AuditIndicatorAnalysis(
-                    id = "cfs",
-                    title = "Коэффициент финансовой свободы",
-                    status = AuditIndicatorStatus.POSITIVE,
-                    text = "✅ Финансовая свобода (КФС: ${Formatters.formatRatio(metrics.financialFreedomRatio, lang)}): Высокая степень автономии. Чистые активы генерируют существенный пассивный доход, закрывающий большую часть обязательных расходов."
-                )
-                metrics.financialFreedomRatio >= 5.0 -> AuditIndicatorAnalysis(
-                    id = "cfs",
-                    title = "Коэффициент финансовой свободы",
-                    status = AuditIndicatorStatus.POSITIVE,
-                    text = "✅ Финансовая свобода (КФС: ${Formatters.formatRatio(metrics.financialFreedomRatio, lang)}): Уверенная фаза роста капитала ($cfsDesc). Доходы от капитала начинают приносить ощутимый результат. Следующая стратегическая цель — рубеж КФС > 15."
-                )
-                metrics.financialFreedomRatio >= 2.0 -> AuditIndicatorAnalysis(
-                    id = "cfs",
-                    title = "Коэффициент финансовой свободы",
-                    status = AuditIndicatorStatus.NEUTRAL,
-                    text = "ℹ️ Финансовая свобода (КФС: ${Formatters.formatRatio(metrics.financialFreedomRatio, lang)}): Начальный этап формирования инвестиционного капитала ($cfsDesc). Основной упор на дисциплинированные регулярные сбережения."
-                )
-                metrics.financialFreedomRatio < 0.0 -> AuditIndicatorAnalysis(
-                    id = "cfs",
-                    title = "Коэффициент финансовой свободы",
-                    status = AuditIndicatorStatus.NEGATIVE,
-                    text = "🚨 Финансовая свобода (КФС: ${Formatters.formatRatio(metrics.financialFreedomRatio, lang)}): Отрицательный показатель ($cfsDesc). Обязательства превышают стоимость активов, чистый капитал находится в дефиците."
-                )
-                else -> AuditIndicatorAnalysis(
-                    id = "cfs",
-                    title = "Коэффициент финансовой свободы",
-                    status = AuditIndicatorStatus.NEGATIVE,
-                    text = "📈 Финансовая свобода (КФС: ${Formatters.formatRatio(metrics.financialFreedomRatio, lang)}): Начальный этап формирования капитала ($cfsDesc). Накопленного объема недостаточно для финансовой автономии, требуется дисциплинированное сбережение."
-                )
-            }
+        val cfsAnalysis = when {
+            metrics.financialFreedomRatio >= FinancialMetricEvaluator.CFS_THRESHOLD_INDEPENDENCE -> AuditIndicatorAnalysis(
+                id = "cfs",
+                title = strings.auditCfsTitle,
+                status = AuditIndicatorStatus.POSITIVE,
+                text = String.format(strings.auditCfsIndependence, Formatters.formatRatio(metrics.financialFreedomRatio, lang))
+            )
+            metrics.financialFreedomRatio >= FinancialMetricEvaluator.CFS_THRESHOLD_STABILITY -> AuditIndicatorAnalysis(
+                id = "cfs",
+                title = strings.auditCfsTitle,
+                status = AuditIndicatorStatus.POSITIVE,
+                text = String.format(strings.auditCfsStability, Formatters.formatRatio(metrics.financialFreedomRatio, lang))
+            )
+            metrics.financialFreedomRatio >= FinancialMetricEvaluator.CFS_POSITIVE_THRESHOLD -> AuditIndicatorAnalysis(
+                id = "cfs",
+                title = strings.auditCfsTitle,
+                status = AuditIndicatorStatus.POSITIVE,
+                text = String.format(strings.auditCfsGrowth, Formatters.formatRatio(metrics.financialFreedomRatio, lang), cfsDesc)
+            )
+            metrics.financialFreedomRatio >= FinancialMetricEvaluator.CFS_NEUTRAL_THRESHOLD -> AuditIndicatorAnalysis(
+                id = "cfs",
+                title = strings.auditCfsTitle,
+                status = AuditIndicatorStatus.NEUTRAL,
+                text = String.format(strings.auditCfsInitial, Formatters.formatRatio(metrics.financialFreedomRatio, lang), cfsDesc)
+            )
+            metrics.financialFreedomRatio < 0.0 -> AuditIndicatorAnalysis(
+                id = "cfs",
+                title = strings.auditCfsTitle,
+                status = AuditIndicatorStatus.NEGATIVE,
+                text = String.format(strings.auditCfsNegative, Formatters.formatRatio(metrics.financialFreedomRatio, lang), cfsDesc)
+            )
+            else -> AuditIndicatorAnalysis(
+                id = "cfs",
+                title = strings.auditCfsTitle,
+                status = AuditIndicatorStatus.NEGATIVE,
+                text = String.format(strings.auditCfsBuffer, Formatters.formatRatio(metrics.financialFreedomRatio, lang), cfsDesc)
+            )
         }
 
         // 9. Реальная доходность капитала
-        val realReturnAnalysis = if (isEn) {
-            when {
-                metrics.realReturnPercent > 0.0 -> AuditIndicatorAnalysis(
-                    id = "real_return",
-                    title = "Real Return on Capital",
-                    status = AuditIndicatorStatus.POSITIVE,
-                    text = "✅ Real Return on Capital (+${Formatters.formatPercent(metrics.realReturnPercent, lang)}): Asset yield outpaces inflation (${Formatters.formatPercent(inputData.nominalReturnPercent, lang)} vs ${Formatters.formatPercent(inputData.inflationPercent, lang)}). Capital is protected against erosion and expands purchasing power."
+        val realReturnAnalysis = when {
+            metrics.realReturnPercent > 0.0 -> AuditIndicatorAnalysis(
+                id = "real_return",
+                title = strings.auditRealReturnTitle,
+                status = AuditIndicatorStatus.POSITIVE,
+                text = String.format(
+                    strings.auditRealReturnPositive,
+                    Formatters.formatPercent(metrics.realReturnPercent, lang),
+                    Formatters.formatPercent(inputData.nominalReturnPercent, lang),
+                    Formatters.formatPercent(inputData.inflationPercent, lang)
                 )
-                metrics.realReturnPercent == 0.0 -> AuditIndicatorAnalysis(
-                    id = "real_return",
-                    title = "Real Return on Capital",
-                    status = AuditIndicatorStatus.NEUTRAL,
-                    text = "ℹ️ Real Return on Capital (0.0%): Yield precisely offsets inflation. Capital preserves nominal purchasing power, but produces no real wealth expansion."
+            )
+            metrics.realReturnPercent == 0.0 -> AuditIndicatorAnalysis(
+                id = "real_return",
+                title = strings.auditRealReturnTitle,
+                status = AuditIndicatorStatus.NEUTRAL,
+                text = strings.auditRealReturnNeutral
+            )
+            else -> AuditIndicatorAnalysis(
+                id = "real_return",
+                title = strings.auditRealReturnTitle,
+                status = AuditIndicatorStatus.NEGATIVE,
+                text = String.format(
+                    strings.auditRealReturnNegative,
+                    Formatters.formatPercent(metrics.realReturnPercent, lang),
+                    Formatters.formatPercent(inputData.inflationPercent, lang),
+                    Formatters.formatPercent(inputData.nominalReturnPercent, lang)
                 )
-                else -> AuditIndicatorAnalysis(
-                    id = "real_return",
-                    title = "Real Return on Capital",
-                    status = AuditIndicatorStatus.NEGATIVE,
-                    text = "⚠️ Real Return on Capital (${Formatters.formatPercent(metrics.realReturnPercent, lang)}): Inflation (${Formatters.formatPercent(inputData.inflationPercent, lang)}) exceeds capital returns (${Formatters.formatPercent(inputData.nominalReturnPercent, lang)}). Hidden depreciation of savings and loss of purchasing power occurring."
-                )
-            }
-        } else {
-            when {
-                metrics.realReturnPercent > 0.0 -> AuditIndicatorAnalysis(
-                    id = "real_return",
-                    title = "Реальная доходность капитала",
-                    status = AuditIndicatorStatus.POSITIVE,
-                    text = "✅ Реальная доходность капитала (+${Formatters.formatPercent(metrics.realReturnPercent, lang)}): Доходность активов опережает инфляцию (${Formatters.formatPercent(inputData.nominalReturnPercent, lang)} против ${Formatters.formatPercent(inputData.inflationPercent, lang)}). Капитал защищен от обесценивания и наращивает реальную покупательную способность."
-                )
-                metrics.realReturnPercent == 0.0 -> AuditIndicatorAnalysis(
-                    id = "real_return",
-                    title = "Реальная доходность капитала",
-                    status = AuditIndicatorStatus.NEUTRAL,
-                    text = "ℹ️ Реальная доходность капитала (0,0%): Доходность в точности компенсирует инфляцию. Капитал сохраняет номинальную покупательную способность, но не создает реального прироста богатства."
-                )
-                else -> AuditIndicatorAnalysis(
-                    id = "real_return",
-                    title = "Реальная доходность капитала",
-                    status = AuditIndicatorStatus.NEGATIVE,
-                    text = "⚠️ Реальная доходность капитала (${Formatters.formatPercent(metrics.realReturnPercent, lang)}): Инфляция (${Formatters.formatPercent(inputData.inflationPercent, lang)}) превышает доходность капитала (${Formatters.formatPercent(inputData.nominalReturnPercent, lang)}). Происходит скрытое обесценивание накоплений и потеря покупательной способности."
-                )
-            }
+            )
         }
 
         val allIndicators = listOf(
@@ -669,87 +395,47 @@ object AuditorAnalysisGenerator {
         lang: AppLanguage = AppLanguage.RU
     ): String {
         val currency = inputData.currencySymbol
-        val isEn = lang == AppLanguage.EN
+        val strings = getAppStrings(lang)
         val cfsDesc = FinanceCalculator.getCfsStageDescription(metrics.financialFreedomRatio, lang)
 
         return buildString {
-            if (isEn) {
-                appendLine("📊 FINANCIAL REPORT — PERSONAL FINANCE")
-                appendLine("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-                appendLine("1. Input Data:")
-                appendLine("• Income: ${Formatters.formatMoney(inputData.monthlyIncome, currency, lang)}/mo.")
-                appendLine("• Expenses: ${Formatters.formatMoney(inputData.monthlyExpenses, currency, lang)}/mo.")
-                appendLine("• Liquid assets: ${Formatters.formatMoney(inputData.liquidAssets, currency, lang)}")
-                appendLine("• Financial assets: ${Formatters.formatMoney(inputData.financialAssets, currency, lang)}")
-                appendLine("• Real estate / property: ${Formatters.formatMoney(inputData.propertyAssets, currency, lang)}")
-                appendLine("• Liabilities (debts): ${Formatters.formatMoney(inputData.liabilities, currency, lang)}")
-                appendLine("• Age: ${metrics.currentAge} yrs (life expectancy: ${metrics.lifeExpectancy} yrs, horizon: ${metrics.remainingYearsHorizon} yrs)")
-                appendLine("• Nominal return: ${Formatters.formatPercent(inputData.nominalReturnPercent, lang)} | Inflation: ${Formatters.formatPercent(inputData.inflationPercent, lang)}")
-                appendLine("• Capital gains tax: ${Formatters.formatPercent(inputData.capitalGainsTaxPercent, lang)}")
-                appendLine()
-                appendLine("2. Calculated Metrics:")
-                appendLine("• Cash flow: ${Formatters.formatMoney(metrics.cashFlow, currency, lang)}/mo.")
-                appendLine("• Savings rate: ${Formatters.formatPercent(metrics.savingsRate, lang)}")
-                appendLine("• Emergency fund: ${Formatters.formatMoney(metrics.emergencyFund, currency, lang)} (${Formatters.formatRatio(metrics.safetyMonths, lang)} mo.)")
-                appendLine("• Debt ratio: ${Formatters.formatRatio(metrics.debtRatio, lang)}")
-                appendLine("• Net worth: ${Formatters.formatMoney(metrics.netWorth, currency, lang)}")
-                appendLine("• Real return: ${Formatters.formatPercent(metrics.realReturnPercent, lang)}")
-                appendLine("• Effective capital gains tax on withdrawal: ${Formatters.formatPercent(metrics.effectiveCapitalGainsTaxRate, lang)}")
-                appendLine()
-                appendLine("3. Score Summary:")
-                appendLine("• Overall score: ${Formatters.formatScore(metrics.scores.totalScore, lang)} of 10")
-                appendLine("• Savings rate: ${metrics.scores.savingsRateScore} / 10")
-                appendLine("• Emergency buffer: ${metrics.scores.safetyMonthsScore} / 10")
-                appendLine("• Debt load: ${metrics.scores.debtRatioScore} / 10")
-                appendLine("• Financial freedom: ${metrics.scores.cfsScore} / 10")
-                appendLine()
-                appendLine("4. Financial Independence, FIRE:")
-                appendLine("• CFS: ${Formatters.formatRatio(metrics.financialFreedomRatio, lang)} ($cfsDesc)")
-                appendLine("• Target FIRE capital: ${Formatters.formatMoney(metrics.retirementTargetCapital, currency, lang)}")
-                appendLine("• Time to retirement: ${Formatters.formatRatio(metrics.yearsToRetirement, lang)} yrs (at age ${Formatters.formatRatio(metrics.retirementAge, lang)} yrs)")
-                appendLine("• Fidelity benchmark: ${Formatters.formatMoney(metrics.fidelityTarget, currency, lang)} (${Formatters.formatRatio(metrics.fidelityMultiplier, lang)}x annual income) — ${Formatters.formatPercent(metrics.fidelityPercent, lang)} of goal")
-                appendLine("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-                appendLine("💡 Generated in \"Personal Finance\" app")
-                appendLine("⚠️ Important: This project is a personal development and is provided solely for informational purposes \"as is\". The author is not responsible for any malfunctions, data loss, or other damages arising from the use of this software. All calculations, formulas, metrics, and simulations are for informational purposes only and do not constitute individual financial, investment, or tax advice. You use this tool at your own risk.")
-            } else {
-                appendLine("📊 ФИНАНСОВЫЙ ОТЧЕТ — ЛИЧНЫЕ ФИНАНСЫ")
-                appendLine("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-                appendLine("1. Исходные данные:")
-                appendLine("• Доход: ${Formatters.formatMoney(inputData.monthlyIncome, currency, lang)}/мес.")
-                appendLine("• Расходы: ${Formatters.formatMoney(inputData.monthlyExpenses, currency, lang)}/мес.")
-                appendLine("• Ликвидные активы: ${Formatters.formatMoney(inputData.liquidAssets, currency, lang)}")
-                appendLine("• Финансовые активы: ${Formatters.formatMoney(inputData.financialAssets, currency, lang)}")
-                appendLine("• Недвижимость / имущество: ${Formatters.formatMoney(inputData.propertyAssets, currency, lang)}")
-                appendLine("• Пассивы (долги): ${Formatters.formatMoney(inputData.liabilities, currency, lang)}")
-                appendLine("• Возраст: ${metrics.currentAge} лет (дожитие: ${metrics.lifeExpectancy} лет, горизонт: ${metrics.remainingYearsHorizon} г.)")
-                appendLine("• Номинальная доходность: ${Formatters.formatPercent(inputData.nominalReturnPercent, lang)} | Инфляция: ${Formatters.formatPercent(inputData.inflationPercent, lang)}")
-                appendLine("• Налог на прирост капитала: ${Formatters.formatPercent(inputData.capitalGainsTaxPercent, lang)}")
-                appendLine()
-                appendLine("2. Рассчитанные показатели:")
-                appendLine("• Денежный поток: ${Formatters.formatMoney(metrics.cashFlow, currency, lang)}/мес.")
-                appendLine("• Норма сбережений: ${Formatters.formatPercent(metrics.savingsRate, lang)}")
-                appendLine("• Подушка безопасности: ${Formatters.formatMoney(metrics.emergencyFund, currency, lang)} (${Formatters.formatRatio(metrics.safetyMonths, lang)} мес.)")
-                appendLine("• Коэффициент задолженности: ${Formatters.formatRatio(metrics.debtRatio, lang)}")
-                appendLine("• Чистый капитал: ${Formatters.formatMoney(metrics.netWorth, currency, lang)}")
-                appendLine("• Реальная доходность: ${Formatters.formatPercent(metrics.realReturnPercent, lang)}")
-                appendLine("• Эффективная ставка налога с вывода капитала: ${Formatters.formatPercent(metrics.effectiveCapitalGainsTaxRate, lang)}")
-                appendLine()
-                appendLine("3. Набранные баллы:")
-                appendLine("• Итоговая оценка: ${Formatters.formatScore(metrics.scores.totalScore, lang)} из 10")
-                appendLine("• Норма сбережений: ${metrics.scores.savingsRateScore} / 10")
-                appendLine("• Подушка безопасности: ${metrics.scores.safetyMonthsScore} / 10")
-                appendLine("• Долговая нагрузка: ${metrics.scores.debtRatioScore} / 10")
-                appendLine("• Финансовая свобода: ${metrics.scores.cfsScore} / 10")
-                appendLine()
-                appendLine("4. Финансовая свобода, FIRE:")
-                appendLine("• КФС: ${Formatters.formatRatio(metrics.financialFreedomRatio, lang)} ($cfsDesc)")
-                appendLine("• Капитал для FIRE: ${Formatters.formatMoney(metrics.retirementTargetCapital, currency, lang)}")
-                appendLine("• Срок до пенсии FIRE: ${Formatters.formatRatio(metrics.yearsToRetirement, lang)} лет (в возрасте ${Formatters.formatRatio(metrics.retirementAge, lang)} лет)")
-                appendLine("• Бенчмарк Fidelity: ${Formatters.formatMoney(metrics.fidelityTarget, currency, lang)} (${Formatters.formatRatio(metrics.fidelityMultiplier, lang)}x годового дохода) — ${Formatters.formatPercent(metrics.fidelityPercent, lang)} от цели")
-                appendLine("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-                appendLine("💡 Сформировано в приложении «Личные финансы»")
-                appendLine("⚠️ Важно: Проект является персональной разработкой и предоставляется исключительно в ознакомительных целях «как есть». Автор не несет ответственности за возможные сбои, потерю данных или иной ущерб, возникший в ходе использования данного ПО. Все расчеты, формулы, метрики и симуляции носят исключительно информационно-ознакомительный характер и не являются индивидуальной финансовой, инвестиционной или налоговой рекомендацией. Вы используете этот инструмент на свой собственный страх и риск.")
-            }
+            appendLine(strings.exportHeaderTitle)
+            appendLine("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+            appendLine(strings.exportSection1Title)
+            appendLine(String.format(strings.exportIncomeLine, Formatters.formatMoney(inputData.monthlyIncome, currency, lang)))
+            appendLine(String.format(strings.exportExpensesLine, Formatters.formatMoney(inputData.monthlyExpenses, currency, lang)))
+            appendLine(String.format(strings.exportLiquidAssetsLine, Formatters.formatMoney(inputData.liquidAssets, currency, lang)))
+            appendLine(String.format(strings.exportFinancialAssetsLine, Formatters.formatMoney(inputData.financialAssets, currency, lang)))
+            appendLine(String.format(strings.exportPropertyAssetsLine, Formatters.formatMoney(inputData.propertyAssets, currency, lang)))
+            appendLine(String.format(strings.exportLiabilitiesLine, Formatters.formatMoney(inputData.liabilities, currency, lang)))
+            appendLine(String.format(strings.exportAgeHorizonLine, metrics.currentAge, metrics.lifeExpectancy, metrics.remainingYearsHorizon))
+            appendLine(String.format(strings.exportReturnsInflationLine, Formatters.formatPercent(inputData.nominalReturnPercent, lang), Formatters.formatPercent(inputData.inflationPercent, lang)))
+            appendLine(String.format(strings.exportTaxLine, Formatters.formatPercent(inputData.capitalGainsTaxPercent, lang)))
+            appendLine()
+            appendLine(strings.exportSection2Title)
+            appendLine(String.format(strings.exportCashFlowLine, Formatters.formatMoney(metrics.cashFlow, currency, lang)))
+            appendLine(String.format(strings.exportSavingsRateLine, Formatters.formatPercent(metrics.savingsRate, lang)))
+            appendLine(String.format(strings.exportEmergencyFundLine, Formatters.formatMoney(metrics.emergencyFund, currency, lang), Formatters.formatRatio(metrics.safetyMonths, lang)))
+            appendLine(String.format(strings.exportDebtRatioLine, Formatters.formatRatio(metrics.debtRatio, lang)))
+            appendLine(String.format(strings.exportNetWorthLine, Formatters.formatMoney(metrics.netWorth, currency, lang)))
+            appendLine(String.format(strings.exportRealReturnLine, Formatters.formatPercent(metrics.realReturnPercent, lang)))
+            appendLine(String.format(strings.exportEffectiveTaxLine, Formatters.formatPercent(metrics.effectiveCapitalGainsTaxRate, lang)))
+            appendLine()
+            appendLine(strings.exportSection3Title)
+            appendLine(String.format(strings.exportScoreTotalLine, Formatters.formatScore(metrics.scores.totalScore, lang)))
+            appendLine(String.format(strings.exportScoreSavingsRateLine, metrics.scores.savingsRateScore))
+            appendLine(String.format(strings.exportScoreSafetyMonthsLine, metrics.scores.safetyMonthsScore))
+            appendLine(String.format(strings.exportScoreDebtRatioLine, metrics.scores.debtRatioScore))
+            appendLine(String.format(strings.exportScoreCfsLine, metrics.scores.cfsScore))
+            appendLine()
+            appendLine(strings.exportSection4Title)
+            appendLine(String.format(strings.exportCfsLine, Formatters.formatRatio(metrics.financialFreedomRatio, lang), cfsDesc))
+            appendLine(String.format(strings.exportFireTargetCapitalLine, Formatters.formatMoney(metrics.retirementTargetCapital, currency, lang)))
+            appendLine(String.format(strings.exportFireTimeToRetirementLine, Formatters.formatRatio(metrics.yearsToRetirement, lang), Formatters.formatRatio(metrics.retirementAge, lang)))
+            appendLine(String.format(strings.exportFidelityLine, Formatters.formatMoney(metrics.fidelityTarget, currency, lang), Formatters.formatRatio(metrics.fidelityMultiplier, lang), Formatters.formatPercent(metrics.fidelityPercent, lang)))
+            appendLine("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+            appendLine(strings.auditShareGeneratedBy)
+            appendLine(strings.auditShareDisclaimer)
         }
     }
 }

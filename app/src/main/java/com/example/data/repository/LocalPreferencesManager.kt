@@ -26,6 +26,7 @@ class LocalPreferencesManager(context: Context) {
         private const val KEY_CAPITAL_GAINS_TAX = "capital_gains_tax"
         private const val KEY_CURRENCY = "currency"
         private const val KEY_INCLUDE_FINANCIAL_EMERGENCY = "include_financial_emergency"
+        private const val KEY_INCLUDE_PROPERTY_FIRE = "include_property_fire"
 
         // Settings & Options
         private const val KEY_LANGUAGE = "app_language"
@@ -78,7 +79,8 @@ class LocalPreferencesManager(context: Context) {
             inflationPercent = prefs.getString(KEY_INFLATION, "2.5")?.toDoubleOrNull() ?: 2.5,
             capitalGainsTaxPercent = prefs.getString(KEY_CAPITAL_GAINS_TAX, "20.0")?.toDoubleOrNull() ?: 20.0,
             currencySymbol = prefs.getString(KEY_CURRENCY, "$") ?: "$",
-            includeFinancialInEmergencyFund = prefs.getBoolean(KEY_INCLUDE_FINANCIAL_EMERGENCY, true)
+            includeFinancialInEmergencyFund = prefs.getBoolean(KEY_INCLUDE_FINANCIAL_EMERGENCY, true),
+            includePropertyInFireCapital = prefs.getBoolean(KEY_INCLUDE_PROPERTY_FIRE, false)
         )
     }
 
@@ -98,6 +100,7 @@ class LocalPreferencesManager(context: Context) {
             putString(KEY_CAPITAL_GAINS_TAX, data.capitalGainsTaxPercent.toString())
             putString(KEY_CURRENCY, data.currencySymbol)
             putBoolean(KEY_INCLUDE_FINANCIAL_EMERGENCY, data.includeFinancialInEmergencyFund)
+            putBoolean(KEY_INCLUDE_PROPERTY_FIRE, data.includePropertyInFireCapital)
             apply()
         }
     }

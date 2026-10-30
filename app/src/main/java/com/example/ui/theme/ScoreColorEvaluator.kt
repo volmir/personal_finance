@@ -15,7 +15,7 @@ object ScoreColorEvaluator {
     const val TOTAL_SCORE_YELLOW_MIN = 3.5
 
     fun getTotalScoreColor(score: Double): Color =
-        com.example.domain.FinancialMetricEvaluator.getTotalScoreColor(score)
+        StatusColors.getColor(com.example.domain.FinancialMetricEvaluator.getTotalScoreStatus(score))
 
     /**
      * Возвращает полупрозрачный цвет фона для плашки итогового суммирующего показателя.

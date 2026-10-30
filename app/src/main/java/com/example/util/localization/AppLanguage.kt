@@ -27,3 +27,6 @@ enum class AppLanguage {
         }
     }
 }
+
+val AppLanguage.isRussian: Boolean
+    get() = this == AppLanguage.RU

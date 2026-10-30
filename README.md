@@ -19,7 +19,7 @@ The app serves as an objective, institutional-grade diagnostic tool for individu
 ### 🌟 Core Philosophy
 - **100% Offline & Private:** No network permissions requested (`android.permission.INTERNET` is omitted). No servers, no telemetry, no tracking, and no bank credential requests. All calculations are executed strictly on your local device.
 - **Data Persistence:** Default US benchmark values are assigned **only on the very first launch**. After initialization, all user inputs, settings, scenario toggles, and simulation slider positions are preserved across app restarts.
-- **Transparent Economics:** Real math based on empirical finance (Fisher equation, Fidelity retirement milestones, Trinity study / 4% safe withdrawal rule).
+- **Transparent Economics:** Real math based on empirical finance (Fisher equation, Fidelity retirement milestones, capital depletion model until life expectancy under constant real return, without the 4% rule or Trinity study).
 
 ---
 
@@ -50,13 +50,15 @@ The application is structured into 4 cohesive functional tabs:
 9. **Реальная доходность капитала (Real Return):** Fisher equation `r = (1 + R) / (1 + i) - 1`, accounting for inflation drag.
 
 ### 3. Набранные баллы и аудит (Scores & Auditor Opinion)
-- **Financial Health Score:** Weighted composite scoring from **0 to 10 points** across savings rate, emergency reserve, debt load, and capital autonomy.
+- **Financial Health Score:** Итоговый балл равен среднему арифметическому четырёх оценок (не «взвешенный»): норма сбережений, подушка безопасности, долговая нагрузка и финансовая свобода (от **0 до 10 баллов**). / Overall score is calculated as the simple arithmetic mean of four key ratings (not weighted).
 - **Component Progress Indicators:** Individual ratings for each key pillar.
 - **Automated Auditor Opinion:** Full qualitative analysis classifying indicators into **Positive (🟢)**, **Neutral (🟡)**, and **Risk/Negative (🔴)** zones.
 - **One-Click Export:** Generate and share complete textual audit reports to clipboard, messaging apps, or email.
 
 ### 4. Финансовая свобода и симулятор «Что если?» (FIRE & Pension Simulator)
-- **Dynamic Retirement Age Calculation:** Automatic calculation of target FIRE nest egg and exact age of financial independence based on the 4% safe withdrawal rate.
+- **Метод FIRE:** Моделирование «капитал до возраста дожития при постоянной реальной доходности, без правила 4%» (capital accumulation and decumulation modeled until life expectancy under constant real return, without the 4% rule / Trinity study).
+- **Капитал FIRE:** Ликвидные + финансовые активы; имущество не учитывается; долги вычитаются только в части, не покрытой имуществом (покрытые имуществом долги обслуживаются через расходы).
+- **Изолированная симуляция:** Симуляция не влияет на реальные показатели и вкладки 1–3 (sliders and 14 stress-test scenarios operate strictly in isolation without modifying baseline user inputs or metrics).
 - **Interactive Tuning Sliders:**
   - Additional monthly savings slider.
   - Real portfolio yield adjustment slider.

@@ -49,6 +49,7 @@ import com.example.ui.components.MetricCard
 import com.example.ui.theme.AccentGold
 import com.example.ui.theme.AccentTeal
 import com.example.ui.theme.AlertRed
+import com.example.ui.theme.StatusColors
 import com.example.ui.theme.SuccessGreen
 import com.example.ui.theme.WarningYellow
 import com.example.util.Formatters
@@ -181,7 +182,7 @@ fun MetricsScreen(
                     formula = strings.metricCashFlowFormula,
                     description = strings.metricCashFlowDesc,
                     icon = Icons.Default.MonetizationOn,
-                    highlightColor = FinancialMetricEvaluator.getCashFlowColor(metrics.cashFlow),
+                    highlightColor = StatusColors.getColor(FinancialMetricEvaluator.getCashFlowStatus(metrics.cashFlow)),
                     subValue = if (metrics.cashFlow >= 0) strings.metricCashFlowPositiveSub else strings.metricCashFlowNegativeSub
                 )
             }
@@ -197,7 +198,7 @@ fun MetricsScreen(
                     description = strings.metricSavingsRateDesc,
                     icon = Icons.Default.Savings,
                     score = metrics.scores.savingsRateScore,
-                    highlightColor = FinancialMetricEvaluator.getSavingsRateColor(metrics.savingsRate),
+                    highlightColor = StatusColors.getColor(FinancialMetricEvaluator.getSavingsRateStatus(metrics.savingsRate)),
                     subValue = strings.metricSavingsRateSub
                 )
             }
@@ -228,7 +229,7 @@ fun MetricsScreen(
                     description = strings.metricSafetyMonthsDesc,
                     icon = Icons.Default.AvTimer,
                     score = metrics.scores.safetyMonthsScore,
-                    highlightColor = FinancialMetricEvaluator.getSafetyMonthsColor(metrics.safetyMonths),
+                    highlightColor = StatusColors.getColor(FinancialMetricEvaluator.getSafetyMonthsStatus(metrics.safetyMonths)),
                     subValue = strings.metricSafetyMonthsSub
                 )
             }
@@ -244,7 +245,7 @@ fun MetricsScreen(
                     description = strings.metricDebtRatioDesc,
                     icon = Icons.Default.AccountBalanceWallet,
                     score = metrics.scores.debtRatioScore,
-                    highlightColor = FinancialMetricEvaluator.getDebtRatioColor(metrics.debtRatio),
+                    highlightColor = StatusColors.getColor(FinancialMetricEvaluator.getDebtRatioStatus(metrics.debtRatio)),
                     subValue = if (metrics.debtRatio <= 0.3) strings.metricDebtRatioLowSub else strings.metricDebtRatioHighSub
                 )
             }
@@ -259,7 +260,7 @@ fun MetricsScreen(
                     formula = strings.metricNetWorthFormula,
                     description = strings.metricNetWorthDesc,
                     icon = Icons.Default.AccountBalance,
-                    highlightColor = FinancialMetricEvaluator.getNetWorthColor(metrics.netWorth),
+                    highlightColor = StatusColors.getColor(FinancialMetricEvaluator.getNetWorthStatus(metrics.netWorth)),
                     subValue = if (metrics.netWorth >= 0) {
                         "${strings.metricNetWorthSubPrefix}: ${Formatters.formatMoney(metrics.totalAssets, inputData.currencySymbol, lang)}"
                     } else {
@@ -274,7 +275,7 @@ fun MetricsScreen(
             item {
                 val fidelityRatio = metrics.fidelityRatio
                 val fidelityPercent = metrics.fidelityPercent
-                val fidelityColor = FinancialMetricEvaluator.getFidelityColor(fidelityRatio)
+                val fidelityColor = StatusColors.getColor(FinancialMetricEvaluator.getFidelityStatus(fidelityRatio))
 
                 MetricCard(
                     title = strings.metricFidelityTitle,
@@ -341,7 +342,7 @@ fun MetricsScreen(
                     description = strings.metricCfsDesc,
                     icon = Icons.Default.CompassCalibration,
                     score = metrics.scores.cfsScore,
-                    highlightColor = FinancialMetricEvaluator.getCfsColor(metrics.financialFreedomRatio),
+                    highlightColor = StatusColors.getColor(FinancialMetricEvaluator.getCfsStatus(metrics.financialFreedomRatio)),
                     subValue = FinancialMetricEvaluator.getCfsStageDescription(metrics.financialFreedomRatio, lang)
                 )
             }
@@ -356,7 +357,7 @@ fun MetricsScreen(
                     formula = strings.metricRealReturnFormula,
                     description = strings.metricRealReturnDesc,
                     icon = Icons.Default.Percent,
-                    highlightColor = FinancialMetricEvaluator.getRealReturnColor(metrics.realReturnPercent),
+                    highlightColor = StatusColors.getColor(FinancialMetricEvaluator.getRealReturnStatus(metrics.realReturnPercent)),
                     subValue = strings.metricRealReturnSubFormat(
                         Formatters.formatPercent(inputData.nominalReturnPercent, lang),
                         Formatters.formatPercent(inputData.inflationPercent, lang)

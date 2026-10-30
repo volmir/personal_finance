@@ -41,6 +41,7 @@ fun FireTrajectoryChart(
     yearsToRetire: Double,
     currentAge: Int,
     currencySymbol: String = "$",
+    isUnreachable: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     if (trajectory.isEmpty()) return
@@ -177,31 +178,33 @@ fun FireTrajectoryChart(
                     )
                 )
 
-                // Draw retirement vertical mark
-                val retX = getX(retireAge)
-                drawLine(
-                    color = Color.White.copy(alpha = 0.6f),
-                    start = Offset(retX, 0f),
-                    end = Offset(retX, h),
-                    strokeWidth = 1.5.dp.toPx(),
-                    pathEffect = PathEffect.dashPathEffect(floatArrayOf(6f, 6f), 0f)
-                )
+                // Draw retirement vertical mark if reachable
+                if (!isUnreachable) {
+                    val retX = getX(retireAge)
+                    drawLine(
+                        color = Color.White.copy(alpha = 0.6f),
+                        start = Offset(retX, 0f),
+                        end = Offset(retX, h),
+                        strokeWidth = 1.5.dp.toPx(),
+                        pathEffect = PathEffect.dashPathEffect(floatArrayOf(6f, 6f), 0f)
+                    )
 
-                // Highlight retirement point circle
-                val retPoint = trajectory.minByOrNull { kotlin.math.abs(it.age - retireAge) }
-                if (retPoint != null) {
-                    val px = getX(retireAge)
-                    val py = getY(retPoint.accumulatedCapital)
-                    drawCircle(
-                        color = SuccessGreen,
-                        radius = 6.dp.toPx(),
-                        center = Offset(px, py)
-                    )
-                    drawCircle(
-                        color = Color.White,
-                        radius = 3.dp.toPx(),
-                        center = Offset(px, py)
-                    )
+                    // Highlight retirement point circle
+                    val retPoint = trajectory.minByOrNull { kotlin.math.abs(it.age - retireAge) }
+                    if (retPoint != null) {
+                        val px = getX(retireAge)
+                        val py = getY(retPoint.accumulatedCapital)
+                        drawCircle(
+                            color = SuccessGreen,
+                            radius = 6.dp.toPx(),
+                            center = Offset(px, py)
+                        )
+                        drawCircle(
+                            color = Color.White,
+                            radius = 3.dp.toPx(),
+                            center = Offset(px, py)
+                        )
+                    }
                 }
             }
         }
@@ -219,10 +222,10 @@ fun FireTrajectoryChart(
             )
             Spacer(modifier = Modifier.weight(1f))
             Text(
-                text = strings.fireChartFirePoint(Formatters.formatRatio(retireAge, lang)),
+                text = if (isUnreachable) strings.fireUnreachableText else strings.fireChartFirePoint(Formatters.formatRatio(retireAge, lang)),
                 style = MaterialTheme.typography.labelSmall.copy(
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
+                    color = if (isUnreachable) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
                 )
             )
             Spacer(modifier = Modifier.weight(1f))

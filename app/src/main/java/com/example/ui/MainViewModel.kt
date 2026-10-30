@@ -15,34 +15,35 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import com.example.util.localization.AppLanguage
 import com.example.util.localization.AppStrings
 import com.example.util.localization.StringsRu
+import com.example.util.localization.getAppStrings
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-enum class AppTab(val defaultTitle: String, val defaultShortTitle: String) {
-    INPUT("Данные для расчетов", "Данные"),
-    METRICS("Расчет показателей", "Показатели"),
-    SCORES("Набранные баллы (итоги, суммирование результатов)", "Итоги & Баллы"),
-    FIRE("Финансовая свобода, пенсия, FIRE", "FIRE & Пенсия");
+enum class AppTab {
+    INPUT,
+    METRICS,
+    SCORES,
+    FIRE;
 
-    val title: String get() = defaultTitle
-    val shortTitle: String get() = defaultShortTitle
-
-    fun localizedTitle(strings: AppStrings): String = when (this) {
+    fun title(strings: AppStrings): String = when (this) {
         INPUT -> strings.tabInputTitle
         METRICS -> strings.tabMetricsTitle
         SCORES -> strings.tabScoresTitle
         FIRE -> strings.tabFireTitle
     }
 
-    fun localizedShortTitle(strings: AppStrings): String = when (this) {
+    fun shortTitle(strings: AppStrings): String = when (this) {
         INPUT -> strings.tabInputShort
         METRICS -> strings.tabMetricsShort
         SCORES -> strings.tabScoresShort
         FIRE -> strings.tabFireShort
     }
+
+    fun localizedTitle(strings: AppStrings): String = title(strings)
+    fun localizedShortTitle(strings: AppStrings): String = shortTitle(strings)
 }
 
 data class FireScenarioToggles(
@@ -225,22 +226,22 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         val current = _fireSimulation.value.scenarios
         val updated = when (scenarioId) {
             // 2.1. Позитивные события
-            "pos_salary_increase", "salary_increase" -> current.copy(salaryIncrease20 = !current.salaryIncrease20)
-            "pos_market_growth", "market_growth" -> current.copy(marketGrowth25 = !current.marketGrowth25)
-            "pos_expense_optimization", "expense_optimization" -> current.copy(expenseOptimization15 = !current.expenseOptimization15)
-            "pos_relocation", "relocation" -> current.copy(relocationLowerCost30 = !current.relocationLowerCost30)
-            "pos_inheritance", "inheritance" -> current.copy(inheritance1200 = !current.inheritance1200)
+            "pos_salary_increase" -> current.copy(salaryIncrease20 = !current.salaryIncrease20)
+            "pos_market_growth" -> current.copy(marketGrowth25 = !current.marketGrowth25)
+            "pos_expense_optimization" -> current.copy(expenseOptimization15 = !current.expenseOptimization15)
+            "pos_relocation" -> current.copy(relocationLowerCost30 = !current.relocationLowerCost30)
+            "pos_inheritance" -> current.copy(inheritance1200 = !current.inheritance1200)
             "pos_property_sale", "property_sale" -> current.copy(propertySale2000 = !current.propertySale2000)
-            "pos_children_self_sufficient", "children_self_sufficient" -> current.copy(childrenSelfSufficient18 = !current.childrenSelfSufficient18)
+            "pos_children_self_sufficient" -> current.copy(childrenSelfSufficient18 = !current.childrenSelfSufficient18)
 
             // 2.2. Негативные события
             "job_loss" -> current.copy(jobLoss = !current.jobLoss)
             "market_crash" -> current.copy(marketCrash30 = !current.marketCrash30)
-            "mortgage", "mortgage_20_years", "mortgage_72" -> current.copy(mortgage20Years35Income = !current.mortgage20Years35Income)
-            "consumer_loan", "car_loan" -> current.copy(carLoan5Years = !current.carLoan5Years)
+            "mortgage" -> current.copy(mortgage20Years35Income = !current.mortgage20Years35Income)
+            "car_loan" -> current.copy(carLoan5Years = !current.carLoan5Years)
             "large_expense" -> current.copy(largeOneOffExpense500 = !current.largeOneOffExpense500)
-            "inflation", "inflation_5", "inflation_expense", "inflation_20" -> current.copy(inflation5Percent = !current.inflation5Percent)
-            "child_dependent", "child_18_years" -> current.copy(childOrDependent18Years = !current.childOrDependent18Years)
+            "inflation" -> current.copy(inflation5Percent = !current.inflation5Percent)
+            "child_dependent" -> current.copy(childOrDependent18Years = !current.childOrDependent18Years)
             else -> current
         }
         _fireSimulation.value = _fireSimulation.value.copy(scenarios = updated)
@@ -289,8 +290,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         // 3. Разовые поступления капитала (Позитивные события):
         // 5. Наследство или крупный подарок: +1200% месячного дохода (12 мес.)
         val inheritanceAmount = if (sc.inheritance1200) 12.0 * baseInput.monthlyIncome else 0.0
-        // 6. Продажа имущества: +2000% месячного дохода (20 мес.)
-        val propertySaleAmount = if (sc.propertySale2000) 20.0 * baseInput.monthlyIncome else 0.0
+        // 6. Продажа имущества: min(2000% месячного дохода, имеющееся имущество)
+        val propertySaleAmount = if (sc.propertySale2000) minOf(20.0 * baseInput.monthlyIncome, baseInput.propertyAssets) else 0.0
+        val effectivePropertyAssets = baseInput.propertyAssets - propertySaleAmount
         val totalPositiveLumpSum = inheritanceAmount + propertySaleAmount
 
         // 4. Постоянные ежемесячные расходы:
@@ -416,6 +418,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             monthlyExpenses = currentEffectiveExpenses,
             liquidAssets = effLiquidAssets,
             financialAssets = effFinAssets,
+            propertyAssets = effectivePropertyAssets,
             liabilities = effectiveLiabilities,
             inflationPercent = effectiveInflationPercent,
             nominalReturnPercent = effectiveNominal
@@ -440,61 +443,40 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun saveCurrentAsScenario(name: String) {
+        val strings = getAppStrings(_appLanguage.value)
         viewModelScope.launch {
             repository.saveScenario(name = name, data = _inputData.value)
                 .onSuccess {
-                    _userFeedbackMessage.value = if (_appLanguage.value == AppLanguage.EN) {
-                        "Scenario \"$name\" saved successfully"
-                    } else {
-                        "Сценарий «$name» успешно сохранен"
-                    }
+                    _userFeedbackMessage.value = strings.scenarioSavedSuccess(name)
                 }
                 .onFailure { error ->
-                    _userFeedbackMessage.value = if (_appLanguage.value == AppLanguage.EN) {
-                        "Failed to save scenario: ${error.localizedMessage ?: "database error"}"
-                    } else {
-                        "Ошибка сохранения сценария: ${error.localizedMessage ?: "ошибка базы данных"}"
-                    }
+                    _userFeedbackMessage.value = strings.scenarioSaveError(error.localizedMessage ?: strings.scenarioDatabaseError)
                 }
         }
     }
 
     fun loadScenario(scenario: ScenarioEntity) {
+        val strings = getAppStrings(_appLanguage.value)
         try {
             val data = scenario.toInputData()
             _inputData.value = data
             localPrefs.saveData(data)
             recalculate()
-            _userFeedbackMessage.value = if (_appLanguage.value == AppLanguage.EN) {
-                "Scenario \"${scenario.name}\" loaded"
-            } else {
-                "Сценарий «${scenario.name}» загружен"
-            }
+            _userFeedbackMessage.value = strings.scenarioLoadedSuccess(scenario.name)
         } catch (e: Exception) {
-            _userFeedbackMessage.value = if (_appLanguage.value == AppLanguage.EN) {
-                "Failed to load scenario: ${e.localizedMessage ?: "corrupted data"}"
-            } else {
-                "Ошибка загрузки сценария: ${e.localizedMessage ?: "поврежденные данные"}"
-            }
+            _userFeedbackMessage.value = strings.scenarioLoadError(e.localizedMessage ?: strings.scenarioCorruptedDataError)
         }
     }
 
     fun deleteScenario(scenario: ScenarioEntity) {
+        val strings = getAppStrings(_appLanguage.value)
         viewModelScope.launch {
             repository.deleteScenario(scenario)
                 .onSuccess {
-                    _userFeedbackMessage.value = if (_appLanguage.value == AppLanguage.EN) {
-                        "Scenario \"${scenario.name}\" deleted"
-                    } else {
-                        "Сценарий «${scenario.name}» удален"
-                    }
+                    _userFeedbackMessage.value = strings.scenarioDeletedSuccess(scenario.name)
                 }
                 .onFailure { error ->
-                    _userFeedbackMessage.value = if (_appLanguage.value == AppLanguage.EN) {
-                        "Failed to delete scenario: ${error.localizedMessage ?: "database error"}"
-                    } else {
-                        "Ошибка удаления сценария: ${error.localizedMessage ?: "ошибка базы данных"}"
-                    }
+                    _userFeedbackMessage.value = strings.scenarioDeleteError(error.localizedMessage ?: strings.scenarioDatabaseError)
                 }
         }
     }

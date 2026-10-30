@@ -1,26 +1,14 @@
 package com.example.domain
 
-import androidx.compose.ui.graphics.Color
-import com.example.ui.theme.AlertRed
-import com.example.ui.theme.SuccessGreen
-import com.example.ui.theme.WarningYellow
+import com.example.domain.model.AuditIndicatorStatus
 import com.example.util.localization.AppLanguage
 
 /**
- * Единый источник истины (Single Source of Truth) для расчета показателей,
- * определения их статуса (ПОЗИТИВНЫЙ / НЕЙТРАЛЬНЫЙ / НЕГАТИВНЫЙ) и цвета (ЗЕЛЁНЫЙ / ЖЁЛТЫЙ / КРАСНЫЙ).
+ * Единый источник истины (Single Source of Truth) для расчета показателей
+ * и определения их статуса (ПОЗИТИВНЫЙ / НЕЙТРАЛЬНЫЙ / НЕГАТИВНЫЙ).
+ * Не содержит зависимостей от UI и Compose Color.
  */
 object FinancialMetricEvaluator {
-
-    // =========================================================================
-    // Общие вспомогательные методы
-    // =========================================================================
-
-    fun getColorForStatus(status: AuditIndicatorStatus): Color = when (status) {
-        AuditIndicatorStatus.POSITIVE -> SuccessGreen
-        AuditIndicatorStatus.NEUTRAL -> WarningYellow
-        AuditIndicatorStatus.NEGATIVE -> AlertRed
-    }
 
     // =========================================================================
     // 1. Денежный поток (Cash Flow)
@@ -32,90 +20,104 @@ object FinancialMetricEvaluator {
         else -> AuditIndicatorStatus.NEGATIVE
     }
 
-    fun getCashFlowColor(cashFlow: Double): Color = getColorForStatus(getCashFlowStatus(cashFlow))
-
     // =========================================================================
     // 2. Норма сбережений (Savings Rate)
-    // < 0%: негативный (красный, 0 баллов)
-    // 0..20%: нейтральный (жёлтый, 5..7 баллов)
-    // > 20%: позитивный (зелёный, 8..10 баллов)
+    // < 0%: негативный (0 баллов)
+    // 0..20%: нейтральный (5..7 баллов)
+    // > 20%: позитивный (8..10 баллов)
     // =========================================================================
 
     const val SAVINGS_RATE_POSITIVE_THRESHOLD = 20.0
+    const val SAVINGS_RATE_NEUTRAL_THRESHOLD = 0.0
+
+    const val SAVINGS_RATE_TIER_LOW = 8.0
+    const val SAVINGS_RATE_TIER_MEDIUM = 15.0
+    const val SAVINGS_RATE_TIER_HIGH = 35.0
+    const val SAVINGS_RATE_TIER_EXCELLENT = 50.0
 
     fun getSavingsRateStatus(savingsRate: Double): AuditIndicatorStatus = when {
         savingsRate > SAVINGS_RATE_POSITIVE_THRESHOLD -> AuditIndicatorStatus.POSITIVE
-        savingsRate >= 0.0 -> AuditIndicatorStatus.NEUTRAL
+        savingsRate >= SAVINGS_RATE_NEUTRAL_THRESHOLD -> AuditIndicatorStatus.NEUTRAL
         else -> AuditIndicatorStatus.NEGATIVE
     }
 
-    fun getSavingsRateColor(savingsRate: Double): Color = getColorForStatus(getSavingsRateStatus(savingsRate))
-
     fun getSavingsRateScore(savingsRate: Double): Int = when {
-        savingsRate < 0 -> 0
-        savingsRate < 8.0 -> 5
-        savingsRate < 15.0 -> 6
-        savingsRate <= 20.0 -> 7
-        savingsRate < 35.0 -> 8
-        savingsRate < 50.0 -> 9
+        savingsRate < SAVINGS_RATE_NEUTRAL_THRESHOLD -> 0
+        savingsRate < SAVINGS_RATE_TIER_LOW -> 5
+        savingsRate < SAVINGS_RATE_TIER_MEDIUM -> 6
+        savingsRate <= SAVINGS_RATE_POSITIVE_THRESHOLD -> 7
+        savingsRate < SAVINGS_RATE_TIER_HIGH -> 8
+        savingsRate < SAVINGS_RATE_TIER_EXCELLENT -> 9
         else -> 10
     }
 
     // =========================================================================
     // 3 & 4. Запас месячных расходов / Подушка безопасности (Safety Months)
-    // >= 6.0 мес.: позитивный (зелёный)
-    // 3.0 .. < 6.0 мес.: нейтральный (жёлтый)
-    // < 3.0 мес.: негативный (красный)
+    // >= 6.0 мес.: позитивный (баллы 9..10)
+    // 3.0 .. < 6.0 мес.: нейтральный (балл 7)
+    // < 3.0 мес.: негативный (баллы 0..4)
     // =========================================================================
 
+    const val SAFETY_MONTHS_POSITIVE_THRESHOLD = 6.0
+    const val SAFETY_MONTHS_NEUTRAL_THRESHOLD = 3.0
+
+    const val SAFETY_MONTHS_TIER_CRITICAL = 0.5
+    const val SAFETY_MONTHS_TIER_LOW = 1.0
+    const val SAFETY_MONTHS_TIER_EXCELLENT = 12.0
+
     fun getSafetyMonthsStatus(safetyMonths: Double): AuditIndicatorStatus = when {
-        safetyMonths >= 6.0 -> AuditIndicatorStatus.POSITIVE
-        safetyMonths >= 3.0 -> AuditIndicatorStatus.NEUTRAL
+        safetyMonths >= SAFETY_MONTHS_POSITIVE_THRESHOLD -> AuditIndicatorStatus.POSITIVE
+        safetyMonths >= SAFETY_MONTHS_NEUTRAL_THRESHOLD -> AuditIndicatorStatus.NEUTRAL
         else -> AuditIndicatorStatus.NEGATIVE
     }
 
-    fun getSafetyMonthsColor(safetyMonths: Double): Color = getColorForStatus(getSafetyMonthsStatus(safetyMonths))
-
     fun getSafetyMonthsScore(safetyMonths: Double): Int = when {
-        safetyMonths < 0.5 -> 0
-        safetyMonths < 1.0 -> 2
-        safetyMonths < 3.0 -> 4
-        safetyMonths < 6.0 -> 7
-        safetyMonths < 12.0 -> 9
+        safetyMonths < SAFETY_MONTHS_TIER_CRITICAL -> 0
+        safetyMonths < SAFETY_MONTHS_TIER_LOW -> 2
+        safetyMonths < SAFETY_MONTHS_NEUTRAL_THRESHOLD -> 4
+        safetyMonths < SAFETY_MONTHS_POSITIVE_THRESHOLD -> 7
+        safetyMonths < SAFETY_MONTHS_TIER_EXCELLENT -> 9
         else -> 10
     }
 
     // =========================================================================
     // 5. Коэффициент задолженности (Debt Ratio)
-    // <= 0.30: позитивный (зелёный)
-    // 0.30 .. 0.60: нейтральный (жёлтый)
-    // > 0.60: негативный (красный)
+    // <= 0.30: позитивный (баллы 8..10)
+    // 0.30 .. 0.60: нейтральный (баллы 6..7)
+    // > 0.60: негативный (баллы 0..4)
     // =========================================================================
 
+    const val DEBT_RATIO_POSITIVE_THRESHOLD = 0.30
+    const val DEBT_RATIO_NEUTRAL_THRESHOLD = 0.60
+
+    const val DEBT_RATIO_TIER_EXCELLENT = 0.05
+    const val DEBT_RATIO_TIER_VERY_GOOD = 0.15
+    const val DEBT_RATIO_TIER_MODERATE = 0.45
+    const val DEBT_RATIO_TIER_HIGH = 0.80
+    const val DEBT_RATIO_TIER_CRITICAL = 1.0
+
     fun getDebtRatioStatus(debtRatio: Double): AuditIndicatorStatus = when {
-        debtRatio <= 0.30 -> AuditIndicatorStatus.POSITIVE
-        debtRatio <= 0.60 -> AuditIndicatorStatus.NEUTRAL
+        debtRatio <= DEBT_RATIO_POSITIVE_THRESHOLD -> AuditIndicatorStatus.POSITIVE
+        debtRatio <= DEBT_RATIO_NEUTRAL_THRESHOLD -> AuditIndicatorStatus.NEUTRAL
         else -> AuditIndicatorStatus.NEGATIVE
     }
 
-    fun getDebtRatioColor(debtRatio: Double): Color = getColorForStatus(getDebtRatioStatus(debtRatio))
-
     fun getDebtRatioScore(debtRatio: Double): Int = when {
-        debtRatio <= 0.05 -> 10
-        debtRatio <= 0.15 -> 9
-        debtRatio <= 0.30 -> 8
-        debtRatio <= 0.45 -> 7
-        debtRatio <= 0.60 -> 6
-        debtRatio <= 0.80 -> 4
-        debtRatio <= 1.0 -> 2
+        debtRatio <= DEBT_RATIO_TIER_EXCELLENT -> 10
+        debtRatio <= DEBT_RATIO_TIER_VERY_GOOD -> 9
+        debtRatio <= DEBT_RATIO_POSITIVE_THRESHOLD -> 8
+        debtRatio <= DEBT_RATIO_TIER_MODERATE -> 7
+        debtRatio <= DEBT_RATIO_NEUTRAL_THRESHOLD -> 6
+        debtRatio <= DEBT_RATIO_TIER_HIGH -> 4
+        debtRatio <= DEBT_RATIO_TIER_CRITICAL -> 2
         else -> 0
     }
 
     // =========================================================================
     // 6. Чистый капитал (Net Worth)
-    // > 0: позитивный (зелёный)
-    // == 0: нейтральный (жёлтый)
-    // < 0: негативный (красный)
+    // > 0: позитивный
+    // == 0: нейтральный
+    // < 0: негативный
     // =========================================================================
 
     fun getNetWorthStatus(netWorth: Double): AuditIndicatorStatus = when {
@@ -124,13 +126,11 @@ object FinancialMetricEvaluator {
         else -> AuditIndicatorStatus.NEGATIVE
     }
 
-    fun getNetWorthColor(netWorth: Double): Color = getColorForStatus(getNetWorthStatus(netWorth))
-
     // =========================================================================
     // 7. Бенчмарк Fidelity (Fidelity Ratio)
-    // >= 1.0 (>= 100% от цели): позитивный (зелёный)
-    // 0.7 .. < 1.0 (70%..99% от цели): нейтральный (жёлтый)
-    // < 0.7 (< 70% от цели): негативный (красный)
+    // >= 1.0 (>= 100% от цели): позитивный
+    // 0.7 .. < 1.0 (70%..99% от цели): нейтральный
+    // < 0.7 (< 70% от цели): негативный
     // =========================================================================
 
     const val FIDELITY_POSITIVE_THRESHOLD = 1.0
@@ -162,22 +162,24 @@ object FinancialMetricEvaluator {
         return getFidelityStatus(ratio)
     }
 
-    fun getFidelityColor(ratio: Double): Color = getColorForStatus(getFidelityStatus(ratio))
-
-    fun getFidelityColor(netWorth: Double, target: Double): Color =
-        getColorForStatus(getFidelityStatus(netWorth, target))
-
     // =========================================================================
     // 8. Коэффициент финансовой свободы (КФС / CFS)
     // Расчет: Чистые активы / Годовые расходы
-    // Пороги:
-    // >= 5.0: позитивный (зелёный, баллы 8..10)
-    // 2.0 .. < 5.0: нейтральный (жёлтый, балл 6)
-    // < 2.0: негативный (красный, баллы 0..4)
+    // Единые интервалы (нижняя граница включительно, верхняя нет):
+    // < 0: долги (балл 0, негативный)
+    // [0, 0.5): минимальная подушка (балл 2, негативный)
+    // [0.5, 2): начало формирования капитала (балл 4, негативный)
+    // [2, 5): долгосрочные инвестиции (балл 6, нейтральный)
+    // [5, 15): доходы от капитала (балл 8, позитивный)
+    // [15, 30): финансовая стабильность (балл 9, позитивный)
+    // 30+: финансовая независимость (балл 10, позитивный)
     // =========================================================================
 
-    const val CFS_POSITIVE_THRESHOLD = 5.0
+    const val CFS_THRESHOLD_BUFFER = 0.5
     const val CFS_NEUTRAL_THRESHOLD = 2.0
+    const val CFS_POSITIVE_THRESHOLD = 5.0
+    const val CFS_THRESHOLD_STABILITY = 15.0
+    const val CFS_THRESHOLD_INDEPENDENCE = 30.0
 
     fun calculateCfs(netWorth: Double, annualExpenses: Double): Double {
         return if (annualExpenses > 0.0) {
@@ -191,47 +193,34 @@ object FinancialMetricEvaluator {
         else -> AuditIndicatorStatus.NEGATIVE
     }
 
-    fun getCfsColor(cfs: Double): Color = getColorForStatus(getCfsStatus(cfs))
-
     fun getCfsScore(cfs: Double): Int = when {
-        cfs < 0 -> 0
-        cfs <= 0.5 -> 2
-        cfs <= 2.0 -> 4
-        cfs <= 5.0 -> 6
-        cfs <= 15.0 -> 8
-        cfs <= 30.0 -> 9
+        cfs < 0.0 -> 0
+        cfs < CFS_THRESHOLD_BUFFER -> 2
+        cfs < CFS_NEUTRAL_THRESHOLD -> 4
+        cfs < CFS_POSITIVE_THRESHOLD -> 6
+        cfs < CFS_THRESHOLD_STABILITY -> 8
+        cfs < CFS_THRESHOLD_INDEPENDENCE -> 9
         else -> 10
     }
 
     fun getCfsStageDescription(cfs: Double, lang: AppLanguage = AppLanguage.RU): String {
-        return if (lang == AppLanguage.EN) {
-            when {
-                cfs < 0 -> "CFS < 0 — You are in debt"
-                cfs <= 0.5 -> "CFS 0..0.5 — You have a minimal emergency buffer"
-                cfs <= 2.0 -> "CFS 0.5..2 — You have started building financial capital"
-                cfs <= 5.0 -> "CFS 2..5 — You can begin engaging in long-term investing"
-                cfs <= 15.0 -> "CFS 5..15 — Investment returns provide significant income. Inflation affects capital more"
-                cfs <= 30.0 -> "CFS 15..30 — Solid financial stability. How do you spend your irreplaceable time?"
-                else -> "CFS > 30 — You have achieved financial independence"
-            }
-        } else {
-            when {
-                cfs < 0 -> "КФС < 0 — Вы в долгах"
-                cfs <= 0.5 -> "КФС 0..0,5 — У вас есть минимальная «подушка безопасности»"
-                cfs <= 2.0 -> "КФС 0,5..2 — Вы начали формировать свой финансовый капитал"
-                cfs <= 5.0 -> "КФС 2..5 — Вы можете начать заниматься долгосрочными инвестициями"
-                cfs <= 15.0 -> "КФС 5..15 — Доходы от капитала могут приносить вам существенную прибавку. Инфляция все более значительно влияет на капитал"
-                cfs <= 30.0 -> "КФС 15..30 — Крепкая финансовая стабильность. На что вы тратите свой невосполнимый капитал времени?"
-                else -> "КФС > 30 — Вы достигли финансовой независимости"
-            }
+        val strings = com.example.util.localization.getAppStrings(lang)
+        return when {
+            cfs < 0.0 -> strings.cfsStageDebt
+            cfs < CFS_THRESHOLD_BUFFER -> strings.cfsStageBuffer
+            cfs < CFS_NEUTRAL_THRESHOLD -> strings.cfsStageCapital
+            cfs < CFS_POSITIVE_THRESHOLD -> strings.cfsStageInvesting
+            cfs < CFS_THRESHOLD_STABILITY -> strings.cfsStageReturns
+            cfs < CFS_THRESHOLD_INDEPENDENCE -> strings.cfsStageStability
+            else -> strings.cfsStageIndependence
         }
     }
 
     // =========================================================================
     // 9. Реальная доходность капитала (Real Return Percent)
-    // > 0%: позитивный (зелёный)
-    // == 0%: нейтральный (жёлтый)
-    // < 0%: негативный (красный)
+    // > 0%: позитивный
+    // == 0%: нейтральный
+    // < 0%: негативный
     // =========================================================================
 
     fun getRealReturnStatus(realReturnPercent: Double): AuditIndicatorStatus = when {
@@ -240,14 +229,11 @@ object FinancialMetricEvaluator {
         else -> AuditIndicatorStatus.NEGATIVE
     }
 
-    fun getRealReturnColor(realReturnPercent: Double): Color =
-        getColorForStatus(getRealReturnStatus(realReturnPercent))
-
     // =========================================================================
     // 10. Общий суммирующий балл (Total Score)
-    // >= 7.0: позитивный (зелёный)
-    // 3.5 .. < 7.0: нейтральный (жёлтый)
-    // < 3.5: негативный (красный)
+    // >= 7.0: позитивный
+    // 3.5 .. < 7.0: нейтральный
+    // < 3.5: негативный
     // =========================================================================
 
     const val TOTAL_SCORE_GREEN_MIN = 7.0
@@ -259,12 +245,12 @@ object FinancialMetricEvaluator {
         else -> AuditIndicatorStatus.NEGATIVE
     }
 
-    fun getTotalScoreColor(totalScore: Double): Color =
-        getColorForStatus(getTotalScoreStatus(totalScore))
+    const val COMPONENT_SCORE_POSITIVE_THRESHOLD = 8
+    const val COMPONENT_SCORE_NEUTRAL_THRESHOLD = 5
 
-    fun getComponentScoreColor(score: Int): Color = when {
-        score >= 8 -> SuccessGreen
-        score >= 5 -> WarningYellow
-        else -> AlertRed
+    fun getComponentScoreStatus(score: Int): AuditIndicatorStatus = when {
+        score >= COMPONENT_SCORE_POSITIVE_THRESHOLD -> AuditIndicatorStatus.POSITIVE
+        score >= COMPONENT_SCORE_NEUTRAL_THRESHOLD -> AuditIndicatorStatus.NEUTRAL
+        else -> AuditIndicatorStatus.NEGATIVE
     }
 }

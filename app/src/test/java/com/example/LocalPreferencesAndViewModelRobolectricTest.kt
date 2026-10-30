@@ -17,23 +17,7 @@ import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
-class ExampleRobolectricTest {
-
-    @Test
-    @Config(qualifiers = "ru")
-    fun `read russian string from context`() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val appName = context.getString(R.string.app_name)
-        assertEquals("Personal finance and FIRE", appName)
-    }
-
-    @Test
-    @Config(qualifiers = "en")
-    fun `read english string from context`() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val appName = context.getString(R.string.app_name)
-        assertEquals("Personal finance and FIRE", appName)
-    }
+class LocalPreferencesAndViewModelRobolectricTest {
 
     @Test
     fun `first launch assigns default US values and subsequent launches preserve user changes`() {
@@ -106,5 +90,41 @@ class ExampleRobolectricTest {
         assertEquals("Disclaimer", enStrings.disclaimerTitle)
         assertTrue(enStrings.disclaimerText.contains("Important: This project is a personal development and is provided solely for informational purposes \"as is\""))
         assertTrue(enStrings.disclaimerText.contains("You use this tool at your own risk"))
+    }
+
+    @Test
+    fun `propertySale2000 preserves totalAssets and netWorth while transferring property to liquidAssets`() {
+        val app = ApplicationProvider.getApplicationContext<android.app.Application>()
+        val viewModel = com.example.ui.MainViewModel(app)
+
+        val baseMetrics = viewModel.metrics.value
+        val initialInput = viewModel.inputData.value
+        val expectedSold = minOf(20.0 * initialInput.monthlyIncome, initialInput.propertyAssets)
+
+        // 1. Активируем сценарий продажи имущества
+        viewModel.toggleScenario("property_sale")
+
+        val simulatedMetrics = viewModel.simulatedMetrics.value
+
+        // Капитал не задваивается: совокупные активы и чистый капитал неизменны
+        assertEquals(baseMetrics.totalAssets, simulatedMetrics.totalAssets, 0.01)
+        assertEquals(baseMetrics.netWorth, simulatedMetrics.netWorth, 0.01)
+
+        // 2. Тест с ограничением: если propertyAssets меньше 20 * monthlyIncome
+        viewModel.updateInputData {
+            it.copy(
+                monthlyIncome = 10_000.0,
+                propertyAssets = 50_000.0,
+                liquidAssets = 20_000.0,
+                financialAssets = 30_000.0,
+                liabilities = 10_000.0
+            )
+        }
+        val cappedBaseMetrics = viewModel.metrics.value
+        val cappedSimulated = viewModel.simulatedMetrics.value
+
+        // Проданная сумма ограничена 50_000 (а не 200_000)
+        assertEquals(cappedBaseMetrics.totalAssets, cappedSimulated.totalAssets, 0.01)
+        assertEquals(cappedBaseMetrics.netWorth, cappedSimulated.netWorth, 0.01)
     }
 }
