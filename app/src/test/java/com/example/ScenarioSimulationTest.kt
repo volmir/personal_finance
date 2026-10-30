@@ -1,6 +1,7 @@
 package com.example
 
 import com.example.data.model.FinancialInputData
+import com.example.domain.DeferredAsset
 import com.example.domain.FinanceCalculator
 import com.example.domain.SimulatorScaleCalculator
 import com.example.domain.TemporaryExpense
@@ -126,6 +127,7 @@ class ScenarioSimulationTest {
         // 3. Ипотека: временный платеж 35% дохода на 20 лет, без отложенного актива.
         val mortgageMonthly = 0.35 * baseInput.monthlyIncome
         val mortgageAnnual = mortgageMonthly * 12.0
+        val mortgageAsset = 84.0 * baseInput.monthlyIncome
         val mortgageInput = baseInput.copy(monthlyExpenses = baseInput.monthlyExpenses + mortgageMonthly)
         val mortgageMetrics = FinanceCalculator.calculate(
             mortgageInput,
