@@ -2,9 +2,9 @@ Categories:
   - Money
 License: MIT
 AuthorName: Personal Finance & FIRE
-SourceCode: https://github.com/USERNAME/REPO
-IssueTracker: https://github.com/USERNAME/REPO/issues
-Changelog: https://github.com/USERNAME/REPO/releases
+SourceCode: https://github.com/volmir/personal_finance
+IssueTracker: https://github.com/volmir/personal_finance/issues
+Changelog: https://github.com/volmir/personal_finance/releases
 
 AutoUpdateMode: Version
 UpdateCheckMode: Tags
@@ -20,3 +20,12 @@ Builds:
       - yes
 
 AutoName: Personal finance and FIRE
+Summary: Offline personal finance audit and FIRE projection
+Description: |-
+  Track monthly income, expenses, assets and liabilities. Review cash flow,
+  savings rate, emergency-fund coverage, net worth, debt ratio, Fidelity age
+  benchmark, financial freedom ratio, real return, and an overall financial
+  health score. Model FIRE with a constant real return, a target based on
+  expenses through the selected life-expectancy horizon, a capital trajectory,
+  adjustment sliders and 14 what-if scenarios. Includes Russian and English.
+  No internet permission is requested; data and calculations stay on-device.

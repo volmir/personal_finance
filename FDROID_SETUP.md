@@ -2,6 +2,8 @@
 
 Данный документ содержит полное описание и пошаговую инструкцию по добавлению приложения **«Личные финансы & FIRE аудит»** (`com.aistudio.finhealthfire.kzqpv`) в официальный каталог свободных приложений **F-Droid**.
 
+Полное описание экранов, параметров и финансовых формул: [APP_DESCRIPTION.md](./APP_DESCRIPTION.md). Короткое и полное описания для каталога находятся в `metadata/com.aistudio.finhealthfire.kzqpv.yml` и `fastlane/metadata/android/`.
+
 ---
 
 ## 1. Чем официальный F-Droid отличается от IzzyOnDroid?
@@ -17,15 +19,16 @@
 
 ## 2. Чек-лист готовности приложения
 
-Приложение **полностью соответствует** всем критериям политики включения F-Droid (Inclusion Policy):
+Технические сведения для подготовки заявки (окончательное решение о соответствии критериям принимает F-Droid):
 
 - [x] **Лицензия с открытым исходным кодом:** проект распространяется под лицензией **MIT** (файл `LICENSE` в корне репозитория).
-- [x] **Чистота от трекеров и аналитики:** в приложении нет ни одного рекламного или отслеживающего SDK (0 трекеров по классификации Exodus Privacy).
-- [x] **Полная автономность (100% Offline):** в `AndroidManifest.xml` **нет разрешения `android.permission.INTERNET`**.
+- [x] **Нет сетевого разрешения:** в `AndroidManifest.xml` нет `android.permission.INTERNET`; приложение не подключается к банкам и не получает котировки.
 - [x] **Отсутствие Anti-Features:** нет платного контента, навязчивых сетевых сервисов или зависимостей от закрытых Google Play Services.
 - [x] **Наличие Gradle Wrapper:** в репозитории подготовлены скрипты `gradlew` и конфигурация `gradle-wrapper.properties` (Gradle 9.3.1).
 - [x] **Метаданные Fastlane:** подготовлены каталоги `fastlane/metadata/android/` с полными текстами на русском (`ru-RU`) и английском (`en-US`), а также иконка `icon.png` и история изменений (`changelogs/1.txt`).
 - [x] **Файл рецепта сборки для F-Droid:** сгенерирован `metadata/com.aistudio.finhealthfire.kzqpv.yml`.
+
+Функции приложения: ввод месячного бюджета, активов и обязательств; 9 финансовых показателей; оценка от 0 до 10 и текстовый аудит; FIRE-модель с графиком капитала и 14 сценариями. Модель использует постоянную реальную доходность, не использует правило 4% и не включает стоимость имущества в FIRE-капитал. Подробные оговорки приведены в `APP_DESCRIPTION.md`.
 
 ---
 
@@ -39,9 +42,9 @@ Categories:
   - Money
 License: MIT
 AuthorName: Personal Finance & FIRE
-SourceCode: https://github.com/ВАШ_ПОЛЬЗОВАТЕЛЬ/ВАШ_РЕПОЗИТОРИЙ
-IssueTracker: https://github.com/ВАШ_ПОЛЬЗОВАТЕЛЬ/ВАШ_РЕПОЗИТОРИЙ/issues
-Changelog: https://github.com/ВАШ_ПОЛЬЗОВАТЕЛЬ/ВАШ_РЕПОЗИТОРИЙ/releases
+SourceCode: https://github.com/volmir/personal_finance
+IssueTracker: https://github.com/volmir/personal_finance/issues
+Changelog: https://github.com/volmir/personal_finance/releases
 
 AutoUpdateMode: Version
 UpdateCheckMode: Tags
@@ -57,9 +60,18 @@ Builds:
       - yes
 
 AutoName: Personal finance and FIRE
+Summary: Offline personal finance audit and FIRE projection
+Description: |-
+  Track monthly income, expenses, assets and liabilities. Review cash flow,
+  savings rate, emergency-fund coverage, net worth, debt ratio, Fidelity age
+  benchmark, financial freedom ratio, real return, and an overall financial
+  health score. Model FIRE with a constant real return, a target based on
+  expenses through the selected life-expectancy horizon, a capital trajectory,
+  adjustment sliders and 14 what-if scenarios. Includes Russian and English.
+  No internet permission is requested; data and calculations stay on-device.
 ```
 
-> **Важно:** Замените `ВАШ_ПОЛЬЗОВАТЕЛЬ/ВАШ_РЕПОЗИТОРИЙ` на реальный путь к вашему репозиторию на GitHub или GitLab.
+Ссылки в уже созданном манифесте настроены на `volmir/personal_finance`; проверьте их, если перенесёте проект в другой репозиторий.
 
 ---
 
@@ -115,7 +127,7 @@ AutoName: Personal finance and FIRE
    - Проверит соответствие лицензии и отсутствие закрытых библиотек.
 2. **Ревью мейнтейнеров:**
    - Волонтеры F-Droid могут оставить комментарии или подтвердить сборку.
-   - Так как приложение на 100% офлайн и использует чистый Compose + Room с лицензией MIT, прохождение проверки обычно проходит без нареканий.
+   - Результат проверки зависит от актуальной версии исходного кода, зависимостей и правил каталога.
 3. **Слияние и публикация:**
    - После слияния MR сборочный сервер F-Droid скомпилирует релиз, подпишет его ключом F-Droid и добавит в официальный индекс каталога.
    - Приложение станет доступно для установки через клиент F-Droid, Aurora Droid, Neo Store и веб-сайт [f-droid.org](https://f-droid.org).

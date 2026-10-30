@@ -1,18 +1,18 @@
-"Personal Finance & FIRE Audit" is an offline, privacy-first wealth diagnostic tool and capital calculator designed to audit your financial health, calculate key wealth metrics, and model your path to early retirement using the FIRE (Financial Independence, Retire Early) methodology.
+Personal Finance & FIRE Audit helps you track a household budget and balance sheet, review financial indicators, and model a possible path to FIRE—financial independence and early retirement.
 
-KEY FEATURES:
-• Comprehensive Capital Audit: Real-time calculation of Net Worth, Savings Rate, Cash Flow, Emergency Buffer, and Debt Ratio.
-• Financial Freedom Ratio (CFS): Measure how many years of living expenses are supported by your investment capital.
-• Fidelity Age Milestones: Compare your portfolio against age-based accumulation benchmarks.
-• Real Return on Capital: Fisher equation accounting for nominal yield and inflation.
-• "What-If?" Scenario Simulator: 14 life and economic stress-tests (market crashes, job loss, inflation surge, mortgage, child care, inheritances) with interactive sliders.
-• Dynamic FIRE Projection: Wealth accumulation and decumulation trajectory up to life expectancy horizon under constant real return, without the 4% rule.
-• One-Click Shareable Audit Reports: Export structured financial audits.
+FOUR SCREENS
 
-PRIVACY & FREEDOM:
-• 100% Offline: No internet permission requested.
-• Zero Data Collection: All data remains securely stored on your local device.
-• Open Source: Licensed under MIT.
+• Input Data: monthly income and expenses, liquid and financial assets, property, liabilities, expected return, inflation, capital-gains tax assumption, date of birth and life-expectancy age. Expandable hints explain input categories.
+• Metrics: cash flow, savings rate, emergency reserve and months of coverage, debt ratio, net worth, Fidelity age-based savings benchmark, financial freedom ratio, and real return.
+• Score & Audit: an overall score from 0 to 10, individual indicator ratings, and a written audit opinion. Share the summary or opinion through Android's system share menu.
+• FIRE: target capital, projected time and age to retirement, and a chart comparing capital accumulation and withdrawals through the selected life-expectancy horizon. Sliders adjust savings/income, expenses and real return. Fourteen scenarios model hypothetical positive events and stress tests.
 
-DISCLAIMER:
-Important: This project is a personal development and is provided solely for informational and educational purposes "as is". The author is not responsible for any malfunctions, data loss, or other damages arising from the use of this software. All calculations, formulas, metrics, and simulations are for informational purposes only and do not constitute personal financial, investment, or tax advice. You use this tool at your own risk.
+ABOUT THE FIRE MODEL
+
+The projection uses a constant real return and estimates the present value of expenses through the selected life-expectancy age. It does not use the 4% rule or Trinity Study. Starting capital includes liquid and financial assets; property is excluded, and liabilities are deducted only to the extent they exceed property value. Scenarios can change temporary and future expenses and add one-off proceeds; the model can also estimate tax on gains from financial assets.
+
+Scenarios include: income +20%; financial assets +25%; expenses −15% or −30%; a one-off inheritance equal to 12 monthly incomes; property-sale proceeds capped at 20 monthly incomes; expenses −25% after 18 years; a one-off reserve draw equal to 12 monthly incomes for job loss; financial assets −30%; mortgage payments of 35% of income for 20 years; car payments of 20% of income for 5 years; a one-off expense of 5 monthly incomes; expenses +25% (labeled as inflation in the app); and child/dependent costs of 25% of expenses for 18 years.
+
+The interface is available in Russian and English. The app does not request internet access; calculations and user data remain on-device. Choose from 13 currency symbols; values are not automatically converted and no exchange rates are provided.
+
+All calculations are informational and are not financial, investment or tax advice. Results depend on entered data and the model's simplified assumptions.

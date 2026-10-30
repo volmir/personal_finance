@@ -6,20 +6,22 @@
 [![Kotlin](https://img.shields.io/badge/Kotlin-2.2%2B-purple.svg)](https://kotlinlang.org/)
 [![Jetpack Compose](https://img.shields.io/badge/UI-Jetpack_Compose_M3-4285F4.svg)](https://developer.android.com/jetpack/compose)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
-[![Privacy](https://img.shields.io/badge/Privacy-100%25_Offline_|_Zero_Tracking-brightgreen.svg)](https://exodus-privacy.eu.org/)
+[![Offline](https://img.shields.io/badge/Network-No_Internet_Permission-brightgreen.svg)](https://developer.android.com/guide/topics/manifest/uses-permission-element)
 
 ---
 
 ## 📖 App Description / Описание приложения
 
+Полное описание экранов, полей, формул FIRE и ограничений модели находится в [APP_DESCRIPTION.md](./APP_DESCRIPTION.md).
+
 **Personal Finance & FIRE Audit** is an open-source, offline-first personal wealth management and early retirement modeling application built natively for Android using modern Jetpack Compose and Material 3.
 
-The app serves as an objective, institutional-grade diagnostic tool for individuals who want to audit their current financial health, calculate key wealth metrics, stress-test their household budget against unexpected economic shocks, and model their path to financial independence and early retirement using the **FIRE (Financial Independence, Retire Early)** methodology.
+The app helps users record a household budget and balance sheet, review calculated financial indicators, generate an explanatory audit, and explore a FIRE retirement projection with adjustable assumptions and hypothetical scenarios.
 
 ### 🌟 Core Philosophy
-- **100% Offline & Private:** No network permissions requested (`android.permission.INTERNET` is omitted). No servers, no telemetry, no tracking, and no bank credential requests. All calculations are executed strictly on your local device.
-- **Data Persistence:** Default US benchmark values are assigned **only on the very first launch**. After initialization, all user inputs, settings, scenario toggles, and simulation slider positions are preserved across app restarts.
-- **Transparent Economics:** Real math based on empirical finance (Fisher equation, Fidelity retirement milestones, capital depletion model until life expectancy under constant real return, without the 4% rule or Trinity study).
+- **Works offline:** The app manifest does not request `android.permission.INTERNET`; calculations and saved financial data stay on the device. There is no account sign-in or bank connection.
+- **Local persistence:** User inputs and simulator state are stored locally. The initial form is prefilled with sample US-average values; these are examples, not personalized or region-specific defaults.
+- **Transparent assumptions:** Metrics use explicit formulas, including the Fisher equation for real return, age-based Fidelity milestones, and a FIRE projection through the selected life-expectancy horizon. The projection does not use the 4% rule or Trinity Study.
 
 ---
 
@@ -28,45 +30,45 @@ The app serves as an objective, institutional-grade diagnostic tool for individu
 The application is structured into 4 cohesive functional tabs:
 
 ### 1. Данные для расчетов (Input Data & Budgeting)
-- **Income & Expenses:** Gross monthly income and living expense tracking with expandable category breakdown hints.
-- **Three-Tier Asset Allocation:**
+- **Income & Expenses:** Monthly income and expenses with expandable category guidance.
+- **Three Asset Types:**
   - *Liquid Assets (Подушка):* Cash, high-yield checking, bank deposits.
   - *Financial Assets (Инвестиции):* Stock portfolios, index funds/ETFs, bonds, retirement accounts.
   - *Property Assets (Недвижимость и имущество):* Primary residence, vehicles, real estate equity.
-- **Comprehensive Liabilities:** Mortgages, car loans, consumer loans, and credit balances.
-- **Emergency Buffer Config:** User-toggleable inclusion of financial assets into emergency reserve calculations.
-- **Demographics & Investment Parameters:** Birth date, horizon planning, life expectancy, nominal expected yield, and inflation rate.
+- **Liabilities:** Enter a total for mortgages, car loans, consumer loans, credit balances, or other obligations.
+- **Emergency Fund Setting:** Choose whether financial assets are included with liquid assets when calculating the emergency reserve.
+- **Demographics & Investment Parameters:** Birth date, life expectancy, expected nominal return, inflation, and capital-gains tax assumption.
+- **Currency Display:** Choose among USD, EUR, RUB, UAH, KZT, BYN, AMD, GBP, JPY, CHF, CAD, AUD, and INR symbols. This changes displayed units; it does not convert amounts or fetch exchange rates.
 - **Dynamic Cash Flow & Savings Rate Preview:** Real-time feedback directly on the input cards.
 
 ### 2. Расчет показателей (9 Core Financial Metrics)
 1. **Денежный поток (Cash Flow):** `Monthly Income - Monthly Expenses` (net monthly surplus/deficit).
-2. **Норма сбережений (Savings Rate):** `(Cash Flow / Income) * 100%`.
+2. **Норма сбережений (Savings Rate):** `(Cash Flow / Income) * 100%` (budget surplus as a share of income).
 3. **Подушка безопасности (Emergency Fund):** Total crisis buffer volume with dynamic color-coding.
 4. **Запас месячных расходов (Safety Months):** Runway duration in months of living expenses.
 5. **Коэффициент задолженности (Debt Ratio):** `Liabilities / Total Assets`.
 6. **Чистый капитал (Net Worth):** `Total Assets - Total Liabilities`.
-7. **Бенчмарк Fidelity:** Age-based milestone target (`Annual Income * Age Multiplier`, from 1x at 30 to 10x at 67).
-8. **Коэффициент финансовой свободы (КФС / CFS):** `Net Assets / Annual Expenses` with life-stage interpretations.
+7. **Бенчмарк Fidelity:** Age-based milestone target (`Annual Income * Age Multiplier`), interpolated between age checkpoints.
+8. **Коэффициент финансовой свободы (КФС / CFS):** `Net Worth / Annual Expenses`, shown as years of current expenses represented by net worth.
 9. **Реальная доходность капитала (Real Return):** Fisher equation `r = (1 + R) / (1 + i) - 1`, accounting for inflation drag.
 
 ### 3. Набранные баллы и аудит (Scores & Auditor Opinion)
-- **Financial Health Score:** Итоговый балл взвешен: CFS 45%, норма сбережений 25%, подушка и долг по 15% (от **0 до 10 баллов**). / Overall score uses weighted ratings: CFS 45%, savings rate 25%, emergency fund and debt ratio 15% each.
+- **Financial Health Score:** Итоговый балл от **0 до 10**: КФС 45%, норма сбережений 25%, резерв и долговая нагрузка по 15%. / Overall score from **0 to 10**: CFS 45%, savings rate 25%, emergency-fund runway and debt ratio 15% each.
 - **Component Progress Indicators:** Individual ratings for each key pillar.
-- **Automated Auditor Opinion:** Full qualitative analysis classifying indicators into **Positive (🟢)**, **Neutral (🟡)**, and **Risk/Negative (🔴)** zones.
-- **One-Click Export:** Generate and share complete textual audit reports to clipboard, messaging apps, or email.
+- **Automated Auditor Opinion:** Qualitative analysis classifying indicators into **Positive (🟢)**, **Neutral (🟡)**, and **Risk/Negative (🔴)** zones.
+- **Shareable Reports:** Generate and share the financial summary and auditor opinion using Android's share menu.
 
 ### 4. Финансовая свобода и симулятор «Что если?» (FIRE & Pension Simulator)
-- **Метод FIRE:** Моделирование «капитал до возраста дожития при постоянной реальной доходности, без правила 4%» (capital accumulation and decumulation modeled until life expectancy under constant real return, without the 4% rule / Trinity study).
-- **Капитал FIRE:** Ликвидные + финансовые активы; имущество не учитывается; долги вычитаются только в части, не покрытой имуществом (покрытые имуществом долги обслуживаются через расходы).
-- **Изолированная симуляция:** Симуляция не влияет на реальные показатели и вкладки 1–3 (sliders and 14 stress-test scenarios operate strictly in isolation without modifying baseline user inputs or metrics).
-- **Interactive Tuning Sliders:**
-  - Additional monthly savings slider.
-  - Real portfolio yield adjustment slider.
-  - Living expense reduction slider.
-- **14 Stress-Test & Life Event Scenarios:**
-  - *Positive:* Salary raise (+20%), market boom (+25%), expense optimization (-15%), geo-arbitrage relocation (-30%), inheritance (+1200% monthly income), property liquidation (+2000%), children reaching adulthood (-25% expenses).
-  - *Negative:* Job loss (income drops to 0), market crash (-30% financial assets), 20-year mortgage (35% income), car loan (+20% expenses for 5 yrs), major one-off expense (500% monthly income), inflation surge (+5%), child birth (+25% expenses for 18 yrs).
-- **Interactive Trajectory Chart:** Visual capital accumulation and decumulation curve projected year-by-year until life expectancy.
+- **Метод FIRE:** Прогноз накопления и расходования капитала до указанного возраста дожития при постоянной реальной доходности. Целевой капитал рассчитывается по приведенной стоимости будущих расходов; правило 4% и Trinity Study не используются.
+- **Стартовый капитал FIRE:** `max(0, ликвидные активы + финансовые активы + min(0, имущество - долги))`. Имущество не включается в инвестируемый капитал; долг вычитается только в части сверх стоимости имущества. Переключатель «Учитывать имущество и долги в расчёте FIRE» в текущем интерфейсе отсутствует и на расчёт не влияет.
+- **Целевой капитал:** Приведённая стоимость будущих расходов до заданного возраста дожития с поправкой на реальную доходность. Сценарии могут менять временные и будущие расходы и добавлять разовые поступления; при наличии финансовых активов может применяться оценка налога на прирост капитала.
+- **Срок до FIRE:** Модель ищет момент, когда прогноз накопленного капитала достигает требуемой суммы. Результат зависит от текущего капитала, денежного потока, реальной доходности, расходов и горизонта планирования.
+- **Симуляция:** Ползунки и переключатели меняют отдельный расчёт «Что если?»; исходные введённые данные не переписываются. Состояние симуляции сохраняется локально и сбрасывается кнопкой сброса.
+- **Three Sliders:** Adjust the monthly savings/income level, monthly expenses, and real investment return for the hypothetical projection.
+- **14 Built-in Scenarios:**
+  - *Positive:* income +20%; financial assets +25%; expenses −15%; cost of living −30%; a one-off inheritance of 12 monthly incomes; property sale proceeds capped at 20 monthly incomes and property value; expenses −25% after 18 years.
+  - *Stress tests:* one-off reserve draw equal to 12 monthly incomes for job loss; financial assets −30%; mortgage payments of 35% of monthly income for 20 years; car payments of 20% of monthly income for 5 years; one-off expense of 5 monthly incomes; expenses +25% (scenario label says inflation); child/dependent costs +25% of expenses for 18 years.
+- **Interactive Trajectory Chart:** Compare projected capital with required capital through the selected life-expectancy horizon.
 
 ---
 
@@ -74,16 +76,9 @@ The application is structured into 4 cohesive functional tabs:
 
 - **Application Languages:**
   - 🇷🇺 **Russian (Русский)** — default for `ru`, `be`, `uk` locales.
-  - 🇬🇧 **English** — default for all other international system locales.
-  - *Detection:* Fully automatic background system locale detection on first launch, persisted locally.
-- **Supported Currency Symbols:**
-  - **$** (US Dollar) — default benchmark currency
-  - **€** (Euro)
-  - **₽** (Russian Ruble)
-  - **₴** (Ukrainian Hryvnia)
-  - **₸** (Kazakhstani Tenge)
-  - **Br** (Belarusian Ruble)
-  - **֏** (Armenian Dram)
+  - 🇬🇧 **English** — default for all other system locales.
+  - *Detection:* System locale is checked on first launch; the selected language is stored locally.
+- **Currency symbols:** $, €, ₽, ₴, ₸, Br, ֏, £, ¥, CHF, C$, A$, ₹. Values are not converted between currencies.
 
 ---
 
@@ -95,7 +90,7 @@ The application is structured into 4 cohesive functional tabs:
 | **Target SDK** | Android 16 (API level 36) | API level 36 |
 | **RAM** | 2 GB | 4 GB+ |
 | **Storage** | ~25 MB free space | 50 MB |
-| **Internet** | **Not required** (100% offline) | — |
+| **Internet permission** | Not requested by the app | — |
 | **Architecture** | `arm64-v8a`, `armeabi-v7a`, `x86_64` | `arm64-v8a` |
 | **Build Tools** | JDK 11+, Gradle 8.x+, Kotlin 2.2+ | JDK 17, Gradle 9.x |
 
@@ -124,7 +119,7 @@ app/src/main/java/com/example/
 ### Architecture Highlights
 - **Clean Architecture / MVVM:** Presentation layer strictly separated from financial domain calculations.
 - **Reactive State Management:** Kotlin Coroutines and `MutableStateFlow` / `StateFlow` with `collectAsStateWithLifecycle`.
-- **Zero Third-Party Tracking SDKs:** Verified clean with Exodus Privacy (0 trackers, 0 permissions).
+- **No app network permission:** The manifest does not request internet access. Android's share sheet can hand a report to an app selected by the user.
 - **Adaptive UI:** Responsive layout scaling from compact smartphones to foldables and tablets via Jetpack Compose container-based constraints.
 
 ---

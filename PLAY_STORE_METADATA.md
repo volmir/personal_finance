@@ -1,148 +1,64 @@
-# Google Play Store Listing — Метаданные для публикации
+# Store listing — тексты и функции приложения
 
----
+Тексты ниже описывают текущую версию приложения и синхронизированы с Fastlane metadata. Поля и расчёты указаны по реализации Android-приложения.
 
-## 🇷🇺 Русская версия (Russian)
+## Русский
 
-### 1. Название приложения (App Title)
-> **Ограничение Google Play:** максимум 30 символов. Без эмодзи, без спам-слов («бесплатно», «топ», «лучший»).  
-**Текущее значение (27 символов):**  
-`Личные финансы & FIRE аудит`
+**Название:** Личные финансы & FIRE аудит
 
-### 2. Краткое описание (Short Description)
-> **Ограничение Google Play:** максимум 80 символов.  
-**Текущее значение (79 символов):**  
-`Аудит капитала, норма сбережений, коэффициент свободы и расчет выхода на пенсию.`
+**Краткое описание:** Личные финансы: бюджет, капитал, финансовый аудит и моделирование FIRE.
 
-### 3. Полное описание (Full Description)
-> **Ограничение Google Play:** максимум 4000 символов.
+**Полное описание:**
 
-```markdown
-«Личные финансы & FIRE аудит» — профессиональный финансовый помощник и комплексный калькулятор капитала, созданный для точной диагностики вашей финансовой устойчивости, аудита благосостояния и планирования выхода на пенсию по методологии FIRE (Financial Independence, Retire Early).
+«Личные финансы & FIRE аудит» помогает записать доходы, расходы, активы и долги, увидеть финансовые показатели и смоделировать возможный срок достижения FIRE (финансовой независимости и раннего выхода на пенсию).
 
-ПРИЛОЖЕНИЕ ПОМОЖЕТ ВАМ:
-• Провести честный и глубокий аудит личных финансов по профессиональным бенчмаркам.
-• Узнать ваш реальный чистый капитал (Net Worth) и очищенную от инфляции доходность.
-• Оценить коэффициент финансовой свободы (КФС) и запас подушки безопасности.
-• Рассчитать точный возраст и необходимый капитал для выхода на заслуженный отдых.
-• Протестировать устойчивость вашего бюджета в симуляторе стресс-тестов («Что если?»).
+Приложение содержит четыре экрана:
 
-КЛЮЧЕВЫЕ ВОЗМОЖНОСТИ И ЭКРАНЫ:
+• **Данные:** месячные доходы и расходы; ликвидные, финансовые и имущественные активы; обязательства; ожидаемая доходность, инфляция и налог на прирост капитала; дата рождения и возраст дожития. Категории сопровождаются подсказками. Можно выбрать символ одной из 13 валют; конвертации и курсов валют нет.
+• **Показатели:** денежный поток, норма сбережений, резерв и его запас в месяцах, коэффициент долга, чистый капитал, ориентир накоплений Fidelity, коэффициент финансовой свободы и реальная доходность.
+• **Оценка и аудит:** общий балл финансового здоровья от 0 до 10, оценки отдельных показателей, текстовый разбор сильных сторон и рисков. Итог и заключение можно передать через системное меню Android.
+• **FIRE:** срок до расчётной финансовой независимости, целевой капитал, возраст выхода и график накопления и расходования капитала до заданного возраста дожития. Ползунки позволяют отдельно менять сбережения/доход, расходы и реальную доходность. Доступны 14 положительных и стрессовых сценариев.
 
-1. ДАННЫЕ И БЮДЖЕТ:
-• Учет доходов и расходов с детализированными подсказками по всем категориям.
-• Разделение активов на ликвидные, финансовые (инвестиции) и имущественные.
-• Полный учет обязательств (ипотека, кредиты, займы, кредитные карты).
-• Учет номинальной доходности и инфляции с расчетом реальной ставки по формуле Фишера.
-• Настройка возраста, горизонта планирования и ожидаемой продолжительности жизни.
-• Поддержка всех основных валют: ₽ (рубль), $ (доллар), € (евро), ₴ (гривна), ₸ (тенге), Br (белорусский рубль), ֏ (армянский драм).
+FIRE-модель использует постоянную реальную доходность и приведённую стоимость расходов на оставшийся срок планирования. Правило 4% и Trinity Study не применяются. Стартовый капитал включает ликвидные и финансовые активы; имущество не включается, а долг уменьшает капитал только в части, превышающей стоимость имущества. Сценарии могут менять временные и будущие расходы и добавлять разовые поступления; в расчёте также может учитываться оценка налога на прирост финансовых активов.
 
-2. РАСЧЕТ И АНАЛИЗ 9 ФИНАНСОВЫХ МЕТРИК:
-• Денежный поток (Cash Flow) — чистый ежемесячный профицит или дефицит.
-• Норма сбережений (Savings Rate) — доля дохода, направляемая в инвестиции.
-• Подушка безопасности (Emergency Fund) — объем неприкосновенного запаса.
-• Запас месячных расходов — на сколько месяцев жизни хватит резерва.
-• Коэффициент задолженности (Debt Ratio) — уровень долговой нагрузки.
-• Чистый капитал (Net Worth) — разница между всеми активами и долгами.
-• Бенчмарк возраста Fidelity — сравнение накоплений с мировым стандартом к вашему возрасту.
-• Коэффициент финансовой свободы (КФС) — этап автономии от капитала.
-• Реальная доходность капитала — опережает ли доходность инфляцию.
+Сценарии симулятора: рост дохода на 20%; рост финансовых активов на 25%; снижение расходов на 15% или 30%; наследство в размере 12 месячных доходов; продажа имущества с поступлением до 20 месячных доходов; снижение расходов на 25% через 18 лет; разовый резерв на потерю работы в размере 12 месячных доходов; падение финансовых активов на 30%; ипотечные платежи 35% дохода в течение 20 лет; автоплатежи 20% дохода в течение 5 лет; разовая трата в размере 5 месячных доходов; увеличение расходов на 25% (сценарий назван инфляцией); дополнительные расходы на ребёнка или иждивенца в размере 25% на 18 лет.
 
-3. АУДИТОРСКОЕ ЗАКЛЮЧЕНИЕ И СИСТЕМА ОЦЕНКИ:
-• Комплексный скоринг финансового здоровья (шкала от 0 до 10 баллов).
-• Подробное аудиторское заключение с разбивкой факторов на позитивные, нейтральные и критические зоны риска.
-• Экспорт полного отчета и аудиторского заключения в текст/мессенджеры/заметки одной кнопкой.
+Интерфейс доступен на русском и английском языках. Приложение работает без разрешения на интернет: данные и расчёты остаются на устройстве. Выбор валюты меняет только отображаемый символ, суммы автоматически не конвертируются.
 
-4. СИМУЛЯТОР «ЧТО ЕСЛИ?» И FIRE КАЛЬКУЛЯТОР:
-• Интерактивные ползунки оптимизации сбережений, сокращения расходов и роста доходности.
-• Панель сценариев стресс-тестов (падение рынков, потеря работы, инфляционный шок, крупные покупки, рождение детей, продажа активов).
-• Динамический график накопления и расходования капитала до горизонта дожития.
-• Точный расчет возраста достижения пенсионной независимости.
+Все расчёты и сценарии носят информационный характер и не являются финансовой, инвестиционной или налоговой рекомендацией. Результаты зависят от введённых данных и упрощённых предположений модели.
 
-КОНФИДЕНЦИАЛЬНОСТЬ И БЕЗОПАСНОСТЬ:
-Приложение не требует регистрации, не подключается к банковским API и работает полностью локально на вашем устройстве. Ваши персональные финансовые данные принадлежат исключительно вам.
+**Ключевые слова:** личные финансы, бюджет, аудит финансов, финансовый калькулятор, FIRE, финансовая независимость, пенсия, чистый капитал, активы, долги, денежный поток, норма сбережений, подушка безопасности, финансовая свобода, доходность, инфляция.
 
-ОТКАЗ ОТ ОТВЕСТВЕНОСТИ:
-Важно: Проект является персональной разработкой и предоставляется исключительно в ознакомительных целях «как есть». Автор не несет ответственности за возможные сбои, потерю данных или иной ущерб, возникший в ходе использования данного ПО. Все расчеты, формулы, метрики и симуляции носят исключительно информационно-ознакомительный характер и не являются индивидуальной финансовой, инвестиционной или налоговой рекомендацией. Вы используете этот инструмент на свой собственный страх и риск.
-```
+## English
 
-### 4. Ключевые слова для поисковой оптимизации (ASO Keywords)
-`личные финансы, финансовый калькулятор, финансовая независимость, fire калькулятор, расчет пенсии, чистый капитал, учет активов, финансовая свобода, норма сбережений, финансовый аудит, подушка безопасности, планирование бюджета, инвестиции, сложный процент, пассивный доход, калькулятор капитала, аудит финансов`
+**Title:** Personal finance and FIRE
 
----
+**Short description:** Personal finance, capital audit, financial metrics and FIRE projections.
 
-## 🇬🇧 Английская версия (English)
+**Full description:**
 
-### 1. App Title
-> **Google Play Limit:** max 30 characters.  
-**Value (25 characters):**  
-`Personal finance and FIRE`
+Personal Finance & FIRE Audit helps you record income, expenses, assets and liabilities, review financial indicators, and model a possible timeline to FIRE (financial independence and early retirement).
 
-### 2. Short Description
-> **Google Play Limit:** max 80 characters.  
-**Value (77 characters):**  
-`Capital audit, savings rate, financial freedom ratio and FIRE retirement plan.`
+The app has four screens:
 
-### 3. Full Description
-> **Google Play Limit:** max 4000 characters.
+• **Input Data:** monthly income and expenses; liquid, financial and property assets; liabilities; expected return, inflation and capital-gains tax assumption; date of birth and life-expectancy age. Expandable hints explain input categories. Choose from 13 currency symbols; amounts are not converted and exchange rates are not provided.
+• **Metrics:** cash flow, savings rate, emergency reserve and months of coverage, debt ratio, net worth, Fidelity age-based savings benchmark, financial freedom ratio, and real return.
+• **Score & Audit:** an overall financial-health score from 0 to 10, component ratings, and a written review of positive indicators and risks. Share the summary or audit opinion through Android's system share menu.
+• **FIRE:** projected time to financial independence, target capital, retirement age, and a chart comparing projected and required capital through the selected life-expectancy horizon. Sliders adjust savings/income, expenses and real return in a separate what-if projection. Fourteen positive and stress-test scenarios are available.
 
-```markdown
-"Personal Finance & FIRE Audit" is a comprehensive wealth diagnostic tool and capital calculator designed to audit your financial health, calculate key wealth metrics, and model your path to early retirement using the proven FIRE (Financial Independence, Retire Early) methodology.
+The FIRE model applies a constant real return and estimates the present value of expenses over the remaining planning horizon. It does not use the 4% rule or Trinity Study. Starting FIRE capital includes liquid and financial assets; property is excluded, and liabilities reduce the base only to the extent they exceed property value. Scenarios can change temporary and future expenses and add one-off proceeds; the model can also include an estimated tax on gains from financial assets.
 
-HOW THIS APP HELPS YOU:
-• Perform an objective, institutional-grade audit of your personal finances.
-• Discover your true Net Worth and inflation-adjusted real return on capital.
-• Benchmark your savings against the global Fidelity retirement milestones.
-• Calculate your Capital Formation Strength (CFS / Financial Freedom Ratio).
-• Simulate economic stress-tests and life scenarios to protect your retirement plan.
+Scenarios include: income +20%; financial assets +25%; expenses −15% or −30%; a one-off inheritance of 12 monthly incomes; property-sale proceeds capped at 20 monthly incomes; expenses −25% after 18 years; a one-off reserve draw equal to 12 monthly incomes for job loss; financial assets −30%; mortgage payments of 35% of income for 20 years; car payments of 20% of income for 5 years; a one-off expense of 5 monthly incomes; expenses +25% (labeled as inflation in the app); and child/dependent costs of 25% of expenses for 18 years.
 
-KEY FEATURES & TABS:
+The interface is available in Russian and English. The app works without the internet permission; data and calculations remain on-device. Currency selection changes the displayed symbol only and does not convert amounts.
 
-1. BUDGET & CAPITAL INPUTS:
-• Income and expenses tracking with categorized breakdown guidance hints.
-• Structured asset allocation: liquid cash, financial portfolio, and physical properties.
-• Complete liability inventory: mortgages, auto loans, credit cards, and private obligations.
-• Return and inflation inputs calculating real purchasing power yield via the Fisher equation.
-• Flexible demographic planning: birth date, age horizon, and life expectancy.
-• Multi-currency support: USD ($), EUR (€), RUB (₽), UAH (₴), KZT (₸), BYN (Br), AMD (֏).
+All calculations and scenarios are informational and are not financial, investment or tax advice. Results depend on the entered data and the model's simplified assumptions.
 
-2. 9 CORE FINANCIAL METRICS EVALUATED:
-• Monthly Cash Flow: budget surplus vs deficit.
-• Savings Rate: percentage of gross income funneled into wealth compounding.
-• Emergency Fund Volume: liquid crisis reserve.
-• Safety Months: runway buffer measured in months of living expenses.
-• Debt Ratio: leverage burden relative to total asset value.
-• Net Worth: total assets minus all outstanding obligations.
-• Fidelity Age Benchmark: progress against age-tiered capital accumulation goals.
-• Financial Freedom Ratio (CFS): stage of autonomy provided by net assets.
-• Real Capital Return: net yield outperforming annual inflation.
+**Keywords:** personal finance, budgeting, financial audit, FIRE calculator, financial independence, retirement planning, net worth, assets, liabilities, cash flow, savings rate, emergency fund, financial freedom, investment return, inflation.
 
-3. FINANCIAL SCORE & AUDITOR OPINION:
-• Single unified overall financial score (0 to 10 points scale).
-• Automated Auditor Opinion classifying findings into Positive, Neutral, and Critical Risk alerts.
-• One-click export of comprehensive audit reports to clipboard, messaging apps, and email.
+## Store settings
 
-4. "WHAT-IF?" SIMULATOR & RETIREMENT TRAJECTORY:
-• Interactive sliders for dynamic adjustments in savings volume, living expenses, and portfolio yields.
-• Scenario stress-testing panel (market crashes, job loss, inflation surges, property sales, delayed inheritances).
-• Visual long-term wealth compounding and decumulation chart up to life expectancy.
-• Exact calculated age of reaching financial independence.
-
-PRIVACY FOCUSED:
-No bank logins required. No cloud account tracking. All calculations run strictly on-device ensuring total financial privacy.
-
-DISCLAIMER:
-Use of this program is intended solely for educational purposes and does not constitute personal financial advice. The author is not responsible for any financial results, losses, or consequences resulting from the use of this software and the information provided. All actions are taken at your own risk.
-```
-
-### 4. ASO Keywords / Search Tags
-`personal finance, fire calculator, financial independence, retirement planner, net worth tracker, money manager, financial audit, savings rate, cash flow, emergency fund, fidelity benchmark, capital calculator, asset allocation, wealth management, early retirement`
-
----
-
-## ⚙️ Google Play Console Settings
-* **Category:** Finance (Финансы)
-* **Tags:** Personal Finance, Financial Planning, Calculator
-* **Content Rating:** Everyone (3+)
-* **Ads:** Contains no ads
-* **Target Audience:** 18+
+- **Category:** Finance
+- **Tags:** Personal Finance, Financial Planning, Calculator
+- **Contains ads:** No
+- **Age audience:** 18+
