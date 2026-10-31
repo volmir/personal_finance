@@ -21,7 +21,7 @@ class AuditorAnalysisTest {
                 monthlyExpenses = 100_000.0 * (1.0 - rate / 100.0)
             )
             val metrics = FinanceCalculator.calculate(input)
-            val opinion = AuditorAnalysisGenerator.generate(input, metrics)
+            val opinion = AuditorAnalysisGenerator.generate(input, metrics, AppLanguage.RU)
             return (opinion.positive + opinion.neutral + opinion.negative)
                 .first { it.id == "savings_rate" }.status
         }
@@ -38,7 +38,7 @@ class AuditorAnalysisTest {
         val input = FinancialInputData.russiaAverageData()
         val metrics = FinanceCalculator.calculate(input)
 
-        val opinion = AuditorAnalysisGenerator.generate(input, metrics)
+        val opinion = AuditorAnalysisGenerator.generate(input, metrics, AppLanguage.RU)
 
         // Должны быть проанализированы все 9 показателей из экрана "Показатели"
         assertEquals(9, opinion.totalCount)
@@ -67,7 +67,7 @@ class AuditorAnalysisTest {
             liabilities = 10_000_000.0 // огромный долг
         )
         val stressedMetrics = FinanceCalculator.calculate(stressedInput)
-        val stressedOpinion = AuditorAnalysisGenerator.generate(stressedInput, stressedMetrics)
+        val stressedOpinion = AuditorAnalysisGenerator.generate(stressedInput, stressedMetrics, AppLanguage.RU)
 
         assertEquals(9, stressedOpinion.totalCount)
         assertTrue(stressedOpinion.negative.any { it.id == "cash_flow" })
@@ -80,7 +80,7 @@ class AuditorAnalysisTest {
         val input = FinancialInputData.russiaAverageData()
         val metrics = FinanceCalculator.calculate(input)
 
-        val export = AuditorAnalysisGenerator.generateExportSummary(input, metrics)
+        val export = AuditorAnalysisGenerator.generateExportSummary(input, metrics, AppLanguage.RU)
 
         // 4 обязательных блока
         assertTrue(export.contains("1. Исходные данные:"))
@@ -106,10 +106,10 @@ class AuditorAnalysisTest {
         val metrics = FinanceCalculator.calculate(input)
 
         assertFalse(metrics.isFidelityAvailable)
-        val opinion = AuditorAnalysisGenerator.generate(input, metrics)
+        val opinion = AuditorAnalysisGenerator.generate(input, metrics, AppLanguage.RU)
         assertFalse((opinion.positive + opinion.neutral + opinion.negative).any { it.id == "fidelity" })
 
-        val export = AuditorAnalysisGenerator.generateExportSummary(input, metrics)
+        val export = AuditorAnalysisGenerator.generateExportSummary(input, metrics, AppLanguage.RU)
         assertFalse(export.contains("100%"))
         assertTrue(export.contains(com.example.util.localization.getAppStrings(com.example.util.localization.AppLanguage.RU).metricUnavailableValue))
     }
@@ -126,7 +126,7 @@ class AuditorAnalysisTest {
             liabilities = 400_000.0
         )
         val metrics = FinanceCalculator.calculate(input, today = java.time.LocalDate.of(2026, 10, 31))
-        val opinion = AuditorAnalysisGenerator.generate(input, metrics)
+        val opinion = AuditorAnalysisGenerator.generate(input, metrics, AppLanguage.RU)
         val fidelity = (opinion.positive + opinion.neutral + opinion.negative).first { it.id == "fidelity" }
 
         assertTrue(metrics.fidelityCapital < 0.0)
@@ -138,7 +138,7 @@ class AuditorAnalysisTest {
     fun testAnalyticsShareIncludesModelAssumptionsAfterLegalDisclaimer() {
         val input = FinancialInputData.russiaAverageData()
         val metrics = FinanceCalculator.calculate(input)
-        val opinion = AuditorAnalysisGenerator.generate(input, metrics)
+        val opinion = AuditorAnalysisGenerator.generate(input, metrics, AppLanguage.RU)
         val export = opinion.toFormattedShareText(input, metrics)
 
         assertTrue(export.contains("Допущения модели"))
@@ -150,7 +150,7 @@ class AuditorAnalysisTest {
     fun testExportSummaryUsesUnreachableFireText() {
         val input = FinancialInputData.russiaAverageData()
         val metrics = FinanceCalculator.calculate(input).copy(fireStatus = FireStatus.UNREACHABLE)
-        val export = AuditorAnalysisGenerator.generateExportSummary(input, metrics)
+        val export = AuditorAnalysisGenerator.generateExportSummary(input, metrics, AppLanguage.RU)
 
         assertTrue(export.contains("Недостижимо при текущих параметрах"))
     }

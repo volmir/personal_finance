@@ -210,7 +210,7 @@ class FinancialMetricEvaluatorTest {
         assertEquals(AuditIndicatorStatus.NEGATIVE, FinancialMetricEvaluator.getSavingsRateStatus(0.0))
         assertEquals(0, FinancialMetricEvaluator.getSavingsRateScore(0.0))
         assertEquals(AuditIndicatorStatus.NEGATIVE, FinancialMetricEvaluator.getCashFlowStatus(0.0))
-        val negOpinion = AuditorAnalysisGenerator.generate(negInput, negMetrics)
+        val negOpinion = AuditorAnalysisGenerator.generate(negInput, negMetrics, AppLanguage.RU)
         val negSr = (negOpinion.positive + negOpinion.neutral + negOpinion.negative).first { it.id == "savings_rate" }
         assertEquals(AuditIndicatorStatus.NEGATIVE, negSr.status)
 
@@ -218,7 +218,7 @@ class FinancialMetricEvaluatorTest {
         val noIncomeMetrics = FinanceCalculator.calculate(noIncomeInput)
         assertEquals(-100.0, noIncomeMetrics.savingsRate, 0.0)
         assertEquals(0, noIncomeMetrics.scores.savingsRateScore)
-        val noIncomeOpinion = AuditorAnalysisGenerator.generate(noIncomeInput, noIncomeMetrics)
+        val noIncomeOpinion = AuditorAnalysisGenerator.generate(noIncomeInput, noIncomeMetrics, AppLanguage.RU)
         val noIncomeSr = (noIncomeOpinion.positive + noIncomeOpinion.neutral + noIncomeOpinion.negative)
             .first { it.id == "savings_rate" }
         assertEquals(AuditIndicatorStatus.NEGATIVE, noIncomeSr.status)
@@ -230,7 +230,7 @@ class FinancialMetricEvaluatorTest {
         val neutralMetrics8 = FinanceCalculator.calculate(neutralInput8)
         assertEquals(8.0, neutralMetrics8.savingsRate, 0.01)
         assertEquals(6, neutralMetrics8.scores.savingsRateScore) // 5..7 диапазон (желтый)
-        val opinion8 = AuditorAnalysisGenerator.generate(neutralInput8, neutralMetrics8)
+        val opinion8 = AuditorAnalysisGenerator.generate(neutralInput8, neutralMetrics8, AppLanguage.RU)
         val sr8 = (opinion8.positive + opinion8.neutral + opinion8.negative).first { it.id == "savings_rate" }
         assertEquals(AuditIndicatorStatus.NEUTRAL, sr8.status)
 
@@ -239,7 +239,7 @@ class FinancialMetricEvaluatorTest {
         assertEquals(20.0, neutralMetrics20.savingsRate, 0.01)
         assertEquals(7, neutralMetrics20.scores.savingsRateScore)
         assertEquals(AuditIndicatorStatus.NEUTRAL, FinancialMetricEvaluator.getSavingsRateStatus(20.0))
-        val opinion20 = AuditorAnalysisGenerator.generate(neutralInput20, neutralMetrics20)
+        val opinion20 = AuditorAnalysisGenerator.generate(neutralInput20, neutralMetrics20, AppLanguage.RU)
         val sr20 = (opinion20.positive + opinion20.neutral + opinion20.negative).first { it.id == "savings_rate" }
         assertEquals(AuditIndicatorStatus.NEUTRAL, sr20.status)
 
@@ -248,7 +248,7 @@ class FinancialMetricEvaluatorTest {
         val posMetrics25 = FinanceCalculator.calculate(posInput25)
         assertEquals(25.0, posMetrics25.savingsRate, 0.01)
         assertEquals(8, posMetrics25.scores.savingsRateScore) // 8..10 диапазон (зеленый)
-        val opinion25 = AuditorAnalysisGenerator.generate(posInput25, posMetrics25)
+        val opinion25 = AuditorAnalysisGenerator.generate(posInput25, posMetrics25, AppLanguage.RU)
         val sr25 = (opinion25.positive + opinion25.neutral + opinion25.negative).first { it.id == "savings_rate" }
         assertEquals(AuditIndicatorStatus.POSITIVE, sr25.status)
 
@@ -362,24 +362,48 @@ class FinancialMetricEvaluatorTest {
         val enStrings = StringsEn
 
         // При норме сбережений 8% (низкое значение)
-        val commentRu8 = ruStrings.savingsRateScoreComment(8.0, "8,0%")
+        val commentRu8 = ruStrings.savingsRateScoreComment(
+            8.0,
+            "8,0%",
+            ruStrings.formatThreshold(FinancialMetricEvaluator.SAVINGS_RATE_POSITIVE_THRESHOLD)
+        )
         assertTrue(commentRu8.contains("низкое значение (8,0%)"))
 
-        val commentEn8 = enStrings.savingsRateScoreComment(8.0, "8.0%")
+        val commentEn8 = enStrings.savingsRateScoreComment(
+            8.0,
+            "8.0%",
+            enStrings.formatThreshold(FinancialMetricEvaluator.SAVINGS_RATE_POSITIVE_THRESHOLD)
+        )
         assertTrue(commentEn8.contains("low rate (8.0%)"))
 
         // При норме сбережений 25% (отличное значение)
-        val commentRu25 = ruStrings.savingsRateScoreComment(25.0, "25,0%")
+        val commentRu25 = ruStrings.savingsRateScoreComment(
+            25.0,
+            "25,0%",
+            ruStrings.formatThreshold(FinancialMetricEvaluator.SAVINGS_RATE_POSITIVE_THRESHOLD)
+        )
         assertTrue(commentRu25.contains("отличное значение (25,0%)"))
 
-        val commentEn25 = enStrings.savingsRateScoreComment(25.0, "25.0%")
+        val commentEn25 = enStrings.savingsRateScoreComment(
+            25.0,
+            "25.0%",
+            enStrings.formatThreshold(FinancialMetricEvaluator.SAVINGS_RATE_POSITIVE_THRESHOLD)
+        )
         assertTrue(commentEn25.contains("excellent rate (25.0%)"))
 
         // При отрицательной норме сбережений (-10%)
-        val commentRuNeg = ruStrings.savingsRateScoreComment(-10.0, "-10,0%")
+        val commentRuNeg = ruStrings.savingsRateScoreComment(
+            -10.0,
+            "-10,0%",
+            ruStrings.formatThreshold(FinancialMetricEvaluator.SAVINGS_RATE_POSITIVE_THRESHOLD)
+        )
         assertTrue(commentRuNeg.contains("отрицательное значение"))
 
-        val commentEnNeg = enStrings.savingsRateScoreComment(-10.0, "-10.0%")
+        val commentEnNeg = enStrings.savingsRateScoreComment(
+            -10.0,
+            "-10.0%",
+            enStrings.formatThreshold(FinancialMetricEvaluator.SAVINGS_RATE_POSITIVE_THRESHOLD)
+        )
         assertTrue(commentEnNeg.contains("negative rate"))
     }
 
@@ -389,17 +413,41 @@ class FinancialMetricEvaluatorTest {
         val enStrings = StringsEn
 
         // Запас 1.5 мес (недостаточный)
-        val commentRuLow = ruStrings.safetyMonthsScoreComment(1.5, "1,5 мес.")
+        val commentRuLow = ruStrings.safetyMonthsScoreComment(
+            1.5,
+            "1,5 мес.",
+            ruStrings.formatThreshold(FinancialMetricEvaluator.SAFETY_MONTHS_NEUTRAL_THRESHOLD),
+            ruStrings.formatThreshold(FinancialMetricEvaluator.SAFETY_MONTHS_POSITIVE_THRESHOLD),
+            ruStrings.formatThreshold(FinancialMetricEvaluator.SAFETY_MONTHS_TIER_EXCELLENT)
+        )
         assertTrue(commentRuLow.contains("недостаточный запас"))
 
-        val commentEnLow = enStrings.safetyMonthsScoreComment(1.5, "1.5 mo.")
+        val commentEnLow = enStrings.safetyMonthsScoreComment(
+            1.5,
+            "1.5 mo.",
+            enStrings.formatThreshold(FinancialMetricEvaluator.SAFETY_MONTHS_NEUTRAL_THRESHOLD),
+            enStrings.formatThreshold(FinancialMetricEvaluator.SAFETY_MONTHS_POSITIVE_THRESHOLD),
+            enStrings.formatThreshold(FinancialMetricEvaluator.SAFETY_MONTHS_TIER_EXCELLENT)
+        )
         assertTrue(commentEnLow.contains("insufficient buffer"))
 
         // Запас 15 мес (отличный)
-        val commentRuHigh = ruStrings.safetyMonthsScoreComment(15.0, "15,0 мес.")
+        val commentRuHigh = ruStrings.safetyMonthsScoreComment(
+            15.0,
+            "15,0 мес.",
+            ruStrings.formatThreshold(FinancialMetricEvaluator.SAFETY_MONTHS_NEUTRAL_THRESHOLD),
+            ruStrings.formatThreshold(FinancialMetricEvaluator.SAFETY_MONTHS_POSITIVE_THRESHOLD),
+            ruStrings.formatThreshold(FinancialMetricEvaluator.SAFETY_MONTHS_TIER_EXCELLENT)
+        )
         assertTrue(commentRuHigh.contains("запас превышает 12 месяцев"))
 
-        val commentEnHigh = enStrings.safetyMonthsScoreComment(15.0, "15.0 mo.")
+        val commentEnHigh = enStrings.safetyMonthsScoreComment(
+            15.0,
+            "15.0 mo.",
+            enStrings.formatThreshold(FinancialMetricEvaluator.SAFETY_MONTHS_NEUTRAL_THRESHOLD),
+            enStrings.formatThreshold(FinancialMetricEvaluator.SAFETY_MONTHS_POSITIVE_THRESHOLD),
+            enStrings.formatThreshold(FinancialMetricEvaluator.SAFETY_MONTHS_TIER_EXCELLENT)
+        )
         assertTrue(commentEnHigh.contains("buffer exceeds 12 months"))
     }
 
