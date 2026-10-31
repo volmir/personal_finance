@@ -361,20 +361,20 @@ class FinancialMetricEvaluatorTest {
         val ruStrings = StringsRu
         val enStrings = StringsEn
 
-        // При норме сбережений 8% (низкое значение)
+        // При норме сбережений 8% (нейтральный показатель)
         val commentRu8 = ruStrings.savingsRateScoreComment(
             8.0,
             "8,0%",
             ruStrings.formatThreshold(FinancialMetricEvaluator.SAVINGS_RATE_POSITIVE_THRESHOLD)
         )
-        assertTrue(commentRu8.contains("низкое значение (8,0%)"))
+        assertTrue(commentRu8.contains("нейтральный показатель (8,0%)"))
 
         val commentEn8 = enStrings.savingsRateScoreComment(
             8.0,
             "8.0%",
             enStrings.formatThreshold(FinancialMetricEvaluator.SAVINGS_RATE_POSITIVE_THRESHOLD)
         )
-        assertTrue(commentEn8.contains("low rate (8.0%)"))
+        assertTrue(commentEn8.contains("is neutral (8.0%)"))
 
         // При норме сбережений 25% (отличное значение)
         val commentRu25 = ruStrings.savingsRateScoreComment(
