@@ -2,25 +2,25 @@ package com.example.ui
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.viewModelScope
-import com.example.data.db.AppDatabase
-import com.example.data.db.ScenarioEntity
 import com.example.data.model.CalculatedMetrics
 import com.example.data.model.FinancialInputData
 import com.example.data.model.TrajectoryPoint
-import com.example.data.repository.FinanceRepository
 import com.example.data.repository.LocalPreferencesManager
 import com.example.domain.FinanceCalculator
+import com.example.domain.SimulatorScaleCalculator
+import com.example.domain.ScenarioConstants
 import kotlinx.coroutines.flow.MutableStateFlow
 import com.example.util.localization.AppLanguage
 import com.example.util.localization.AppStrings
-import com.example.util.localization.StringsRu
 import com.example.util.localization.getAppStrings
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.stateIn
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.time.LocalDate
 
 enum class AppTab {
     INPUT,
@@ -62,18 +62,9 @@ data class FireScenarioToggles(
     val mortgage20Years35Income: Boolean = false,   // 3. Ипотека на квартиру: 35% от ежемесячного дохода на период 20 лет
     val carLoan5Years: Boolean = false,             // 4. Автомобиль в кредит: ежемесячные расходы +20% на 5 лет
     val largeOneOffExpense500: Boolean = false,     // 5. Крупная разовая трата: расход 500% мес. дохода (покрытие из активов)
-    val inflation5Percent: Boolean = false,         // 6. Рост расходов: +25% к расходам
+    val expensesPlus25: Boolean = false,           // 6. Рост расходов: +25% к расходам
     val childOrDependent18Years: Boolean = false    // 7. Рождение ребенка: +25% к расходам на период в 18 лет
 ) {
-    // Backward compatibility aliases
-    val mortgage72Months: Boolean get() = mortgage20Years35Income
-    val mortgage: Boolean get() = mortgage20Years35Income
-    val carLoan4Years: Boolean get() = carLoan5Years
-    val consumerLoan200: Boolean get() = carLoan5Years
-    val inflation20Expenses: Boolean get() = inflation5Percent
-    val inflation25Expenses: Boolean get() = inflation5Percent
-    val childOrDependent25: Boolean get() = childOrDependent18Years
-
     val positiveActiveCount: Int
         get() = listOf(
             salaryIncrease20,
@@ -92,7 +83,7 @@ data class FireScenarioToggles(
             mortgage20Years35Income,
             carLoan5Years,
             largeOneOffExpense500,
-            inflation5Percent,
+            expensesPlus25,
             childOrDependent18Years
         ).count { it }
 
@@ -116,18 +107,13 @@ data class FireSimulationState(
                 scenarios.hasActiveScenarios
 }
 
-class MainViewModel(application: Application) : AndroidViewModel(application) {
+class MainViewModel(
+    application: Application,
+    private val today: LocalDate = LocalDate.now()
+) : AndroidViewModel(application) {
 
-    private val repository: FinanceRepository
     private val localPrefs: LocalPreferencesManager = LocalPreferencesManager(application)
-
-    init {
-        val db = AppDatabase.getInstance(application)
-        repository = FinanceRepository(db.scenarioDao())
-    }
-
-    val savedScenarios: StateFlow<List<ScenarioEntity>> = repository.getAllScenarios()
-        .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+    private var inputDataSaveJob: Job? = null
 
     private val _currentTab = MutableStateFlow(localPrefs.loadCurrentTab() ?: AppTab.INPUT)
     val currentTab: StateFlow<AppTab> = _currentTab.asStateFlow()
@@ -147,16 +133,19 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     )
     val appLanguage: StateFlow<AppLanguage> = _appLanguage.asStateFlow()
 
-    fun setLanguage(language: AppLanguage) {
-        _appLanguage.value = language
-        localPrefs.saveLanguage(language)
+    fun updateLanguageFromSystem(languageCode: String) {
+        val language = AppLanguage.fromLocaleCode(languageCode)
+        if (_appLanguage.value != language) {
+            _appLanguage.value = language
+            localPrefs.saveLanguage(language)
+        }
     }
 
     // Загрузка из локального хранилища (дефолтные значения только при первом запуске)
     private val _inputData = MutableStateFlow(localPrefs.loadData())
     val inputData: StateFlow<FinancialInputData> = _inputData.asStateFlow()
 
-    private val _metrics = MutableStateFlow(FinanceCalculator.calculate(_inputData.value))
+    private val _metrics = MutableStateFlow(FinanceCalculator.calculate(_inputData.value, today = today))
     val metrics: StateFlow<CalculatedMetrics> = _metrics.asStateFlow()
 
     private val _fireSimulation = MutableStateFlow(localPrefs.loadSimulationState())
@@ -183,32 +172,40 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun updateInputData(transform: (FinancialInputData) -> FinancialInputData) {
         val updated = transform(_inputData.value)
         _inputData.value = updated
-        // Save locally to user device immediately
-        localPrefs.saveData(updated)
+        val updatedMetrics = FinanceCalculator.calculate(updated, today = today)
+        val savingsConfig = SimulatorScaleCalculator.calculateSavingsConfig(
+            currentSavings = updatedMetrics.cashFlow,
+            monthlyIncome = updated.monthlyIncome,
+            monthlyExpenses = updated.monthlyExpenses
+        )
+        val expensesConfig = SimulatorScaleCalculator.calculateExpensesConfig(
+            monthlyExpenses = updated.monthlyExpenses,
+            monthlyIncome = updated.monthlyIncome
+        )
+        val returnConfig = SimulatorScaleCalculator.calculateReturnConfig(updatedMetrics.realReturnPercent)
+        val currentSimulation = _fireSimulation.value
+        val boundedSimulation = currentSimulation.copy(
+            extraMonthlySavings = currentSimulation.extraMonthlySavings.coerceIn(
+                savingsConfig.minValue.toDouble(), savingsConfig.maxValue.toDouble()
+            ),
+            expenseReduction = currentSimulation.expenseReduction.coerceIn(
+                expensesConfig.minValue.toDouble(), expensesConfig.maxValue.toDouble()
+            ),
+            realReturnAdjustment = currentSimulation.realReturnAdjustment.coerceIn(
+                returnConfig.minValue.toDouble(), returnConfig.maxValue.toDouble()
+            )
+        )
+        if (boundedSimulation != currentSimulation) {
+            _fireSimulation.value = boundedSimulation
+            localPrefs.saveSimulationState(boundedSimulation)
+        }
+        // Debounce disk writes while keeping model and calculations immediately up to date.
+        inputDataSaveJob?.cancel()
+        inputDataSaveJob = viewModelScope.launch {
+            delay(400)
+            localPrefs.saveData(_inputData.value)
+        }
         // Dynamically recalculate all metrics in real-time
-        recalculate()
-    }
-
-    fun loadUsAverage() {
-        val sample = FinancialInputData.usAverageData()
-        _inputData.value = sample
-        localPrefs.saveData(sample)
-        val resetSim = FireSimulationState()
-        _fireSimulation.value = resetSim
-        localPrefs.saveSimulationState(resetSim)
-        recalculate()
-    }
-
-    fun loadDefaultAverage() = loadUsAverage()
-
-    fun loadRussiaAverage() = loadUsAverage()
-
-    fun clearData() {
-        localPrefs.clearData()
-        _inputData.value = localPrefs.loadData()
-        val resetSim = FireSimulationState()
-        _fireSimulation.value = resetSim
-        localPrefs.saveSimulationState(resetSim)
         recalculate()
     }
 
@@ -240,7 +237,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             "mortgage" -> current.copy(mortgage20Years35Income = !current.mortgage20Years35Income)
             "car_loan" -> current.copy(carLoan5Years = !current.carLoan5Years)
             "large_expense" -> current.copy(largeOneOffExpense500 = !current.largeOneOffExpense500)
-            "inflation" -> current.copy(inflation5Percent = !current.inflation5Percent)
+            "inflation" -> current.copy(expensesPlus25 = !current.expensesPlus25)
             "child_dependent" -> current.copy(childOrDependent18Years = !current.childOrDependent18Years)
             else -> current
         }
@@ -258,9 +255,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     private fun recalculate() {
         val currentInput = _inputData.value
-        val calc = FinanceCalculator.calculate(currentInput)
+        val calc = FinanceCalculator.calculate(currentInput, today = today)
         _metrics.value = calc
-        _trajectory.value = FinanceCalculator.generateTrajectory(calc, currentInput)
+        _trajectory.value = FinanceCalculator.generateTrajectory(calc, currentInput, today = today)
         recalculateSimulation()
     }
 
@@ -271,26 +268,23 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
         // 1. Доход:
         // Базовый доход с учетом "Повышение зарплаты" (+20% постоянно)
-        val incomeMultiplier = 1.0 + (if (sc.salaryIncrease20) 0.20 else 0.0)
+        val incomeMultiplier = 1.0 + (if (sc.salaryIncrease20) ScenarioConstants.SALARY_INCREASE_PERCENT / 100.0 else 0.0)
         // Потеря работы моделируется разовым изъятием накоплений, доход сохраняется.
         val baseIncome = baseInput.monthlyIncome * incomeMultiplier
-        // Ползунок ежемесячных сбережений (extraMonthlySavings)
-        val rawEffectiveIncome = baseIncome + sim.extraMonthlySavings
-        val effectiveIncome = maxOf(0.0, rawEffectiveIncome)
-        val unmetNegativeIncome = if (rawEffectiveIncome < 0.0) -rawEffectiveIncome else 0.0
 
         // 2. Рынок и финансовые активы:
         // Негативное: Обвал рынка на 30% (-30%)
         // Позитивное: Рост рынка на 25% (+25%)
         val marketMultiplier =
-            (if (sc.marketCrash30) 0.70 else 1.0) * (if (sc.marketGrowth25) 1.25 else 1.0)
+            (if (sc.marketCrash30) 1.0 - ScenarioConstants.MARKET_CRASH_PERCENT / 100.0 else 1.0) *
+                (if (sc.marketGrowth25) 1.0 + ScenarioConstants.MARKET_GROWTH_PERCENT / 100.0 else 1.0)
         val afterMarketFinAssets = (baseInput.financialAssets * marketMultiplier.coerceAtLeast(0.0))
 
         // 3. Разовые поступления капитала (Позитивные события):
         // 5. Наследство или крупный подарок: +1200% месячного дохода (12 мес.)
-        val inheritanceAmount = if (sc.inheritance1200) 12.0 * baseInput.monthlyIncome else 0.0
+        val inheritanceAmount = if (sc.inheritance1200) ScenarioConstants.INHERITANCE_PERCENT_OF_MONTHLY_INCOME / 100.0 * baseInput.monthlyIncome else 0.0
         // 6. Продажа имущества: min(2000% месячного дохода, имеющееся имущество)
-        val propertySaleAmount = if (sc.propertySale2000) minOf(20.0 * baseInput.monthlyIncome, baseInput.propertyAssets) else 0.0
+        val propertySaleAmount = if (sc.propertySale2000) minOf(ScenarioConstants.PROPERTY_SALE_PERCENT_OF_MONTHLY_INCOME / 100.0 * baseInput.monthlyIncome, baseInput.propertyAssets) else 0.0
         val effectivePropertyAssets = baseInput.propertyAssets - propertySaleAmount
         val totalPositiveLumpSum = inheritanceAmount + propertySaleAmount
 
@@ -298,23 +292,25 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         // Позитивное: Оптимизация расходов (-15%)
         // Позитивное: Переезд в регион с более низкой стоимостью (-30%)
         val ongoingExpenseMultiplier =
-            (if (sc.expenseOptimization15) 0.85 else 1.0) *
-                (if (sc.relocationLowerCost30) 0.70 else 1.0) *
-                (if (sc.inflation5Percent) 1.25 else 1.0)
+            (if (sc.expenseOptimization15) 1.0 - ScenarioConstants.EXPENSE_OPTIMIZATION_PERCENT / 100.0 else 1.0) *
+                (if (sc.relocationLowerCost30) 1.0 - ScenarioConstants.RELOCATION_EXPENSE_REDUCTION_PERCENT / 100.0 else 1.0) *
+                (if (sc.expensesPlus25) 1.0 + ScenarioConstants.EXPENSE_INFLATION_PERCENT / 100.0 else 1.0)
         val baseOngoingExpenses = baseInput.monthlyExpenses * ongoingExpenseMultiplier.coerceAtLeast(0.10)
 
-        // Влияние ползунка сокращения/роста расходов (sim.expenseReduction) и дефицита дохода
-        val effectiveOngoingExpenses = (baseOngoingExpenses - sim.expenseReduction + unmetNegativeIncome).coerceAtLeast(0.0)
+        // Влияние ползунка сокращения/роста расходов (sim.expenseReduction)
+        val minimumOngoingExpenses = baseInput.monthlyExpenses * 0.10
+        val effectiveOngoingExpenses = (baseOngoingExpenses - sim.expenseReduction)
+            .coerceAtLeast(minimumOngoingExpenses)
 
         // 5. Временные ежемесячные расходы:
         // Негативное 3. Ипотека на квартиру: 35% от ежемесячного дохода на период 20 лет
-        val mortgageMonthlyExpense = if (sc.mortgage20Years35Income) 0.35 * baseInput.monthlyIncome else 0.0
+        val mortgageMonthlyExpense = if (sc.mortgage20Years35Income) ScenarioConstants.MORTGAGE_INCOME_PERCENT / 100.0 * baseIncome else 0.0
 
         // Негативное 4. Автомобиль в кредит: 20% от ежемесячного дохода на 5 лет
-        val carLoanMonthlyExpense = if (sc.carLoan5Years) 0.20 * baseInput.monthlyIncome else 0.0
+        val carLoanMonthlyExpense = if (sc.carLoan5Years) ScenarioConstants.CAR_LOAN_INCOME_PERCENT / 100.0 * baseIncome else 0.0
 
         // Негативное 7. Рождение ребенка: +25% к базовым расходам на 18 лет
-        val childMonthlyExpense = if (sc.childOrDependent18Years) 0.25 * baseInput.monthlyExpenses else 0.0
+        val childMonthlyExpense = if (sc.childOrDependent18Years) ScenarioConstants.CHILD_DEPENDENT_EXPENSE_PERCENT / 100.0 * baseInput.monthlyExpenses else 0.0
 
         // Текущие совокупные ежемесячные расходы на момент t = 0 (включая временные платежи)
         val currentEffectiveExpenses = effectiveOngoingExpenses + mortgageMonthlyExpense + carLoanMonthlyExpense + childMonthlyExpense
@@ -322,7 +318,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         // 6. Отложенное снижение расходов:
         // Позитивное 7. Выход детей на самообеспечение: расходы -25% ежемесячно после 18 лет
         val deferredReductionAnnual = if (sc.childrenSelfSufficient18) {
-            0.25 * baseInput.monthlyExpenses * 12.0
+            minOf(ScenarioConstants.CHILDREN_EXPENSE_REDUCTION_PERCENT / 100.0 * baseOngoingExpenses * 12.0, effectiveOngoingExpenses * 12.0)
         } else 0.0
 
         val temporaryExpenses = mutableListOf<com.example.domain.TemporaryExpense>()
@@ -330,7 +326,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             temporaryExpenses.add(
                 com.example.domain.TemporaryExpense(
                     annualAmount = mortgageMonthlyExpense * 12.0,
-                    durationYears = 20.0
+                    durationYears = ScenarioConstants.MORTGAGE_DURATION_YEARS
                 )
             )
         }
@@ -338,7 +334,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             temporaryExpenses.add(
                 com.example.domain.TemporaryExpense(
                     annualAmount = carLoanMonthlyExpense * 12.0,
-                    durationYears = 5.0
+                    durationYears = ScenarioConstants.CAR_LOAN_DURATION_YEARS
                 )
             )
         }
@@ -346,7 +342,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             temporaryExpenses.add(
                 com.example.domain.TemporaryExpense(
                     annualAmount = childMonthlyExpense * 12.0,
-                    durationYears = 18.0
+                    durationYears = ScenarioConstants.CHILD_DEPENDENT_DURATION_YEARS
                 )
             )
         }
@@ -359,8 +355,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
         if (sc.largeOneOffExpense500 || sc.jobLoss) {
             val expenseTarget =
-                (if (sc.largeOneOffExpense500) 5.0 else 0.0) * baseInput.monthlyIncome +
-                    (if (sc.jobLoss) 12.0 else 0.0) * baseInput.monthlyIncome
+                (if (sc.largeOneOffExpense500) ScenarioConstants.LARGE_ONE_OFF_EXPENSE_PERCENT / 100.0 else 0.0) * baseInput.monthlyIncome +
+                    (if (sc.jobLoss) ScenarioConstants.JOB_LOSS_MONTHS else 0.0) * baseInput.monthlyIncome
             var remainingToCover = expenseTarget
 
             val coveredFromLiquid = minOf(effLiquidAssets, remainingToCover)
@@ -396,7 +392,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
 
         val simulatedInput = baseInput.copy(
-            monthlyIncome = effectiveIncome,
+            monthlyIncome = baseIncome,
             monthlyExpenses = currentEffectiveExpenses,
             liquidAssets = effLiquidAssets,
             financialAssets = effFinAssets,
@@ -410,7 +406,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             input = simulatedInput,
             temporaryExpenses = temporaryExpenses,
             deferredAnnualExpenseReduction = deferredReductionAnnual,
-            deferredStartYears = 18.0,
+            deferredStartYears = ScenarioConstants.CHILDREN_SELF_SUFFICIENT_YEARS,
+            extraMonthlyCashFlow = sim.extraMonthlySavings,
+            today = today
         )
         _simulatedMetrics.value = simCalc
         _simulatedTrajectory.value = FinanceCalculator.generateTrajectory(
@@ -418,46 +416,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             input = simulatedInput,
             temporaryExpenses = temporaryExpenses,
             deferredAnnualExpenseReduction = deferredReductionAnnual,
-            deferredStartYears = 18.0,
+            deferredStartYears = ScenarioConstants.CHILDREN_SELF_SUFFICIENT_YEARS,
+            extraMonthlyCashFlow = sim.extraMonthlySavings,
+            today = today
         )
     }
 
-    fun saveCurrentAsScenario(name: String) {
-        val strings = getAppStrings(_appLanguage.value)
-        viewModelScope.launch {
-            repository.saveScenario(name = name, data = _inputData.value)
-                .onSuccess {
-                    _userFeedbackMessage.value = strings.scenarioSavedSuccess(name)
-                }
-                .onFailure { error ->
-                    _userFeedbackMessage.value = strings.scenarioSaveError(error.localizedMessage ?: strings.scenarioDatabaseError)
-                }
-        }
-    }
-
-    fun loadScenario(scenario: ScenarioEntity) {
-        val strings = getAppStrings(_appLanguage.value)
-        try {
-            val data = scenario.toInputData()
-            _inputData.value = data
-            localPrefs.saveData(data)
-            recalculate()
-            _userFeedbackMessage.value = strings.scenarioLoadedSuccess(scenario.name)
-        } catch (e: Exception) {
-            _userFeedbackMessage.value = strings.scenarioLoadError(e.localizedMessage ?: strings.scenarioCorruptedDataError)
-        }
-    }
-
-    fun deleteScenario(scenario: ScenarioEntity) {
-        val strings = getAppStrings(_appLanguage.value)
-        viewModelScope.launch {
-            repository.deleteScenario(scenario)
-                .onSuccess {
-                    _userFeedbackMessage.value = strings.scenarioDeletedSuccess(scenario.name)
-                }
-                .onFailure { error ->
-                    _userFeedbackMessage.value = strings.scenarioDeleteError(error.localizedMessage ?: strings.scenarioDatabaseError)
-                }
-        }
-    }
 }

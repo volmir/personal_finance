@@ -1,18 +1,20 @@
 package com.example.util.localization
 
-enum class AppLanguage {
-    RU,
-    EN;
+import java.util.Locale
+
+enum class AppLanguage(val code: String, val locale: Locale) {
+    RU("ru", Locale("ru")),
+    EN("en", Locale("en"));
 
     companion object {
         /**
          * Логика выбора языковой версии:
-         * - если у пользователя установлена русская (ru), украинская (uk) или белорусская (be) локаль — язык интерфейса русский.
+         * - если у пользователя установлена русская (ru) или белорусская (be) локаль — язык интерфейса русский.
          * - в противном случае — английский.
          */
         fun fromLocaleCode(languageCode: String): AppLanguage {
             return when (languageCode.lowercase().trim()) {
-                "ru", "uk", "be" -> RU
+                "ru", "be" -> RU
                 else -> EN
             }
         }
@@ -27,6 +29,3 @@ enum class AppLanguage {
         }
     }
 }
-
-val AppLanguage.isRussian: Boolean
-    get() = this == AppLanguage.RU

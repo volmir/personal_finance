@@ -145,7 +145,7 @@ class LocalPreferencesManager(context: Context) {
             mortgage20Years35Income = prefs.getBoolean(KEY_SC_MORTGAGE, false),
             carLoan5Years = prefs.getBoolean(KEY_SC_CAR_LOAN, false),
             largeOneOffExpense500 = prefs.getBoolean(KEY_SC_LARGE_EXPENSE, false),
-            inflation5Percent = prefs.getBoolean(KEY_SC_INFLATION, false),
+            expensesPlus25 = prefs.getBoolean(KEY_SC_INFLATION, false),
             childOrDependent18Years = prefs.getBoolean(KEY_SC_CHILD_DEPENDENT, false)
         )
         return FireSimulationState(
@@ -176,29 +176,10 @@ class LocalPreferencesManager(context: Context) {
             putBoolean(KEY_SC_MORTGAGE, sc.mortgage20Years35Income)
             putBoolean(KEY_SC_CAR_LOAN, sc.carLoan5Years)
             putBoolean(KEY_SC_LARGE_EXPENSE, sc.largeOneOffExpense500)
-            putBoolean(KEY_SC_INFLATION, sc.inflation5Percent)
+            putBoolean(KEY_SC_INFLATION, sc.expensesPlus25)
             putBoolean(KEY_SC_CHILD_DEPENDENT, sc.childOrDependent18Years)
             apply()
         }
     }
 
-    fun clearData() {
-        val empty = FinancialInputData(
-            monthlyIncome = 0.0,
-            monthlyExpenses = 0.0,
-            liquidAssets = 0.0,
-            financialAssets = 0.0,
-            propertyAssets = 0.0,
-            liabilities = 0.0,
-            birthDate = "1990-01-01",
-            lifeExpectancy = 82,
-            nominalReturnPercent = 7.5,
-            inflationPercent = 2.5,
-            capitalGainsTaxPercent = 20.0,
-            currencySymbol = "$",
-            includeFinancialInEmergencyFund = true
-        )
-        saveData(empty)
-        saveSimulationState(FireSimulationState())
-    }
 }

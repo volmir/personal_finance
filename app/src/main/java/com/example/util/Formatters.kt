@@ -1,64 +1,46 @@
 package com.example.util
 
 import com.example.util.localization.AppLanguage
+import com.example.data.model.FireStatus
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
-import java.util.Locale
 
 object Formatters {
-    private val symbolsRu = DecimalFormatSymbols(Locale("ru", "RU")).apply {
-        groupingSeparator = ' '
-        decimalSeparator = ','
-    }
-
-    private val symbolsEn = DecimalFormatSymbols(Locale.US).apply {
-        groupingSeparator = ','
-        decimalSeparator = '.'
-    }
-
-    private val moneyFormatRu = DecimalFormat("#,##0.00", symbolsRu)
-    private val moneyFormatEn = DecimalFormat("#,##0.00", symbolsEn)
-
-    private val percentFormatRu = DecimalFormat("#,##0.00", symbolsRu)
-    private val percentFormatEn = DecimalFormat("#,##0.00", symbolsEn)
-
-    private val ratioFormatRu = DecimalFormat("#,##0.00", symbolsRu)
-    private val ratioFormatEn = DecimalFormat("#,##0.00", symbolsEn)
-
-    private val scoreFormatRu = DecimalFormat("#,##0.0", symbolsRu)
-    private val scoreFormatEn = DecimalFormat("#,##0.0", symbolsEn)
-
-    private val prefixCurrencies = setOf(
-        "$", "€", "£", "¥", "₹", "C$", "A$",
-        "USD", "EUR", "GBP", "JPY", "INR", "CAD", "AUD"
-    )
-
-    fun formatMoney(amount: Double, currency: String = "$", lang: AppLanguage = AppLanguage.RU): String {
-        val formatter = if (lang == AppLanguage.EN) moneyFormatEn else moneyFormatRu
-        return if (lang == AppLanguage.EN && currency in prefixCurrencies) {
-            "$currency${formatter.format(amount)}"
-        } else {
-            "${formatter.format(amount)} $currency"
+    private fun decimalFormat(lang: AppLanguage, fractionDigits: Int): DecimalFormat {
+        val symbols = DecimalFormatSymbols.getInstance(lang.locale).apply {
+            // Keep the existing Russian display separator while taking decimal/grouping
+            // conventions from the language locale.
+            if (groupingSeparator.isWhitespace() || groupingSeparator == '\u00A0' || groupingSeparator == '\u202F') {
+                groupingSeparator = ' '
+            }
+        }
+        return DecimalFormat("#,##0.${"0".repeat(fractionDigits)}", symbols).apply {
+            minimumFractionDigits = fractionDigits
+            maximumFractionDigits = fractionDigits
         }
     }
 
-    fun formatNumber(amount: Double, lang: AppLanguage = AppLanguage.RU): String {
-        return if (lang == AppLanguage.EN) moneyFormatEn.format(amount) else moneyFormatRu.format(amount)
+    fun formatMoney(amount: Double, currency: String = "$", lang: AppLanguage): String {
+        val strings = com.example.util.localization.getAppStrings(lang)
+        val formattedAmount = decimalFormat(lang, 2).format(amount)
+        return String.format(java.util.Locale.ROOT, strings.moneyFormat, currency, formattedAmount)
     }
 
-    fun formatPercent(value: Double, lang: AppLanguage = AppLanguage.RU): String {
-        val formatter = if (lang == AppLanguage.EN) percentFormatEn else percentFormatRu
-        return "${formatter.format(value)}%"
+    fun formatNumber(amount: Double, lang: AppLanguage): String {
+        return decimalFormat(lang, 2).format(amount)
     }
 
-    fun formatRatio(value: Double, lang: AppLanguage = AppLanguage.RU): String {
-        val formatter = if (lang == AppLanguage.EN) ratioFormatEn else ratioFormatRu
-        return formatter.format(value)
+    fun formatPercent(value: Double, lang: AppLanguage): String {
+        return "${decimalFormat(lang, 2).format(value)}%"
     }
 
-    fun formatScore(value: Double, lang: AppLanguage = AppLanguage.RU): String {
-        val formatter = if (lang == AppLanguage.EN) scoreFormatEn else scoreFormatRu
-        return formatter.format(value)
+    fun formatRatio(value: Double, lang: AppLanguage): String {
+        if (value.isInfinite()) return "—"
+        return decimalFormat(lang, 2).format(value)
+    }
+
+    fun formatScore(value: Double, lang: AppLanguage): String {
+        return decimalFormat(lang, 1).format(value)
     }
 
     fun parseDouble(input: String): Double {
@@ -66,6 +48,7 @@ object Formatters {
             .replace(",", ".")
             .replace("\u00A0", "")
             .trim()
+        if (cleaned.isEmpty() || cleaned == "-" || cleaned == "." || cleaned == "-.") return 0.0
         return cleaned.toDoubleOrNull() ?: 0.0
     }
 
@@ -74,16 +57,15 @@ object Formatters {
      * RU: 1 чекбокс, 2 чекбокса, 5 чекбоксов
      * EN: 1 checkbox, 2 checkboxes
      */
-    fun formatCheckboxesCount(count: Int, lang: AppLanguage = AppLanguage.RU): String {
+    fun formatCheckboxesCount(count: Int, lang: AppLanguage): String {
         val strings = com.example.util.localization.getAppStrings(lang)
-        val word = strings.plural(count, strings.checkboxOne, strings.checkboxFew, strings.checkboxMany)
-        return "$count\u00A0$word"
+        return strings.formatCount(count, strings.checkboxPluralForms)
     }
 
     /**
      * Формирует бейдж активных параметров симуляции в одну строку с неразрывными пробелами.
      */
-    fun formatSimulationBadge(activeCount: Int, hasSliders: Boolean, lang: AppLanguage = AppLanguage.RU): String {
+    fun formatSimulationBadge(activeCount: Int, hasSliders: Boolean, lang: AppLanguage): String {
         val strings = com.example.util.localization.getAppStrings(lang)
         return when {
             activeCount > 0 && hasSliders -> "${formatCheckboxesCount(activeCount, lang)}\u00A0+\u00A0${strings.simulationBadgeSlidersSuffix}"
@@ -92,17 +74,7 @@ object Formatters {
         }
     }
 
-    /**
-     * Проверяет, недостижим ли FIRE при текущих параметрах:
-     * retirementAge >= lifeExpectancy - 0.01
-     */
-    fun isFireUnreachable(retirementAge: Double, lifeExpectancy: Int): Boolean {
-        return retirementAge >= lifeExpectancy - 0.01
-    }
-
-    fun isFireUnreachable(retirementAge: Double, lifeExpectancy: Double): Boolean {
-        return retirementAge >= lifeExpectancy - 0.01
-    }
+    fun isFireUnreachable(status: FireStatus): Boolean = status == FireStatus.UNREACHABLE
 
     /**
      * Форматирует срок до пенсии в годах:
@@ -111,15 +83,15 @@ object Formatters {
      */
     fun formatFireYearsToRetirement(
         yearsToRetirement: Double,
-        retirementAge: Double,
-        lifeExpectancy: Int,
-        lang: AppLanguage = AppLanguage.RU
+        status: FireStatus,
+        lang: AppLanguage
     ): String {
         val strings = com.example.util.localization.getAppStrings(lang)
-        return if (isFireUnreachable(retirementAge, lifeExpectancy)) {
-            strings.fireUnreachableText
-        } else {
-            formatRatio(yearsToRetirement, lang)
+        return when (status) {
+            FireStatus.INVALID_AGE -> strings.invalidBirthDateError
+            FireStatus.UNREACHABLE -> strings.fireUnreachableText
+            FireStatus.HORIZON_EXHAUSTED -> strings.fireHorizonExhaustedText
+            FireStatus.REACHED_NOW, FireStatus.REACHABLE -> formatRatio(yearsToRetirement, lang)
         }
     }
 
@@ -130,14 +102,15 @@ object Formatters {
      */
     fun formatFireRetirementAge(
         retirementAge: Double,
-        lifeExpectancy: Int,
-        lang: AppLanguage = AppLanguage.RU
+        status: FireStatus,
+        lang: AppLanguage
     ): String {
         val strings = com.example.util.localization.getAppStrings(lang)
-        return if (isFireUnreachable(retirementAge, lifeExpectancy)) {
-            strings.fireUnreachableText
-        } else {
-            strings.fireRetirementAgeValue(formatRatio(retirementAge, lang))
+        return when (status) {
+            FireStatus.INVALID_AGE -> strings.invalidBirthDateError
+            FireStatus.UNREACHABLE -> strings.fireUnreachableText
+            FireStatus.HORIZON_EXHAUSTED -> strings.fireHorizonExhaustedText
+            FireStatus.REACHED_NOW, FireStatus.REACHABLE -> strings.fireRetirementAgeValue(formatRatio(retirementAge, lang))
         }
     }
 
@@ -150,16 +123,20 @@ object Formatters {
     fun formatFireSimulationSummary(
         baseYearsToRetirement: Double,
         baseRetirementAge: Double,
+        baseStatus: FireStatus,
         simulatedYearsToRetirement: Double,
         simulatedRetirementAge: Double,
-        lifeExpectancy: Int,
-        lang: AppLanguage = AppLanguage.RU
+        simulatedStatus: FireStatus,
+        lang: AppLanguage
     ): String {
         val strings = com.example.util.localization.getAppStrings(lang)
-        val isSimUnreachable = isFireUnreachable(simulatedRetirementAge, lifeExpectancy)
-        val isBaseUnreachable = isFireUnreachable(baseRetirementAge, lifeExpectancy)
+        val isSimUnreachable = simulatedStatus == FireStatus.UNREACHABLE || simulatedStatus == FireStatus.HORIZON_EXHAUSTED
+        val isBaseUnreachable = baseStatus == FireStatus.UNREACHABLE || baseStatus == FireStatus.HORIZON_EXHAUSTED
 
         return when {
+            simulatedStatus == FireStatus.INVALID_AGE -> strings.invalidBirthDateError
+            baseStatus == FireStatus.INVALID_AGE -> strings.invalidBirthDateError
+            simulatedStatus == FireStatus.HORIZON_EXHAUSTED -> strings.fireHorizonExhaustedText
             isSimUnreachable -> strings.fireUnreachableText
             isBaseUnreachable -> strings.fireSimWithoutBase(
                 formatRatio(simulatedYearsToRetirement, lang),
@@ -189,15 +166,15 @@ object Formatters {
     fun formatFireSimulationSummary(
         baseMetrics: com.example.data.model.CalculatedMetrics,
         simulatedMetrics: com.example.data.model.CalculatedMetrics,
-        lifeExpectancy: Int,
-        lang: AppLanguage = AppLanguage.RU
+        lang: AppLanguage
     ): String {
         return formatFireSimulationSummary(
             baseYearsToRetirement = baseMetrics.yearsToRetirement,
             baseRetirementAge = baseMetrics.retirementAge,
+            baseStatus = baseMetrics.fireStatus,
             simulatedYearsToRetirement = simulatedMetrics.yearsToRetirement,
             simulatedRetirementAge = simulatedMetrics.retirementAge,
-            lifeExpectancy = lifeExpectancy,
+            simulatedStatus = simulatedMetrics.fireStatus,
             lang = lang
         )
     }

@@ -8,6 +8,7 @@ import com.example.domain.TemporaryExpense
 import com.example.ui.FireScenarioToggles
 import com.example.ui.FireSimulationState
 import com.example.util.Formatters
+import com.example.util.localization.AppLanguage
 import com.example.util.localization.StringsEn
 import com.example.util.localization.StringsRu
 import org.junit.Assert.assertEquals
@@ -340,11 +341,11 @@ class ScenarioSimulationTest {
         )
         assertTrue(childSelfSufficientMetrics.yearsToRetirement < baseMetrics.yearsToRetirement)
         assertEquals("Дети станут самостоятельными", StringsRu.scenarioChildrenSelfSufficientTitle)
-        assertEquals("расходы −25% через 18 лет (расходы на детей уже в ваших расходах)", StringsRu.scenarioChildrenSelfSufficientParam)
-        assertEquals("Снижение семейных расходов: -AMOUNT/мес. (через 18 лет)", StringsRu.scenarioChildrenSelfSufficientDesc("AMOUNT"))
+        assertEquals("расходы −25% через 18 лет (расходы на детей уже в ваших расходах)", StringsRu.scenarioChildrenSelfSufficientParam("25", "18"))
+        assertEquals("Снижение семейных расходов: -AMOUNT/мес. (через 18 лет)", StringsRu.scenarioChildrenSelfSufficientDesc("AMOUNT", "18"))
         assertEquals("Children Become Independent", StringsEn.scenarioChildrenSelfSufficientTitle)
-        assertEquals("expenses −25% in 18 yrs (child costs already in your expenses)", StringsEn.scenarioChildrenSelfSufficientParam)
-        assertEquals("Family expense reduction: -AMOUNT/mo. (in 18 yrs)", StringsEn.scenarioChildrenSelfSufficientDesc("AMOUNT"))
+        assertEquals("expenses −25% in 18 yrs (child costs already in your expenses)", StringsEn.scenarioChildrenSelfSufficientParam("25", "18"))
+        assertEquals("Family expense reduction: -AMOUNT/mo. (in 18 yrs)", StringsEn.scenarioChildrenSelfSufficientDesc("AMOUNT", "18"))
 
         // Совместное кумулятивное влияние: Зарплата +20% + Оптимизация расходов -15% + Рост рынка +25%
         val combinedPositiveInput = baseInput.copy(
@@ -370,8 +371,8 @@ class ScenarioSimulationTest {
         val ru = StringsRu
         val en = StringsEn
 
-        assertEquals("+25% к ежемесячным расходам", ru.scenarioInflationParam)
-        assertEquals("+25% to monthly expenses", en.scenarioInflationParam)
+        assertEquals("+25% к ежемесячным расходам", ru.scenarioInflationParam("25"))
+        assertEquals("+25% to monthly expenses", en.scenarioInflationParam("25"))
         assertEquals("Расходы растут: +13,0/мес.", ru.scenarioInflationDesc("13,0"))
         assertEquals("Expenses increase: +13.0/mo.", en.scenarioInflationDesc("13.0"))
 
@@ -398,18 +399,18 @@ class ScenarioSimulationTest {
 
     @Test
     fun testFormatCheckboxesBadge() {
-        assertEquals("1\u00A0чекбокс", Formatters.formatCheckboxesCount(1))
-        assertEquals("2\u00A0чекбокса", Formatters.formatCheckboxesCount(2))
-        assertEquals("3\u00A0чекбокса", Formatters.formatCheckboxesCount(3))
-        assertEquals("4\u00A0чекбокса", Formatters.formatCheckboxesCount(4))
-        assertEquals("5\u00A0чекбоксов", Formatters.formatCheckboxesCount(5))
-        assertEquals("11\u00A0чекбоксов", Formatters.formatCheckboxesCount(11))
-        assertEquals("21\u00A0чекбокс", Formatters.formatCheckboxesCount(21))
+        assertEquals("1\u00A0чекбокс", Formatters.formatCheckboxesCount(1, AppLanguage.RU))
+        assertEquals("2\u00A0чекбокса", Formatters.formatCheckboxesCount(2, AppLanguage.RU))
+        assertEquals("3\u00A0чекбокса", Formatters.formatCheckboxesCount(3, AppLanguage.RU))
+        assertEquals("4\u00A0чекбокса", Formatters.formatCheckboxesCount(4, AppLanguage.RU))
+        assertEquals("5\u00A0чекбоксов", Formatters.formatCheckboxesCount(5, AppLanguage.RU))
+        assertEquals("11\u00A0чекбоксов", Formatters.formatCheckboxesCount(11, AppLanguage.RU))
+        assertEquals("21\u00A0чекбокс", Formatters.formatCheckboxesCount(21, AppLanguage.RU))
 
-        assertEquals("1\u00A0чекбокс", Formatters.formatSimulationBadge(1, false))
-        assertEquals("1\u00A0чекбокс\u00A0+\u00A0ползунки", Formatters.formatSimulationBadge(1, true))
-        assertEquals("2\u00A0чекбокса\u00A0+\u00A0ползунки", Formatters.formatSimulationBadge(2, true))
-        assertEquals("Ползунки настройки", Formatters.formatSimulationBadge(0, true))
+        assertEquals("1\u00A0чекбокс", Formatters.formatSimulationBadge(1, false, AppLanguage.RU))
+        assertEquals("1\u00A0чекбокс\u00A0+\u00A0ползунки", Formatters.formatSimulationBadge(1, true, AppLanguage.RU))
+        assertEquals("2\u00A0чекбокса\u00A0+\u00A0ползунки", Formatters.formatSimulationBadge(2, true, AppLanguage.RU))
+        assertEquals("Ползунки настройки", Formatters.formatSimulationBadge(0, true, AppLanguage.RU))
     }
 
     @Test
@@ -430,7 +431,7 @@ class ScenarioSimulationTest {
             mortgage20Years35Income = true,
             carLoan5Years = true,
             largeOneOffExpense500 = true,
-            inflation5Percent = true,
+            expensesPlus25 = true,
             childOrDependent18Years = true
         )
 
@@ -465,7 +466,7 @@ class ScenarioSimulationTest {
 
         val ongoingExpenseMultiplier = (if (allScenarios.expenseOptimization15) 0.85 else 1.0) *
             (if (allScenarios.relocationLowerCost30) 0.70 else 1.0) *
-            (if (allScenarios.inflation5Percent) 1.25 else 1.0)
+            (if (allScenarios.expensesPlus25) 1.25 else 1.0)
         val baseOngoingExpenses = baseInput.monthlyExpenses * ongoingExpenseMultiplier.coerceAtLeast(0.10)
 
         val mortgageMonthlyExpense = if (allScenarios.mortgage20Years35Income) 0.35 * baseInput.monthlyIncome else 0.0

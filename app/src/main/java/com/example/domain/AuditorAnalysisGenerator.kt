@@ -6,6 +6,7 @@ import com.example.domain.model.AuditIndicatorStatus
 import com.example.util.Formatters
 import com.example.util.localization.AppLanguage
 import com.example.util.localization.getAppStrings
+import java.util.Locale
 import kotlin.math.roundToInt
 
 typealias AuditIndicatorStatus = com.example.domain.model.AuditIndicatorStatus
@@ -27,17 +28,17 @@ data class GroupedAuditOpinion(
     fun toFormattedShareText(
         inputData: FinancialInputData,
         metrics: CalculatedMetrics,
-        lang: AppLanguage = AppLanguage.RU
+        lang: AppLanguage
     ): String {
         val strings = getAppStrings(lang)
         return buildString {
             appendLine(strings.auditShareHeaderTitle)
             appendLine("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-            appendLine(String.format(strings.auditShareScoreLine, Formatters.formatScore(metrics.scores.totalScore, lang = lang)))
-            appendLine(String.format(strings.auditShareTotalCountLine, totalCount))
+            appendLine(String.format(Locale.ROOT, strings.auditShareScoreLine, Formatters.formatScore(metrics.scores.totalScore, lang = lang)))
+            appendLine(String.format(Locale.ROOT, strings.auditShareTotalCountLine, totalCount))
             appendLine()
 
-            appendLine(String.format(strings.auditSharePositiveHeader, positive.size))
+            appendLine(String.format(Locale.ROOT, strings.auditSharePositiveHeader, positive.size))
             if (positive.isEmpty()) {
                 appendLine(strings.auditSharePositiveEmpty)
             } else {
@@ -45,7 +46,7 @@ data class GroupedAuditOpinion(
             }
             appendLine()
 
-            appendLine(String.format(strings.auditShareNeutralHeader, neutral.size))
+            appendLine(String.format(Locale.ROOT, strings.auditShareNeutralHeader, neutral.size))
             if (neutral.isEmpty()) {
                 appendLine(strings.auditShareNeutralEmpty)
             } else {
@@ -53,7 +54,7 @@ data class GroupedAuditOpinion(
             }
             appendLine()
 
-            appendLine(String.format(strings.auditShareNegativeHeader, negative.size))
+            appendLine(String.format(Locale.ROOT, strings.auditShareNegativeHeader, negative.size))
             if (negative.isEmpty()) {
                 appendLine(strings.auditShareNegativeEmpty)
             } else {
@@ -64,8 +65,8 @@ data class GroupedAuditOpinion(
             appendLine(strings.auditShareGeneratedBy)
             appendLine(strings.auditShareDisclaimer)
             appendLine()
-            appendLine(strings.assumptionsDisclaimerTitle)
-            appendLine(strings.assumptionsDisclaimerBody(
+            appendLine(strings.fireAssumptionsTitle)
+            appendLine(strings.fireAssumptionsBody(
                 Formatters.formatPercent(inputData.nominalReturnPercent, lang),
                 Formatters.formatPercent(inputData.inflationPercent, lang)
             ))
@@ -78,7 +79,7 @@ object AuditorAnalysisGenerator {
     fun generate(
         inputData: FinancialInputData,
         metrics: CalculatedMetrics,
-        lang: AppLanguage = AppLanguage.RU
+        lang: AppLanguage
     ): GroupedAuditOpinion {
         val currency = inputData.currencySymbol
         val strings = getAppStrings(lang)
@@ -89,91 +90,114 @@ object AuditorAnalysisGenerator {
                 id = "cash_flow",
                 title = strings.auditCashFlowTitle,
                 status = AuditIndicatorStatus.POSITIVE,
-                text = String.format(strings.auditCashFlowPositive, Formatters.formatMoney(metrics.cashFlow, currency, lang))
+                text = String.format(Locale.ROOT, strings.auditCashFlowPositive, Formatters.formatMoney(metrics.cashFlow, currency, lang))
             )
             metrics.cashFlow == 0.0 -> AuditIndicatorAnalysis(
                 id = "cash_flow",
                 title = strings.auditCashFlowTitle,
                 status = AuditIndicatorStatus.NEUTRAL,
-                text = String.format(strings.auditCashFlowNeutral, currency)
+                text = String.format(Locale.ROOT, strings.auditCashFlowNeutral, currency)
             )
             else -> AuditIndicatorAnalysis(
                 id = "cash_flow",
                 title = strings.auditCashFlowTitle,
                 status = AuditIndicatorStatus.NEGATIVE,
-                text = String.format(strings.auditCashFlowNegative, Formatters.formatMoney(metrics.cashFlow, currency, lang))
+                text = String.format(Locale.ROOT, strings.auditCashFlowNegative, Formatters.formatMoney(metrics.cashFlow, currency, lang))
             )
         }
 
         // 2. Норма сбережений
         val savingsRateAnalysis = when {
-            metrics.savingsRate > 20.0 -> AuditIndicatorAnalysis(
+            metrics.savingsRate > FinancialMetricEvaluator.SAVINGS_RATE_POSITIVE_THRESHOLD -> AuditIndicatorAnalysis(
                 id = "savings_rate",
                 title = strings.auditSavingsRateTitle,
                 status = AuditIndicatorStatus.POSITIVE,
-                text = String.format(strings.auditSavingsRatePositive, Formatters.formatPercent(metrics.savingsRate, lang))
+                text = strings.auditSavingsRatePositive(
+                    Formatters.formatPercent(metrics.savingsRate, lang),
+                    strings.formatThreshold(FinancialMetricEvaluator.SAVINGS_RATE_POSITIVE_THRESHOLD)
+                )
             )
-            metrics.savingsRate >= 0.0 -> AuditIndicatorAnalysis(
+            metrics.savingsRate > FinancialMetricEvaluator.SAVINGS_RATE_NEUTRAL_THRESHOLD -> AuditIndicatorAnalysis(
                 id = "savings_rate",
                 title = strings.auditSavingsRateTitle,
                 status = AuditIndicatorStatus.NEUTRAL,
-                text = String.format(strings.auditSavingsRateNeutral, Formatters.formatPercent(metrics.savingsRate, lang))
+                text = strings.auditSavingsRateNeutral(
+                    Formatters.formatPercent(metrics.savingsRate, lang),
+                    strings.formatThreshold(FinancialMetricEvaluator.SAVINGS_RATE_NEUTRAL_THRESHOLD),
+                    strings.formatThreshold(FinancialMetricEvaluator.SAVINGS_RATE_POSITIVE_THRESHOLD)
+                )
             )
             else -> AuditIndicatorAnalysis(
                 id = "savings_rate",
                 title = strings.auditSavingsRateTitle,
                 status = AuditIndicatorStatus.NEGATIVE,
-                text = String.format(strings.auditSavingsRateNegative, Formatters.formatPercent(metrics.savingsRate, lang))
+                text = String.format(Locale.ROOT, strings.auditSavingsRateNegative, Formatters.formatPercent(metrics.savingsRate, lang))
             )
         }
 
         // 3. Подушка безопасности (сумма)
         val emergencyFundAnalysis = when {
-            metrics.safetyMonths >= 6.0 -> AuditIndicatorAnalysis(
+            metrics.safetyMonths >= FinancialMetricEvaluator.SAFETY_MONTHS_POSITIVE_THRESHOLD -> AuditIndicatorAnalysis(
                 id = "emergency_fund",
                 title = strings.auditEmergencyFundTitle,
                 status = AuditIndicatorStatus.POSITIVE,
-                text = String.format(strings.auditEmergencyFundPositive, Formatters.formatMoney(metrics.emergencyFund, currency, lang))
+                text = String.format(Locale.ROOT, strings.auditEmergencyFundPositive, Formatters.formatMoney(metrics.emergencyFund, currency, lang))
             )
-            metrics.safetyMonths >= 3.0 -> AuditIndicatorAnalysis(
+            metrics.safetyMonths >= FinancialMetricEvaluator.SAFETY_MONTHS_NEUTRAL_THRESHOLD -> AuditIndicatorAnalysis(
                 id = "emergency_fund",
                 title = strings.auditEmergencyFundTitle,
                 status = AuditIndicatorStatus.NEUTRAL,
-                text = String.format(strings.auditEmergencyFundNeutral, Formatters.formatMoney(metrics.emergencyFund, currency, lang))
+                text = strings.auditEmergencyFundNeutral(
+                    Formatters.formatMoney(metrics.emergencyFund, currency, lang),
+                    strings.formatThreshold(FinancialMetricEvaluator.SAFETY_MONTHS_POSITIVE_THRESHOLD)
+                )
             )
             else -> AuditIndicatorAnalysis(
                 id = "emergency_fund",
                 title = strings.auditEmergencyFundTitle,
                 status = AuditIndicatorStatus.NEGATIVE,
-                text = String.format(strings.auditEmergencyFundNegative, Formatters.formatMoney(metrics.emergencyFund, currency, lang))
+                text = String.format(Locale.ROOT, strings.auditEmergencyFundNegative, Formatters.formatMoney(metrics.emergencyFund, currency, lang))
             )
         }
 
         // 4. Запас месячных расходов
         val safetyMonthsAnalysis = when {
-            metrics.safetyMonths >= 12.0 -> AuditIndicatorAnalysis(
+            metrics.safetyMonths >= FinancialMetricEvaluator.SAFETY_MONTHS_TIER_EXCELLENT -> AuditIndicatorAnalysis(
                 id = "safety_months",
                 title = strings.auditSafetyMonthsTitle,
                 status = AuditIndicatorStatus.POSITIVE,
-                text = String.format(strings.auditSafetyMonthsHigh, Formatters.formatRatio(metrics.safetyMonths, lang))
+                text = strings.auditSafetyMonthsHigh(
+                    Formatters.formatRatio(metrics.safetyMonths, lang),
+                    strings.formatThreshold(FinancialMetricEvaluator.SAFETY_MONTHS_TIER_EXCELLENT)
+                )
             )
-            metrics.safetyMonths >= 6.0 -> AuditIndicatorAnalysis(
+            metrics.safetyMonths >= FinancialMetricEvaluator.SAFETY_MONTHS_POSITIVE_THRESHOLD -> AuditIndicatorAnalysis(
                 id = "safety_months",
                 title = strings.auditSafetyMonthsTitle,
                 status = AuditIndicatorStatus.POSITIVE,
-                text = String.format(strings.auditSafetyMonthsTarget, Formatters.formatRatio(metrics.safetyMonths, lang))
+                text = strings.auditSafetyMonthsTarget(
+                    Formatters.formatRatio(metrics.safetyMonths, lang),
+                    strings.formatThreshold(FinancialMetricEvaluator.SAFETY_MONTHS_POSITIVE_THRESHOLD)
+                )
             )
-            metrics.safetyMonths >= 3.0 -> AuditIndicatorAnalysis(
+            metrics.safetyMonths >= FinancialMetricEvaluator.SAFETY_MONTHS_NEUTRAL_THRESHOLD -> AuditIndicatorAnalysis(
                 id = "safety_months",
                 title = strings.auditSafetyMonthsTitle,
                 status = AuditIndicatorStatus.NEUTRAL,
-                text = String.format(strings.auditSafetyMonthsNeutral, Formatters.formatRatio(metrics.safetyMonths, lang))
+                text = strings.auditSafetyMonthsNeutral(
+                    Formatters.formatRatio(metrics.safetyMonths, lang),
+                    strings.formatThreshold(FinancialMetricEvaluator.SAFETY_MONTHS_POSITIVE_THRESHOLD)
+                )
             )
             else -> AuditIndicatorAnalysis(
                 id = "safety_months",
                 title = strings.auditSafetyMonthsTitle,
                 status = AuditIndicatorStatus.NEGATIVE,
-                text = String.format(strings.auditSafetyMonthsNegative, Formatters.formatRatio(metrics.safetyMonths, lang))
+                text = strings.auditSafetyMonthsNegative(
+                    Formatters.formatRatio(metrics.safetyMonths, lang),
+                    strings.formatThreshold(FinancialMetricEvaluator.SAFETY_MONTHS_NEUTRAL_THRESHOLD),
+                    strings.formatThreshold(FinancialMetricEvaluator.SAFETY_MONTHS_POSITIVE_THRESHOLD)
+                )
             )
         }
 
@@ -186,31 +210,31 @@ object AuditorAnalysisGenerator {
                 status = AuditIndicatorStatus.POSITIVE,
                 text = strings.auditDebtRatioZero
             )
-            metrics.debtRatio <= 0.30 -> AuditIndicatorAnalysis(
+            metrics.debtRatio <= FinancialMetricEvaluator.DEBT_RATIO_POSITIVE_THRESHOLD -> AuditIndicatorAnalysis(
                 id = "debt_ratio",
                 title = strings.auditDebtRatioTitle,
                 status = AuditIndicatorStatus.POSITIVE,
-                text = String.format(
+                text = String.format(Locale.ROOT,
                     strings.auditDebtRatioConservative,
                     Formatters.formatRatio(metrics.debtRatio, lang),
                     Formatters.formatPercent(debtPct, lang)
                 )
             )
-            metrics.debtRatio <= 0.60 -> AuditIndicatorAnalysis(
+            metrics.debtRatio <= FinancialMetricEvaluator.DEBT_RATIO_NEUTRAL_THRESHOLD -> AuditIndicatorAnalysis(
                 id = "debt_ratio",
                 title = strings.auditDebtRatioTitle,
                 status = AuditIndicatorStatus.NEUTRAL,
-                text = String.format(
+                text = String.format(Locale.ROOT,
                     strings.auditDebtRatioModerate,
                     Formatters.formatRatio(metrics.debtRatio, lang),
                     Formatters.formatPercent(debtPct, lang)
                 )
             )
-            metrics.debtRatio <= 1.0 -> AuditIndicatorAnalysis(
+            metrics.debtRatio <= FinancialMetricEvaluator.DEBT_RATIO_TIER_CRITICAL -> AuditIndicatorAnalysis(
                 id = "debt_ratio",
                 title = strings.auditDebtRatioTitle,
                 status = AuditIndicatorStatus.NEGATIVE,
-                text = String.format(
+                text = String.format(Locale.ROOT,
                     strings.auditDebtRatioHigh,
                     Formatters.formatRatio(metrics.debtRatio, lang),
                     Formatters.formatPercent(debtPct, lang)
@@ -220,7 +244,7 @@ object AuditorAnalysisGenerator {
                 id = "debt_ratio",
                 title = strings.auditDebtRatioTitle,
                 status = AuditIndicatorStatus.NEGATIVE,
-                text = String.format(
+                text = String.format(Locale.ROOT,
                     strings.auditDebtRatioCritical,
                     Formatters.formatRatio(metrics.debtRatio, lang),
                     Formatters.formatPercent(debtPct - 100.0, lang)
@@ -234,83 +258,79 @@ object AuditorAnalysisGenerator {
                 id = "net_worth",
                 title = strings.auditNetWorthTitle,
                 status = AuditIndicatorStatus.POSITIVE,
-                text = String.format(strings.auditNetWorthStrong, Formatters.formatMoney(metrics.netWorth, currency, lang))
+                text = String.format(Locale.ROOT, strings.auditNetWorthStrong, Formatters.formatMoney(metrics.netWorth, currency, lang))
             )
             metrics.netWorth >= 0.0 -> AuditIndicatorAnalysis(
                 id = "net_worth",
                 title = strings.auditNetWorthTitle,
                 status = AuditIndicatorStatus.NEUTRAL,
-                text = String.format(strings.auditNetWorthBalanced, Formatters.formatMoney(metrics.netWorth, currency, lang))
+                text = String.format(Locale.ROOT, strings.auditNetWorthBalanced, Formatters.formatMoney(metrics.netWorth, currency, lang))
             )
             else -> AuditIndicatorAnalysis(
                 id = "net_worth",
                 title = strings.auditNetWorthTitle,
                 status = AuditIndicatorStatus.NEGATIVE,
-                text = String.format(strings.auditNetWorthNegative, Formatters.formatMoney(metrics.netWorth, currency, lang))
+                text = String.format(Locale.ROOT, strings.auditNetWorthNegative, Formatters.formatMoney(metrics.netWorth, currency, lang))
             )
         }
 
         // 7. Бенчмарк Fidelity
-        val fidelityAnalysis = if (metrics.fidelityTarget > 0.0) {
-            val fidelityPercent = FinancialMetricEvaluator.calculateFidelityPercent(metrics.netWorth, metrics.fidelityTarget)
-            val fidelityStatus = FinancialMetricEvaluator.getFidelityStatus(metrics.netWorth, metrics.fidelityTarget)
+        val fidelityAnalysis = if (metrics.isFidelityAvailable) {
+            val fidelityPercent = FinancialMetricEvaluator.calculateFidelityPercent(metrics.fidelityCapital, metrics.fidelityTarget)
+            val fidelityStatus = FinancialMetricEvaluator.getFidelityStatus(metrics.fidelityCapital, metrics.fidelityTarget)
             val formattedPercent = Formatters.formatPercent(fidelityPercent, lang)
             val formattedTarget = Formatters.formatMoney(metrics.fidelityTarget, currency, lang)
-            val formattedNetWorth = Formatters.formatMoney(metrics.netWorth, currency, lang)
+            val formattedFidelityCapital = Formatters.formatMoney(metrics.fidelityCapital, currency, lang)
             when (fidelityStatus) {
                 AuditIndicatorStatus.POSITIVE -> AuditIndicatorAnalysis(
                     id = "fidelity",
                     title = strings.auditFidelityTitle,
                     status = AuditIndicatorStatus.POSITIVE,
-                    text = String.format(strings.auditFidelityPositive, formattedPercent, formattedTarget)
+                    text = String.format(Locale.ROOT, strings.auditFidelityPositive, formattedPercent, formattedTarget)
                 )
                 AuditIndicatorStatus.NEUTRAL -> AuditIndicatorAnalysis(
                     id = "fidelity",
                     title = strings.auditFidelityTitle,
                     status = AuditIndicatorStatus.NEUTRAL,
-                    text = String.format(strings.auditFidelityNeutral, formattedPercent, formattedTarget)
+                    text = String.format(Locale.ROOT, strings.auditFidelityNeutral, formattedPercent, formattedTarget)
                 )
                 AuditIndicatorStatus.NEGATIVE -> {
-                    if (metrics.netWorth < 0.0) {
+                    if (metrics.fidelityCapital < 0.0) {
                         AuditIndicatorAnalysis(
                             id = "fidelity",
                             title = strings.auditFidelityTitle,
                             status = AuditIndicatorStatus.NEGATIVE,
-                            text = String.format(strings.auditFidelityNegativeInsolvent, formattedNetWorth, formattedTarget)
+                            text = String.format(Locale.ROOT, strings.auditFidelityNegativeInsolvent, formattedFidelityCapital, formattedTarget)
                         )
                     } else {
                         AuditIndicatorAnalysis(
                             id = "fidelity",
                             title = strings.auditFidelityTitle,
                             status = AuditIndicatorStatus.NEGATIVE,
-                            text = String.format(strings.auditFidelityNegativeLagging, formattedPercent, formattedTarget)
+                            text = String.format(Locale.ROOT, strings.auditFidelityNegativeLagging, formattedPercent, formattedTarget)
                         )
                     }
                 }
             }
-        } else {
-            AuditIndicatorAnalysis(
-                id = "fidelity",
-                title = strings.auditFidelityTitle,
-                status = AuditIndicatorStatus.POSITIVE,
-                text = strings.auditFidelityUnder30
-            )
-        }
+        } else null
 
         // 8. Коэффициент финансовой свободы (КФС)
         val cfs = metrics.financialFreedomRatio
         val cfsAnalysis = when {
-            cfs >= 25.0 -> AuditIndicatorAnalysis(
+            cfs >= FinancialMetricEvaluator.CFS_THRESHOLD_INDEPENDENCE -> AuditIndicatorAnalysis(
                 id = "cfs",
                 title = strings.auditCfsTitle,
                 status = AuditIndicatorStatus.POSITIVE,
                 text = strings.auditCfsFinanciallyIndependent
             )
-            cfs >= 15.0 -> AuditIndicatorAnalysis(
+            cfs >= FinancialMetricEvaluator.CFS_THRESHOLD_STABILITY &&
+                    cfs < FinancialMetricEvaluator.CFS_THRESHOLD_INDEPENDENCE -> AuditIndicatorAnalysis(
                 id = "cfs",
                 title = strings.auditCfsTitle,
                 status = AuditIndicatorStatus.POSITIVE,
-                text = strings.auditCfsCloseToIndependence((cfs / 25.0 * 100.0).roundToInt())
+                text = strings.auditCfsCloseToIndependence(
+                    (cfs / FinancialMetricEvaluator.CFS_THRESHOLD_INDEPENDENCE * 100.0).roundToInt()
+                )
             )
             else -> AuditIndicatorAnalysis(
                 id = "cfs",
@@ -326,7 +346,7 @@ object AuditorAnalysisGenerator {
                 id = "real_return",
                 title = strings.auditRealReturnTitle,
                 status = AuditIndicatorStatus.POSITIVE,
-                text = String.format(
+                text = String.format(Locale.ROOT,
                     strings.auditRealReturnPositive,
                     Formatters.formatPercent(metrics.realReturnPercent, lang),
                     Formatters.formatPercent(inputData.nominalReturnPercent, lang),
@@ -343,7 +363,7 @@ object AuditorAnalysisGenerator {
                 id = "real_return",
                 title = strings.auditRealReturnTitle,
                 status = AuditIndicatorStatus.NEGATIVE,
-                text = String.format(
+                text = String.format(Locale.ROOT,
                     strings.auditRealReturnNegative,
                     Formatters.formatPercent(metrics.realReturnPercent, lang),
                     Formatters.formatPercent(inputData.inflationPercent, lang),
@@ -352,7 +372,7 @@ object AuditorAnalysisGenerator {
             )
         }
 
-        val allIndicators = listOf(
+        val allIndicators = listOfNotNull(
             cashFlowAnalysis,
             savingsRateAnalysis,
             emergencyFundAnalysis,
@@ -381,7 +401,7 @@ object AuditorAnalysisGenerator {
     fun generateExportSummary(
         inputData: FinancialInputData,
         metrics: CalculatedMetrics,
-        lang: AppLanguage = AppLanguage.RU
+        lang: AppLanguage
     ): String {
         val currency = inputData.currencySymbol
         val strings = getAppStrings(lang)
@@ -391,43 +411,51 @@ object AuditorAnalysisGenerator {
             appendLine(strings.exportHeaderTitle)
             appendLine("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
             appendLine(strings.exportSection1Title)
-            appendLine(String.format(strings.exportIncomeLine, Formatters.formatMoney(inputData.monthlyIncome, currency, lang)))
-            appendLine(String.format(strings.exportExpensesLine, Formatters.formatMoney(inputData.monthlyExpenses, currency, lang)))
-            appendLine(String.format(strings.exportLiquidAssetsLine, Formatters.formatMoney(inputData.liquidAssets, currency, lang)))
-            appendLine(String.format(strings.exportFinancialAssetsLine, Formatters.formatMoney(inputData.financialAssets, currency, lang)))
-            appendLine(String.format(strings.exportPropertyAssetsLine, Formatters.formatMoney(inputData.propertyAssets, currency, lang)))
-            appendLine(String.format(strings.exportLiabilitiesLine, Formatters.formatMoney(inputData.liabilities, currency, lang)))
-            appendLine(String.format(strings.exportAgeHorizonLine, metrics.currentAge, metrics.lifeExpectancy, metrics.remainingYearsHorizon))
-            appendLine(String.format(strings.exportReturnsInflationLine, Formatters.formatPercent(inputData.nominalReturnPercent, lang), Formatters.formatPercent(inputData.inflationPercent, lang)))
-            appendLine(String.format(strings.exportTaxLine, Formatters.formatPercent(inputData.capitalGainsTaxPercent, lang)))
+            appendLine(String.format(Locale.ROOT, strings.exportIncomeLine, Formatters.formatMoney(inputData.monthlyIncome, currency, lang)))
+            appendLine(String.format(Locale.ROOT, strings.exportExpensesLine, Formatters.formatMoney(inputData.monthlyExpenses, currency, lang)))
+            appendLine(String.format(Locale.ROOT, strings.exportLiquidAssetsLine, Formatters.formatMoney(inputData.liquidAssets, currency, lang)))
+            appendLine(String.format(Locale.ROOT, strings.exportFinancialAssetsLine, Formatters.formatMoney(inputData.financialAssets, currency, lang)))
+            appendLine(String.format(Locale.ROOT, strings.exportPropertyAssetsLine, Formatters.formatMoney(inputData.propertyAssets, currency, lang)))
+            appendLine(String.format(Locale.ROOT, strings.exportLiabilitiesLine, Formatters.formatMoney(inputData.liabilities, currency, lang)))
+            appendLine(String.format(Locale.ROOT, strings.exportAgeHorizonLine, metrics.currentAge, metrics.lifeExpectancy, metrics.remainingYearsHorizon))
+            appendLine(String.format(Locale.ROOT, strings.exportReturnsInflationLine, Formatters.formatPercent(inputData.nominalReturnPercent, lang), Formatters.formatPercent(inputData.inflationPercent, lang)))
+            appendLine(String.format(Locale.ROOT, strings.exportTaxLine, Formatters.formatPercent(inputData.capitalGainsTaxPercent, lang)))
             appendLine()
             appendLine(strings.exportSection2Title)
-            appendLine(String.format(strings.exportCashFlowLine, Formatters.formatMoney(metrics.cashFlow, currency, lang)))
-            appendLine(String.format(strings.exportSavingsRateLine, Formatters.formatPercent(metrics.savingsRate, lang)))
-            appendLine(String.format(strings.exportEmergencyFundLine, Formatters.formatMoney(metrics.emergencyFund, currency, lang), Formatters.formatRatio(metrics.safetyMonths, lang)))
-            appendLine(String.format(strings.exportDebtRatioLine, Formatters.formatRatio(metrics.debtRatio, lang)))
-            appendLine(String.format(strings.exportNetWorthLine, Formatters.formatMoney(metrics.netWorth, currency, lang)))
-            appendLine(String.format(strings.exportRealReturnLine, Formatters.formatPercent(metrics.realReturnPercent, lang)))
-            appendLine(String.format(strings.exportEffectiveTaxLine, Formatters.formatPercent(metrics.effectiveCapitalGainsTaxRate, lang)))
+            appendLine(String.format(Locale.ROOT, strings.exportCashFlowLine, Formatters.formatMoney(metrics.cashFlow, currency, lang)))
+            appendLine(String.format(Locale.ROOT, strings.exportSavingsRateLine, Formatters.formatPercent(metrics.savingsRate, lang)))
+            appendLine(String.format(Locale.ROOT, strings.exportEmergencyFundLine, Formatters.formatMoney(metrics.emergencyFund, currency, lang), Formatters.formatRatio(metrics.safetyMonths, lang)))
+            appendLine(String.format(Locale.ROOT, strings.exportDebtRatioLine, Formatters.formatRatio(metrics.debtRatio, lang)))
+            appendLine(String.format(Locale.ROOT, strings.exportNetWorthLine, Formatters.formatMoney(metrics.netWorth, currency, lang)))
+            appendLine(String.format(Locale.ROOT, strings.exportRealReturnLine, Formatters.formatPercent(metrics.realReturnPercent, lang)))
+            appendLine(String.format(Locale.ROOT, strings.exportEffectiveTaxLine, Formatters.formatPercent(metrics.effectiveCapitalGainsTaxRate, lang)))
             appendLine()
             appendLine(strings.exportSection3Title)
-            appendLine(String.format(strings.exportScoreTotalLine, Formatters.formatScore(metrics.scores.totalScore, lang)))
-            appendLine(String.format(strings.exportScoreSavingsRateLine, metrics.scores.savingsRateScore))
-            appendLine(String.format(strings.exportScoreSafetyMonthsLine, metrics.scores.safetyMonthsScore))
-            appendLine(String.format(strings.exportScoreDebtRatioLine, metrics.scores.debtRatioScore))
-            appendLine(String.format(strings.exportScoreCfsLine, metrics.scores.cfsScore))
+            appendLine(String.format(Locale.ROOT, strings.exportScoreTotalLine, Formatters.formatScore(metrics.scores.totalScore, lang)))
+            appendLine(String.format(Locale.ROOT, strings.exportScoreSavingsRateLine, metrics.scores.savingsRateScore))
+            appendLine(String.format(Locale.ROOT, strings.exportScoreSafetyMonthsLine, metrics.scores.safetyMonthsScore))
+            appendLine(String.format(Locale.ROOT, strings.exportScoreDebtRatioLine, metrics.scores.debtRatioScore))
+            appendLine(String.format(Locale.ROOT, strings.exportScoreCfsLine, metrics.scores.cfsScore))
             appendLine()
             appendLine(strings.exportSection4Title)
-            appendLine(String.format(strings.exportCfsLine, Formatters.formatRatio(metrics.financialFreedomRatio, lang), cfsDesc))
-            appendLine(String.format(strings.exportFireTargetCapitalLine, Formatters.formatMoney(metrics.retirementTargetCapital, currency, lang)))
-            appendLine(String.format(strings.exportFireTimeToRetirementLine, Formatters.formatRatio(metrics.yearsToRetirement, lang), Formatters.formatRatio(metrics.retirementAge, lang)))
-            appendLine(String.format(strings.exportFidelityLine, Formatters.formatMoney(metrics.fidelityTarget, currency, lang), Formatters.formatRatio(metrics.fidelityMultiplier, lang), Formatters.formatPercent(metrics.fidelityPercent, lang)))
+            appendLine(String.format(Locale.ROOT, strings.exportCfsLine, Formatters.formatRatio(metrics.financialFreedomRatio, lang), cfsDesc))
+            appendLine(String.format(Locale.ROOT, strings.exportFireTargetCapitalLine, Formatters.formatMoney(metrics.retirementTargetCapital, currency, lang)))
+            appendLine(String.format(
+                Locale.ROOT,
+                strings.exportFireTimeToRetirementLine,
+                Formatters.formatFireYearsToRetirement(metrics.yearsToRetirement, metrics.fireStatus, lang),
+                Formatters.formatFireRetirementAge(metrics.retirementAge, metrics.fireStatus, lang)
+            ))
+            val fidelityValue = if (metrics.isFidelityAvailable) Formatters.formatPercent(metrics.fidelityPercent, lang) else strings.metricUnavailableValue
+            val fidelityTarget = if (metrics.isFidelityAvailable) Formatters.formatMoney(metrics.fidelityTarget, currency, lang) else strings.metricUnavailableValue
+            val fidelityMultiplier = if (metrics.isFidelityAvailable) Formatters.formatRatio(metrics.fidelityMultiplier, lang) else strings.metricUnavailableValue
+            appendLine(String.format(Locale.ROOT, strings.exportFidelityLine, fidelityTarget, fidelityMultiplier, fidelityValue))
             appendLine("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
             appendLine(strings.auditShareGeneratedBy)
             appendLine(strings.auditShareDisclaimer)
             appendLine()
-            appendLine(strings.assumptionsDisclaimerTitle)
-            appendLine(strings.assumptionsDisclaimerBody(
+            appendLine(strings.fireAssumptionsTitle)
+            appendLine(strings.fireAssumptionsBody(
                 Formatters.formatPercent(inputData.nominalReturnPercent, lang),
                 Formatters.formatPercent(inputData.inflationPercent, lang)
             ))

@@ -45,6 +45,7 @@ import androidx.compose.ui.unit.sp
 import com.example.data.model.CalculatedMetrics
 import com.example.data.model.FinancialInputData
 import com.example.domain.FinancialMetricEvaluator
+import com.example.domain.model.AuditIndicatorStatus
 import com.example.ui.components.MetricCard
 import com.example.ui.theme.AccentGold
 import com.example.ui.theme.AccentTeal
@@ -183,7 +184,11 @@ fun MetricsScreen(
                     description = strings.metricCashFlowDesc,
                     icon = Icons.Default.MonetizationOn,
                     highlightColor = StatusColors.getColor(FinancialMetricEvaluator.getCashFlowStatus(metrics.cashFlow)),
-                    subValue = if (metrics.cashFlow >= 0) strings.metricCashFlowPositiveSub else strings.metricCashFlowNegativeSub
+                    subValue = when (FinancialMetricEvaluator.getCashFlowStatus(metrics.cashFlow)) {
+                        AuditIndicatorStatus.POSITIVE -> strings.metricCashFlowPositiveSub
+                        AuditIndicatorStatus.NEUTRAL -> strings.metricCashFlowNeutralSub
+                        AuditIndicatorStatus.NEGATIVE -> strings.metricCashFlowNegativeSub
+                    }
                 )
             }
         }
@@ -195,11 +200,17 @@ fun MetricsScreen(
                     title = strings.metricSavingsRateTitle,
                     value = Formatters.formatPercent(metrics.savingsRate, lang),
                     formula = strings.metricSavingsRateFormula,
-                    description = strings.metricSavingsRateDesc,
+                    description = strings.metricSavingsRateDesc(
+                        strings.formatThreshold(FinancialMetricEvaluator.SAVINGS_RATE_NEUTRAL_THRESHOLD),
+                        strings.formatThreshold(FinancialMetricEvaluator.SAVINGS_RATE_POSITIVE_THRESHOLD)
+                    ),
                     icon = Icons.Default.Savings,
                     score = metrics.scores.savingsRateScore,
                     highlightColor = StatusColors.getColor(FinancialMetricEvaluator.getSavingsRateStatus(metrics.savingsRate)),
-                    subValue = strings.metricSavingsRateSub
+                    subValue = strings.metricSavingsRateSub(
+                        strings.formatThreshold(FinancialMetricEvaluator.SAVINGS_RATE_NEUTRAL_THRESHOLD),
+                        strings.formatThreshold(FinancialMetricEvaluator.SAVINGS_RATE_POSITIVE_THRESHOLD)
+                    )
                 )
             }
         }
@@ -226,11 +237,19 @@ fun MetricsScreen(
                     title = strings.metricSafetyMonthsTitle,
                     value = "${Formatters.formatRatio(metrics.safetyMonths, lang)} ${strings.monthsSuffix}",
                     formula = strings.metricSafetyMonthsFormula,
-                    description = strings.metricSafetyMonthsDesc,
+                    description = strings.metricSafetyMonthsDesc(
+                        strings.formatThreshold(FinancialMetricEvaluator.SAFETY_MONTHS_NEUTRAL_THRESHOLD),
+                        strings.formatThreshold(FinancialMetricEvaluator.SAFETY_MONTHS_POSITIVE_THRESHOLD),
+                        strings.formatThreshold(FinancialMetricEvaluator.SAFETY_MONTHS_TIER_EXCELLENT)
+                    ),
                     icon = Icons.Default.AvTimer,
                     score = metrics.scores.safetyMonthsScore,
                     highlightColor = StatusColors.getColor(FinancialMetricEvaluator.getSafetyMonthsStatus(metrics.safetyMonths)),
-                    subValue = strings.metricSafetyMonthsSub
+                    subValue = strings.metricSafetyMonthsSub(
+                        strings.formatThreshold(FinancialMetricEvaluator.SAFETY_MONTHS_NEUTRAL_THRESHOLD),
+                        strings.formatThreshold(FinancialMetricEvaluator.SAFETY_MONTHS_POSITIVE_THRESHOLD),
+                        strings.formatThreshold(FinancialMetricEvaluator.SAFETY_MONTHS_TIER_EXCELLENT)
+                    )
                 )
             }
         }
@@ -242,11 +261,23 @@ fun MetricsScreen(
                     title = strings.metricDebtRatioTitle,
                     value = Formatters.formatRatio(metrics.debtRatio, lang),
                     formula = strings.metricDebtRatioFormula,
-                    description = strings.metricDebtRatioDesc,
+                    description = strings.metricDebtRatioDesc(
+                        strings.formatDebtRatioThreshold(FinancialMetricEvaluator.DEBT_RATIO_ZERO_THRESHOLD),
+                        strings.formatDebtRatioThreshold(FinancialMetricEvaluator.DEBT_RATIO_POSITIVE_THRESHOLD),
+                        strings.formatDebtRatioThreshold(FinancialMetricEvaluator.DEBT_RATIO_NEUTRAL_THRESHOLD),
+                        strings.formatDebtRatioThreshold(FinancialMetricEvaluator.DEBT_RATIO_TIER_CRITICAL)
+                    ),
                     icon = Icons.Default.AccountBalanceWallet,
                     score = metrics.scores.debtRatioScore,
                     highlightColor = StatusColors.getColor(FinancialMetricEvaluator.getDebtRatioStatus(metrics.debtRatio)),
-                    subValue = if (metrics.debtRatio <= 0.3) strings.metricDebtRatioLowSub else strings.metricDebtRatioHighSub
+                    subValue = when (FinancialMetricEvaluator.getDebtRatioStatus(metrics.debtRatio)) {
+                        AuditIndicatorStatus.POSITIVE -> strings.metricDebtRatioLowSub
+                        AuditIndicatorStatus.NEUTRAL -> strings.debtComment1(
+                            strings.formatDebtRatioThreshold(FinancialMetricEvaluator.DEBT_RATIO_POSITIVE_THRESHOLD),
+                            strings.formatDebtRatioThreshold(FinancialMetricEvaluator.DEBT_RATIO_NEUTRAL_THRESHOLD)
+                        )
+                        AuditIndicatorStatus.NEGATIVE -> strings.metricDebtRatioHighSub
+                    }
                 )
             }
         }
@@ -282,11 +313,15 @@ fun MetricsScreen(
             item {
                 val fidelityRatio = metrics.fidelityRatio
                 val fidelityPercent = metrics.fidelityPercent
-                val fidelityColor = StatusColors.getColor(FinancialMetricEvaluator.getFidelityStatus(fidelityRatio))
+                val fidelityColor = if (metrics.isFidelityAvailable) {
+                    StatusColors.getColor(FinancialMetricEvaluator.getFidelityStatus(fidelityRatio))
+                } else {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                }
 
                 MetricCard(
                     title = strings.metricFidelityTitle,
-                    value = Formatters.formatMoney(metrics.fidelityTarget, inputData.currencySymbol, lang),
+                    value = if (metrics.isFidelityAvailable) Formatters.formatMoney(metrics.fidelityTarget, inputData.currencySymbol, lang) else strings.metricUnavailableValue,
                     formula = strings.metricFidelityFormula,
                     description = strings.metricFidelityDesc,
                     icon = Icons.Default.Flag,
@@ -307,7 +342,7 @@ fun MetricsScreen(
                                     )
                                 )
                                 Text(
-                                    text = if (metrics.fidelityTarget > 0.0) {
+                                    text = if (metrics.isFidelityAvailable) {
                                         Formatters.formatPercent(fidelityPercent, lang)
                                     } else {
                                         strings.metricUnavailableValue
@@ -322,9 +357,9 @@ fun MetricsScreen(
                             Spacer(modifier = Modifier.height(6.dp))
                             LinearProgressIndicator(
                                 progress = {
-                                    if (metrics.fidelityTarget > 0.0) {
+                                    if (metrics.isFidelityAvailable) {
                                         (fidelityRatio.toFloat()).coerceIn(0f, 1f)
-                                    } else 1f
+                                    } else 0f
                                 },
                                 color = fidelityColor,
                                 trackColor = MaterialTheme.colorScheme.surface,
@@ -346,7 +381,14 @@ fun MetricsScreen(
                     title = strings.metricCfsTitle,
                     value = Formatters.formatRatio(metrics.financialFreedomRatio, lang),
                     formula = strings.metricCfsFormula,
-                    description = strings.metricCfsDesc,
+                    description = strings.metricCfsDesc(
+                        strings.formatThreshold(FinancialMetricEvaluator.CFS_THRESHOLD_DEBT),
+                        strings.formatThreshold(FinancialMetricEvaluator.CFS_THRESHOLD_BUFFER),
+                        strings.formatThreshold(FinancialMetricEvaluator.CFS_NEUTRAL_THRESHOLD),
+                        strings.formatThreshold(FinancialMetricEvaluator.CFS_POSITIVE_THRESHOLD),
+                        strings.formatThreshold(FinancialMetricEvaluator.CFS_THRESHOLD_STABILITY),
+                        strings.formatThreshold(FinancialMetricEvaluator.CFS_THRESHOLD_INDEPENDENCE)
+                    ),
                     icon = Icons.Default.CompassCalibration,
                     score = metrics.scores.cfsScore,
                     highlightColor = StatusColors.getColor(FinancialMetricEvaluator.getCfsStatus(metrics.financialFreedomRatio)),

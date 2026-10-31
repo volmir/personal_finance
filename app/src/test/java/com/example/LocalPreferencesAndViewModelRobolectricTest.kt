@@ -52,7 +52,7 @@ class LocalPreferencesAndViewModelRobolectricTest {
             extraMonthlySavings = 500.0,
             scenarios = prefsManager.loadSimulationState().scenarios.copy(
                 salaryIncrease20 = true,
-                inflation5Percent = true
+                expensesPlus25 = true
             )
         )
         prefsManager.saveSimulationState(customSim)
@@ -74,7 +74,7 @@ class LocalPreferencesAndViewModelRobolectricTest {
         val loadedSim = restartedPrefsManager.loadSimulationState()
         assertEquals(500.0, loadedSim.extraMonthlySavings, 0.01)
         assertTrue(loadedSim.scenarios.salaryIncrease20)
-        assertTrue(loadedSim.scenarios.inflation5Percent)
+        assertTrue(loadedSim.scenarios.expensesPlus25)
         assertFalse(loadedSim.scenarios.jobLoss)
     }
 

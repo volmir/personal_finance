@@ -22,6 +22,13 @@ import org.junit.Test
 class FinancialMetricEvaluatorTest {
 
     @Test
+    fun testCfsWithNoExpensesUsesTopTierForPositiveNetWorth() {
+        assertTrue(FinancialMetricEvaluator.calculateCfs(netWorth = 1.0, annualExpenses = 0.0) >= 30.0)
+        assertEquals(0.0, FinancialMetricEvaluator.calculateCfs(netWorth = 0.0, annualExpenses = 0.0), 0.0)
+        assertEquals(0.0, FinancialMetricEvaluator.calculateCfs(netWorth = -1.0, annualExpenses = 0.0), 0.0)
+    }
+
+    @Test
     fun testCfsCalculatedWithNetAssets() {
         val input = FinancialInputData(
             monthlyIncome = 100_000.0,
@@ -93,11 +100,11 @@ class FinancialMetricEvaluatorTest {
             CfsTestCase(5.0, 8, AuditIndicatorStatus.POSITIVE, "5..15", "5..15"),
             CfsTestCase(10.0, 8, AuditIndicatorStatus.POSITIVE, "5..15", "5..15"),
             CfsTestCase(14.99, 8, AuditIndicatorStatus.POSITIVE, "5..15", "5..15"),
-            CfsTestCase(15.0, 9, AuditIndicatorStatus.POSITIVE, "15..30", "15..30"),
-            CfsTestCase(25.0, 9, AuditIndicatorStatus.POSITIVE, "15..30", "15..30"),
-            CfsTestCase(29.99, 9, AuditIndicatorStatus.POSITIVE, "15..30", "15..30"),
-            CfsTestCase(30.0, 10, AuditIndicatorStatus.POSITIVE, "> 30", "> 30"),
-            CfsTestCase(50.0, 10, AuditIndicatorStatus.POSITIVE, "> 30", "> 30")
+            CfsTestCase(15.0, 9, AuditIndicatorStatus.POSITIVE, "КФС >= 15 и КФС < 30", "CFS >= 15 and < 30"),
+            CfsTestCase(25.0, 9, AuditIndicatorStatus.POSITIVE, "КФС >= 15 и КФС < 30", "CFS >= 15 and < 30"),
+            CfsTestCase(29.99, 9, AuditIndicatorStatus.POSITIVE, "КФС >= 15 и КФС < 30", "CFS >= 15 and < 30"),
+            CfsTestCase(30.0, 10, AuditIndicatorStatus.POSITIVE, "КФС >= 30", "CFS >= 30"),
+            CfsTestCase(50.0, 10, AuditIndicatorStatus.POSITIVE, "КФС >= 30", "CFS >= 30")
         )
 
         for (tc in cases) {
@@ -193,11 +200,16 @@ class FinancialMetricEvaluatorTest {
 
     @Test
     fun testSavingsRateThresholdsAndScores() {
-        // 1. Меньше 0: негативный показатель
+        // Нулевое и отрицательное значения: негативный показатель без баллов.
         val negInput = FinancialInputData(monthlyIncome = 50_000.0, monthlyExpenses = 60_000.0)
         val negMetrics = FinanceCalculator.calculate(negInput)
         assertTrue(negMetrics.savingsRate < 0.0)
         assertEquals(0, negMetrics.scores.savingsRateScore)
+        assertEquals(AuditIndicatorStatus.NEGATIVE, FinancialMetricEvaluator.getSavingsRateStatus(-5.0))
+        assertEquals(0, FinancialMetricEvaluator.getSavingsRateScore(-5.0))
+        assertEquals(AuditIndicatorStatus.NEGATIVE, FinancialMetricEvaluator.getSavingsRateStatus(0.0))
+        assertEquals(0, FinancialMetricEvaluator.getSavingsRateScore(0.0))
+        assertEquals(AuditIndicatorStatus.NEGATIVE, FinancialMetricEvaluator.getCashFlowStatus(0.0))
         val negOpinion = AuditorAnalysisGenerator.generate(negInput, negMetrics)
         val negSr = (negOpinion.positive + negOpinion.neutral + negOpinion.negative).first { it.id == "savings_rate" }
         assertEquals(AuditIndicatorStatus.NEGATIVE, negSr.status)
@@ -211,7 +223,9 @@ class FinancialMetricEvaluatorTest {
             .first { it.id == "savings_rate" }
         assertEquals(AuditIndicatorStatus.NEGATIVE, noIncomeSr.status)
 
-        // 2. От 0 до 20: нейтральный показатель (например 8% и 20%)
+        // Положительные значения до 20% включительно нейтральны.
+        assertEquals(AuditIndicatorStatus.NEUTRAL, FinancialMetricEvaluator.getSavingsRateStatus(0.01))
+        assertEquals(5, FinancialMetricEvaluator.getSavingsRateScore(0.01))
         val neutralInput8 = FinancialInputData(monthlyIncome = 100_000.0, monthlyExpenses = 92_000.0)
         val neutralMetrics8 = FinanceCalculator.calculate(neutralInput8)
         assertEquals(8.0, neutralMetrics8.savingsRate, 0.01)
@@ -224,6 +238,7 @@ class FinancialMetricEvaluatorTest {
         val neutralMetrics20 = FinanceCalculator.calculate(neutralInput20)
         assertEquals(20.0, neutralMetrics20.savingsRate, 0.01)
         assertEquals(7, neutralMetrics20.scores.savingsRateScore)
+        assertEquals(AuditIndicatorStatus.NEUTRAL, FinancialMetricEvaluator.getSavingsRateStatus(20.0))
         val opinion20 = AuditorAnalysisGenerator.generate(neutralInput20, neutralMetrics20)
         val sr20 = (opinion20.positive + opinion20.neutral + opinion20.negative).first { it.id == "savings_rate" }
         assertEquals(AuditIndicatorStatus.NEUTRAL, sr20.status)
@@ -236,6 +251,18 @@ class FinancialMetricEvaluatorTest {
         val opinion25 = AuditorAnalysisGenerator.generate(posInput25, posMetrics25)
         val sr25 = (opinion25.positive + opinion25.neutral + opinion25.negative).first { it.id == "savings_rate" }
         assertEquals(AuditIndicatorStatus.POSITIVE, sr25.status)
+
+        assertEquals(AuditIndicatorStatus.POSITIVE, FinancialMetricEvaluator.getSavingsRateStatus(20.01))
+        assertEquals(8, FinancialMetricEvaluator.getSavingsRateScore(20.01))
+
+        // Ноль теперь теряет прежние 5 баллов; ограничение при CFS < 5 сохраняется.
+        val zeroRateScores = FinanceCalculator.calculateScores(0.0, 7.0, 0.3, 5.0)
+        val positiveRateScores = FinanceCalculator.calculateScores(0.01, 7.0, 0.3, 5.0)
+        assertEquals(0, zeroRateScores.savingsRateScore)
+        assertEquals(5, positiveRateScores.savingsRateScore)
+        assertTrue(zeroRateScores.totalScore < positiveRateScores.totalScore)
+        assertEquals(6.0, FinanceCalculator.calculateTotalScore(10, 10, 10, 4), 0.0)
+        assertTrue(FinanceCalculator.calculateTotalScore(10, 10, 10, 5) > 6.0)
     }
 
     @Test
@@ -308,6 +335,14 @@ class FinancialMetricEvaluatorTest {
         val fidelityItem = (opinion.positive + opinion.neutral + opinion.negative).first { it.id == "fidelity" }
         assertEquals(AuditIndicatorStatus.POSITIVE, fidelityItem.status)
         assertTrue(fidelityItem.text.contains("% от цели"))
+    }
+
+    @Test
+    fun `Fidelity capital subtracts only debt not covered by property`() {
+        assertEquals(55_000.0, FinancialMetricEvaluator.fidelityCapital(15_000.0, 40_000.0, 280_000.0, 180_000.0), 0.0)
+        assertEquals(55_000.0, FinancialMetricEvaluator.fidelityCapital(15_000.0, 40_000.0, 0.0, 0.0), 0.0)
+        assertEquals(35_000.0, FinancialMetricEvaluator.fidelityCapital(15_000.0, 40_000.0, 280_000.0, 300_000.0), 0.0)
+        assertEquals(-65_000.0, FinancialMetricEvaluator.fidelityCapital(15_000.0, 40_000.0, 280_000.0, 400_000.0), 0.0)
     }
 
     @Test

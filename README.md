@@ -75,7 +75,7 @@ The application is structured into 4 cohesive functional tabs:
 ## 🌐 Languages & Localization / Языки и локализация
 
 - **Application Languages:**
-  - 🇷🇺 **Russian (Русский)** — default for `ru`, `be`, `uk` locales.
+  - 🇷🇺 **Russian (Русский)** — default for `ru` and `be` locales.
   - 🇬🇧 **English** — default for all other system locales.
   - *Detection:* System locale is checked on first launch; the selected language is stored locally.
 - **Currency symbols:** $, €, ₽, ₴, ₸, Br, ֏, £, ¥, CHF, C$, A$, ₹. Values are not converted between currencies.

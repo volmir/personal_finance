@@ -36,15 +36,25 @@ object FinanceCalculator {
         }
     }
 
+    internal fun calculateRealReturnPercent(nominalReturnPercent: Double, inflationPercent: Double): Double {
+        val nominalRate = nominalReturnPercent / 100.0
+        val inflationRate = inflationPercent / 100.0
+        return if (inflationRate != -1.0) {
+            ((1.0 + nominalRate) / (1.0 + inflationRate) - 1.0) * 100.0
+        } else 0.0
+    }
+
     fun calculate(
         input: FinancialInputData,
         temporaryExpenses: List<TemporaryExpense> = emptyList(),
         deferredAnnualExpenseReduction: Double = 0.0,
         deferredStartYears: Double = 18.0,
-        deferredAssets: List<DeferredAsset> = emptyList()
+        deferredAssets: List<DeferredAsset> = emptyList(),
+        extraMonthlyCashFlow: Double = 0.0,
+        today: LocalDate = LocalDate.now()
     ): CalculatedMetrics {
         val totalAssets = input.liquidAssets + input.financialAssets + input.propertyAssets
-        val cashFlow = input.monthlyIncome - input.monthlyExpenses
+        val cashFlow = input.monthlyIncome - input.monthlyExpenses + extraMonthlyCashFlow
         val savingsRate = if (input.monthlyIncome > 0) {
             (cashFlow / input.monthlyIncome) * 100.0
         } else if (cashFlow < 0.0) -100.0 else 0.0
@@ -64,10 +74,13 @@ object FinanceCalculator {
         } else if (input.liabilities > 0.0) Double.POSITIVE_INFINITY else 0.0
 
         val netWorth = totalAssets - input.liabilities
+        val fidelityCapital = FinancialMetricEvaluator.fidelityCapital(
+            input.liquidAssets, input.financialAssets, input.propertyAssets, input.liabilities
+        )
         val annualIncome = input.monthlyIncome * 12.0
         val annualExpenses = input.monthlyExpenses * 12.0
 
-        val computedAge = calculateAge(input.birthDate)
+        val computedAge = calculateAge(input.birthDate, today)
         val isAgeValid = computedAge != null
         val currentAge = computedAge ?: 0
         val remainingYearsHorizon = if (isAgeValid) (input.lifeExpectancy - currentAge).coerceAtLeast(0) else 0
@@ -76,13 +89,7 @@ object FinanceCalculator {
         val fidelityTarget = if (isAgeValid) annualIncome * fidelityMultiplier else 0.0
 
         val cfs = FinancialMetricEvaluator.calculateCfs(netWorth, annualExpenses)
-        val cfsStageDescription = FinancialMetricEvaluator.getCfsStageDescription(cfs)
-
-        val nominalRate = input.nominalReturnPercent / 100.0
-        val inflRate = input.inflationPercent / 100.0
-        val realReturnPercent = if (inflRate != -1.0) {
-            ((1.0 + nominalRate) / (1.0 + inflRate) - 1.0) * 100.0
-        } else 0.0
+        val realReturnPercent = calculateRealReturnPercent(input.nominalReturnPercent, input.inflationPercent)
 
         val scores = calculateScores(
             savingsRate = savingsRate,
@@ -91,70 +98,29 @@ object FinanceCalculator {
             cfs = cfs
         )
 
-        // Динамический расчет эффективной ставки налога на прирост капитала с вывода
-        // Учет в расчетах: применяется к выводу, если в структуре капитала есть финансовые активы (акции/облигации)
-        val hasFinancialAssets = input.financialAssets > 0.0
-
         val engine = ProjectionEngine(
             ProjectionParams.from(
                 input = input,
                 temporaryExpenses = temporaryExpenses,
                 deferredAnnualExpenseReduction = deferredAnnualExpenseReduction,
                 deferredStartYears = deferredStartYears,
-                deferredAssets = deferredAssets
+                deferredAssets = deferredAssets,
+                extraMonthlyCashFlow = extraMonthlyCashFlow,
+                today = today
             )
         )
 
-        val yearsToRetire = if (isAgeValid) {
-            engine.findYearsToRetirement()
-        } else {
-            0.0
-        }
+        val retirementResult = engine.findYearsToRetirement()
+        val yearsToRetire = retirementResult.years
 
         val retirementAge = if (isAgeValid) currentAge + yearsToRetire else 0.0
         val remainingYearsInRetirement = if (isAgeValid) (input.lifeExpectancy - retirementAge).coerceAtLeast(0.0) else 0.0
-        val ongoingAnnualExpenses = engine.ongoingAnnualExpenses
-
-        // Индивидуальный расчет Blended Model для конкретного пользователя:
-        val financialAssetRatio = engine.finRatio
-
-        // Совокупные расходы на пенсии на всем горизонте дожития
-        val totalRetirementExpenses = ongoingAnnualExpenses * remainingYearsInRetirement
-
-        // Совокупные собственные вложения (тело капитала = текущие финансовые активы + пополнения до пенсии)
-        val contributedPrincipal = input.financialAssets + maxOf(0.0, cashFlow * 12.0) * yearsToRetire
-
         // Базовый капитал до налогообложения
         val baseReq = engine.computeBaseRequirement(yearsToRetire, remainingYearsInRetirement)
-
-        // Индивидуальный накопленный инвестиционный доход (прирост капитала)
-        val totalGain = maxOf(
-            (totalRetirementExpenses - contributedPrincipal).coerceAtLeast(0.0),
-            (totalRetirementExpenses - baseReq).coerceAtLeast(0.0)
-        )
-
-        // Индивидуальная расчетная доля прибыли в выводе
-        val individualGainShare = if (totalRetirementExpenses > 0.0 && hasFinancialAssets) {
-            (totalGain / totalRetirementExpenses).coerceIn(0.0, 0.95)
-        } else {
-            0.0
-        }
-
-        // Индивидуальная эффективная ставка налога с вывода
-        val effectiveCapitalGainsTaxRate = if (hasFinancialAssets && input.capitalGainsTaxPercent > 0.0) {
-            ((input.capitalGainsTaxPercent / 100.0) * individualGainShare * financialAssetRatio).coerceIn(0.0, 0.50)
-        } else {
-            0.0
-        }
-
-        val taxMultiplier = if (effectiveCapitalGainsTaxRate > 0.0 && effectiveCapitalGainsTaxRate < 0.99) {
-            1.0 / (1.0 - effectiveCapitalGainsTaxRate)
-        } else {
-            1.0
-        }
+        val taxInfo = engine.taxInfo(yearsToRetire, remainingYearsInRetirement, baseReq)
 
         val targetRetirementCapital = if (isAgeValid && remainingYearsInRetirement > 0) {
-            engine.requiredCapitalAt(yearsToRetire, fixedTaxFactor = taxMultiplier)
+            engine.requiredCapitalAt(yearsToRetire, fixedTaxFactor = taxInfo.factor)
         } else 0.0
 
         return CalculatedMetrics(
@@ -165,6 +131,7 @@ object FinanceCalculator {
             safetyMonths = safetyMonths,
             debtRatio = debtRatio,
             netWorth = netWorth,
+            fidelityCapital = fidelityCapital,
             annualIncome = annualIncome,
             annualExpenses = annualExpenses,
             currentAge = currentAge,
@@ -173,15 +140,15 @@ object FinanceCalculator {
             fidelityMultiplier = fidelityMultiplier,
             fidelityTarget = fidelityTarget,
             financialFreedomRatio = cfs,
-            cfsStageDescription = cfsStageDescription,
             realReturnPercent = realReturnPercent,
             yearsToRetirement = yearsToRetire,
             retirementAge = retirementAge,
+            fireStatus = retirementResult.status,
             retirementTargetCapital = targetRetirementCapital,
             scores = scores,
             capitalGainsTaxPercent = input.capitalGainsTaxPercent,
-            effectiveCapitalGainsTaxRate = effectiveCapitalGainsTaxRate * 100.0,
-            capitalGainsGainSharePercent = individualGainShare * 100.0,
+            effectiveCapitalGainsTaxRate = taxInfo.effectiveRate * 100.0,
+            capitalGainsGainSharePercent = taxInfo.gainShare * 100.0,
             isAgeValid = isAgeValid
         )
     }
@@ -205,18 +172,7 @@ object FinanceCalculator {
         }
     }
 
-    /**
-     * Fidelity Benchmark Multiplier:
-     * Discrete checkpoints:
-     * 30: 1.0x
-     * 40: 3.0x
-     * 50: 6.0x
-     * 60: 8.0x
-     * 67+: 10.0x
-     *
-     * Linear interpolation between checkpoints:
-     * For age 35: 1.0 + (35 - 30) / 10.0 * (3.0 - 1.0) = 1.0 + 0.5 * 2.0 = 2.0x
-     */
+    /** Адаптация приложения: до 25 лет 0.5x; 25–30 линейно 0.5→1.0; далее линейно между точками. */
     fun calculateFidelityMultiplier(age: Int): Double {
         return when {
             age <= 25 -> 0.5
@@ -229,7 +185,7 @@ object FinanceCalculator {
         }
     }
 
-    fun getCfsStageDescription(cfs: Double, lang: com.example.util.localization.AppLanguage = com.example.util.localization.AppLanguage.RU): String {
+    fun getCfsStageDescription(cfs: Double, lang: com.example.util.localization.AppLanguage): String {
         return FinancialMetricEvaluator.getCfsStageDescription(cfs, lang)
     }
 
@@ -261,51 +217,9 @@ object FinanceCalculator {
         cfsScore: Int
     ): Double {
         val total = savingsScore * 0.25 + safetyScore * 0.15 + debtScore * 0.15 + cfsScore * 0.45
-        return if (cfsScore < 5) minOf(total, 6.0) else total
-    }
-
-    /**
-     * Calculates years until financial independence (FIRE / retirement).
-     * Solves: AccumulatedCapital(t) >= RequiredCapitalToCoverExpensesUntilLifeExpectancy(t).
-     *
-     * Initial capital: W0 = totalAssets
-     * Annual addition: S = annualCashFlow
-     * Annual expenses: Exp = annualExpenses
-     * Real return: r
-     * Horizon: currentAge to lifeExpectancy
-     */
-    fun calculateYearsToRetirement(
-        currentAge: Int,
-        lifeExpectancy: Int,
-        totalAssets: Double,
-        annualCashFlow: Double,
-        annualExpenses: Double,
-        realReturnRate: Double,
-        temporaryExpenses: List<TemporaryExpense> = emptyList(),
-        deferredAnnualExpenseReduction: Double = 0.0,
-        deferredStartYears: Double = 18.0,
-        deferredAssets: List<DeferredAsset> = emptyList(),
-        financialAssets: Double = 0.0,
-        liquidAssets: Double = 0.0,
-        capitalGainsTaxPercent: Double = 0.0
-    ): Double {
-        val params = ProjectionParams(
-            currentAge = currentAge,
-            lifeExpectancy = lifeExpectancy,
-            startCapital = totalAssets,
-            annualCashFlow = annualCashFlow,
-            annualExpenses = annualExpenses,
-            realReturnRate = realReturnRate,
-            temporaryExpenses = temporaryExpenses,
-            deferredAnnualExpenseReduction = deferredAnnualExpenseReduction,
-            deferredStartYears = deferredStartYears,
-            deferredAssets = deferredAssets,
-            financialAssets = financialAssets,
-            liquidAssets = liquidAssets,
-            capitalGainsTaxPercent = capitalGainsTaxPercent,
-            isAgeValid = true
-        )
-        return ProjectionEngine(params).findYearsToRetirement()
+        return if (cfsScore < FinancialMetricEvaluator.TOTAL_SCORE_CFS_CAP_TRIGGER) {
+            minOf(total, FinancialMetricEvaluator.TOTAL_SCORE_CAP_FOR_LOW_CFS)
+        } else total
     }
 
     /**
@@ -317,14 +231,18 @@ object FinanceCalculator {
         temporaryExpenses: List<TemporaryExpense> = emptyList(),
         deferredAnnualExpenseReduction: Double = 0.0,
         deferredStartYears: Double = 18.0,
-        deferredAssets: List<DeferredAsset> = emptyList()
+        deferredAssets: List<DeferredAsset> = emptyList(),
+        extraMonthlyCashFlow: Double = 0.0,
+        today: LocalDate = LocalDate.now()
     ): List<TrajectoryPoint> {
         val params = ProjectionParams.from(
             input = input,
             temporaryExpenses = temporaryExpenses,
             deferredAnnualExpenseReduction = deferredAnnualExpenseReduction,
             deferredStartYears = deferredStartYears,
-            deferredAssets = deferredAssets
+            deferredAssets = deferredAssets,
+            extraMonthlyCashFlow = extraMonthlyCashFlow,
+            today = today
         )
         val engine = ProjectionEngine(params)
         val effectiveTaxRate = (metrics.effectiveCapitalGainsTaxRate / 100.0).coerceIn(0.0, 0.50)

@@ -1,6 +1,5 @@
 package com.example.ui.screens
 
-import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -30,8 +29,6 @@ import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Percent
-import androidx.compose.material.icons.filled.Public
-import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -49,6 +46,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -89,8 +87,6 @@ fun InputDataScreen(
     inputData: FinancialInputData,
     metrics: CalculatedMetrics,
     onUpdate: ((FinancialInputData) -> FinancialInputData) -> Unit,
-    onLoadRussiaAverage: () -> Unit = {},
-    onClear: () -> Unit = {},
     onNavigateToMetrics: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -166,7 +162,7 @@ fun InputDataScreen(
                     label = strings.monthlyIncomeLabel,
                     value = inputData.monthlyIncome,
                     currency = inputData.currencySymbol,
-                    onValueChange = { newVal -> onUpdate { it.copy(monthlyIncome = newVal) } },
+                    onValueChange = { newVal -> onUpdate { it.copy(monthlyIncome = newVal.coerceAtLeast(0.0)) } },
                     testTag = "input_monthly_income"
                 )
 
@@ -185,7 +181,7 @@ fun InputDataScreen(
                     label = strings.monthlyExpensesLabel,
                     value = inputData.monthlyExpenses,
                     currency = inputData.currencySymbol,
-                    onValueChange = { newVal -> onUpdate { it.copy(monthlyExpenses = newVal) } },
+                    onValueChange = { newVal -> onUpdate { it.copy(monthlyExpenses = newVal.coerceAtLeast(0.0)) } },
                     testTag = "input_monthly_expenses"
                 )
 
@@ -231,7 +227,7 @@ fun InputDataScreen(
                     label = strings.liquidAssetsLabel,
                     value = inputData.liquidAssets,
                     currency = inputData.currencySymbol,
-                    onValueChange = { newVal -> onUpdate { it.copy(liquidAssets = newVal) } },
+                    onValueChange = { newVal -> onUpdate { it.copy(liquidAssets = newVal.coerceAtLeast(0.0)) } },
                     testTag = "input_liquid_assets"
                 )
 
@@ -241,7 +237,7 @@ fun InputDataScreen(
                     label = strings.financialAssetsLabel,
                     value = inputData.financialAssets,
                     currency = inputData.currencySymbol,
-                    onValueChange = { newVal -> onUpdate { it.copy(financialAssets = newVal) } },
+                    onValueChange = { newVal -> onUpdate { it.copy(financialAssets = newVal.coerceAtLeast(0.0)) } },
                     testTag = "input_financial_assets"
                 )
 
@@ -251,7 +247,7 @@ fun InputDataScreen(
                     label = strings.propertyAssetsLabel,
                     value = inputData.propertyAssets,
                     currency = inputData.currencySymbol,
-                    onValueChange = { newVal -> onUpdate { it.copy(propertyAssets = newVal) } },
+                    onValueChange = { newVal -> onUpdate { it.copy(propertyAssets = newVal.coerceAtLeast(0.0)) } },
                     testTag = "input_property_assets"
                 )
 
@@ -316,7 +312,7 @@ fun InputDataScreen(
                     label = strings.liabilitiesLabel,
                     value = inputData.liabilities,
                     currency = inputData.currencySymbol,
-                    onValueChange = { newVal -> onUpdate { it.copy(liabilities = newVal) } },
+                    onValueChange = { newVal -> onUpdate { it.copy(liabilities = newVal.coerceAtLeast(0.0)) } },
                     testTag = "input_liabilities"
                 )
 
@@ -358,7 +354,8 @@ fun InputDataScreen(
                             value = inputData.nominalReturnPercent,
                             currency = "%",
                             onValueChange = { newVal -> onUpdate { it.copy(nominalReturnPercent = newVal) } },
-                            testTag = "input_nominal_return"
+                            testTag = "input_nominal_return",
+                            allowNegative = true
                         )
                     }
                     Box(modifier = Modifier.weight(1f)) {
@@ -366,8 +363,9 @@ fun InputDataScreen(
                             label = strings.inflationLabel,
                             value = inputData.inflationPercent,
                             currency = "%",
-                            onValueChange = { newVal -> onUpdate { it.copy(inflationPercent = newVal) } },
-                            testTag = "input_inflation"
+                            onValueChange = { newVal -> onUpdate { it.copy(inflationPercent = newVal.coerceAtLeast(-99.99)) } },
+                            testTag = "input_inflation",
+                            allowNegative = true
                         )
                     }
                 }
@@ -378,7 +376,7 @@ fun InputDataScreen(
                     label = strings.capitalGainsTaxLabel,
                     value = inputData.capitalGainsTaxPercent,
                     currency = "%",
-                    onValueChange = { newVal -> onUpdate { it.copy(capitalGainsTaxPercent = newVal) } },
+                    onValueChange = { newVal -> onUpdate { it.copy(capitalGainsTaxPercent = newVal.coerceIn(0.0, 100.0)) } },
                     testTag = "input_capital_gains_tax"
                 )
 
@@ -443,18 +441,37 @@ fun InputDataScreen(
                             .testTag("input_birth_date")
                     )
 
+                    var lifeExpectancyText by remember { mutableStateOf(inputData.lifeExpectancy.toString()) }
+                    LaunchedEffect(inputData.lifeExpectancy) {
+                        if (lifeExpectancyText.toIntOrNull() != inputData.lifeExpectancy) {
+                            lifeExpectancyText = inputData.lifeExpectancy.toString()
+                        }
+                    }
+                    val currentAge = metrics.currentAge
+                    val enteredLifeExpectancy = lifeExpectancyText.toIntOrNull()
+                    val lifeExpectancyInvalid = enteredLifeExpectancy != null &&
+                        enteredLifeExpectancy !in ((currentAge + 1)..120)
                     OutlinedTextField(
-                        value = inputData.lifeExpectancy.toString(),
+                        value = lifeExpectancyText,
                         onValueChange = { str ->
-                            val v = str.toIntOrNull() ?: inputData.lifeExpectancy
-                            onUpdate { it.copy(lifeExpectancy = v) }
+                            val filtered = str.filter(Char::isDigit)
+                            lifeExpectancyText = filtered
+                            val v = filtered.toIntOrNull()
+                            if (v != null && v in ((currentAge + 1)..120)) {
+                                onUpdate { it.copy(lifeExpectancy = v) }
+                            }
                         },
                         label = { Text(strings.lifeExpectancyLabel) },
+                        isError = lifeExpectancyInvalid,
+                        supportingText = if (lifeExpectancyInvalid) {
+                            { Text(strings.invalidBirthDateError, color = MaterialTheme.colorScheme.error, fontSize = 11.sp) }
+                        } else null,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         singleLine = true,
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = MaterialTheme.colorScheme.primary,
-                            unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                            errorBorderColor = MaterialTheme.colorScheme.error
                         ),
                         modifier = Modifier
                             .weight(0.9f)
@@ -631,17 +648,33 @@ fun NumberInputField(
     currency: String,
     onValueChange: (Double) -> Unit,
     testTag: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    allowNegative: Boolean = false
 ) {
-    var textValue by remember(value) {
-        mutableStateOf(if (value == 0.0) "" else Formatters.formatNumber(value))
+    val lang = LocalAppLanguage.current
+    var textValue by remember {
+        mutableStateOf(if (value == 0.0) "" else Formatters.formatNumber(value, lang))
+    }
+    LaunchedEffect(value) {
+        if (Formatters.parseDouble(textValue) != value) {
+            textValue = if (value == 0.0) "" else Formatters.formatNumber(value, lang)
+        }
     }
 
     OutlinedTextField(
         value = textValue,
         onValueChange = { inputStr ->
-            textValue = inputStr
-            val parsed = Formatters.parseDouble(inputStr)
+            val filtered = buildString {
+                inputStr.forEachIndexed { index, char ->
+                    when {
+                        char.isDigit() -> append(char)
+                        (char == '.' || char == ',') && none { it == '.' || it == ',' } -> append(char)
+                        char == '-' && allowNegative && index == 0 && isEmpty() -> append(char)
+                    }
+                }
+            }
+            textValue = filtered
+            val parsed = Formatters.parseDouble(filtered)
             onValueChange(parsed)
         },
         label = { Text(label, fontSize = 12.sp) },
@@ -656,7 +689,7 @@ fun NumberInputField(
             )
         },
         singleLine = true,
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+        keyboardOptions = KeyboardOptions(keyboardType = if (allowNegative) KeyboardType.Decimal else KeyboardType.Number),
         colors = OutlinedTextFieldDefaults.colors(
             focusedBorderColor = MaterialTheme.colorScheme.primary,
             unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)

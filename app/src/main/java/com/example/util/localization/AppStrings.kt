@@ -1,6 +1,29 @@
 package com.example.util.localization
 
 import androidx.compose.runtime.compositionLocalOf
+import android.icu.text.PluralRules
+import java.text.DecimalFormat
+import java.text.DecimalFormatSymbols
+import java.text.NumberFormat
+import java.util.Locale
+
+data class PluralForms(
+    val zero: String? = null,
+    val one: String? = null,
+    val two: String? = null,
+    val few: String? = null,
+    val many: String? = null,
+    val other: String
+) {
+    fun forCategory(category: String): String = when (category) {
+        "zero" -> zero ?: other
+        "one" -> one ?: other
+        "two" -> two ?: other
+        "few" -> few ?: other
+        "many" -> many ?: other
+        else -> other
+    }
+}
 
 data class BreakdownCategory(
     val title: String,
@@ -124,12 +147,13 @@ interface AppStrings {
     val metricCashFlowFormula: String
     val metricCashFlowDesc: String
     val metricCashFlowPositiveSub: String
+    val metricCashFlowNeutralSub: String
     val metricCashFlowNegativeSub: String
 
     val metricSavingsRateTitle: String
     val metricSavingsRateFormula: String
-    val metricSavingsRateDesc: String
-    val metricSavingsRateSub: String
+    val metricSavingsRateDesc: (neutralThreshold: String, positiveThreshold: String) -> String
+    val metricSavingsRateSub: (neutralThreshold: String, positiveThreshold: String) -> String
 
     val metricEmergencyFundTitle: String
     val metricEmergencyFundFormula: String
@@ -139,13 +163,13 @@ interface AppStrings {
 
     val metricSafetyMonthsTitle: String
     val metricSafetyMonthsFormula: String
-    val metricSafetyMonthsDesc: String
-    val metricSafetyMonthsSub: String
+    val metricSafetyMonthsDesc: (neutralThreshold: String, positiveThreshold: String, excellentThreshold: String) -> String
+    val metricSafetyMonthsSub: (neutralThreshold: String, positiveThreshold: String, excellentThreshold: String) -> String
     val monthsSuffix: String
 
     val metricDebtRatioTitle: String
     val metricDebtRatioFormula: String
-    val metricDebtRatioDesc: String
+    val metricDebtRatioDesc: (zero: String, positiveThreshold: String, neutralThreshold: String, criticalThreshold: String) -> String
     val metricDebtRatioLowSub: String
     val metricDebtRatioHighSub: String
 
@@ -165,7 +189,7 @@ interface AppStrings {
 
     val metricCfsTitle: String
     val metricCfsFormula: String
-    val metricCfsDesc: String
+    val metricCfsDesc: (debt: String, buffer: String, neutral: String, positive: String, stability: String, independence: String) -> String
 
     val metricRealReturnTitle: String
     val metricRealReturnFormula: String
@@ -187,12 +211,12 @@ interface AppStrings {
     val scoreValuePrefix: String
     val scoreOutOfTen: (score: Int) -> String
     val scoreSlashOutOfTen: (score: String) -> String
-    val savingsRateScoreComment: (rate: Double, sr: String) -> String
-    val safetyMonthsScoreComment: (months: Double, monthsText: String) -> String
-    val debtComment0: String
-    val debtComment1: String
-    val debtComment2: String
-    val debtComment3: String
+    val savingsRateScoreComment: (rate: Double, sr: String, positiveThreshold: String) -> String
+    val safetyMonthsScoreComment: (months: Double, monthsText: String, neutralThreshold: String, positiveThreshold: String, excellentThreshold: String) -> String
+    val debtComment0: (zero: String, positiveThreshold: String) -> String
+    val debtComment1: (positiveThreshold: String, neutralThreshold: String) -> String
+    val debtComment2: (neutralThreshold: String, criticalThreshold: String) -> String
+    val debtComment3: (criticalThreshold: String) -> String
 
     val auditorOpinionTitle: String
     val auditorOpinionSubtitle: (count: Int) -> String
@@ -237,6 +261,7 @@ interface AppStrings {
     val fireSimSame: (target: String) -> String
     val fireSimWithoutBase: (target: String, age: String) -> String
     val fireUnreachableText: String
+    val fireHorizonExhaustedText: String
     val fireSimCashFlowRow: String
     val fireSimExpensesRow: String
     val fireSimNetWorthRow: String
@@ -271,100 +296,114 @@ interface AppStrings {
 
     // Scenarios Items (titles, parameters, descriptions)
     val scenarioSalaryIncreaseTitle: String
-    val scenarioSalaryIncreaseParam: String
+    val scenarioSalaryIncreaseParam: (percent: String) -> String
     val scenarioSalaryIncreaseDesc: (amt: String) -> String
 
-    val scenarioMarketGrowthTitle: String
-    val scenarioMarketGrowthParam: String
+    val scenarioMarketGrowthTitle: (percent: String) -> String
+    val scenarioMarketGrowthParam: (percent: String) -> String
     val scenarioMarketGrowthDesc: (amt: String) -> String
 
     val scenarioExpenseOptTitle: String
-    val scenarioExpenseOptParam: String
+    val scenarioExpenseOptParam: (percent: String) -> String
     val scenarioExpenseOptDesc: (amt: String) -> String
 
     val scenarioRelocationTitle: String
-    val scenarioRelocationParam: String
+    val scenarioRelocationParam: (percent: String) -> String
     val scenarioRelocationDesc: (amt: String) -> String
 
     val scenarioInheritanceTitle: String
-    val scenarioInheritanceParam: String
+    val scenarioInheritanceParam: (percent: String) -> String
     val scenarioInheritanceDesc: (amt: String) -> String
 
     val scenarioPropertySaleTitle: String
-    val scenarioPropertySaleParam: String
+    val scenarioPropertySaleParam: (percent: String) -> String
     val scenarioPropertySaleDesc: (amt: String) -> String
 
     val scenarioChildrenSelfSufficientTitle: String
-    val scenarioChildrenSelfSufficientParam: String
-    val scenarioChildrenSelfSufficientDesc: (amt: String) -> String
+    val scenarioChildrenSelfSufficientParam: (percent: String, years: String) -> String
+    val scenarioChildrenSelfSufficientDesc: (amt: String, years: String) -> String
 
     val scenarioJobLossTitle: String
-    val scenarioJobLossParam: String
-    val scenarioJobLossDesc: String
+    val scenarioJobLossParam: (months: String) -> String
+    val scenarioJobLossDesc: (months: String) -> String
 
-    val scenarioMarketCrashTitle: String
-    val scenarioMarketCrashParam: String
-    val scenarioMarketCrashDesc: (amt: String) -> String
+    val scenarioMarketCrashTitle: (percent: String) -> String
+    val scenarioMarketCrashParam: (percent: String) -> String
+    val scenarioMarketCrashDesc: (percent: String, amt: String) -> String
 
     val scenarioMortgageTitle: String
-    val scenarioMortgageParam: String
-    val scenarioMortgageDesc: (pay: String) -> String
+    val scenarioMortgageParam: (percent: String, years: String) -> String
+    val scenarioMortgageDesc: (pay: String, years: String) -> String
 
     val scenarioCarLoanTitle: String
-    val scenarioCarLoanParam: String
-    val scenarioCarLoanDesc: (pay: String) -> String
+    val scenarioCarLoanParam: (percent: String, years: String) -> String
+    val scenarioCarLoanDesc: (pay: String, years: String) -> String
 
     val scenarioLargeExpenseTitle: String
-    val scenarioLargeExpenseParam: String
+    val scenarioLargeExpenseParam: (percent: String) -> String
     val scenarioLargeExpenseDesc: (amt: String) -> String
 
     val scenarioInflationTitle: String
-    val scenarioInflationParam: String
+    val scenarioInflationParam: (percent: String) -> String
     val scenarioInflationDesc: (amt: String) -> String
 
     val scenarioChildTitle: String
-    val scenarioChildParam: String
-    val scenarioChildDesc: (amt: String) -> String
+    val scenarioChildParam: (percent: String, years: String) -> String
+    val scenarioChildDesc: (amt: String, years: String) -> String
 
     val disclaimerTitle: String
     val disclaimerText: String
     val assumptionsDisclaimerTitle: String
     val assumptionsDisclaimerBody: (returnRate: String, inflation: String) -> String
+    val fireAssumptionsTitle: String
+    val fireAssumptionsBody: (returnRate: String, inflation: String) -> String
 
     // Scenario feedback messages
-    fun scenarioSavedSuccess(name: String): String
-    fun scenarioSaveError(error: String): String
-    val scenarioDatabaseError: String
-    fun scenarioLoadedSuccess(name: String): String
-    fun scenarioLoadError(error: String): String
-    val scenarioCorruptedDataError: String
-    fun scenarioDeletedSuccess(name: String): String
-    fun scenarioDeleteError(error: String): String
 
     // Pluralization
-    fun plural(n: Int, one: String, many: String): String
-    fun plural(n: Int, one: String, few: String, many: String): String
-    fun pluralYears(n: Int): String
-    fun pluralMonths(n: Int): String
-    fun pluralPoints(n: Int): String
-    val checkboxOne: String
-    val checkboxFew: String
-    val checkboxMany: String
+    val countFormat: String
+    val checkboxPluralForms: PluralForms
+    val yearPluralForms: PluralForms
+    val monthPluralForms: PluralForms
+    val pointPluralForms: PluralForms
     val simulationBadgeSlidersSuffix: String
     val simulationBadgeOnlySliders: String
+
+    fun plural(n: Number, forms: PluralForms): String {
+        val category = PluralRules.forLocale(language.locale).select(n.toDouble())
+        return forms.forCategory(category)
+    }
+
+    fun formatCount(n: Number, forms: PluralForms): String {
+        val localizedNumber = NumberFormat.getNumberInstance(language.locale).format(n)
+        return String.format(Locale.ROOT, countFormat, localizedNumber, plural(n, forms))
+    }
+
+    fun formatThreshold(value: Double): String = DecimalFormat(
+        "#,##0.#",
+        DecimalFormatSymbols.getInstance(language.locale)
+    ).format(value)
+
+    fun formatDebtRatioThreshold(value: Double): String = DecimalFormat(
+        "#,##0.0",
+        DecimalFormatSymbols.getInstance(language.locale)
+    ).format(value)
+
+    // Currency first, then the formatted amount. The template controls symbol placement.
+    val moneyFormat: String
 
     // Score & Safety Months formats
     val safetyMonthsValueFormat: String
     val shareScoreReportTemplate: String
 
     // CFS Stage descriptions
-    val cfsStageDebt: String
-    val cfsStageBuffer: String
-    val cfsStageCapital: String
-    val cfsStageInvesting: String
-    val cfsStageReturns: String
-    val cfsStageStability: String
-    val cfsStageIndependence: String
+    val cfsStageDebt: (debt: String) -> String
+    val cfsStageBuffer: (debt: String, buffer: String) -> String
+    val cfsStageCapital: (buffer: String, neutral: String) -> String
+    val cfsStageInvesting: (neutral: String, positive: String) -> String
+    val cfsStageReturns: (positive: String, stability: String) -> String
+    val cfsStageStability: (stability: String, independence: String) -> String
+    val cfsStageIndependence: (independence: String) -> String
 
     // Auditor Opinion Share Text
     val auditShareHeaderTitle: String
@@ -386,20 +425,20 @@ interface AppStrings {
     val auditCashFlowNegative: String
 
     val auditSavingsRateTitle: String
-    val auditSavingsRatePositive: String
-    val auditSavingsRateNeutral: String
+    val auditSavingsRatePositive: (value: String, positiveThreshold: String) -> String
+    val auditSavingsRateNeutral: (value: String, neutralThreshold: String, positiveThreshold: String) -> String
     val auditSavingsRateNegative: String
 
     val auditEmergencyFundTitle: String
     val auditEmergencyFundPositive: String
-    val auditEmergencyFundNeutral: String
+    val auditEmergencyFundNeutral: (value: String, positiveMonths: String) -> String
     val auditEmergencyFundNegative: String
 
     val auditSafetyMonthsTitle: String
-    val auditSafetyMonthsHigh: String
-    val auditSafetyMonthsTarget: String
-    val auditSafetyMonthsNeutral: String
-    val auditSafetyMonthsNegative: String
+    val auditSafetyMonthsHigh: (value: String, excellentMonths: String) -> String
+    val auditSafetyMonthsTarget: (value: String, positiveMonths: String) -> String
+    val auditSafetyMonthsNeutral: (value: String, positiveMonths: String) -> String
+    val auditSafetyMonthsNegative: (value: String, neutralMonths: String, positiveMonths: String) -> String
 
     val auditDebtRatioTitle: String
     val auditDebtRatioZero: String
@@ -418,15 +457,14 @@ interface AppStrings {
     val auditFidelityNeutral: String
     val auditFidelityNegativeInsolvent: String
     val auditFidelityNegativeLagging: String
-    val auditFidelityUnder30: String
 
     val auditCfsTitle: String
-    val auditCfsIndependence: String
-    val auditCfsStability: String
-    val auditCfsGrowth: String
+    val auditCfsIndependence: (cfs: String, independence: String) -> String
+    val auditCfsStability: (cfs: String, stability: String, independence: String) -> String
+    val auditCfsGrowth: (cfs: String, stability: String) -> String
     val auditCfsInitial: String
     val auditCfsNegative: String
-    val auditCfsBuffer: String
+    val auditCfsBuffer: (cfs: String, buffer: String) -> String
     val auditCfsPathToIndependence: String
     val auditCfsCloseToIndependence: (percent: Int) -> String
     val auditCfsFinanciallyIndependent: String
@@ -473,8 +511,11 @@ interface AppStrings {
 }
 
 fun getAppStrings(language: AppLanguage): AppStrings {
-    return if (language.isRussian) StringsRu else StringsEn
+    return when (language) {
+        AppLanguage.RU -> StringsRu
+        AppLanguage.EN -> StringsEn
+    }
 }
 
-val LocalAppStrings = compositionLocalOf { StringsRu }
+val LocalAppStrings = compositionLocalOf<AppStrings> { error("LocalAppStrings was not provided") }
 val LocalAppLanguage = compositionLocalOf { AppLanguage.RU }

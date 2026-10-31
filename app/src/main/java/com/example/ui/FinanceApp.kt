@@ -49,6 +49,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -69,6 +70,12 @@ import com.example.util.localization.getAppStrings
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FinanceApp(viewModel: MainViewModel) {
+    val configuration = LocalConfiguration.current
+    val systemLanguageCode = configuration.locales.get(0)?.language ?: configuration.locale.language
+    LaunchedEffect(systemLanguageCode) {
+        viewModel.updateLanguageFromSystem(systemLanguageCode)
+    }
+
     val currentTab by viewModel.currentTab.collectAsStateWithLifecycle()
     val appLanguage by viewModel.appLanguage.collectAsStateWithLifecycle()
     val inputData by viewModel.inputData.collectAsStateWithLifecycle()
@@ -77,7 +84,6 @@ fun FinanceApp(viewModel: MainViewModel) {
     val simulationState by viewModel.fireSimulation.collectAsStateWithLifecycle()
     val trajectory by viewModel.trajectory.collectAsStateWithLifecycle()
     val simulatedTrajectory by viewModel.simulatedTrajectory.collectAsStateWithLifecycle()
-    val savedScenarios by viewModel.savedScenarios.collectAsStateWithLifecycle()
     val feedbackMessage by viewModel.userFeedbackMessage.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -205,8 +211,6 @@ fun FinanceApp(viewModel: MainViewModel) {
                         inputData = inputData,
                         metrics = metrics,
                         onUpdate = { transform -> viewModel.updateInputData(transform) },
-                        onLoadRussiaAverage = { viewModel.loadRussiaAverage() },
-                        onClear = { viewModel.clearData() },
                         onNavigateToMetrics = { viewModel.selectTab(AppTab.METRICS) }
                     )
 

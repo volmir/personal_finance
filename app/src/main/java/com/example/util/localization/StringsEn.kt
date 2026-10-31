@@ -329,14 +329,15 @@ val StringsEn: AppStrings = object : AppStrings {
 
     override val metricCashFlowTitle: String = "Cash Flow"
     override val metricCashFlowFormula: String = "(Income - Expenses)"
-    override val metricCashFlowDesc: String = "Cash Flow. Net movement of funds (inflows and outflows) per period.\n\n• Positive value: You earn more than you spend.\n• Negative value: You spend more than you earn."
+    override val metricCashFlowDesc: String = "Cash Flow. Net movement of funds (inflows and outflows) per period.\n\n• Positive value (> 0): You earn more than you spend.\n• Zero or negative value (≤ 0): Income equals or is lower than expenses."
     override val metricCashFlowPositiveSub: String = "Positive cash surplus"
+    override val metricCashFlowNeutralSub: String = "Income equals expenses"
     override val metricCashFlowNegativeSub: String = "Budget deficit"
 
     override val metricSavingsRateTitle: String = "Savings Rate"
     override val metricSavingsRateFormula: String = "(Cash Flow / Income) * 100%"
-    override val metricSavingsRateDesc: String = "It is recommended to aim for a savings rate above 20% of gross household income.\n\n• Below 0%: Negative indicator (deficit)\n• 0% — 20%: Neutral indicator (moderate)\n• Above 20%: Positive indicator (excellent)"
-    override val metricSavingsRateSub: String = "Target benchmark: > 20% (0–20% neutral)"
+    override val metricSavingsRateDesc: (String, String) -> String = { neutral, positive -> "It is recommended to aim for a savings rate above ${positive}% of gross household income.\n\n• Less than or equal to ${neutral}%: Negative; above ${neutral}% and up to ${positive}%: Neutral; above ${positive}%: Positive." }
+    override val metricSavingsRateSub: (String, String) -> String = { neutral, positive -> "Less than or equal to ${neutral}%: Negative; above ${neutral}% and up to ${positive}%: Neutral; above ${positive}%: Positive." }
 
     override val metricEmergencyFundTitle: String = "Emergency Fund"
     override val metricEmergencyFundFormula: String = "(Liquid Assets)"
@@ -346,13 +347,13 @@ val StringsEn: AppStrings = object : AppStrings {
 
     override val metricSafetyMonthsTitle: String = "Emergency Buffer (Months)"
     override val metricSafetyMonthsFormula: String = "(Emergency Fund / Monthly Expenses)"
-    override val metricSafetyMonthsDesc: String = "The number of months you can sustain baseline living expenses solely from your emergency reserves.\n\n• Minimum target: 3-6 months of core living costs (rent/mortgage, food, utilities, transport). Guarantees calm recovery during income gaps.\n• Ideal target: Up to 12 months for comprehensive crisis resilience, especially for freelancers or households with dependents."
-    override val metricSafetyMonthsSub: String = "Norm: 3-6 mo, Ideal: 12+ mo"
+    override val metricSafetyMonthsDesc: (String, String, String) -> String = { neutral, positive, excellent -> "The number of months you can sustain baseline living expenses solely from your emergency reserves.\n\n• Minimum target: ${neutral}-${positive} months of core living costs (rent/mortgage, food, utilities, transport). Guarantees calm recovery during income gaps.\n• Ideal target: Up to ${excellent} months for comprehensive crisis resilience, especially for freelancers or households with dependents." }
+    override val metricSafetyMonthsSub: (String, String, String) -> String = { neutral, positive, excellent -> "Norm: ${neutral}-${positive} mo, Ideal: ${excellent}+ mo" }
     override val monthsSuffix: String = "mo."
 
     override val metricDebtRatioTitle: String = "Debt-to-Asset Ratio"
     override val metricDebtRatioFormula: String = "(Liabilities / Assets)"
-    override val metricDebtRatioDesc: String = "Measures the proportion of assets financed through debt obligations, reflecting financial risk exposure and dependency on creditors.\n\n• 0.0 - 0.3: Strong financial solvency, most assets funded by equity\n• 0.3 - 0.6: Balanced leverage for most households\n• Above 0.6: High risk, excessive debt dependency\n• Above 1.0: Liabilities exceed assets (insolvency risk)"
+    override val metricDebtRatioDesc: (String, String, String, String) -> String = { zero, positive, neutral, critical -> "Measures the proportion of assets financed through debt obligations, reflecting financial risk exposure and dependency on creditors.\n\n• ${zero} - ${positive}: Strong financial solvency, most assets funded by equity\n• ${positive} - ${neutral}: Balanced leverage for most households\n• Above ${neutral}: High risk, excessive debt dependency\n• Above ${critical}: Liabilities exceed assets (insolvency risk)" }
     override val metricDebtRatioLowSub: String = "Low risk (excellent)"
     override val metricDebtRatioHighSub: String = "High debt risk"
 
@@ -366,13 +367,13 @@ val StringsEn: AppStrings = object : AppStrings {
 
     override val metricFidelityTitle: String = "Benchmark: Fidelity Capital Milestones"
     override val metricFidelityFormula: String = "Annual Income * Multiplier"
-    override val metricFidelityDesc: String = "Fidelity's rule of thumb outlines how many times your current retirement portfolio should exceed your annual salary at specific life stages.\n\nCheckpoints: 1x by age 30, 3x by 40, 6x by 50, 8x by 60, and 10x by 67.\nExample: At age 40 with $100,000 annual income, Fidelity recommends having at least $300,000 saved.\n\nNote: This application is not affiliated with or endorsed by Fidelity Investments and solely uses publicly available research milestones and educational benchmarks."
+    override val metricFidelityDesc: String = "Fidelity reference points are shown: age 30 — 1x, 40 — 3x, 50 — 6x, 60 — 8x, and 67 — 10x. The app linearly interpolates between points and uses a 0.5x multiplier before age 25 (an app simplification). The comparison uses liquid and financial assets minus debts not covered by property; property itself is excluded.\n\nExample: at age 40 with annual income of 100,000, the target is 300,000.\n\nNote: This application is not affiliated with or endorsed by Fidelity Investments and solely uses publicly available research milestones and educational benchmarks."
     override val metricFidelitySubFormat: (age: Int, mult: String) -> String = { age, mult -> "Age: $age yrs | Multiplier: ${mult}x" }
     override val metricFidelityProgress: String = "Progress toward Fidelity goal:"
 
     override val metricCfsTitle: String = "Financial Freedom Ratio (CFS)"
-    override val metricCfsFormula: String = "(Net Assets / Annual Expenses)"
-    override val metricCfsDesc: String = "Measures how many years of baseline living expenses are covered by your net assets (net worth).\n\n• CFS < 0 — You are in net debt\n• CFS 0..0.5 — Minimal emergency cushion\n• CFS 0.5..2 — Initial capital accumulation stage\n• CFS 2..5 — Long-term investing stage\n• CFS 5..15 — Investment returns provide tangible income. Inflation impact grows\n• CFS 15..30 — Solid financial stability. How do you value your irreplaceable time?\n• CFS > 30 — Complete financial independence achieved"
+    override val metricCfsFormula: String = "(Net capital, including property / Annual expenses)"
+    override val metricCfsDesc: (String, String, String, String, String, String) -> String = { debt, buffer, neutral, positive, stability, independence -> "Net capital = all assets, including property, minus all debts. This metric does not mean you can live on income from your capital; the FIRE tab assesses that readiness and excludes property.\n\nMeasures how many years of baseline living expenses are covered by your net assets (net worth).\n\n• CFS < ${debt} — You are in net debt\n• CFS ${debt}..${buffer} — Minimal emergency cushion\n• CFS ${buffer}..${neutral} — Initial capital accumulation stage\n• CFS ${neutral}..${positive} — Long-term investing stage\n• CFS ${positive}..${stability} — Investment returns provide tangible income. Inflation impact grows\n• CFS >= ${stability} and < ${independence} — Solid financial stability. How do you value your irreplaceable time?\n• CFS >= ${independence} — Complete financial independence achieved" }
 
     override val metricRealReturnTitle: String = "Real Return on Capital, %"
     override val metricRealReturnFormula: String = "(1 + Nominal Return) / (1 + Inflation) - 1"
@@ -393,25 +394,25 @@ val StringsEn: AppStrings = object : AppStrings {
     override val scoreValuePrefix: String = "Value: "
     override val scoreOutOfTen: (score: Int) -> String = { score -> "$score of 10" }
     override val scoreSlashOutOfTen: (score: String) -> String = { score -> "$score / 10" }
-    override val savingsRateScoreComment: (rate: Double, sr: String) -> String = { rate, sr ->
+    override val savingsRateScoreComment: (rate: Double, sr: String, positiveThreshold: String) -> String = { rate, sr, positiveThreshold ->
         when {
-            rate > 20.0 -> "Recommended above 20%. You maintain an excellent rate ($sr)."
-            rate >= 0.0 -> "Recommended above 20%. You have a low rate ($sr)."
-            else -> "Recommended above 20%. You have a negative rate ($sr), budget deficit."
+            rate > com.example.domain.FinancialMetricEvaluator.SAVINGS_RATE_POSITIVE_THRESHOLD -> "Recommended above ${positiveThreshold}%. You maintain an excellent rate ($sr)."
+            rate > com.example.domain.FinancialMetricEvaluator.SAVINGS_RATE_NEUTRAL_THRESHOLD -> "Recommended above ${positiveThreshold}%. A rate up to and including ${positiveThreshold}% is neutral ($sr)."
+            else -> "Recommended above ${positiveThreshold}%. A zero or negative rate ($sr) is negative: income equals or is lower than expenses."
         }
     }
-    override val safetyMonthsScoreComment: (months: Double, monthsText: String) -> String = { months, monthsText ->
+    override val safetyMonthsScoreComment: (months: Double, monthsText: String, neutral: String, positive: String, excellent: String) -> String = { months, monthsText, neutral, positive, excellent ->
         when {
-            months >= 12.0 -> "Minimum 3-6 months, ideal 12+ months. Excellent result: buffer exceeds 12 months ($monthsText)."
-            months >= 6.0 -> "Minimum 3-6 months, ideal 12+ months. Good buffer ($monthsText), 6-month benchmark achieved."
-            months >= 3.0 -> "Minimum 3-6 months, ideal 12+ months. Basic buffer ($monthsText), expanding to 6-12 months recommended."
-            else -> "Minimum 3-6 months, ideal 12+ months. You have an insufficient buffer ($monthsText), elevated financial risk."
+            months >= com.example.domain.FinancialMetricEvaluator.SAFETY_MONTHS_TIER_EXCELLENT -> "Minimum ${neutral}-${positive} months, ideal ${excellent}+ months. Excellent result: buffer exceeds ${excellent} months ($monthsText)."
+            months >= com.example.domain.FinancialMetricEvaluator.SAFETY_MONTHS_POSITIVE_THRESHOLD -> "Minimum ${neutral}-${positive} months, ideal ${excellent}+ months. Good buffer ($monthsText), ${positive}-month benchmark achieved."
+            months >= com.example.domain.FinancialMetricEvaluator.SAFETY_MONTHS_NEUTRAL_THRESHOLD -> "Minimum ${neutral}-${positive} months, ideal ${excellent}+ months. Basic buffer ($monthsText), expanding to ${positive}-${excellent} months recommended."
+            else -> "Minimum ${neutral}-${positive} months, ideal ${excellent}+ months. You have an insufficient buffer ($monthsText), elevated financial risk."
         }
     }
-    override val debtComment0: String = "0.0 - 0.3: Excellent stability, assets funded almost entirely by own equity."
-    override val debtComment1: String = "0.3 - 0.6: Balanced leverage, manageable borrowing level."
-    override val debtComment2: String = "0.6 - 1.0: Elevated risk, substantial dependence on borrowed money."
-    override val debtComment3: String = "Above 1.0: Critical risk, total debts exceed the value of all assets."
+    override val debtComment0: (String, String) -> String = { zero, positive -> "$zero - $positive: Excellent stability, assets funded almost entirely by own equity." }
+    override val debtComment1: (String, String) -> String = { positive, neutral -> "$positive - $neutral: Balanced leverage, manageable borrowing level." }
+    override val debtComment2: (String, String) -> String = { neutral, critical -> "$neutral - $critical: Elevated risk, substantial dependence on borrowed money." }
+    override val debtComment3: (String) -> String = { critical -> "Above $critical: Critical risk, total debts exceed the value of all assets." }
 
     override val auditorOpinionTitle: String = "Auditor Opinion"
     override val auditorOpinionSubtitle: (count: Int) -> String = { count -> "Analysis across all $count indicators from the Metrics screen" }
@@ -455,6 +456,7 @@ val StringsEn: AppStrings = object : AppStrings {
     override val fireSimSame: (target: String) -> String = { target -> "Retirement timeline remains unchanged (in $target yrs)." }
     override val fireSimWithoutBase: (target: String, age: String) -> String = { target, age -> "Retirement reachable in $target yrs (at age $age yrs)." }
     override val fireUnreachableText: String = "Unachievable with current parameters"
+    override val fireHorizonExhaustedText: String = "Planning horizon exhausted"
     override val fireSimCashFlowRow: String = "Cash flow (savings):"
     override val fireSimExpensesRow: String = "Monthly expenses:"
     override val fireSimNetWorthRow: String = "Net worth (assets − debts):"
@@ -487,84 +489,76 @@ val StringsEn: AppStrings = object : AppStrings {
     override val scenarioParamsPrefix: String = "Parameters: "
 
     override val scenarioSalaryIncreaseTitle: String = "Salary Increase"
-    override val scenarioSalaryIncreaseParam: String = "income +20% monthly, permanent"
+    override val scenarioSalaryIncreaseParam: (String) -> String = { percent -> "income +${percent}% monthly, permanent" }
     override val scenarioSalaryIncreaseDesc: (amt: String) -> String = { amt -> "Income increase: +$amt/mo." }
 
-    override val scenarioMarketGrowthTitle: String = "Market Growth +25%"
-    override val scenarioMarketGrowthParam: String = "ETF +25%"
+    override val scenarioMarketGrowthTitle: (String) -> String = { percent -> "Market Growth +${percent}%" }
+    override val scenarioMarketGrowthParam: (String) -> String = { percent -> "ETF +${percent}%" }
     override val scenarioMarketGrowthDesc: (amt: String) -> String = { amt -> "Financial portfolio gain: +$amt" }
 
     override val scenarioExpenseOptTitle: String = "Expense Optimization"
-    override val scenarioExpenseOptParam: String = "−15% to monthly expenses, permanent"
+    override val scenarioExpenseOptParam: (String) -> String = { percent -> "−${percent}% to monthly expenses, permanent" }
     override val scenarioExpenseOptDesc: (amt: String) -> String = { amt -> "Ongoing savings: -$amt/mo." }
 
     override val scenarioRelocationTitle: String = "Relocation to Lower-Cost Region"
-    override val scenarioRelocationParam: String = "−30% to monthly expenses, permanent"
+    override val scenarioRelocationParam: (String) -> String = { percent -> "−${percent}% to monthly expenses, permanent" }
     override val scenarioRelocationDesc: (amt: String) -> String = { amt -> "Living cost reduction: -$amt/mo." }
 
     override val scenarioInheritanceTitle: String = "Inheritance or Windfall Gift"
-    override val scenarioInheritanceParam: String = "one-time windfall 1200% monthly income"
+    override val scenarioInheritanceParam: (String) -> String = { percent -> "one-time windfall ${percent}% monthly income" }
     override val scenarioInheritanceDesc: (amt: String) -> String = { amt -> "Capital inflow: +$amt (into liquid assets)" }
 
     override val scenarioPropertySaleTitle: String = "Sale of Property (car, land, real estate)"
-    override val scenarioPropertySaleParam: String = "one-time windfall 2000% monthly income"
+    override val scenarioPropertySaleParam: (String) -> String = { percent -> "one-time windfall ${percent}% monthly income" }
     override val scenarioPropertySaleDesc: (amt: String) -> String = { amt -> "Sale proceeds: +$amt (into liquid assets)" }
 
     override val scenarioChildrenSelfSufficientTitle: String = "Children Become Independent"
-    override val scenarioChildrenSelfSufficientParam: String = "expenses −25% in 18 yrs (child costs already in your expenses)"
-    override val scenarioChildrenSelfSufficientDesc: (amt: String) -> String = { amt -> "Family expense reduction: -$amt/mo. (in 18 yrs)" }
+    override val scenarioChildrenSelfSufficientParam: (String, String) -> String = { percent, years -> "expenses −${percent}% in $years yrs (child costs already in your expenses)" }
+    override val scenarioChildrenSelfSufficientDesc: (amt: String, years: String) -> String = { amt, years -> "Family expense reduction: -$amt/mo. (in $years yrs)" }
 
     override val scenarioJobLossTitle: String = "Job Loss"
-    override val scenarioJobLossParam: String = "12 months of lost income"
-    override val scenarioJobLossDesc: String = "12 months of income lost, covered from savings"
+    override val scenarioJobLossParam: (String) -> String = { months -> "$months months of lost income" }
+    override val scenarioJobLossDesc: (String) -> String = { months -> "$months months of income lost, covered from savings" }
 
-    override val scenarioMarketCrashTitle: String = "Market Crash −30%"
-    override val scenarioMarketCrashParam: String = "ETF −30%"
-    override val scenarioMarketCrashDesc: (amt: String) -> String = { amt -> "Portfolio drawdown of 30% ($amt)" }
+    override val scenarioMarketCrashTitle: (String) -> String = { percent -> "Market Crash −${percent}%" }
+    override val scenarioMarketCrashParam: (String) -> String = { percent -> "ETF −${percent}%" }
+    override val scenarioMarketCrashDesc: (percent: String, amt: String) -> String = { percent, amt -> "Portfolio drawdown of ${percent}% ($amt)" }
 
     override val scenarioMortgageTitle: String = "Home Mortgage"
-    override val scenarioMortgageParam: String = "35% income for 20 yrs"
-    override val scenarioMortgageDesc: (pay: String) -> String = { pay -> "Payment: $pay/mo. (20 yrs)" }
+    override val scenarioMortgageParam: (String, String) -> String = { percent, years -> "${percent}% income for $years yrs" }
+    override val scenarioMortgageDesc: (pay: String, years: String) -> String = { pay, years -> "Payment: $pay/mo. ($years yrs)" }
 
     override val scenarioCarLoanTitle: String = "Car Loan"
-    override val scenarioCarLoanParam: String = "20% income for 5 yrs"
-    override val scenarioCarLoanDesc: (pay: String) -> String = { pay -> "Payment: $pay/mo. (5 yrs)" }
+    override val scenarioCarLoanParam: (String, String) -> String = { percent, years -> "${percent}% income for $years yrs" }
+    override val scenarioCarLoanDesc: (pay: String, years: String) -> String = { pay, years -> "Payment: $pay/mo. ($years yrs)" }
 
     override val scenarioLargeExpenseTitle: String = "Major One-Off Expense"
-    override val scenarioLargeExpenseParam: String = "expense 500% monthly income"
+    override val scenarioLargeExpenseParam: (String) -> String = { percent -> "expense ${percent}% monthly income" }
     override val scenarioLargeExpenseDesc: (amt: String) -> String = { amt -> "Outflow of $amt (covered from liquid and financial assets)" }
 
     override val scenarioInflationTitle: String = "Expense Increase (Inflation)"
-    override val scenarioInflationParam: String = "+25% to monthly expenses"
+    override val scenarioInflationParam: (String) -> String = { percent -> "+${percent}% to monthly expenses" }
     override val scenarioInflationDesc: (amt: String) -> String = { amt -> "Expenses increase: +$amt/mo." }
 
     override val scenarioChildTitle: String = "Child Birth"
-    override val scenarioChildParam: String = "+25% to expenses for 18 yrs"
-    override val scenarioChildDesc: (amt: String) -> String = { amt -> "Childcare costs: +$amt/mo. (for 18 years)" }
+    override val scenarioChildParam: (String, String) -> String = { percent, years -> "+${percent}% to expenses for $years yrs" }
+    override val scenarioChildDesc: (amt: String, years: String) -> String = { amt, years -> "Childcare costs: +$amt/mo. (for $years years)" }
 
     override val disclaimerTitle: String = "Disclaimer"
     override val disclaimerText: String = "Important: This project is a personal development and is provided solely for informational purposes \"as is\". The author is not responsible for any malfunctions, data loss, or other damages arising from the use of this software. All calculations, formulas, metrics, and simulations are for informational purposes only and do not constitute individual financial, investment, or tax advice. You use this tool at your own risk."
     override val assumptionsDisclaimerTitle: String = "Disclaimer"
     override val assumptionsDisclaimerBody: (returnRate: String, inflation: String) -> String = { returnRate, inflation -> "Calculations assume a constant return of $returnRate and inflation of $inflation, without taxes or sequence-of-returns effects. This is a model, not a forecast.\n\nThe model does not account for taxes, sequence-of-returns effects, or income inflation. This is a guide, not a guarantee." }
+    override val fireAssumptionsTitle: String = "Model assumptions"
+    override val fireAssumptionsBody: (returnRate: String, inflation: String) -> String = { returnRate, inflation -> "Calculations assume a constant return of $returnRate and inflation of $inflation, without accounting for taxes, market-event ordering, or income inflation. This is a guideline, not a forecast or a guarantee." }
 
-    override fun scenarioSavedSuccess(name: String): String = "Scenario \"$name\" saved successfully"
-    override fun scenarioSaveError(error: String): String = "Failed to save scenario: $error"
-    override val scenarioDatabaseError: String = "database error"
-    override fun scenarioLoadedSuccess(name: String): String = "Scenario \"${name}\" loaded"
-    override fun scenarioLoadError(error: String): String = "Failed to load scenario: $error"
-    override val scenarioCorruptedDataError: String = "corrupted data"
-    override fun scenarioDeletedSuccess(name: String): String = "Scenario \"${name}\" deleted"
-    override fun scenarioDeleteError(error: String): String = "Failed to delete scenario: $error"
 
     // Pluralization
-    override fun plural(n: Int, one: String, many: String): String = if (n == 1) one else many
-    override fun plural(n: Int, one: String, few: String, many: String): String = if (n == 1) one else many
-    override fun pluralYears(n: Int): String = "$n " + plural(n, "year", "years")
-    override fun pluralMonths(n: Int): String = "$n " + plural(n, "month", "months")
-    override fun pluralPoints(n: Int): String = "$n " + plural(n, "point", "points")
-    override val checkboxOne: String = "checkbox"
-    override val checkboxFew: String = "checkboxes"
-    override val checkboxMany: String = "checkboxes"
+    override val moneyFormat: String = "%1${'$'}s%2${'$'}s"
+    override val countFormat: String = "%1${'$'}s\u00A0%2${'$'}s"
+    override val checkboxPluralForms = PluralForms(one = "checkbox", other = "checkboxes")
+    override val yearPluralForms = PluralForms(one = "year", other = "years")
+    override val monthPluralForms = PluralForms(one = "month", other = "months")
+    override val pointPluralForms = PluralForms(one = "point", other = "points")
     override val simulationBadgeSlidersSuffix: String = "sliders"
     override val simulationBadgeOnlySliders: String = "Adjustment sliders"
 
@@ -573,13 +567,13 @@ val StringsEn: AppStrings = object : AppStrings {
     override val shareScoreReportTemplate: String = "📊 Financial Report & Capital Audit:\n• Overall Score: %1${'$'}s of 10\n• Savings Rate: %2${'$'}s/10 (%3${'$'}s)\n• Expense Buffer: %4${'$'}s/10 (%5${'$'}s mo.)\n• Debt Ratio: %6${'$'}s/10 (%7${'$'}s)\n• Financial Freedom Ratio: %8${'$'}s/10 (%9${'$'}s)\n• Time to Retirement (FIRE): %10${'$'}s yrs (at age %11${'$'}s yrs)\n"
 
     // CFS Stage descriptions
-    override val cfsStageDebt: String = "CFS < 0 — You are in debt"
-    override val cfsStageBuffer: String = "CFS 0..0.5 — You have a minimal emergency buffer"
-    override val cfsStageCapital: String = "CFS 0.5..2 — You have started building financial capital"
-    override val cfsStageInvesting: String = "CFS 2..5 — You can begin engaging in long-term investing"
-    override val cfsStageReturns: String = "CFS 5..15 — Investment returns provide significant income. Inflation affects capital more"
-    override val cfsStageStability: String = "CFS 15..30 — Solid financial stability. How do you spend your irreplaceable time?"
-    override val cfsStageIndependence: String = "CFS > 30 — You have achieved financial independence"
+    override val cfsStageDebt: (String) -> String = { debt -> "CFS < $debt — You are in debt" }
+    override val cfsStageBuffer: (String, String) -> String = { debt, buffer -> "CFS $debt..$buffer — You have a minimal emergency buffer" }
+    override val cfsStageCapital: (String, String) -> String = { buffer, neutral -> "CFS $buffer..$neutral — You have started building financial capital" }
+    override val cfsStageInvesting: (String, String) -> String = { neutral, positive -> "CFS $neutral..$positive — You can begin engaging in long-term investing" }
+    override val cfsStageReturns: (String, String) -> String = { positive, stability -> "CFS $positive..$stability — Investment returns provide significant income. Inflation affects capital more" }
+    override val cfsStageStability: (String, String) -> String = { stability, independence -> "CFS >= $stability and < $independence — Solid financial stability. How do you spend your irreplaceable time?" }
+    override val cfsStageIndependence: (String) -> String = { independence -> "CFS >= $independence — net capital, including property, exceeds $independence years of expenses" }
 
     // Auditor Opinion Share Text
     override val auditShareHeaderTitle: String = "📋 AUDITOR OPINION ACROSS ALL INDICATORS"
@@ -601,20 +595,20 @@ val StringsEn: AppStrings = object : AppStrings {
     override val auditCashFlowNegative: String = "🚨 Cash Flow (%1${'$'}s/mo.): Budget deficit! Current expenses exceed income, depleting reserves or raising debt."
 
     override val auditSavingsRateTitle: String = "Savings Rate"
-    override val auditSavingsRatePositive: String = "✅ Savings Capacity (Savings Rate: %1${'$'}s): High savings rate (above 20%%). Provides steady asset accumulation and exponential wealth compounding."
-    override val auditSavingsRateNeutral: String = "ℹ️ Savings Capacity (Savings Rate: %1${'$'}s): Neutral range (0–20%%). Capital accumulation proceeds steadily; expense optimization can help reach the >20%% target."
-    override val auditSavingsRateNegative: String = "🚨 Savings Capacity (Savings Rate: %1${'$'}s): Negative cash flow (budget deficit)! Expenses exceed income, depleting assets and increasing debt."
+    override val auditSavingsRatePositive: (String, String) -> String = { value, threshold -> "✅ Savings Capacity (Savings Rate: $value): High savings rate (above ${threshold}%). Provides steady asset accumulation and exponential wealth compounding." }
+    override val auditSavingsRateNeutral: (String, String, String) -> String = { value, neutral, positive -> "ℹ️ Savings Capacity (Savings Rate: $value): Neutral range (above $neutral and up to ${positive}%). Capital accumulation proceeds steadily; expense optimization can help reach the >${positive}% target." }
+    override val auditSavingsRateNegative: String = "🚨 Savings Capacity (Savings Rate: %1${'$'}s): Zero or negative cash flow: expenses equal or exceed income, so capital does not grow."
 
     override val auditEmergencyFundTitle: String = "Emergency Fund"
     override val auditEmergencyFundPositive: String = "✅ Emergency Fund (Reserve Volume: %1${'$'}s): Liquid reserve is fully sufficient to cover unexpected emergencies and crises without borrowing."
-    override val auditEmergencyFundNeutral: String = "ℹ️ Emergency Fund (Reserve Volume: %1${'$'}s): Baseline minimal reserve established. Recommended to gradually expand to 6 months of living expenses."
+    override val auditEmergencyFundNeutral: (String, String) -> String = { value, months -> "ℹ️ Emergency Fund (Reserve Volume: $value): Baseline minimal reserve established. Recommended to gradually expand to $months months of living expenses." }
     override val auditEmergencyFundNegative: String = "⚠️ Emergency Fund (Reserve Volume: %1${'$'}s): Critically low reserve. High vulnerability to unforeseen costs and forced borrowing."
 
     override val auditSafetyMonthsTitle: String = "Emergency Buffer (Months)"
-    override val auditSafetyMonthsHigh: String = "✅ Financial Cushion (Emergency Buffer: %1${'$'}s mo.): Fully formed with ample margin. Income loss risks are mitigated. Excess liquidity above 12 months should be deployed into productive investments."
-    override val auditSafetyMonthsTarget: String = "✅ Financial Cushion (Emergency Buffer: %1${'$'}s mo.): Target 6-month norm achieved. Baseline family financial security is assured."
-    override val auditSafetyMonthsNeutral: String = "ℹ️ Financial Cushion (Emergency Buffer: %1${'$'}s mo.): Minimal baseline reserve created; recommended to expand to 6 months for better crisis resilience."
-    override val auditSafetyMonthsNegative: String = "⚠️ Financial Cushion (Emergency Buffer: %1${'$'}s mo.): Critically insufficient reserve (under 3 months). Cash crunch risks creating debt traps. Priority: build a 6-month reserve urgently."
+    override val auditSafetyMonthsHigh: (String, String) -> String = { value, months -> "✅ Financial Cushion (Emergency Buffer: $value mo.): Fully formed with ample margin. Income loss risks are mitigated. Excess liquidity above $months months should be deployed into productive investments." }
+    override val auditSafetyMonthsTarget: (String, String) -> String = { value, months -> "✅ Financial Cushion (Emergency Buffer: $value mo.): Target $months-month norm achieved. Baseline family financial security is assured." }
+    override val auditSafetyMonthsNeutral: (String, String) -> String = { value, months -> "ℹ️ Financial Cushion (Emergency Buffer: $value mo.): Minimal baseline reserve created; recommended to expand to $months months for better crisis resilience." }
+    override val auditSafetyMonthsNegative: (String, String, String) -> String = { value, neutral, positive -> "⚠️ Financial Cushion (Emergency Buffer: $value mo.): Critically insufficient reserve (under $neutral months). Cash crunch risks creating debt traps. Priority: build a ${positive}-month reserve urgently." }
 
     override val auditDebtRatioTitle: String = "Debt Ratio"
     override val auditDebtRatioZero: String = "✅ Debt Load (Debt Ratio: 0.00): Absolute financial autonomy — no debts or loans, 100% of assets are owned outright."
@@ -631,20 +625,19 @@ val StringsEn: AppStrings = object : AppStrings {
     override val auditFidelityTitle: String = "Fidelity Benchmark"
     override val auditFidelityPositive: String = "✅ Age Capital Milestone (Fidelity Benchmark: %1${'$'}s of goal): Capital exceeds target milestone for your age (%2${'$'}s). Excellent long-term trajectory."
     override val auditFidelityNeutral: String = "ℹ️ Age Capital Milestone (Fidelity Benchmark: %1${'$'}s of goal): Capital matches recommended age savings guidelines (%2${'$'}s)."
-    override val auditFidelityNegativeInsolvent: String = "🚨 Age Capital Milestone (Fidelity Benchmark): Net capital is negative (%1${'$'}s). Outstanding liabilities prevent reaching recommended retirement milestone (%2${'$'}s)."
+    override val auditFidelityNegativeInsolvent: String = "🚨 Age Capital Milestone (Fidelity Benchmark): Liquid and financial capital after debts is negative (%1${'$'}s). Outstanding liabilities prevent reaching recommended retirement milestone (%2${'$'}s)."
     override val auditFidelityNegativeLagging: String = "⚠️ Age Capital Milestone (Fidelity Benchmark: %1${'$'}s of goal): Lagging behind recommended age benchmark (%2${'$'}s). Accelerating savings pace advised."
-    override val auditFidelityUnder30: String = "✅ Age Capital Milestone (Fidelity Benchmark): Under age 30, the primary focus is laying down early savings foundations. Fidelity multiplier milestones begin at age 30 (1x annual salary)."
 
     override val auditCfsTitle: String = "Financial Freedom Ratio"
-    override val auditCfsIndependence: String = "🎉 Financial Freedom (CFS: %1${'$'}s): You have achieved complete financial independence (FIRE)! Accumulated net assets can support your current living standards indefinitely."
-    override val auditCfsStability: String = "✅ Financial Freedom (CFS: %1${'$'}s): High degree of autonomy. Net assets yield substantial passive income covering most necessary living expenses."
-    override val auditCfsGrowth: String = "✅ Financial Freedom (CFS: %1${'$'}s): Solid capital compounding phase (%2${'$'}s). Investment returns yield noticeable impact. Next target: CFS > 15."
+    override val auditCfsIndependence: (String, String) -> String = { cfs, independence -> "🎉 Financial Freedom (CFS: $cfs): Net capital, including property, exceeds $independence years of expenses." }
+    override val auditCfsStability: (String, String, String) -> String = { cfs, stability, independence -> "✅ Financial Freedom (CFS: $cfs): Net capital, including property, exceeds $stability years of expenses; the next stage leads to the $independence-year threshold." }
+    override val auditCfsGrowth: (String, String) -> String = { cfs, stability -> "✅ Financial Freedom (CFS: $cfs): Net capital, including property, covers several years of expenses. Next target: CFS > $stability." }
     override val auditCfsInitial: String = "ℹ️ Financial Freedom (CFS: %1${'$'}s): Initial stage of investment capital (%2${'$'}s). Primary focus on disciplined regular savings."
-    override val auditCfsNegative: String = "🚨 Financial Freedom (CFS: %1${'$'}s): Negative ratio (%2${'$'}s). Total obligations exceed assets, resulting in negative net worth."
-    override val auditCfsBuffer: String = "📈 Financial Freedom (CFS: %1${'$'}s): Early stage of capital accumulation (%2${'$'}s). Current volume is insufficient for financial autonomy; disciplined saving required."
+    override val auditCfsNegative: String = "🚨 Financial Freedom (CFS: %1${'$'}s): Negative ratio (%2${'$'}s). Debts exceed all assets, including property, leaving negative net capital."
+    override val auditCfsBuffer: (String, String) -> String = { cfs, buffer -> "📈 Financial Freedom (CFS: $cfs): Net capital, including property, covers no more than $buffer years of expenses." }
     override val auditCfsPathToIndependence: String = "You are on the path to independence, but still far from the goal."
     override val auditCfsCloseToIndependence: (percent: Int) -> String = { percent -> "You are close: capital covers $percent% of the target." }
-    override val auditCfsFinanciallyIndependent: String = "You are financially independent under the 4% rule."
+    override val auditCfsFinanciallyIndependent: String = "You are financially independent by net capital (including property)."
 
     override val auditRealReturnTitle: String = "Real Return on Capital"
     override val auditRealReturnPositive: String = "✅ Real Return on Capital (+%1${'$'}s): Asset yield outpaces inflation (%2${'$'}s vs %3${'$'}s). Capital is protected against erosion and expands purchasing power."
@@ -686,5 +679,3 @@ val StringsEn: AppStrings = object : AppStrings {
     override val exportFireTimeToRetirementLine: String = "• Time to retirement: %1${'$'}s yrs (at age %2${'$'}s yrs)"
     override val exportFidelityLine: String = "• Fidelity benchmark: %1${'$'}s (%2${'$'}sx annual income) — %3${'$'}s of goal"
 }
-
-fun plural(n: Int, one: String, many: String): String = if (n == 1) one else many

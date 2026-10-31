@@ -1,7 +1,9 @@
 package com.example
 
 import com.example.data.model.FinancialInputData
+import com.example.data.model.FireStatus
 import com.example.domain.FinanceCalculator
+import com.example.domain.ProjectionParams
 import java.time.LocalDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -12,6 +14,83 @@ import org.junit.Ignore
 import org.junit.Test
 
 class FinanceCalculatorTest {
+
+    @Test
+    fun `Fidelity uses liquid and financial capital after uncovered debt while CFS keeps net worth`() {
+        val today = LocalDate.of(2026, 10, 31)
+        val input = FinancialInputData(
+            birthDate = "1988-10-31",
+            monthlyIncome = 6_000.0,
+            monthlyExpenses = 4_800.0,
+            liquidAssets = 15_000.0,
+            financialAssets = 40_000.0,
+            propertyAssets = 280_000.0,
+            liabilities = 180_000.0
+        )
+        val metrics = FinanceCalculator.calculate(input, today = today)
+
+        assertEquals(2.6, metrics.fidelityMultiplier, 0.001)
+        assertEquals(187_200.0, metrics.fidelityTarget, 0.01)
+        assertEquals(55_000.0, metrics.fidelityCapital, 0.01)
+        assertEquals(29.4, metrics.fidelityPercent, 0.1)
+        assertEquals(com.example.domain.model.AuditIndicatorStatus.NEGATIVE,
+            com.example.domain.FinancialMetricEvaluator.getFidelityStatus(metrics.fidelityCapital, metrics.fidelityTarget))
+        assertEquals(155_000.0, metrics.netWorth, 0.01)
+        assertEquals(155_000.0 / 57_600.0, metrics.financialFreedomRatio, 0.001)
+        assertEquals(6.0, metrics.scores.cfsScore.toDouble(), 0.0)
+        assertEquals(6.7, metrics.scores.totalScore, 0.001)
+
+        val propertyRemoved = FinanceCalculator.calculate(input.copy(propertyAssets = 0.0, liabilities = 0.0), today = today)
+        assertEquals(metrics.fidelityCapital, propertyRemoved.fidelityCapital, 0.01)
+
+        val uncoveredDebt = FinanceCalculator.calculate(input.copy(liabilities = 300_000.0), today = today)
+        assertEquals(35_000.0, uncoveredDebt.fidelityCapital, 0.01)
+
+        val insolventFidelity = FinanceCalculator.calculate(input.copy(liabilities = 400_000.0), today = today)
+        assertTrue(insolventFidelity.fidelityCapital < 0.0)
+    }
+
+    @Test
+    fun `Fidelity availability follows valid age and positive income`() {
+        val today = LocalDate.of(2026, 10, 31)
+        fun available(birthDate: String, income: Double = 1_000.0) = FinanceCalculator.calculate(
+            FinancialInputData(birthDate = birthDate, monthlyIncome = income), today = today
+        )
+
+        assertFalse(available("invalid-date").isFidelityAvailable)
+        assertFalse(available("1988-10-31", income = 0.0).isFidelityAvailable)
+        assertTrue(available("2002-10-31").isFidelityAvailable) // 24 лет, 0.5x
+        assertTrue(available("1999-10-31").isFidelityAvailable) // 27 лет, интерполяция
+        assertTrue(available("1988-10-31").isFidelityAvailable) // 38 лет
+    }
+
+    @Test
+    fun `scenario asset changes flow through Fidelity capital but extra savings do not change target`() {
+        val today = LocalDate.of(2026, 10, 31)
+        val base = FinancialInputData(
+            birthDate = "1988-10-31",
+            monthlyIncome = 6_000.0,
+            monthlyExpenses = 4_800.0,
+            liquidAssets = 15_000.0,
+            financialAssets = 40_000.0,
+            propertyAssets = 280_000.0,
+            liabilities = 180_000.0
+        )
+        val baseMetrics = FinanceCalculator.calculate(base, today = today)
+        val inheritance = FinanceCalculator.calculate(base.copy(liquidAssets = base.liquidAssets + 50_000.0), today = today)
+        val propertySale = FinanceCalculator.calculate(base.copy(
+            liquidAssets = base.liquidAssets + 50_000.0,
+            propertyAssets = base.propertyAssets - 50_000.0
+        ), today = today)
+        val marketCrash = FinanceCalculator.calculate(base.copy(financialAssets = base.financialAssets * 0.7), today = today)
+        val extraSavings = FinanceCalculator.calculate(base, extraMonthlyCashFlow = 2_000.0, today = today)
+
+        assertEquals(50_000.0, inheritance.fidelityCapital - baseMetrics.fidelityCapital, 0.01)
+        assertEquals(50_000.0, propertySale.fidelityCapital - baseMetrics.fidelityCapital, 0.01)
+        assertEquals(-12_000.0, marketCrash.fidelityCapital - baseMetrics.fidelityCapital, 0.01)
+        assertEquals(baseMetrics.fidelityCapital, extraSavings.fidelityCapital, 0.01)
+        assertEquals(baseMetrics.fidelityTarget, extraSavings.fidelityTarget, 0.01)
+    }
 
     @Test
     fun `total score weights CFS and caps low CFS`() {
@@ -39,6 +118,26 @@ class FinanceCalculatorTest {
         assertEquals(2.5, input.inflationPercent, 0.01)
         assertEquals("$", input.currencySymbol)
         assertTrue(metrics.realReturnPercent > 0.0)
+    }
+
+    @Test
+    fun `extra monthly cash flow increases savings and projection without changing income target`() {
+        val input = FinancialInputData.usAverageData()
+
+        val baseMetrics = FinanceCalculator.calculate(input)
+        val extraMetrics = FinanceCalculator.calculate(input, extraMonthlyCashFlow = 2_000.0)
+        // До отдельного параметра дополнительные сбережения моделировались как рост дохода.
+        val previousEquivalentMetrics = FinanceCalculator.calculate(
+            input.copy(monthlyIncome = input.monthlyIncome + 2_000.0)
+        )
+
+        assertEquals(6_000.0, input.monthlyIncome, 0.01)
+        assertEquals(3_200.0, extraMetrics.cashFlow, 0.01)
+        assertEquals(53.33, extraMetrics.savingsRate, 0.01)
+        assertEquals(38_400.0, ProjectionParams.from(input, extraMonthlyCashFlow = 2_000.0).annualCashFlow, 0.01)
+        assertEquals(baseMetrics.fidelityTarget, extraMetrics.fidelityTarget, 0.01)
+        assertNotEquals(previousEquivalentMetrics.fidelityTarget, extraMetrics.fidelityTarget, 0.01)
+        assertEquals(previousEquivalentMetrics.yearsToRetirement, extraMetrics.yearsToRetirement, 0.01)
     }
 
     @Test
@@ -130,6 +229,7 @@ class FinanceCalculatorTest {
         val metrics = FinanceCalculator.calculate(invalidInput)
 
         assertFalse(metrics.isAgeValid)
+        assertEquals(FireStatus.INVALID_AGE, metrics.fireStatus)
         assertEquals(0.0, metrics.yearsToRetirement, 0.001)
         assertEquals(0.0, metrics.retirementAge, 0.001)
         assertEquals(0.0, metrics.retirementTargetCapital, 0.001)
@@ -350,6 +450,7 @@ class FinanceCalculatorTest {
         val metrics = FinanceCalculator.calculate(input)
 
         assertTrue(metrics.isAgeValid)
+        assertEquals(FireStatus.HORIZON_EXHAUSTED, metrics.fireStatus)
         assertEquals(0, metrics.remainingYearsHorizon)
         assertEquals(0.0, metrics.yearsToRetirement, 0.001)
         assertEquals(metrics.currentAge.toDouble(), metrics.retirementAge, 0.001)
@@ -429,12 +530,32 @@ class FinanceCalculatorTest {
         val metrics = FinanceCalculator.calculate(input)
 
         assertTrue(metrics.cashFlow < 0.0)
+        assertEquals(FireStatus.UNREACHABLE, metrics.fireStatus)
         assertTrue(metrics.realReturnPercent < 0.0)
         assertFalse(metrics.yearsToRetirement.isNaN())
         assertFalse(metrics.yearsToRetirement.isInfinite())
         // При недостижимом FIRE срок упирается в максимальный горизонт (дожитие)
         val maxYears = (metrics.lifeExpectancy - metrics.currentAge).toDouble()
         assertEquals(maxYears, metrics.yearsToRetirement, 0.01)
+    }
+
+    @Test
+    fun testFireAlreadyReachedNow() {
+        val input = FinancialInputData(
+            monthlyIncome = 100_000.0,
+            monthlyExpenses = 50_000.0,
+            liquidAssets = 100_000_000.0,
+            financialAssets = 100_000_000.0,
+            propertyAssets = 0.0,
+            liabilities = 0.0,
+            birthDate = "1990-01-01",
+            lifeExpectancy = 80,
+            nominalReturnPercent = 7.0,
+            inflationPercent = 2.0
+        )
+        val metrics = FinanceCalculator.calculate(input)
+        assertEquals(FireStatus.REACHED_NOW, metrics.fireStatus)
+        assertEquals(0.0, metrics.yearsToRetirement, 0.001)
     }
 
     @Test

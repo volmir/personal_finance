@@ -62,6 +62,7 @@ import com.example.ui.theme.WarningYellow
 import com.example.ui.theme.WarningYellowBg
 import com.example.util.Formatters
 import com.example.util.localization.LocalAppLanguage
+import java.util.Locale
 import com.example.util.localization.LocalAppStrings
 
 @Composable
@@ -122,7 +123,7 @@ fun AuditScoreScreen(
 
                         IconButton(
                             onClick = {
-                                val reportText = String.format(
+                                val reportText = String.format(Locale.ROOT,
                                     strings.shareScoreReportTemplate,
                                     Formatters.formatScore(scores.totalScore, lang = lang),
                                     scores.savingsRateScore,
@@ -133,8 +134,8 @@ fun AuditScoreScreen(
                                     Formatters.formatRatio(metrics.debtRatio, lang),
                                     scores.cfsScore,
                                     Formatters.formatRatio(metrics.financialFreedomRatio, lang),
-                                    Formatters.formatRatio(metrics.yearsToRetirement, lang),
-                                    Formatters.formatRatio(metrics.retirementAge, lang)
+                                    Formatters.formatFireYearsToRetirement(metrics.yearsToRetirement, metrics.fireStatus, lang),
+                                    Formatters.formatFireRetirementAge(metrics.retirementAge, metrics.fireStatus, lang)
                                 )
                                 val sendIntent = Intent().apply {
                                     action = Intent.ACTION_SEND
@@ -207,7 +208,11 @@ fun AuditScoreScreen(
                 score = scores.savingsRateScore,
                 currentValue = Formatters.formatPercent(metrics.savingsRate, lang),
                 formula = strings.savingsRateFormula,
-                comment = strings.savingsRateScoreComment(metrics.savingsRate, Formatters.formatPercent(metrics.savingsRate, lang)),
+                comment = strings.savingsRateScoreComment(
+                    metrics.savingsRate,
+                    Formatters.formatPercent(metrics.savingsRate, lang),
+                    strings.formatThreshold(FinancialMetricEvaluator.SAVINGS_RATE_POSITIVE_THRESHOLD)
+                ),
                 valuePrefix = strings.scoreValuePrefix,
                 scoreOutOfTen = strings.scoreOutOfTen(scores.savingsRateScore),
                 tag = "score_savings_rate"
@@ -216,13 +221,19 @@ fun AuditScoreScreen(
 
         // 2. Запас месячных расходов Score
         item {
-            val monthsText = String.format(strings.safetyMonthsValueFormat, Formatters.formatRatio(metrics.safetyMonths, lang))
+            val monthsText = String.format(Locale.ROOT, strings.safetyMonthsValueFormat, Formatters.formatRatio(metrics.safetyMonths, lang))
             ScoreItemCard(
                 title = strings.metricSafetyMonthsTitle,
                 score = scores.safetyMonthsScore,
                 currentValue = monthsText,
                 formula = strings.metricSafetyMonthsFormula,
-                comment = strings.safetyMonthsScoreComment(metrics.safetyMonths, monthsText),
+                comment = strings.safetyMonthsScoreComment(
+                    metrics.safetyMonths,
+                    monthsText,
+                    strings.formatThreshold(FinancialMetricEvaluator.SAFETY_MONTHS_NEUTRAL_THRESHOLD),
+                    strings.formatThreshold(FinancialMetricEvaluator.SAFETY_MONTHS_POSITIVE_THRESHOLD),
+                    strings.formatThreshold(FinancialMetricEvaluator.SAFETY_MONTHS_TIER_EXCELLENT)
+                ),
                 valuePrefix = strings.scoreValuePrefix,
                 scoreOutOfTen = strings.scoreOutOfTen(scores.safetyMonthsScore),
                 tag = "score_safety_months"
@@ -231,11 +242,25 @@ fun AuditScoreScreen(
 
         // 3. Коэффициент задолженности Score
         item {
-            val debtComment = when {
-                metrics.debtRatio <= 0.3 -> strings.debtComment0
-                metrics.debtRatio <= 0.6 -> strings.debtComment1
-                metrics.debtRatio <= 1.0 -> strings.debtComment2
-                else -> strings.debtComment3
+            val debtComment = when (FinancialMetricEvaluator.getDebtRatioStatus(metrics.debtRatio)) {
+                AuditIndicatorStatus.POSITIVE -> strings.debtComment0(
+                    strings.formatDebtRatioThreshold(FinancialMetricEvaluator.DEBT_RATIO_ZERO_THRESHOLD),
+                    strings.formatDebtRatioThreshold(FinancialMetricEvaluator.DEBT_RATIO_POSITIVE_THRESHOLD)
+                )
+                AuditIndicatorStatus.NEUTRAL -> strings.debtComment1(
+                    strings.formatDebtRatioThreshold(FinancialMetricEvaluator.DEBT_RATIO_POSITIVE_THRESHOLD),
+                    strings.formatDebtRatioThreshold(FinancialMetricEvaluator.DEBT_RATIO_NEUTRAL_THRESHOLD)
+                )
+                AuditIndicatorStatus.NEGATIVE -> if (metrics.debtRatio <= FinancialMetricEvaluator.DEBT_RATIO_TIER_CRITICAL) {
+                    strings.debtComment2(
+                        strings.formatDebtRatioThreshold(FinancialMetricEvaluator.DEBT_RATIO_NEUTRAL_THRESHOLD),
+                        strings.formatDebtRatioThreshold(FinancialMetricEvaluator.DEBT_RATIO_TIER_CRITICAL)
+                    )
+                } else {
+                    strings.debtComment3(
+                        strings.formatDebtRatioThreshold(FinancialMetricEvaluator.DEBT_RATIO_TIER_CRITICAL)
+                    )
+                }
             }
             ScoreItemCard(
                 title = strings.metricDebtRatioTitle,
@@ -616,7 +641,7 @@ fun AuditScoreScreen(
                     Spacer(modifier = Modifier.width(10.dp))
                     Column {
                         Text(
-                            text = strings.assumptionsDisclaimerTitle,
+                            text = strings.fireAssumptionsTitle,
                             style = MaterialTheme.typography.labelMedium.copy(
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurface
@@ -624,7 +649,7 @@ fun AuditScoreScreen(
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = strings.assumptionsDisclaimerBody(
+                            text = strings.fireAssumptionsBody(
                                 Formatters.formatPercent(inputData.nominalReturnPercent, lang),
                                 Formatters.formatPercent(inputData.inflationPercent, lang)
                             ),

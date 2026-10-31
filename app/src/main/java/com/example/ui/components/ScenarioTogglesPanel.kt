@@ -53,6 +53,7 @@ import com.example.ui.theme.AlertRed
 import com.example.ui.theme.SuccessGreen
 import com.example.ui.theme.WarningYellowBg
 import com.example.util.Formatters
+import com.example.domain.ScenarioConstants
 import com.example.util.localization.LocalAppLanguage
 import com.example.util.localization.LocalAppStrings
 
@@ -82,9 +83,9 @@ fun ScenarioTogglesPanel(
             id = "pos_salary_increase",
             number = 1,
             title = strings.scenarioSalaryIncreaseTitle,
-            parametersText = strings.scenarioSalaryIncreaseParam,
+            parametersText = strings.scenarioSalaryIncreaseParam(strings.formatThreshold(ScenarioConstants.SALARY_INCREASE_PERCENT)),
             description = strings.scenarioSalaryIncreaseDesc(
-                Formatters.formatMoney(inputData.monthlyIncome * 0.20, inputData.currencySymbol, lang)
+                Formatters.formatMoney(inputData.monthlyIncome * ScenarioConstants.SALARY_INCREASE_PERCENT / 100.0, inputData.currencySymbol, lang)
             ),
             icon = Icons.Default.TrendingUp,
             isChecked = scenarios.salaryIncrease20,
@@ -93,10 +94,10 @@ fun ScenarioTogglesPanel(
         ScenarioItemData(
             id = "pos_market_growth",
             number = 2,
-            title = strings.scenarioMarketGrowthTitle,
-            parametersText = strings.scenarioMarketGrowthParam,
+            title = strings.scenarioMarketGrowthTitle(strings.formatThreshold(ScenarioConstants.MARKET_GROWTH_PERCENT)),
+            parametersText = strings.scenarioMarketGrowthParam(strings.formatThreshold(ScenarioConstants.MARKET_GROWTH_PERCENT)),
             description = strings.scenarioMarketGrowthDesc(
-                Formatters.formatMoney(inputData.financialAssets * 0.25, inputData.currencySymbol, lang)
+                Formatters.formatMoney(inputData.financialAssets * ScenarioConstants.MARKET_GROWTH_PERCENT / 100.0, inputData.currencySymbol, lang)
             ),
             icon = Icons.Default.ShowChart,
             isChecked = scenarios.marketGrowth25,
@@ -106,9 +107,9 @@ fun ScenarioTogglesPanel(
             id = "pos_expense_optimization",
             number = 3,
             title = strings.scenarioExpenseOptTitle,
-            parametersText = strings.scenarioExpenseOptParam,
+            parametersText = strings.scenarioExpenseOptParam(strings.formatThreshold(ScenarioConstants.EXPENSE_OPTIMIZATION_PERCENT)),
             description = strings.scenarioExpenseOptDesc(
-                Formatters.formatMoney(inputData.monthlyExpenses * 0.15, inputData.currencySymbol, lang)
+                Formatters.formatMoney(inputData.monthlyExpenses * ScenarioConstants.EXPENSE_OPTIMIZATION_PERCENT / 100.0, inputData.currencySymbol, lang)
             ),
             icon = Icons.Default.Savings,
             isChecked = scenarios.expenseOptimization15,
@@ -118,9 +119,9 @@ fun ScenarioTogglesPanel(
             id = "pos_relocation",
             number = 4,
             title = strings.scenarioRelocationTitle,
-            parametersText = strings.scenarioRelocationParam,
+            parametersText = strings.scenarioRelocationParam(strings.formatThreshold(ScenarioConstants.RELOCATION_EXPENSE_REDUCTION_PERCENT)),
             description = strings.scenarioRelocationDesc(
-                Formatters.formatMoney(inputData.monthlyExpenses * 0.30, inputData.currencySymbol, lang)
+                Formatters.formatMoney(inputData.monthlyExpenses * ScenarioConstants.RELOCATION_EXPENSE_REDUCTION_PERCENT / 100.0, inputData.currencySymbol, lang)
             ),
             icon = Icons.Default.LocationCity,
             isChecked = scenarios.relocationLowerCost30,
@@ -130,9 +131,9 @@ fun ScenarioTogglesPanel(
             id = "pos_inheritance",
             number = 5,
             title = strings.scenarioInheritanceTitle,
-            parametersText = strings.scenarioInheritanceParam,
+            parametersText = strings.scenarioInheritanceParam(strings.formatThreshold(ScenarioConstants.INHERITANCE_PERCENT_OF_MONTHLY_INCOME)),
             description = strings.scenarioInheritanceDesc(
-                Formatters.formatMoney(12.0 * inputData.monthlyIncome, inputData.currencySymbol, lang)
+                Formatters.formatMoney(ScenarioConstants.INHERITANCE_PERCENT_OF_MONTHLY_INCOME / 100.0 * inputData.monthlyIncome, inputData.currencySymbol, lang)
             ),
             icon = Icons.Default.Redeem,
             isChecked = scenarios.inheritance1200,
@@ -142,9 +143,9 @@ fun ScenarioTogglesPanel(
             id = "pos_property_sale",
             number = 6,
             title = strings.scenarioPropertySaleTitle,
-            parametersText = strings.scenarioPropertySaleParam,
+            parametersText = strings.scenarioPropertySaleParam(strings.formatThreshold(ScenarioConstants.PROPERTY_SALE_PERCENT_OF_MONTHLY_INCOME)),
             description = strings.scenarioPropertySaleDesc(
-                Formatters.formatMoney(20.0 * inputData.monthlyIncome, inputData.currencySymbol, lang)
+                Formatters.formatMoney(ScenarioConstants.PROPERTY_SALE_PERCENT_OF_MONTHLY_INCOME / 100.0 * inputData.monthlyIncome, inputData.currencySymbol, lang)
             ),
             icon = Icons.Default.AccountBalance,
             isChecked = scenarios.propertySale2000,
@@ -154,9 +155,13 @@ fun ScenarioTogglesPanel(
             id = "pos_children_self_sufficient",
             number = 7,
             title = strings.scenarioChildrenSelfSufficientTitle,
-            parametersText = strings.scenarioChildrenSelfSufficientParam,
+            parametersText = strings.scenarioChildrenSelfSufficientParam(
+                strings.formatThreshold(ScenarioConstants.CHILDREN_EXPENSE_REDUCTION_PERCENT),
+                strings.formatThreshold(ScenarioConstants.CHILDREN_SELF_SUFFICIENT_YEARS)
+            ),
             description = strings.scenarioChildrenSelfSufficientDesc(
-                Formatters.formatMoney(inputData.monthlyExpenses * 0.25, inputData.currencySymbol, lang)
+                Formatters.formatMoney(inputData.monthlyExpenses * ScenarioConstants.CHILDREN_EXPENSE_REDUCTION_PERCENT / 100.0, inputData.currencySymbol, lang),
+                strings.formatThreshold(ScenarioConstants.CHILDREN_SELF_SUFFICIENT_YEARS)
             ),
             icon = Icons.Default.School,
             isChecked = scenarios.childrenSelfSufficient18,
@@ -169,8 +174,8 @@ fun ScenarioTogglesPanel(
             id = "job_loss",
             number = 1,
             title = strings.scenarioJobLossTitle,
-            parametersText = strings.scenarioJobLossParam,
-            description = strings.scenarioJobLossDesc,
+            parametersText = strings.scenarioJobLossParam(strings.formatThreshold(ScenarioConstants.JOB_LOSS_MONTHS)),
+            description = strings.scenarioJobLossDesc(strings.formatThreshold(ScenarioConstants.JOB_LOSS_MONTHS)),
             icon = Icons.Default.WorkOff,
             isChecked = scenarios.jobLoss,
             isPositive = false
@@ -178,10 +183,11 @@ fun ScenarioTogglesPanel(
         ScenarioItemData(
             id = "market_crash",
             number = 2,
-            title = strings.scenarioMarketCrashTitle,
-            parametersText = strings.scenarioMarketCrashParam,
+            title = strings.scenarioMarketCrashTitle(strings.formatThreshold(ScenarioConstants.MARKET_CRASH_PERCENT)),
+            parametersText = strings.scenarioMarketCrashParam(strings.formatThreshold(ScenarioConstants.MARKET_CRASH_PERCENT)),
             description = strings.scenarioMarketCrashDesc(
-                Formatters.formatMoney(inputData.financialAssets * 0.3, inputData.currencySymbol, lang)
+                strings.formatThreshold(ScenarioConstants.MARKET_CRASH_PERCENT),
+                Formatters.formatMoney(inputData.financialAssets * ScenarioConstants.MARKET_CRASH_PERCENT / 100.0, inputData.currencySymbol, lang)
             ),
             icon = Icons.Default.TrendingDown,
             isChecked = scenarios.marketCrash30,
@@ -191,9 +197,13 @@ fun ScenarioTogglesPanel(
             id = "mortgage",
             number = 3,
             title = strings.scenarioMortgageTitle,
-            parametersText = strings.scenarioMortgageParam,
+            parametersText = strings.scenarioMortgageParam(
+                strings.formatThreshold(ScenarioConstants.MORTGAGE_INCOME_PERCENT),
+                strings.formatThreshold(ScenarioConstants.MORTGAGE_DURATION_YEARS)
+            ),
             description = strings.scenarioMortgageDesc(
-                Formatters.formatMoney(inputData.monthlyIncome * 0.35, inputData.currencySymbol, lang)
+                Formatters.formatMoney(inputData.monthlyIncome * ScenarioConstants.MORTGAGE_INCOME_PERCENT / 100.0, inputData.currencySymbol, lang),
+                strings.formatThreshold(ScenarioConstants.MORTGAGE_DURATION_YEARS)
             ),
             icon = Icons.Default.Home,
             isChecked = scenarios.mortgage20Years35Income,
@@ -203,9 +213,13 @@ fun ScenarioTogglesPanel(
             id = "car_loan",
             number = 4,
             title = strings.scenarioCarLoanTitle,
-            parametersText = strings.scenarioCarLoanParam,
+            parametersText = strings.scenarioCarLoanParam(
+                strings.formatThreshold(ScenarioConstants.CAR_LOAN_INCOME_PERCENT),
+                strings.formatThreshold(ScenarioConstants.CAR_LOAN_DURATION_YEARS)
+            ),
             description = strings.scenarioCarLoanDesc(
-                Formatters.formatMoney(inputData.monthlyIncome * 0.20, inputData.currencySymbol, lang)
+                Formatters.formatMoney(inputData.monthlyIncome * ScenarioConstants.CAR_LOAN_INCOME_PERCENT / 100.0, inputData.currencySymbol, lang),
+                strings.formatThreshold(ScenarioConstants.CAR_LOAN_DURATION_YEARS)
             ),
             icon = Icons.Default.DirectionsCar,
             isChecked = scenarios.carLoan5Years,
@@ -215,9 +229,9 @@ fun ScenarioTogglesPanel(
             id = "large_expense",
             number = 5,
             title = strings.scenarioLargeExpenseTitle,
-            parametersText = strings.scenarioLargeExpenseParam,
+            parametersText = strings.scenarioLargeExpenseParam(strings.formatThreshold(ScenarioConstants.LARGE_ONE_OFF_EXPENSE_PERCENT)),
             description = strings.scenarioLargeExpenseDesc(
-                Formatters.formatMoney(5.0 * inputData.monthlyIncome, inputData.currencySymbol, lang)
+                Formatters.formatMoney(ScenarioConstants.LARGE_ONE_OFF_EXPENSE_PERCENT / 100.0 * inputData.monthlyIncome, inputData.currencySymbol, lang)
             ),
             icon = Icons.Default.Payments,
             isChecked = scenarios.largeOneOffExpense500,
@@ -227,21 +241,25 @@ fun ScenarioTogglesPanel(
             id = "inflation",
             number = 6,
             title = strings.scenarioInflationTitle,
-            parametersText = strings.scenarioInflationParam,
+            parametersText = strings.scenarioInflationParam(strings.formatThreshold(ScenarioConstants.EXPENSE_INFLATION_PERCENT)),
             description = strings.scenarioInflationDesc(
-                Formatters.formatMoney(inputData.monthlyExpenses * 0.25, inputData.currencySymbol, lang)
+                Formatters.formatMoney(inputData.monthlyExpenses * ScenarioConstants.EXPENSE_INFLATION_PERCENT / 100.0, inputData.currencySymbol, lang)
             ),
             icon = Icons.Default.TrendingUp,
-            isChecked = scenarios.inflation5Percent,
+            isChecked = scenarios.expensesPlus25,
             isPositive = false
         ),
         ScenarioItemData(
             id = "child_dependent",
             number = 7,
             title = strings.scenarioChildTitle,
-            parametersText = strings.scenarioChildParam,
+            parametersText = strings.scenarioChildParam(
+                strings.formatThreshold(ScenarioConstants.CHILD_DEPENDENT_EXPENSE_PERCENT),
+                strings.formatThreshold(ScenarioConstants.CHILD_DEPENDENT_DURATION_YEARS)
+            ),
             description = strings.scenarioChildDesc(
-                Formatters.formatMoney(inputData.monthlyExpenses * 0.25, inputData.currencySymbol, lang)
+                Formatters.formatMoney(inputData.monthlyExpenses * ScenarioConstants.CHILD_DEPENDENT_EXPENSE_PERCENT / 100.0, inputData.currencySymbol, lang),
+                strings.formatThreshold(ScenarioConstants.CHILD_DEPENDENT_DURATION_YEARS)
             ),
             icon = Icons.Default.ChildCare,
             isChecked = scenarios.childOrDependent18Years,

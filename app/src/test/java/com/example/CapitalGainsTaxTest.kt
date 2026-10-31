@@ -4,6 +4,9 @@ import com.example.data.db.ScenarioEntity
 import com.example.data.model.FinancialInputData
 import com.example.domain.AuditorAnalysisGenerator
 import com.example.domain.FinanceCalculator
+import com.example.domain.ProjectionEngine
+import com.example.domain.ProjectionParams
+import com.example.domain.TemporaryExpense
 import com.example.util.localization.AppLanguage
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -33,6 +36,22 @@ class CapitalGainsTaxTest {
         assertEquals(20.0, metrics20.capitalGainsTaxPercent, 0.01)
         assertTrue(metrics20.capitalGainsGainSharePercent > 0.0)
         assertTrue(metrics20.effectiveCapitalGainsTaxRate > 0.0)
+
+        // Без временных расходов calculate() и движок используют один и тот же расчет налога.
+        val engine = ProjectionEngine(ProjectionParams.from(baseInput))
+        val yearsInRetirement = (baseInput.lifeExpectancy - engine.params.currentAge - metrics20.yearsToRetirement)
+            .coerceAtLeast(0.0)
+        val baseReq = engine.computeBaseRequirement(metrics20.yearsToRetirement, yearsInRetirement)
+        assertEquals(
+            engine.getEffectiveTaxRateAt(metrics20.yearsToRetirement, yearsInRetirement, baseReq),
+            metrics20.effectiveCapitalGainsTaxRate,
+            0.000001
+        )
+        assertEquals(
+            engine.getGainShareAt(metrics20.yearsToRetirement, yearsInRetirement, baseReq),
+            metrics20.capitalGainsGainSharePercent,
+            0.000001
+        )
 
         // 2. Custom rate: 23% scales effective tax proportionally
         val input23 = baseInput.copy(capitalGainsTaxPercent = 23.0)
@@ -64,6 +83,36 @@ class CapitalGainsTaxTest {
         assertTrue(exportEn.contains("• Capital gains tax: 20"))
         assertTrue(exportEn.contains("Effective capital gains tax on withdrawal:"))
         assertFalse(exportEn.contains("eff."))
+    }
+
+    @Test
+    fun testTemporaryExpensesUseEngineTaxCalculation() {
+        val input = FinancialInputData(
+            monthlyIncome = 100_000.0,
+            monthlyExpenses = 50_000.0,
+            liquidAssets = 100_000.0,
+            financialAssets = 1_000_000.0,
+            propertyAssets = 0.0,
+            liabilities = 0.0,
+            birthDate = "1990-01-01",
+            lifeExpectancy = 80,
+            nominalReturnPercent = 10.0,
+            inflationPercent = 5.0,
+            capitalGainsTaxPercent = 20.0
+        )
+        val temporaryExpenses = listOf(TemporaryExpense(annualAmount = 120_000.0, durationYears = 10.0))
+        val metrics = FinanceCalculator.calculate(input, temporaryExpenses = temporaryExpenses)
+        val engine = ProjectionEngine(ProjectionParams.from(input, temporaryExpenses = temporaryExpenses))
+        val yearsInRetirement = (input.lifeExpectancy - engine.params.currentAge - metrics.yearsToRetirement)
+            .coerceAtLeast(0.0)
+        val baseReq = engine.computeBaseRequirement(metrics.yearsToRetirement, yearsInRetirement)
+
+        assertTrue(metrics.effectiveCapitalGainsTaxRate > 0.0)
+        assertEquals(
+            engine.getEffectiveTaxRateAt(metrics.yearsToRetirement, yearsInRetirement, baseReq),
+            metrics.effectiveCapitalGainsTaxRate,
+            0.000001
+        )
     }
 
     @Test

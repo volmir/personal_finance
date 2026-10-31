@@ -16,15 +16,14 @@ object FinancialMetricEvaluator {
 
     fun getCashFlowStatus(cashFlow: Double): AuditIndicatorStatus = when {
         cashFlow > 0.0 -> AuditIndicatorStatus.POSITIVE
-        cashFlow == 0.0 -> AuditIndicatorStatus.NEUTRAL
         else -> AuditIndicatorStatus.NEGATIVE
     }
 
     // =========================================================================
     // 2. Норма сбережений (Savings Rate)
-    // < 0%: негативный (0 баллов)
-    // 0..20%: нейтральный (5..7 баллов)
-    // > 20%: позитивный (8..10 баллов)
+    // <= 0%: негативный (0 баллов)
+    // (0..20%]: нейтральный
+    // > 20%: позитивный
     // =========================================================================
 
     const val SAVINGS_RATE_POSITIVE_THRESHOLD = 20.0
@@ -36,14 +35,13 @@ object FinancialMetricEvaluator {
     const val SAVINGS_RATE_TIER_EXCELLENT = 50.0
 
     fun getSavingsRateStatus(savingsRate: Double): AuditIndicatorStatus = when {
-        savingsRate < 0.0 -> AuditIndicatorStatus.NEGATIVE
+        savingsRate <= SAVINGS_RATE_NEUTRAL_THRESHOLD -> AuditIndicatorStatus.NEGATIVE
         savingsRate > SAVINGS_RATE_POSITIVE_THRESHOLD -> AuditIndicatorStatus.POSITIVE
-        savingsRate >= SAVINGS_RATE_NEUTRAL_THRESHOLD -> AuditIndicatorStatus.NEUTRAL
-        else -> AuditIndicatorStatus.NEGATIVE
+        else -> AuditIndicatorStatus.NEUTRAL
     }
 
     fun getSavingsRateScore(savingsRate: Double): Int = when {
-        savingsRate < SAVINGS_RATE_NEUTRAL_THRESHOLD -> 0
+        savingsRate <= SAVINGS_RATE_NEUTRAL_THRESHOLD -> 0
         savingsRate < SAVINGS_RATE_TIER_LOW -> 5
         savingsRate < SAVINGS_RATE_TIER_MEDIUM -> 6
         savingsRate <= SAVINGS_RATE_POSITIVE_THRESHOLD -> 7
@@ -90,6 +88,7 @@ object FinancialMetricEvaluator {
 
     const val DEBT_RATIO_POSITIVE_THRESHOLD = 0.30
     const val DEBT_RATIO_NEUTRAL_THRESHOLD = 0.60
+    const val DEBT_RATIO_ZERO_THRESHOLD = 0.0
 
     const val DEBT_RATIO_TIER_EXCELLENT = 0.05
     const val DEBT_RATIO_TIER_VERY_GOOD = 0.15
@@ -139,16 +138,20 @@ object FinancialMetricEvaluator {
     const val FIDELITY_POSITIVE_THRESHOLD = 1.0
     const val FIDELITY_NEUTRAL_THRESHOLD = 0.7
 
-    fun calculateFidelityRatio(netWorth: Double, target: Double): Double {
+    fun fidelityCapital(liquid: Double, financial: Double, property: Double, liabilities: Double): Double {
+        return liquid + financial - maxOf(0.0, liabilities - property)
+    }
+
+    fun calculateFidelityRatio(capital: Double, target: Double): Double {
         return if (target > 0.0) {
-            netWorth / target
+            capital / target
         } else {
-            if (netWorth >= 0.0) 1.0 else 0.0
+            if (capital >= 0.0) 1.0 else 0.0
         }
     }
 
-    fun calculateFidelityPercent(netWorth: Double, target: Double): Double {
-        return calculateFidelityRatio(netWorth, target) * 100.0
+    fun calculateFidelityPercent(capital: Double, target: Double): Double {
+        return calculateFidelityRatio(capital, target) * 100.0
     }
 
     fun getFidelityStatus(ratio: Double): AuditIndicatorStatus = when {
@@ -157,11 +160,11 @@ object FinancialMetricEvaluator {
         else -> AuditIndicatorStatus.NEGATIVE
     }
 
-    fun getFidelityStatus(netWorth: Double, target: Double): AuditIndicatorStatus {
+    fun getFidelityStatus(capital: Double, target: Double): AuditIndicatorStatus {
         if (target <= 0.0) {
-            return if (netWorth >= 0.0) AuditIndicatorStatus.POSITIVE else AuditIndicatorStatus.NEGATIVE
+            return if (capital >= 0.0) AuditIndicatorStatus.POSITIVE else AuditIndicatorStatus.NEGATIVE
         }
-        val ratio = netWorth / target
+        val ratio = capital / target
         return getFidelityStatus(ratio)
     }
 
@@ -178,16 +181,21 @@ object FinancialMetricEvaluator {
     // 30+: финансовая независимость (балл 10, позитивный)
     // =========================================================================
 
+    const val CFS_THRESHOLD_DEBT = 0.0
     const val CFS_THRESHOLD_BUFFER = 0.5
     const val CFS_NEUTRAL_THRESHOLD = 2.0
     const val CFS_POSITIVE_THRESHOLD = 5.0
     const val CFS_THRESHOLD_STABILITY = 15.0
     const val CFS_THRESHOLD_INDEPENDENCE = 30.0
+    const val TOTAL_SCORE_CFS_CAP_TRIGGER = 5
+    const val TOTAL_SCORE_CAP_FOR_LOW_CFS = 6.0
 
     fun calculateCfs(netWorth: Double, annualExpenses: Double): Double {
-        return if (annualExpenses > 0.0) {
-            netWorth / annualExpenses
-        } else 0.0
+        return when {
+            annualExpenses > 0.0 -> netWorth / annualExpenses
+            annualExpenses == 0.0 && netWorth > 0.0 -> CFS_THRESHOLD_INDEPENDENCE
+            else -> 0.0
+        }
     }
 
     fun getCfsStatus(cfs: Double): AuditIndicatorStatus = when {
@@ -197,7 +205,7 @@ object FinancialMetricEvaluator {
     }
 
     fun getCfsScore(cfs: Double): Int = when {
-        cfs < 0.0 -> 0
+        cfs < CFS_THRESHOLD_DEBT -> 0
         cfs < CFS_THRESHOLD_BUFFER -> 2
         cfs < CFS_NEUTRAL_THRESHOLD -> 4
         cfs < CFS_POSITIVE_THRESHOLD -> 6
@@ -206,16 +214,17 @@ object FinancialMetricEvaluator {
         else -> 10
     }
 
-    fun getCfsStageDescription(cfs: Double, lang: AppLanguage = AppLanguage.RU): String {
+    fun getCfsStageDescription(cfs: Double, lang: AppLanguage): String {
         val strings = com.example.util.localization.getAppStrings(lang)
+        val threshold = strings::formatThreshold
         return when {
-            cfs < 0.0 -> strings.cfsStageDebt
-            cfs < CFS_THRESHOLD_BUFFER -> strings.cfsStageBuffer
-            cfs < CFS_NEUTRAL_THRESHOLD -> strings.cfsStageCapital
-            cfs < CFS_POSITIVE_THRESHOLD -> strings.cfsStageInvesting
-            cfs < CFS_THRESHOLD_STABILITY -> strings.cfsStageReturns
-            cfs < CFS_THRESHOLD_INDEPENDENCE -> strings.cfsStageStability
-            else -> strings.cfsStageIndependence
+            cfs < CFS_THRESHOLD_DEBT -> strings.cfsStageDebt(threshold(CFS_THRESHOLD_DEBT))
+            cfs < CFS_THRESHOLD_BUFFER -> strings.cfsStageBuffer(threshold(CFS_THRESHOLD_DEBT), threshold(CFS_THRESHOLD_BUFFER))
+            cfs < CFS_NEUTRAL_THRESHOLD -> strings.cfsStageCapital(threshold(CFS_THRESHOLD_BUFFER), threshold(CFS_NEUTRAL_THRESHOLD))
+            cfs < CFS_POSITIVE_THRESHOLD -> strings.cfsStageInvesting(threshold(CFS_NEUTRAL_THRESHOLD), threshold(CFS_POSITIVE_THRESHOLD))
+            cfs < CFS_THRESHOLD_STABILITY -> strings.cfsStageReturns(threshold(CFS_POSITIVE_THRESHOLD), threshold(CFS_THRESHOLD_STABILITY))
+            cfs < CFS_THRESHOLD_INDEPENDENCE -> strings.cfsStageStability(threshold(CFS_THRESHOLD_STABILITY), threshold(CFS_THRESHOLD_INDEPENDENCE))
+            else -> strings.cfsStageIndependence(threshold(CFS_THRESHOLD_INDEPENDENCE))
         }
     }
 

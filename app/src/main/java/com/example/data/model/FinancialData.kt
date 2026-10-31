@@ -34,6 +34,14 @@ enum class MetricStatus {
     CRITICAL
 }
 
+enum class FireStatus {
+    REACHED_NOW,
+    REACHABLE,
+    UNREACHABLE,
+    HORIZON_EXHAUSTED,
+    INVALID_AGE
+}
+
 data class FinancialScores(
     val savingsRateScore: Int,
     val safetyMonthsScore: Int,
@@ -50,6 +58,7 @@ data class CalculatedMetrics(
     val safetyMonths: Double,
     val debtRatio: Double,
     val netWorth: Double,
+    val fidelityCapital: Double,
     val annualIncome: Double,
     val annualExpenses: Double,
     val currentAge: Int,
@@ -58,10 +67,10 @@ data class CalculatedMetrics(
     val fidelityMultiplier: Double,
     val fidelityTarget: Double,
     val financialFreedomRatio: Double,
-    val cfsStageDescription: String,
     val realReturnPercent: Double,
     val yearsToRetirement: Double,
     val retirementAge: Double,
+    val fireStatus: FireStatus = FireStatus.REACHABLE,
     val retirementTargetCapital: Double,
     val scores: FinancialScores,
     val capitalGainsTaxPercent: Double = 20.0,
@@ -69,8 +78,9 @@ data class CalculatedMetrics(
     val capitalGainsGainSharePercent: Double = 60.0,
     val isAgeValid: Boolean = true
 ) {
-    val fidelityRatio: Double get() = com.example.domain.FinancialMetricEvaluator.calculateFidelityRatio(netWorth, fidelityTarget)
-    val fidelityPercent: Double get() = com.example.domain.FinancialMetricEvaluator.calculateFidelityPercent(netWorth, fidelityTarget)
+    val fidelityRatio: Double get() = com.example.domain.FinancialMetricEvaluator.calculateFidelityRatio(fidelityCapital, fidelityTarget)
+    val fidelityPercent: Double get() = com.example.domain.FinancialMetricEvaluator.calculateFidelityPercent(fidelityCapital, fidelityTarget)
+    val isFidelityAvailable: Boolean get() = isAgeValid && fidelityTarget > 0.0
 }
 
 data class TrajectoryPoint(
