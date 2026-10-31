@@ -688,7 +688,7 @@ fun FireRetirementScreen(
                             onValueChange = { rawValue ->
                                 val snapped = kotlin.math.round(rawValue / savingsConfig.stepSize) * savingsConfig.stepSize
                                 onUpdateSimulation(
-                                    snapped.coerceIn(savingsConfig.minValue, savingsConfig.maxValue).toDouble(),
+                                    snapped.coerceIn(savingsConfig.minValue.toDouble(), savingsConfig.maxValue.toDouble()),
                                     simulationState.realReturnAdjustment.coerceIn(returnConfig.minValue.toDouble(), returnConfig.maxValue.toDouble()),
                                     simulationState.expenseReduction.coerceIn(expensesConfig.minValue.toDouble(), expensesConfig.maxValue.toDouble())
                                 )
@@ -791,7 +791,7 @@ fun FireRetirementScreen(
                                 onUpdateSimulation(
                                     simulationState.extraMonthlySavings.coerceIn(savingsConfig.minValue.toDouble(), savingsConfig.maxValue.toDouble()),
                                     simulationState.realReturnAdjustment.coerceIn(returnConfig.minValue.toDouble(), returnConfig.maxValue.toDouble()),
-                                    snapped.coerceIn(expensesConfig.minValue, expensesConfig.maxValue).toDouble()
+                                    snapped.coerceIn(expensesConfig.minValue.toDouble(), expensesConfig.maxValue.toDouble())
                                 )
                             },
                             valueRange = expensesConfig.minValue..expensesConfig.maxValue,
@@ -880,7 +880,7 @@ fun FireRetirementScreen(
                                 val snapped = kotlin.math.round(rawValue / returnConfig.stepSize) * returnConfig.stepSize
                                 onUpdateSimulation(
                                     simulationState.extraMonthlySavings.coerceIn(savingsConfig.minValue.toDouble(), savingsConfig.maxValue.toDouble()),
-                                    snapped.coerceIn(returnConfig.minValue, returnConfig.maxValue).toDouble(),
+                                    snapped.coerceIn(returnConfig.minValue.toDouble(), returnConfig.maxValue.toDouble()),
                                     simulationState.expenseReduction.coerceIn(expensesConfig.minValue.toDouble(), expensesConfig.maxValue.toDouble())
                                 )
                             },
