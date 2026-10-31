@@ -139,7 +139,7 @@ class AuditorAnalysisTest {
         val input = FinancialInputData.russiaAverageData()
         val metrics = FinanceCalculator.calculate(input)
         val opinion = AuditorAnalysisGenerator.generate(input, metrics, AppLanguage.RU)
-        val export = opinion.toFormattedShareText(input, metrics)
+        val export = opinion.toFormattedShareText(input, metrics, AppLanguage.RU)
 
         assertTrue(export.contains("Допущения модели"))
         assertTrue(export.contains("ориентир, а не прогноз и не гарантия"))
