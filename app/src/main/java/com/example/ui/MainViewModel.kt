@@ -107,7 +107,7 @@ data class FireSimulationState(
                 scenarios.hasActiveScenarios
 }
 
-class MainViewModel(
+class MainViewModel @JvmOverloads constructor(
     application: Application,
     private val today: LocalDate = LocalDate.now()
 ) : AndroidViewModel(application) {
