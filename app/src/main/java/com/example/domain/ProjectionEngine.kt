@@ -95,7 +95,7 @@ class ProjectionEngine(val params: ProjectionParams) {
     } else 1.0
 
     internal fun taxInfo(t: Double, yearsInRetirement: Double, baseReq: Double): TaxInfo {
-        val gainShare = if (yearsInRetirement <= 0.0) {
+        val gainShare = if (yearsInRetirement <= 0.0 || finRatio == 0.0) {
             0.0
         } else {
             val totalRetirementSpend = ongoingAnnualExpenses * yearsInRetirement

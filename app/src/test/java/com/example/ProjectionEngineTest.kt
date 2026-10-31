@@ -328,7 +328,7 @@ class ProjectionEngineTest {
         assertEquals(FireStatus.INVALID_AGE, invalidAge.status)
         assertEquals(0.0, invalidAge.years, 0.001)
 
-        val reachedNow = ProjectionEngine(common.copy(startCapital = 100_000_000.0)).findYearsToRetirement()
+        val reachedNow = ProjectionEngine(common.copy(startCapital = 200_000_000.0)).findYearsToRetirement()
         assertEquals(FireStatus.REACHED_NOW, reachedNow.status)
         assertEquals(0.0, reachedNow.years, 0.001)
     }

@@ -28,7 +28,7 @@ data class GroupedAuditOpinion(
     fun toFormattedShareText(
         inputData: FinancialInputData,
         metrics: CalculatedMetrics,
-        lang: AppLanguage
+        lang: AppLanguage = AppLanguage.RU
     ): String {
         val strings = getAppStrings(lang)
         return buildString {
@@ -79,7 +79,7 @@ object AuditorAnalysisGenerator {
     fun generate(
         inputData: FinancialInputData,
         metrics: CalculatedMetrics,
-        lang: AppLanguage
+        lang: AppLanguage = AppLanguage.RU
     ): GroupedAuditOpinion {
         val currency = inputData.currencySymbol
         val strings = getAppStrings(lang)
@@ -401,7 +401,7 @@ object AuditorAnalysisGenerator {
     fun generateExportSummary(
         inputData: FinancialInputData,
         metrics: CalculatedMetrics,
-        lang: AppLanguage
+        lang: AppLanguage = AppLanguage.RU
     ): String {
         val currency = inputData.currencySymbol
         val strings = getAppStrings(lang)

@@ -1,7 +1,6 @@
 package com.example.util.localization
 
 import androidx.compose.runtime.compositionLocalOf
-import android.icu.text.PluralRules
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
 import java.text.NumberFormat
@@ -370,7 +369,26 @@ interface AppStrings {
     val simulationBadgeOnlySliders: String
 
     fun plural(n: Number, forms: PluralForms): String {
-        val category = PluralRules.forLocale(language.locale).select(n.toDouble())
+        val d = n.toDouble()
+        val category = when (language) {
+            AppLanguage.RU -> {
+                val i = n.toLong()
+                if (d != i.toDouble()) {
+                    "other"
+                } else {
+                    val rem10 = kotlin.math.abs(i) % 10
+                    val rem100 = kotlin.math.abs(i) % 100
+                    when {
+                        rem10 == 1L && rem100 != 11L -> "one"
+                        rem10 in 2L..4L && rem100 !in 12L..14L -> "few"
+                        else -> "many"
+                    }
+                }
+            }
+            AppLanguage.EN -> {
+                if (d == 1.0) "one" else "other"
+            }
+        }
         return forms.forCategory(category)
     }
 

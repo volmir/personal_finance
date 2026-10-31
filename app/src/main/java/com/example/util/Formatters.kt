@@ -89,8 +89,7 @@ object Formatters {
         val strings = com.example.util.localization.getAppStrings(lang)
         return when (status) {
             FireStatus.INVALID_AGE -> strings.invalidBirthDateError
-            FireStatus.UNREACHABLE -> strings.fireUnreachableText
-            FireStatus.HORIZON_EXHAUSTED -> strings.fireHorizonExhaustedText
+            FireStatus.UNREACHABLE, FireStatus.HORIZON_EXHAUSTED -> strings.fireUnreachableText
             FireStatus.REACHED_NOW, FireStatus.REACHABLE -> formatRatio(yearsToRetirement, lang)
         }
     }
@@ -108,8 +107,7 @@ object Formatters {
         val strings = com.example.util.localization.getAppStrings(lang)
         return when (status) {
             FireStatus.INVALID_AGE -> strings.invalidBirthDateError
-            FireStatus.UNREACHABLE -> strings.fireUnreachableText
-            FireStatus.HORIZON_EXHAUSTED -> strings.fireHorizonExhaustedText
+            FireStatus.UNREACHABLE, FireStatus.HORIZON_EXHAUSTED -> strings.fireUnreachableText
             FireStatus.REACHED_NOW, FireStatus.REACHABLE -> strings.fireRetirementAgeValue(formatRatio(retirementAge, lang))
         }
     }

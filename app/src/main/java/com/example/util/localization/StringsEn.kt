@@ -637,7 +637,7 @@ val StringsEn: AppStrings = object : AppStrings {
     override val auditCfsBuffer: (String, String) -> String = { cfs, buffer -> "📈 Financial Freedom (CFS: $cfs): Net capital, including property, covers no more than $buffer years of expenses." }
     override val auditCfsPathToIndependence: String = "You are on the path to independence, but still far from the goal."
     override val auditCfsCloseToIndependence: (percent: Int) -> String = { percent -> "You are close: capital covers $percent% of the target." }
-    override val auditCfsFinanciallyIndependent: String = "You are financially independent by net capital (including property)."
+    override val auditCfsFinanciallyIndependent: String = "You have achieved financial independence: CFS is at least 30."
 
     override val auditRealReturnTitle: String = "Real Return on Capital"
     override val auditRealReturnPositive: String = "✅ Real Return on Capital (+%1${'$'}s): Asset yield outpaces inflation (%2${'$'}s vs %3${'$'}s). Capital is protected against erosion and expands purchasing power."
