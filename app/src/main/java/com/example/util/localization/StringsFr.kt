@@ -371,6 +371,7 @@ val StringsFr: AppStrings = object : AppStrings {
     override val metricFidelitySubFormat: (age: Int, mult: String) -> String = { age, mult -> "Âge : $age ans | Multiplicateur : ${mult}x" }
     override val metricFidelityProgress: String = "Progression vers l'objectif Fidelity :"
     override val metricFidelityCapitalFormat: (capital: String) -> String = { capital -> "Capital pris en compte : $capital" }
+    override val fidelityProgressRatioFormat: (String, String) -> String = { capital, target -> "($capital sur $target)" }
 
     override val metricCfsTitle: String = "Taux de liberté financière (CFS)"
     override val metricCfsFormula: String = "(Patrimoine net, immobilier inclus / Dépenses annuelles)"
@@ -623,10 +624,10 @@ val StringsFr: AppStrings = object : AppStrings {
     override val auditNetWorthNegative: String = "🚨 Valeur nette (Solde négatif : %1${'$'}s) : Valeur nette négative (situation de déficit). L'ensemble des dettes excède les biens possédés."
 
     override val auditFidelityTitle: String = "Repère Fidelity"
-    override val auditFidelityPositive: String = "✅ Jalon de patrimoine (Fidelity : %1${'$'}s de la cible) : Votre capital dépasse le seuil recommandé pour votre âge (%2${'$'}s). Excellente trajectoire."
-    override val auditFidelityNeutral: String = "ℹ️ Jalon de patrimoine (Fidelity : %1${'$'}s de la cible) : Le capital correspond aux recommandations d'épargne pour votre âge (%2${'$'}s)."
-    override val auditFidelityNegativeInsolvent: String = "🚨 Jalon de patrimoine (Fidelity) : Le capital net liquide et financier déduction faite des dettes est négatif (%1${'$'}s). Le passif bloque l'atteinte du jalon (%2${'$'}s)."
-    override val auditFidelityNegativeLagging: String = "⚠️ Jalon de patrimoine (Fidelity : %1${'$'}s de la cible) : En retard sur le repère recommandé pour votre âge (%2${'$'}s). Accélérer l'épargne est conseillé."
+    override val auditFidelityPositive: String = "✅ Jalon de patrimoine (Fidelity : %1${'$'}s de la cible) : Votre capital dépasse le seuil recommandé pour votre âge %2${'$'}s. Excellente trajectoire."
+    override val auditFidelityNeutral: String = "ℹ️ Jalon de patrimoine (Fidelity : %1${'$'}s de la cible) : Le capital correspond aux recommandations d'épargne pour votre âge %2${'$'}s."
+    override val auditFidelityNegativeInsolvent: String = "🚨 Jalon de patrimoine (Fidelity) : Le capital net liquide et financier déduction faite des dettes est négatif (%1${'$'}s). Le passif bloque l'atteinte du jalon %2${'$'}s."
+    override val auditFidelityNegativeLagging: String = "⚠️ Jalon de patrimoine (Fidelity : %1${'$'}s de la cible) : En retard sur le repère recommandé pour votre âge %2${'$'}s. Accélérer l'épargne est conseillé."
 
     override val auditCfsTitle: String = "Taux de liberté financière"
     override val auditCfsIndependence: (String, String) -> String = { cfs, independence -> "🎉 Liberté financière (CFS : $cfs) : Le patrimoine net, immobilier compris, dépasse $independence années de dépenses." }

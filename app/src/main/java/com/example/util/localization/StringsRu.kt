@@ -371,6 +371,7 @@ val StringsRu: AppStrings = object : AppStrings {
     override val metricFidelitySubFormat: (age: Int, mult: String) -> String = { age, mult -> "Возраст: $age лет | Множитель: ${mult}x" }
     override val metricFidelityProgress: String = "Прогресс к ориентиру Fidelity:"
     override val metricFidelityCapitalFormat: (capital: String) -> String = { capital -> "Учитываемый капитал: $capital" }
+    override val fidelityProgressRatioFormat: (String, String) -> String = { capital, target -> "($capital из $target)" }
 
     override val metricCfsTitle: String = "Коэффициент финансовой свободы"
     override val metricCfsFormula: String = "(Чистый капитал, включая недвижимость / Годовые расходы)"
@@ -624,10 +625,10 @@ val StringsRu: AppStrings = object : AppStrings {
     override val auditNetWorthNegative: String = "🚨 Чистый капитал (Отрицательный баланс: %1${'$'}s): Отрицательный чистый капитал (техническая неплатежеспособность). Обязательства превышают стоимость всего имеющегося имущества."
 
     override val auditFidelityTitle: String = "Бенчмарк Fidelity"
-    override val auditFidelityPositive: String = "✅ Возрастной ориентир капитала (Бенчмарк Fidelity: %1${'$'}s от цели): Капитал опережает целевой норматив для вашего возраста (%2${'$'}s). Отличный задел для долгосрочного благосостояния."
-    override val auditFidelityNeutral: String = "ℹ️ Возрастной ориентир капитала (Бенчмарк Fidelity: %1${'$'}s от цели): Капитал соответствует рекомендуемым возрастным ориентирам накоплений (%2${'$'}s)."
-    override val auditFidelityNegativeInsolvent: String = "🚨 Возрастной ориентир капитала (Бенчмарк Fidelity): Ликвидный и финансовый капитал за вычетом долгов отрицателен (%1${'$'}s). Наличие долговой нагрузки отдаляет достижение пенсионного норматива (%2${'$'}s)."
-    override val auditFidelityNegativeLagging: String = "⚠️ Возрастной ориентир капитала (Бенчмарк Fidelity: %1${'$'}s от цели): Отставание от рекомендуемой возрастной планки капитала (%2${'$'}s). Желательно ускорить темп капитализации."
+    override val auditFidelityPositive: String = "✅ Возрастной ориентир капитала (Бенчмарк Fidelity: %1${'$'}s от цели): Капитал опережает целевой норматив для вашего возраста %2${'$'}s. Отличный задел для долгосрочного благосостояния."
+    override val auditFidelityNeutral: String = "ℹ️ Возрастной ориентир капитала (Бенчмарк Fidelity: %1${'$'}s от цели): Капитал соответствует рекомендуемым возрастным ориентирам накоплений %2${'$'}s."
+    override val auditFidelityNegativeInsolvent: String = "🚨 Возрастной ориентир капитала (Бенчмарк Fidelity): Ликвидный и финансовый капитал за вычетом долгов отрицателен (%1${'$'}s). Наличие долговой нагрузки отдаляет достижение пенсионного норматива %2${'$'}s."
+    override val auditFidelityNegativeLagging: String = "⚠️ Возрастной ориентир капитала (Бенчмарк Fidelity: %1${'$'}s от цели): Отставание от рекомендуемой возрастной планки капитала %2${'$'}s. Желательно ускорить темп капитализации."
 
     override val auditCfsTitle: String = "Коэффициент финансовой свободы"
     override val auditCfsIndependence: (String, String) -> String = { cfs, independence -> "🎉 Финансовая свобода (КФС: $cfs): Чистый капитал, включая недвижимость, превышает $independence годовых расходов." }

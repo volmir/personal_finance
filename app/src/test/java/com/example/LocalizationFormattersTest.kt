@@ -77,5 +77,11 @@ class LocalizationFormattersTest {
 
         val enFidelityLine = getAppStrings(AppLanguage.EN).metricFidelityCapitalFormat("$55,000")
         org.junit.Assert.assertEquals("Eligible capital: $55,000", enFidelityLine)
+
+        val ruRatio = getAppStrings(AppLanguage.RU).fidelityProgressRatioFormat("55 000 $", "187 200 $")
+        org.junit.Assert.assertEquals("(55 000 $ из 187 200 $)", ruRatio)
+
+        val enRatio = getAppStrings(AppLanguage.EN).fidelityProgressRatioFormat("$55,000", "$187,200")
+        org.junit.Assert.assertEquals("($55,000 of $187,200)", enRatio)
     }
 }

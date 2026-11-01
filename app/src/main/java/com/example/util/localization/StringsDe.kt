@@ -371,6 +371,7 @@ val StringsDe: AppStrings = object : AppStrings {
     override val metricFidelitySubFormat: (age: Int, mult: String) -> String = { age, mult -> "Alter: $age J. | Multiplikator: ${mult}x" }
     override val metricFidelityProgress: String = "Fortschritt zum Fidelity-Ziel:"
     override val metricFidelityCapitalFormat: (capital: String) -> String = { capital -> "Berücksichtigtes Kapital: $capital" }
+    override val fidelityProgressRatioFormat: (String, String) -> String = { capital, target -> "($capital von $target)" }
 
     override val metricCfsTitle: String = "Finanzielle Freiheitsquote (CFS)"
     override val metricCfsFormula: String = "(Reinvermögen inklusive Immobilien / Jahresausgaben)"
@@ -623,10 +624,10 @@ val StringsDe: AppStrings = object : AppStrings {
     override val auditNetWorthNegative: String = "🚨 Reinvermögen (Negativer Saldo: %1${'$'}s): Negatives Reinvermögen. Gesamtverbindlichkeiten übersteigen alle vorhandenen Vermögenswerte."
 
     override val auditFidelityTitle: String = "Fidelity-Benchmark"
-    override val auditFidelityPositive: String = "✅ Alters-Meilenstein (Fidelity-Benchmark: %1${'$'}s des Ziels): Kapital übertrifft den Richtwert für Ihr Alter (%2${'$'}s). Ausgezeichnete langfristige Entwicklung."
-    override val auditFidelityNeutral: String = "ℹ️ Alters-Meilenstein (Fidelity-Benchmark: %1${'$'}s des Ziels): Kapital entspricht der Altersempfehlung (%2${'$'}s)."
-    override val auditFidelityNegativeInsolvent: String = "🚨 Alters-Meilenstein (Fidelity-Benchmark): Liquides und finanzielles Kapital nach Schulden ist negativ (%1${'$'}s). Ausstehende Schulden verhindern das Erreichen des empfohlenen Ziels (%2${'$'}s)."
-    override val auditFidelityNegativeLagging: String = "⚠️ Alters-Meilenstein (Fidelity-Benchmark: %1${'$'}s des Ziels): Rückstand gegenüber dem Altersrichtwert (%2${'$'}s). Erhöhung der Sparquote empfohlen."
+    override val auditFidelityPositive: String = "✅ Alters-Meilenstein (Fidelity-Benchmark: %1${'$'}s des Ziels): Kapital übertrifft den Richtwert für Ihr Alter %2${'$'}s. Ausgezeichnete langfristige Entwicklung."
+    override val auditFidelityNeutral: String = "ℹ️ Alters-Meilenstein (Fidelity-Benchmark: %1${'$'}s des Ziels): Kapital entspricht der Altersempfehlung %2${'$'}s."
+    override val auditFidelityNegativeInsolvent: String = "🚨 Alters-Meilenstein (Fidelity-Benchmark): Liquides und finanzielles Kapital nach Schulden ist negativ (%1${'$'}s). Ausstehende Schulden verhindern das Erreichen des empfohlenen Ziels %2${'$'}s."
+    override val auditFidelityNegativeLagging: String = "⚠️ Alters-Meilenstein (Fidelity-Benchmark: %1${'$'}s des Ziels): Rückstand gegenüber dem Altersrichtwert %2${'$'}s. Erhöhung der Sparquote empfohlen."
 
     override val auditCfsTitle: String = "Finanzielle Freiheitsquote"
     override val auditCfsIndependence: (String, String) -> String = { cfs, independence -> "🎉 Finanzielle Freiheit (CFS: $cfs): Reinvermögen inklusive Immobilien übersteigt $independence Jahresausgaben." }

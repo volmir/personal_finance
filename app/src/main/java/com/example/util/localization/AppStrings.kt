@@ -186,6 +186,7 @@ interface AppStrings {
     val metricFidelitySubFormat: (age: Int, mult: String) -> String
     val metricFidelityProgress: String
     val metricFidelityCapitalFormat: (capital: String) -> String
+    val fidelityProgressRatioFormat: (capital: String, target: String) -> String
 
     val metricCfsTitle: String
     val metricCfsFormula: String

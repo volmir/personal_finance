@@ -371,6 +371,7 @@ val StringsEs: AppStrings = object : AppStrings {
     override val metricFidelitySubFormat: (age: Int, mult: String) -> String = { age, mult -> "Edad: $age años | Multiplicador: ${mult}x" }
     override val metricFidelityProgress: String = "Progreso hacia el objetivo Fidelity:"
     override val metricFidelityCapitalFormat: (capital: String) -> String = { capital -> "Capital considerado: $capital" }
+    override val fidelityProgressRatioFormat: (String, String) -> String = { capital, target -> "($capital de $target)" }
 
     override val metricCfsTitle: String = "Tasa de libertad financiera (CFS)"
     override val metricCfsFormula: String = "(Patrimonio neto incluidos inmuebles / Gastos anuales)"
@@ -623,10 +624,10 @@ val StringsEs: AppStrings = object : AppStrings {
     override val auditNetWorthNegative: String = "🚨 Patrimonio neto (Saldo negativo: %1${'$'}s): Patrimonio neto negativo (insolvencia técnica). Las obligaciones totales superan el conjunto de bienes poseídos."
 
     override val auditFidelityTitle: String = "Referencia Fidelity"
-    override val auditFidelityPositive: String = "✅ Hito patrimonial por edad (Fidelity: %1${'$'}s del objetivo): Tu capital supera la referencia aconsejada para tu edad (%2${'$'}s). Trayectoria excelente a largo plazo."
-    override val auditFidelityNeutral: String = "ℹ️ Hito patrimonial por edad (Fidelity: %1${'$'}s del objetivo): El capital se alinea con la pauta de ahorro para tu edad (%2${'$'}s)."
-    override val auditFidelityNegativeInsolvent: String = "🚨 Hito patrimonial por edad (Fidelity): El capital líquido y financiero tras deudas es negativo (%1${'$'}s). El pasivo impide alcanzar la referencia (%2${'$'}s)."
-    override val auditFidelityNegativeLagging: String = "⚠️ Hito patrimonial por edad (Fidelity: %1${'$'}s del objetivo): Por debajo del objetivo de referencia para tu edad (%2${'$'}s). Se aconseja acelerar el ritmo de ahorro."
+    override val auditFidelityPositive: String = "✅ Hito patrimonial por edad (Fidelity: %1${'$'}s del objetivo): Tu capital supera la referencia aconsejada para tu edad %2${'$'}s. Trayectoria excelente a largo plazo."
+    override val auditFidelityNeutral: String = "ℹ️ Hito patrimonial por edad (Fidelity: %1${'$'}s del objetivo): El capital se alinea con la pauta de ahorro para tu edad %2${'$'}s."
+    override val auditFidelityNegativeInsolvent: String = "🚨 Hito patrimonial por edad (Fidelity): El capital líquido y financiero tras deudas es negativo (%1${'$'}s). El pasivo impide alcanzar la referencia %2${'$'}s."
+    override val auditFidelityNegativeLagging: String = "⚠️ Hito patrimonial por edad (Fidelity: %1${'$'}s del objetivo): Por debajo del objetivo de referencia para tu edad %2${'$'}s. Se aconseja acelerar el ritmo de ahorro."
 
     override val auditCfsTitle: String = "Tasa de libertad financiera"
     override val auditCfsIndependence: (String, String) -> String = { cfs, independence -> "🎉 Libertad financiera (CFS: $cfs): El patrimonio neto incluidos inmuebles supera $independence años de gastos." }

@@ -371,6 +371,7 @@ val StringsIt: AppStrings = object : AppStrings {
     override val metricFidelitySubFormat: (age: Int, mult: String) -> String = { age, mult -> "Età: $age anni | Moltiplicatore: ${mult}x" }
     override val metricFidelityProgress: String = "Progresso verso il target Fidelity:"
     override val metricFidelityCapitalFormat: (capital: String) -> String = { capital -> "Capitale considerato: $capital" }
+    override val fidelityProgressRatioFormat: (String, String) -> String = { capital, target -> "($capital su $target)" }
 
     override val metricCfsTitle: String = "Tasso di libertà finanziaria (CFS)"
     override val metricCfsFormula: String = "(Patrimonio netto compresi immobili / Spese annue)"
@@ -623,10 +624,10 @@ val StringsIt: AppStrings = object : AppStrings {
     override val auditNetWorthNegative: String = "🚨 Patrimonio netto (Saldo negativo: %1${'$'}s): Patrimonio netto negativo (insolvenza tecnica). Le passività complessive superano tutte le attività possedute."
 
     override val auditFidelityTitle: String = "Benchmark Fidelity"
-    override val auditFidelityPositive: String = "✅ Traguardo di capitale per età (Fidelity: %1${'$'}s del target): Il capitale supera la soglia raccomandata per la tua età (%2${'$'}s). Traiettoria eccellente a lungo termine."
-    override val auditFidelityNeutral: String = "ℹ️ Traguardo di capitale per età (Fidelity: %1${'$'}s del target): Il capitale corrisponde alle linee guida di risparmio per la tua età (%2${'$'}s)."
-    override val auditFidelityNegativeInsolvent: String = "🚨 Traguardo di capitale per età (Fidelity): Il capitale liquido e finanziario al netto dei debiti è negativo (%1${'$'}s). Le passività impediscono il raggiungimento del traguardo (%2${'$'}s)."
-    override val auditFidelityNegativeLagging: String = "⚠️ Traguardo di capitale per età (Fidelity: %1${'$'}s del target): In ritardo rispetto al benchmark consigliato per la tua età (%2${'$'}s). Si raccomanda di accelerare il risparmio."
+    override val auditFidelityPositive: String = "✅ Traguardo di capitale per età (Fidelity: %1${'$'}s del target): Il capitale supera la soglia raccomandata per la tua età %2${'$'}s. Traiettoria eccellente a lungo termine."
+    override val auditFidelityNeutral: String = "ℹ️ Traguardo di capitale per età (Fidelity: %1${'$'}s del target): Il capitale corrisponde alle linee guida di risparmio per la tua età %2${'$'}s."
+    override val auditFidelityNegativeInsolvent: String = "🚨 Traguardo di capitale per età (Fidelity): Il capitale liquido e finanziario al netto dei debiti è negativo (%1${'$'}s). Le passività impediscono il raggiungimento del traguardo %2${'$'}s."
+    override val auditFidelityNegativeLagging: String = "⚠️ Traguardo di capitale per età (Fidelity: %1${'$'}s del target): In ritardo rispetto al benchmark consigliato per la tua età %2${'$'}s. Si raccomanda di accelerare il risparmio."
 
     override val auditCfsTitle: String = "Tasso di libertà finanziaria"
     override val auditCfsIndependence: (String, String) -> String = { cfs, independence -> "🎉 Libertà finanziaria (CFS: $cfs): Il patrimonio netto, compresi gli immobili, supera $independence anni di spese." }

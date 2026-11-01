@@ -282,18 +282,19 @@ object AuditorAnalysisGenerator {
             val formattedPercent = Formatters.formatPercent(fidelityPercent, lang)
             val formattedTarget = Formatters.formatMoney(metrics.fidelityTarget, currency, lang)
             val formattedFidelityCapital = Formatters.formatMoney(metrics.fidelityCapital, currency, lang)
+            val formattedCapitalOfTarget = strings.fidelityProgressRatioFormat(formattedFidelityCapital, formattedTarget)
             when (fidelityStatus) {
                 AuditIndicatorStatus.POSITIVE -> AuditIndicatorAnalysis(
                     id = "fidelity",
                     title = strings.auditFidelityTitle,
                     status = AuditIndicatorStatus.POSITIVE,
-                    text = String.format(Locale.ROOT, strings.auditFidelityPositive, formattedPercent, formattedTarget)
+                    text = String.format(Locale.ROOT, strings.auditFidelityPositive, formattedPercent, formattedCapitalOfTarget)
                 )
                 AuditIndicatorStatus.NEUTRAL -> AuditIndicatorAnalysis(
                     id = "fidelity",
                     title = strings.auditFidelityTitle,
                     status = AuditIndicatorStatus.NEUTRAL,
-                    text = String.format(Locale.ROOT, strings.auditFidelityNeutral, formattedPercent, formattedTarget)
+                    text = String.format(Locale.ROOT, strings.auditFidelityNeutral, formattedPercent, formattedCapitalOfTarget)
                 )
                 AuditIndicatorStatus.NEGATIVE -> {
                     if (metrics.fidelityCapital < 0.0) {
@@ -301,14 +302,14 @@ object AuditorAnalysisGenerator {
                             id = "fidelity",
                             title = strings.auditFidelityTitle,
                             status = AuditIndicatorStatus.NEGATIVE,
-                            text = String.format(Locale.ROOT, strings.auditFidelityNegativeInsolvent, formattedFidelityCapital, formattedTarget)
+                            text = String.format(Locale.ROOT, strings.auditFidelityNegativeInsolvent, formattedFidelityCapital, formattedCapitalOfTarget)
                         )
                     } else {
                         AuditIndicatorAnalysis(
                             id = "fidelity",
                             title = strings.auditFidelityTitle,
                             status = AuditIndicatorStatus.NEGATIVE,
-                            text = String.format(Locale.ROOT, strings.auditFidelityNegativeLagging, formattedPercent, formattedTarget)
+                            text = String.format(Locale.ROOT, strings.auditFidelityNegativeLagging, formattedPercent, formattedCapitalOfTarget)
                         )
                     }
                 }
@@ -448,9 +449,11 @@ object AuditorAnalysisGenerator {
                 Formatters.formatFireRetirementAge(metrics.retirementAge, metrics.fireStatus, lang)
             ))
             val fidelityValue = if (metrics.isFidelityAvailable) Formatters.formatPercent(metrics.fidelityPercent, lang) else strings.metricUnavailableValue
+            val fidelityCapital = if (metrics.isFidelityAvailable) Formatters.formatMoney(metrics.fidelityCapital, currency, lang) else strings.metricUnavailableValue
             val fidelityTarget = if (metrics.isFidelityAvailable) Formatters.formatMoney(metrics.fidelityTarget, currency, lang) else strings.metricUnavailableValue
+            val fidelityTargetDisplay = if (metrics.isFidelityAvailable) strings.fidelityProgressRatioFormat(fidelityCapital, fidelityTarget) else strings.metricUnavailableValue
             val fidelityMultiplier = if (metrics.isFidelityAvailable) Formatters.formatRatio(metrics.fidelityMultiplier, lang) else strings.metricUnavailableValue
-            appendLine(String.format(Locale.ROOT, strings.exportFidelityLine, fidelityTarget, fidelityMultiplier, fidelityValue))
+            appendLine(String.format(Locale.ROOT, strings.exportFidelityLine, fidelityTargetDisplay, fidelityMultiplier, fidelityValue))
             appendLine("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
             appendLine(strings.auditShareGeneratedBy)
             appendLine()

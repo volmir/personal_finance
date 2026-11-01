@@ -244,4 +244,41 @@ class AuditorAnalysisTest {
             assertFalse(scoreReport.contains("años años"))
         }
     }
+
+    @Test
+    fun testFidelityAuditAndExportIncludesEligibleCapitalOfTarget() {
+        val input = FinancialInputData(
+            birthDate = "1988-06-15",
+            monthlyIncome = 6_000.0,
+            monthlyExpenses = 4_800.0,
+            liquidAssets = 15_000.0,
+            financialAssets = 40_000.0,
+            propertyAssets = 280_000.0,
+            liabilities = 180_000.0,
+            currencySymbol = "$"
+        )
+        val metrics = FinanceCalculator.calculate(input, today = java.time.LocalDate.of(2026, 11, 1))
+
+        // Russian
+        val ruOpinion = AuditorAnalysisGenerator.generate(input, metrics, AppLanguage.RU)
+        val ruFidelity = (ruOpinion.positive + ruOpinion.neutral + ruOpinion.negative).first { it.id == "fidelity" }
+        val ruCapital = Formatters.formatMoney(metrics.fidelityCapital, "$", AppLanguage.RU)
+        val ruTarget = Formatters.formatMoney(metrics.fidelityTarget, "$", AppLanguage.RU)
+        val ruExpected = "($ruCapital из $ruTarget)"
+        assertTrue(ruFidelity.text.contains(ruExpected))
+
+        val ruExport = AuditorAnalysisGenerator.generateExportSummary(input, metrics, AppLanguage.RU)
+        assertTrue(ruExport.contains(ruExpected))
+
+        // English
+        val enOpinion = AuditorAnalysisGenerator.generate(input, metrics, AppLanguage.EN)
+        val enFidelity = (enOpinion.positive + enOpinion.neutral + enOpinion.negative).first { it.id == "fidelity" }
+        val enCapital = Formatters.formatMoney(metrics.fidelityCapital, "$", AppLanguage.EN)
+        val enTarget = Formatters.formatMoney(metrics.fidelityTarget, "$", AppLanguage.EN)
+        val enExpected = "($enCapital of $enTarget)"
+        assertTrue(enFidelity.text.contains(enExpected))
+
+        val enExport = AuditorAnalysisGenerator.generateExportSummary(input, metrics, AppLanguage.EN)
+        assertTrue(enExport.contains(enExpected))
+    }
 }
