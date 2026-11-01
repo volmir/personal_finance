@@ -145,7 +145,9 @@ fun AuditScoreScreen(
                                 }
                                 context.startActivity(Intent.createChooser(sendIntent, strings.scoresShareReportChooser))
                             },
-                            modifier = Modifier.testTag("share_audit_button")
+                            modifier = Modifier
+                                .size(48.dp)
+                                .testTag("share_audit_button")
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Share,
@@ -315,7 +317,12 @@ fun AuditScoreScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(end = 8.dp)
+                        ) {
                             Icon(
                                 imageVector = Icons.Default.TrendingUp,
                                 contentDescription = null,
@@ -340,7 +347,9 @@ fun AuditScoreScreen(
 
                         IconButton(
                             onClick = shareFullOpinion,
-                            modifier = Modifier.testTag("share_auditor_opinion_button")
+                            modifier = Modifier
+                                .size(48.dp)
+                                .testTag("share_auditor_opinion_button")
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Share,

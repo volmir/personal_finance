@@ -1,0 +1,14 @@
+« Personal Finance & FIRE » vous aide à enregistrer vos revenus, dépenses, actifs et dettes, à analyser vos indicateurs financiers clés et à modéliser votre trajectoire vers l'indépendance financière (FIRE).
+
+L'application comprend quatre écrans :
+
+• Données : Revenus et dépenses mensuels, actifs liquides, financiers et immobiliers, passifs, rendement nominal attendu, inflation, fiscalité des plus-values, date de naissance et espérance de vie. Choix parmi 13 symboles monétaires (affichage des symboles sans conversion de devises).
+• Indicateurs : Cash-flow, taux d'épargne, coussin de sécurité et autonomie en mois, ratio d'endettement, valeur nette, cible d'épargne par âge Fidelity, ratio de liberté financière (CFS) et rendement réel.
+• Score & Audit : Score global de santé financière de 0 à 10, notes des piliers et avis d'audit automatisé avec points forts et facteurs de risque. Rapports partageables via le menu Android.
+• FIRE & Scénarios : Délai prévisionnel jusqu'à la retraite, capital cible, âge de départ et graphique d'évolution du capital jusqu'à l'espérance de vie. Curseurs d'ajustement pour l'épargne, les dépenses et le rendement réel, plus 14 scénarios de simulation.
+
+Le modèle applique un rendement réel constant et l'actualisation des dépenses futures (la règle des 4% et l'étude Trinity ne sont pas utilisées). Les biens immobiliers ne sont pas inclus dans le capital FIRE liquide de départ.
+
+L'interface est disponible en 6 langues (anglais, français, allemand, espagnol, italien, russe), déterminée par la langue du système. L'application fonctionne entièrement hors ligne sans autorisation Internet ; toutes vos données restent sur votre appareil.
+
+Tous les calculs ont une vocation informative et éducative et ne constituent pas un conseil financier, d'investissement ou fiscal personnalisé.

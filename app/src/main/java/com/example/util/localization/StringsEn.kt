@@ -370,6 +370,7 @@ val StringsEn: AppStrings = object : AppStrings {
     override val metricFidelityDesc: String = "Fidelity reference points are shown: age 30 — 1x, 40 — 3x, 50 — 6x, 60 — 8x, and 67 — 10x. The app linearly interpolates between points and uses a 0.5x multiplier before age 25 (an app simplification). The comparison uses liquid and financial assets minus debts not covered by property; property itself is excluded.\n\nExample: at age 40 with annual income of 100,000, the target is 300,000.\n\nNote: This application is not affiliated with or endorsed by Fidelity Investments and solely uses publicly available research milestones and educational benchmarks."
     override val metricFidelitySubFormat: (age: Int, mult: String) -> String = { age, mult -> "Age: $age yrs | Multiplier: ${mult}x" }
     override val metricFidelityProgress: String = "Progress toward Fidelity goal:"
+    override val metricFidelityCapitalFormat: (capital: String) -> String = { capital -> "Eligible capital: $capital" }
 
     override val metricCfsTitle: String = "Financial Freedom Ratio (CFS)"
     override val metricCfsFormula: String = "(Net capital, including property / Annual expenses)"
@@ -564,7 +565,7 @@ val StringsEn: AppStrings = object : AppStrings {
 
     // Score & Safety Months formats
     override val safetyMonthsValueFormat: String = "%1${'$'}s mo."
-    override val shareScoreReportTemplate: String = "📊 Financial Report & Capital Audit:\n• Overall Score: %1${'$'}s of 10\n• Savings Rate: %2${'$'}s/10 (%3${'$'}s)\n• Expense Buffer: %4${'$'}s/10 (%5${'$'}s mo.)\n• Debt Ratio: %6${'$'}s/10 (%7${'$'}s)\n• Financial Freedom Ratio: %8${'$'}s/10 (%9${'$'}s)\n• Time to Retirement (FIRE): %10${'$'}s yrs (at age %11${'$'}s yrs)\n"
+    override val shareScoreReportTemplate: String = "📊 Financial Report & Capital Audit:\n• Overall Score: %1${'$'}s of 10\n• Savings Rate: %2${'$'}s/10 (%3${'$'}s)\n• Expense Buffer: %4${'$'}s/10 (%5${'$'}s mo.)\n• Debt Ratio: %6${'$'}s/10 (%7${'$'}s)\n• Financial Freedom Ratio: %8${'$'}s/10 (%9${'$'}s)\n• Time to Retirement (FIRE): %10${'$'}s yrs (at age %11${'$'}s)\n"
 
     // CFS Stage descriptions
     override val cfsStageDebt: (String) -> String = { debt -> "CFS < $debt — You are in debt" }
@@ -676,6 +677,6 @@ val StringsEn: AppStrings = object : AppStrings {
     override val exportSection4Title: String = "4. Financial Independence, FIRE:"
     override val exportCfsLine: String = "• CFS: %1${'$'}s (%2${'$'}s)"
     override val exportFireTargetCapitalLine: String = "• Target FIRE capital: %1${'$'}s"
-    override val exportFireTimeToRetirementLine: String = "• Time to retirement: %1${'$'}s yrs (at age %2${'$'}s yrs)"
+    override val exportFireTimeToRetirementLine: String = "• Time to retirement: %1${'$'}s yrs (at age %2${'$'}s)"
     override val exportFidelityLine: String = "• Fidelity benchmark: %1${'$'}s (%2${'$'}sx annual income) — %3${'$'}s of goal"
 }

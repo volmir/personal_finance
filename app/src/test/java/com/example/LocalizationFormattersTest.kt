@@ -54,4 +54,28 @@ class LocalizationFormattersTest {
         assertEquals("1,5\u00A0чекбокса", russian.formatCount(1.5, russian.checkboxPluralForms))
         assertEquals("1.5\u00A0checkboxes", english.formatCount(1.5, english.checkboxPluralForms))
     }
+
+    @Test
+    fun newLanguagesAreProperlyLoadedAndFormatted() {
+        val languages = listOf(AppLanguage.DE, AppLanguage.FR, AppLanguage.IT, AppLanguage.ES)
+        for (lang in languages) {
+            val strings = getAppStrings(lang)
+            assertEquals(lang, strings.language)
+            org.junit.Assert.assertNotNull(strings.appName)
+            org.junit.Assert.assertTrue(strings.appName.isNotEmpty())
+            org.junit.Assert.assertTrue(strings.block1Title.isNotEmpty())
+            org.junit.Assert.assertTrue(strings.disclaimerText.isNotEmpty())
+            org.junit.Assert.assertTrue(strings.fireAssumptionsTitle.isNotEmpty())
+            val formatted = Formatters.formatMoney(1000.0, "€", lang)
+            org.junit.Assert.assertTrue(formatted.contains("1") && formatted.contains("000") && formatted.contains("€"))
+            val capitalLine = strings.metricFidelityCapitalFormat("100 000 €")
+            org.junit.Assert.assertTrue(capitalLine.contains("100 000 €"))
+        }
+
+        val ruFidelityLine = getAppStrings(AppLanguage.RU).metricFidelityCapitalFormat("55 000 $")
+        org.junit.Assert.assertEquals("Учитываемый капитал: 55 000 $", ruFidelityLine)
+
+        val enFidelityLine = getAppStrings(AppLanguage.EN).metricFidelityCapitalFormat("$55,000")
+        org.junit.Assert.assertEquals("Eligible capital: $55,000", enFidelityLine)
+    }
 }

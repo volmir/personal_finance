@@ -74,9 +74,13 @@ The application is structured into 4 cohesive functional tabs:
 
 ## 🌐 Languages & Localization / Языки и локализация
 
-- **Application Languages:**
-  - 🇷🇺 **Russian (Русский)** — default for `ru` and `be` locales.
-  - 🇬🇧 **English** — default for all other system locales.
+- **Application Languages (6 языковых версий):**
+  - 🇬🇧 **English** — default language for all other system locales.
+  - 🇷🇺 **Russian (Русский)** — automatically selected for `ru` and `be` locales.
+  - 🇩🇪 **German (Deutsch)** — automatically selected for `de` locales.
+  - 🇫🇷 **French (Français)** — automatically selected for `fr` locales.
+  - 🇮🇹 **Italian (Italiano)** — automatically selected for `it` locales.
+  - 🇪🇸 **Spanish (Español)** — automatically selected for `es` locales.
   - *Detection:* System locale is checked on first launch; the selected language is stored locally.
 - **Currency symbols:** $, €, ₽, ₴, ₸, Br, ֏, £, ¥, CHF, C$, A$, ₹. Values are not converted between currencies.
 
@@ -113,7 +117,7 @@ app/src/main/java/com/example/
 │   └── MainViewModel.kt    # MVVM StateFlow Coordinator & Real-Time Calculation Engine
 └── util/
     ├── Formatters.kt       # Currency, ratio, percentage & score number formatters
-    └── localization/       # AppLanguage, AppStrings, StringsRu, StringsEn
+    └── localization/       # AppLanguage, AppStrings, StringsRu, StringsEn, StringsDe, StringsFr, StringsIt, StringsEs
 ```
 
 ### Architecture Highlights

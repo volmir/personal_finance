@@ -13,6 +13,6 @@ The projection uses a constant real return and estimates the present value of ex
 
 Scenarios include: income +20%; financial assets +25%; expenses −15% or −30%; a one-off inheritance equal to 12 monthly incomes; property-sale proceeds capped at 20 monthly incomes; expenses −25% after 18 years; a one-off reserve draw equal to 12 monthly incomes for job loss; financial assets −30%; mortgage payments of 35% of income for 20 years; car payments of 20% of income for 5 years; a one-off expense of 5 monthly incomes; expenses +25% (labeled as inflation in the app); and child/dependent costs of 25% of expenses for 18 years.
 
-The interface is available in Russian and English. The app does not request internet access; calculations and user data remain on-device. Choose from 13 currency symbols; values are not automatically converted and no exchange rates are provided.
+The interface is available in 6 languages: English, Russian, German, French, Italian, and Spanish (automatically selected based on device system locale). The app does not request internet access; calculations and user data remain on-device. Choose from 13 currency symbols; values are not automatically converted and no exchange rates are provided.
 
 All calculations are informational and are not financial, investment or tax advice. Results depend on entered data and the model's simplified assumptions.

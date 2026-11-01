@@ -185,6 +185,7 @@ interface AppStrings {
     val metricFidelityDesc: String
     val metricFidelitySubFormat: (age: Int, mult: String) -> String
     val metricFidelityProgress: String
+    val metricFidelityCapitalFormat: (capital: String) -> String
 
     val metricCfsTitle: String
     val metricCfsFormula: String
@@ -385,8 +386,11 @@ interface AppStrings {
                     }
                 }
             }
-            AppLanguage.EN -> {
+            AppLanguage.EN, AppLanguage.DE, AppLanguage.IT, AppLanguage.ES -> {
                 if (d == 1.0) "one" else "other"
+            }
+            AppLanguage.FR -> {
+                if (d >= 0.0 && d < 2.0) "one" else "other"
             }
         }
         return forms.forCategory(category)
@@ -532,6 +536,10 @@ fun getAppStrings(language: AppLanguage): AppStrings {
     return when (language) {
         AppLanguage.RU -> StringsRu
         AppLanguage.EN -> StringsEn
+        AppLanguage.DE -> StringsDe
+        AppLanguage.FR -> StringsFr
+        AppLanguage.IT -> StringsIt
+        AppLanguage.ES -> StringsEs
     }
 }
 

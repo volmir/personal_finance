@@ -25,7 +25,7 @@
 - [x] **Нет сетевого разрешения:** в `AndroidManifest.xml` нет `android.permission.INTERNET`; приложение не подключается к банкам и не получает котировки.
 - [x] **Отсутствие Anti-Features:** нет платного контента, навязчивых сетевых сервисов или зависимостей от закрытых Google Play Services.
 - [x] **Наличие Gradle Wrapper:** в репозитории подготовлены скрипты `gradlew` и конфигурация `gradle-wrapper.properties` (Gradle 9.3.1).
-- [x] **Метаданные Fastlane:** подготовлены каталоги `fastlane/metadata/android/` с полными текстами на русском (`ru-RU`) и английском (`en-US`), а также иконка `icon.png` и история изменений (`changelogs/1.txt`).
+- [x] **Метаданные Fastlane:** подготовлены каталоги `fastlane/metadata/android/` с текстами для поддерживаемых языков (включая `en-US` и `ru-RU`), а также иконка `icon.png` и история изменений (`changelogs/1.txt`).
 - [x] **Файл рецепта сборки для F-Droid:** сгенерирован `metadata/com.aistudio.finhealthfire.kzqpv.yml`.
 
 Функции приложения: ввод месячного бюджета, активов и обязательств; 9 финансовых показателей; оценка от 0 до 10 и текстовый аудит; FIRE-модель с графиком капитала и 14 сценариями. Модель использует постоянную реальную доходность, не использует правило 4% и не включает стоимость имущества в FIRE-капитал. Подробные оговорки приведены в `APP_DESCRIPTION.md`.
@@ -67,7 +67,7 @@ Description: |-
   benchmark, financial freedom ratio, real return, and an overall financial
   health score. Model FIRE with a constant real return, a target based on
   expenses through the selected life-expectancy horizon, a capital trajectory,
-  adjustment sliders and 14 what-if scenarios. Includes Russian and English.
+  adjustment sliders and 14 what-if scenarios. Includes English, Russian, German, French, Italian, and Spanish.
   No internet permission is requested; data and calculations stay on-device.
 ```
 

@@ -40,6 +40,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.CalculatedMetrics
@@ -367,6 +368,22 @@ fun MetricsScreen(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(6.dp)
+                            )
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Text(
+                                text = strings.metricFidelityCapitalFormat(
+                                    if (metrics.isFidelityAvailable) {
+                                        Formatters.formatMoney(metrics.fidelityCapital, inputData.currencySymbol, lang)
+                                    } else {
+                                        strings.metricUnavailableValue
+                                    }
+                                ),
+                                style = MaterialTheme.typography.bodySmall.copy(
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    fontSize = 11.5.sp
+                                ),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                     }

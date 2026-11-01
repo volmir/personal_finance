@@ -370,6 +370,7 @@ val StringsRu: AppStrings = object : AppStrings {
     override val metricFidelityDesc: String = "Приведены контрольные точки Fidelity: 30 лет — 1x, 40 — 3x, 50 — 6x, 60 — 8x, 67 — 10x. Между точками приложение применяет линейную интерполяцию, до 25 лет используется множитель 0.5x (упрощение приложения). Сравнение ведётся с ликвидными и финансовыми активами за вычетом долгов, не покрытых недвижимостью; сама недвижимость в расчёт не входит.\n\nПример: если вам 40 лет и ваш годовой доход — 100 000, целевая сумма составляет 300 000.\n\nПримечание: Данное приложение не связано с компанией Fidelity Investments и использует исключительно открытые исследовательские ориентиры и общедоступную финансовую методологию."
     override val metricFidelitySubFormat: (age: Int, mult: String) -> String = { age, mult -> "Возраст: $age лет | Множитель: ${mult}x" }
     override val metricFidelityProgress: String = "Прогресс к ориентиру Fidelity:"
+    override val metricFidelityCapitalFormat: (capital: String) -> String = { capital -> "Учитываемый капитал: $capital" }
 
     override val metricCfsTitle: String = "Коэффициент финансовой свободы"
     override val metricCfsFormula: String = "(Чистый капитал, включая недвижимость / Годовые расходы)"
@@ -564,7 +565,7 @@ val StringsRu: AppStrings = object : AppStrings {
 
     // Score & Safety Months formats
     override val safetyMonthsValueFormat: String = "%1${'$'}s мес."
-    override val shareScoreReportTemplate: String = "📊 Финансовый отчет и аудит капитала:\n• Итоговый результат: %1${'$'}s из 10\n• Норма сбережений: %2${'$'}s/10 (%3${'$'}s)\n• Запас расходов: %4${'$'}s/10 (%5${'$'}s мес.)\n• Коэффициент задолженности: %6${'$'}s/10 (%7${'$'}s)\n• Коэффициент фин. свободы: %8${'$'}s/10 (%9${'$'}s)\n• До пенсии (FIRE): %10${'$'}s лет (в %11${'$'}s лет)\n"
+    override val shareScoreReportTemplate: String = "📊 Финансовый отчет и аудит капитала:\n• Итоговый результат: %1${'$'}s из 10\n• Норма сбережений: %2${'$'}s/10 (%3${'$'}s)\n• Запас расходов: %4${'$'}s/10 (%5${'$'}s мес.)\n• Коэффициент задолженности: %6${'$'}s/10 (%7${'$'}s)\n• Коэффициент фин. свободы: %8${'$'}s/10 (%9${'$'}s)\n• До пенсии (FIRE): %10${'$'}s лет (в %11${'$'}s)\n"
 
     // CFS Stage descriptions
     override val cfsStageDebt: (String) -> String = { debt -> "КФС < $debt — Вы в долгах" }
@@ -676,6 +677,6 @@ val StringsRu: AppStrings = object : AppStrings {
     override val exportSection4Title: String = "4. Финансовая свобода, FIRE:"
     override val exportCfsLine: String = "• КФС: %1${'$'}s (%2${'$'}s)"
     override val exportFireTargetCapitalLine: String = "• Капитал для FIRE: %1${'$'}s"
-    override val exportFireTimeToRetirementLine: String = "• Срок до пенсии FIRE: %1${'$'}s лет (в возрасте %2${'$'}s лет)"
+    override val exportFireTimeToRetirementLine: String = "• Срок до пенсии FIRE: %1${'$'}s лет (в возрасте %2${'$'}s)"
     override val exportFidelityLine: String = "• Бенчмарк Fidelity: %1${'$'}s (%2${'$'}sx годового дохода) — %3${'$'}s от цели"
 }

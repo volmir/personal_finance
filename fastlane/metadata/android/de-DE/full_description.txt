@@ -1,0 +1,14 @@
+«Personal Finance & FIRE» hilft Ihnen, Einnahmen, Ausgaben, Vermögen und Schulden zu erfassen, finanzielle Schlüsselkennzahlen zu analysieren und den Weg zur finanziellen Unabhängigkeit (FIRE) zu simulieren.
+
+Das Programm umfasst vier Hauptbereiche:
+
+• Daten: Monatseinkommen und Ausgaben, liquide Mittel, Finanz- und Sachwerte, Verbindlichkeiten, Renditeerwartung, Inflation, Kapitalertragsteuer, Geburtsdatum und Lebenserwartung. 13 Währungssymbole verfügbar (reine Symbolanzeige ohne automatische Währungsumrechnung).
+• Kennzahlen: Cashflow, Sparquote, Notfallpuffer und Pufferreichweite in Monaten, Verschuldungsgrad, Nettovermögen, Fidelity-Altersziel, Freiheitsquote (CFS) und Realrendite.
+• Bewertung & Prüfung: Gesamtnote von 0 bis 10 Punkten, Einzelnoten der Säulen und detaillierte automatisierte Beurteilung mit Stärken und Risikofaktoren. Berichte können über das Android-Teilen-Menü geteilt werden.
+• FIRE & Simulation: Prognostizierte Jahre bis zur Rente, Zielkapital, Rentenalter und Vermögensverlaufsgrafik bis zur Lebenserwartung. Regler zur Anpassung von Ersparnissen, Ausgaben und Realrendite sowie 14 Was-wäre-wenn-Szenarien.
+
+Das FIRE-Modell basiert auf konstanter Realrendite und abgezinsten künftigen Ausgaben. Das 4%-Modell und Trinity Study finden keine Anwendung. Immobilien fließen nicht in das liquide FIRE-Startkapital ein.
+
+Die App unterstützt 6 Sprachen (Englisch, Deutsch, Französisch, Italienisch, Spanisch, Russisch), ermittelt anhand der Systemsprache. Die Anwendung funktioniert komplett offline ohne Internetberechtigung; sämtliche Daten und Berechnungen verbleiben ausschließlich lokal auf Ihrem Gerät.
+
+Alle Berechnungen dienen reinen Informations- und Bildungszwecken und stellen keine individuelle Finanz-, Anlage- oder Steuerberatung dar.

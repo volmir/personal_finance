@@ -23,7 +23,7 @@ FIRE-модель использует постоянную реальную д�
 
 Сценарии симулятора: рост дохода на 20%; рост финансовых активов на 25%; снижение расходов на 15% или 30%; наследство в размере 12 месячных доходов; продажа имущества с поступлением до 20 месячных доходов; снижение расходов на 25% через 18 лет; разовый резерв на потерю работы в размере 12 месячных доходов; падение финансовых активов на 30%; ипотечные платежи 35% дохода в течение 20 лет; автоплатежи 20% дохода в течение 5 лет; разовая трата в размере 5 месячных доходов; увеличение расходов на 25% (сценарий назван инфляцией); дополнительные расходы на ребёнка или иждивенца в размере 25% на 18 лет.
 
-Интерфейс доступен на русском и английском языках. Приложение работает без разрешения на интернет: данные и расчёты остаются на устройстве. Выбор валюты меняет только отображаемый символ, суммы автоматически не конвертируются.
+Интерфейс доступен на 6 языках: английском, русском, немецком, французском, итальянском и испанском (язык определяется автоматически по системной локали Android). Приложение работает без разрешения на интернет: данные и расчёты остаются на устройстве. Выбор валюты меняет только отображаемый символ, суммы автоматически не конвертируются.
 
 Все расчёты и сценарии носят информационный характер и не являются финансовой, инвестиционной или налоговой рекомендацией. Результаты зависят от введённых данных и упрощённых предположений модели.
 
@@ -50,7 +50,7 @@ The FIRE model applies a constant real return and estimates the present value of
 
 Scenarios include: income +20%; financial assets +25%; expenses −15% or −30%; a one-off inheritance of 12 monthly incomes; property-sale proceeds capped at 20 monthly incomes; expenses −25% after 18 years; a one-off reserve draw equal to 12 monthly incomes for job loss; financial assets −30%; mortgage payments of 35% of income for 20 years; car payments of 20% of income for 5 years; a one-off expense of 5 monthly incomes; expenses +25% (labeled as inflation in the app); and child/dependent costs of 25% of expenses for 18 years.
 
-The interface is available in Russian and English. The app works without the internet permission; data and calculations remain on-device. Currency selection changes the displayed symbol only and does not convert amounts.
+The interface is available in 6 languages: English, Russian, German, French, Italian, and Spanish (automatically determined by the device's system locale, defaulting to English). The app works without the internet permission; data and calculations remain on-device. Currency selection changes the displayed symbol only and does not convert amounts.
 
 All calculations and scenarios are informational and are not financial, investment or tax advice. Results depend on the entered data and the model's simplified assumptions.
 

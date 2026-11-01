@@ -5,6 +5,7 @@ import com.example.data.model.FireStatus
 import com.example.domain.AuditorAnalysisGenerator
 import com.example.domain.FinanceCalculator
 import com.example.domain.model.AuditIndicatorStatus
+import com.example.util.Formatters
 import com.example.util.localization.AppLanguage
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -95,9 +96,9 @@ class AuditorAnalysisTest {
         assertFalse(export.contains("чекбокс"))
         assertTrue(export.contains("Допущения модели"))
         assertTrue(export.contains("Расчёты основаны на постоянной доходности"))
-        assertFalse(export.contains("\n\nМодель не учитывает"))
         assertTrue(export.contains("2,50%"))
-        assertTrue(export.indexOf("⚠️ Важно") < export.indexOf("Допущения модели"))
+        assertTrue(export.indexOf("Допущения модели") < export.indexOf("⚠️ Важно"))
+        assertFalse(export.contains("лет лет"))
     }
 
     @Test
@@ -135,7 +136,7 @@ class AuditorAnalysisTest {
     }
 
     @Test
-    fun testAnalyticsShareIncludesModelAssumptionsAfterLegalDisclaimer() {
+    fun testAnalyticsShareIncludesModelAssumptionsBeforeLegalDisclaimer() {
         val input = FinancialInputData.russiaAverageData()
         val metrics = FinanceCalculator.calculate(input)
         val opinion = AuditorAnalysisGenerator.generate(input, metrics, AppLanguage.RU)
@@ -143,7 +144,7 @@ class AuditorAnalysisTest {
 
         assertTrue(export.contains("Допущения модели"))
         assertTrue(export.contains("ориентир, а не прогноз и не гарантия"))
-        assertTrue(export.indexOf("⚠️ Важно") < export.indexOf("Допущения модели"))
+        assertTrue(export.indexOf("Допущения модели") < export.indexOf("⚠️ Важно"))
     }
 
     @Test
@@ -181,5 +182,66 @@ class AuditorAnalysisTest {
         val independentEn = cfsOpinion(30.0, AppLanguage.EN)
         assertEquals("You have achieved financial independence: CFS is at least 30.", independentEn)
         assertFalse(independentEn.contains("4%"))
+    }
+
+    @Test
+    fun `export and share texts have model assumptions before disclaimer and no duplicate year units`() {
+        val input = FinancialInputData(
+            birthDate = "1990-01-01",
+            monthlyIncome = 150_000.0,
+            monthlyExpenses = 70_000.0,
+            liquidAssets = 200_000.0,
+            financialAssets = 500_000.0,
+            propertyAssets = 0.0,
+            liabilities = 0.0
+        )
+        val metrics = FinanceCalculator.calculate(input)
+
+        for (lang in AppLanguage.values()) {
+            val strings = com.example.util.localization.getAppStrings(lang)
+            val export = AuditorAnalysisGenerator.generateExportSummary(input, metrics, lang)
+            val opinion = AuditorAnalysisGenerator.generate(input, metrics, lang)
+            val share = opinion.toFormattedShareText(input, metrics, lang)
+
+            // Block order: assumptions before disclaimer
+            val exportAssumptionsIdx = export.indexOf(strings.fireAssumptionsTitle)
+            val exportDisclaimerIdx = export.indexOf(strings.auditShareDisclaimer)
+            assertTrue(exportAssumptionsIdx in 0 until exportDisclaimerIdx)
+
+            val shareAssumptionsIdx = share.indexOf(strings.fireAssumptionsTitle)
+            val shareDisclaimerIdx = share.indexOf(strings.auditShareDisclaimer)
+            assertTrue(shareAssumptionsIdx in 0 until shareDisclaimerIdx)
+
+            // No duplicate year words
+            assertFalse(export.contains("лет лет"))
+            assertFalse(export.contains("yrs yrs"))
+            assertFalse(export.contains("J. J."))
+            assertFalse(export.contains("ans ans"))
+            assertFalse(export.contains("anni anni"))
+            assertFalse(export.contains("años años"))
+
+            val scores = metrics.scores
+            val scoreReport = String.format(
+                java.util.Locale.ROOT,
+                strings.shareScoreReportTemplate,
+                Formatters.formatScore(scores.totalScore, lang = lang),
+                scores.savingsRateScore,
+                Formatters.formatPercent(metrics.savingsRate, lang),
+                scores.safetyMonthsScore,
+                Formatters.formatRatio(metrics.safetyMonths, lang),
+                scores.debtRatioScore,
+                Formatters.formatRatio(metrics.debtRatio, lang),
+                scores.cfsScore,
+                Formatters.formatRatio(metrics.financialFreedomRatio, lang),
+                Formatters.formatFireYearsToRetirement(metrics.yearsToRetirement, metrics.fireStatus, lang),
+                Formatters.formatFireRetirementAge(metrics.retirementAge, metrics.fireStatus, lang)
+            )
+            assertFalse(scoreReport.contains("лет лет"))
+            assertFalse(scoreReport.contains("yrs yrs"))
+            assertFalse(scoreReport.contains("Jahren Jahren"))
+            assertFalse(scoreReport.contains("ans ans"))
+            assertFalse(scoreReport.contains("anni anni"))
+            assertFalse(scoreReport.contains("años años"))
+        }
     }
 }

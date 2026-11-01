@@ -63,13 +63,14 @@ data class GroupedAuditOpinion(
             appendLine()
             appendLine("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
             appendLine(strings.auditShareGeneratedBy)
-            appendLine(strings.auditShareDisclaimer)
             appendLine()
             appendLine(strings.fireAssumptionsTitle)
             appendLine(strings.fireAssumptionsBody(
                 Formatters.formatPercent(inputData.nominalReturnPercent, lang),
                 Formatters.formatPercent(inputData.inflationPercent, lang)
             ))
+            appendLine()
+            appendLine(strings.auditShareDisclaimer)
         }
     }
 }
@@ -452,13 +453,14 @@ object AuditorAnalysisGenerator {
             appendLine(String.format(Locale.ROOT, strings.exportFidelityLine, fidelityTarget, fidelityMultiplier, fidelityValue))
             appendLine("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
             appendLine(strings.auditShareGeneratedBy)
-            appendLine(strings.auditShareDisclaimer)
             appendLine()
             appendLine(strings.fireAssumptionsTitle)
             appendLine(strings.fireAssumptionsBody(
                 Formatters.formatPercent(inputData.nominalReturnPercent, lang),
                 Formatters.formatPercent(inputData.inflationPercent, lang)
             ))
+            appendLine()
+            appendLine(strings.auditShareDisclaimer)
         }
     }
 }
