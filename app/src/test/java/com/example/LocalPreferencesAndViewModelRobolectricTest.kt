@@ -13,11 +13,27 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [36])
 class LocalPreferencesAndViewModelRobolectricTest {
+
+    @Test
+    fun `legacy property in FIRE preference is ignored without changing saved data`() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val prefs = context.getSharedPreferences("user_finance_data", Context.MODE_PRIVATE)
+        prefs.edit().clear().commit()
+        val manager = LocalPreferencesManager(context)
+        val expected = FinancialInputData.usAverageData()
+        manager.saveData(expected)
+        prefs.edit().putBoolean("include_property_fire", true).commit()
+
+        assertEquals(expected, manager.loadData())
+
+        val updated = expected.copy(monthlyIncome = 12_000.0)
+        manager.saveData(updated)
+        assertEquals(updated, LocalPreferencesManager(context).loadData())
+        assertTrue(prefs.getBoolean("include_property_fire", false))
+    }
 
     @Test
     fun `first launch assigns default US values and subsequent launches preserve user changes`() {

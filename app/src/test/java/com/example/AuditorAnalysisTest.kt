@@ -4,6 +4,7 @@ import com.example.data.model.FinancialInputData
 import com.example.data.model.FireStatus
 import com.example.domain.AuditorAnalysisGenerator
 import com.example.domain.FinanceCalculator
+import com.example.domain.FinancialMetricEvaluator
 import com.example.domain.model.AuditIndicatorStatus
 import com.example.util.Formatters
 import com.example.util.localization.AppLanguage
@@ -13,6 +14,74 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class AuditorAnalysisTest {
+
+    @Test
+    fun `net worth audit matches shared screen status and preserves text for all asset shares`() {
+        val defaults = FinancialInputData.usAverageData()
+        val base = defaults.copy(liquidAssets = 100.0, financialAssets = 0.0, propertyAssets = 0.0)
+        val cases = listOf(
+            base.copy(liabilities = 40.0) to AuditIndicatorStatus.POSITIVE,
+            base.copy(liabilities = 50.0) to AuditIndicatorStatus.POSITIVE,
+            defaults to AuditIndicatorStatus.NEUTRAL,
+            base.copy(liabilities = 100.0) to AuditIndicatorStatus.NEUTRAL,
+            base.copy(liabilities = 101.0) to AuditIndicatorStatus.NEGATIVE
+        )
+
+        for ((input, expectedStatus) in cases) {
+            val metrics = FinanceCalculator.calculate(input, today = java.time.LocalDate.of(2026, 11, 1))
+            val screenStatus = FinancialMetricEvaluator.getNetWorthStatus(metrics.netWorth, metrics.totalAssets)
+            assertEquals(expectedStatus, screenStatus)
+            if (input == defaults) {
+                assertEquals(335_000.0, metrics.totalAssets, 0.0)
+                assertEquals(155_000.0, metrics.netWorth, 0.0)
+            }
+
+            for (lang in AppLanguage.values()) {
+                val strings = com.example.util.localization.getAppStrings(lang)
+                val opinion = AuditorAnalysisGenerator.generate(input, metrics, lang)
+                val item = (opinion.positive + opinion.neutral + opinion.negative).first { it.id == "net_worth" }
+                assertEquals("$input $lang", screenStatus, item.status)
+                val template = when (expectedStatus) {
+                    AuditIndicatorStatus.POSITIVE -> strings.auditNetWorthStrong
+                    AuditIndicatorStatus.NEUTRAL -> strings.auditNetWorthBalanced
+                    AuditIndicatorStatus.NEGATIVE -> strings.auditNetWorthNegative
+                }
+                assertEquals(
+                    String.format(java.util.Locale.ROOT, template, Formatters.formatMoney(metrics.netWorth, input.currencySymbol, lang)),
+                    item.text
+                )
+            }
+        }
+    }
+
+    @Test
+    fun `export target capital availability follows FIRE status without changing metrics`() {
+        val input = FinancialInputData.usAverageData()
+        val baseMetrics = FinanceCalculator.calculate(input, today = java.time.LocalDate.of(2026, 11, 1))
+        val targetCapital = 1_234_567.89
+
+        for (lang in AppLanguage.values()) {
+            val strings = com.example.util.localization.getAppStrings(lang)
+            for (status in FireStatus.values()) {
+                val metrics = baseMetrics.copy(fireStatus = status, retirementTargetCapital = targetCapital)
+                val expectedValue = when (status) {
+                    FireStatus.REACHED_NOW, FireStatus.REACHABLE ->
+                        Formatters.formatMoney(targetCapital, input.currencySymbol, lang)
+                    else -> strings.metricUnavailableValue
+                }
+
+                val export = AuditorAnalysisGenerator.generateExportSummary(input, metrics, lang)
+
+                assertTrue(
+                    "$lang $status",
+                    export.lineSequence().any {
+                        it == String.format(java.util.Locale.ROOT, strings.exportFireTargetCapitalLine, expectedValue)
+                    }
+                )
+                assertEquals(targetCapital, metrics.retirementTargetCapital, 0.0)
+            }
+        }
+    }
 
     @Test
     fun testSavingsRateAuditBoundaries() {
@@ -173,7 +242,7 @@ class AuditorAnalysisTest {
                 .first { it.id == "cfs" }.text
         }
 
-        assertEquals("Вы на пути к независимости, но пока далеко от цели.", cfsOpinion(14.0))
+        assertEquals(FinancialMetricEvaluator.getCfsStageDescription(14.0, AppLanguage.RU), cfsOpinion(14.0))
         assertEquals("Вы близки: капитал покрывает 50% от целевого.", cfsOpinion(15.0))
         assertEquals("Вы близки: капитал покрывает 80% от целевого.", cfsOpinion(24.0))
         assertEquals("Вы близки: капитал покрывает 100% от целевого.", cfsOpinion(29.99))
@@ -182,6 +251,38 @@ class AuditorAnalysisTest {
         val independentEn = cfsOpinion(30.0, AppLanguage.EN)
         assertEquals("You have achieved financial independence: CFS is at least 30.", independentEn)
         assertFalse(independentEn.contains("4%"))
+    }
+
+    @Test
+    fun `CFS audit below fifteen uses localized stage and preserves status`() {
+        val cases = listOf(
+            -1.0 to AuditIndicatorStatus.NEGATIVE,
+            0.3 to AuditIndicatorStatus.NEGATIVE,
+            1.0 to AuditIndicatorStatus.NEGATIVE,
+            3.0 to AuditIndicatorStatus.NEUTRAL,
+            8.0 to AuditIndicatorStatus.POSITIVE
+        )
+
+        for ((cfs, expectedStatus) in cases) {
+            val input = FinancialInputData(
+                monthlyIncome = 1_000.0,
+                monthlyExpenses = 1_000.0,
+                liquidAssets = maxOf(cfs * 12_000.0, 0.0),
+                financialAssets = 0.0,
+                propertyAssets = 0.0,
+                liabilities = maxOf(-cfs * 12_000.0, 0.0)
+            )
+            val metrics = FinanceCalculator.calculate(input, today = java.time.LocalDate.of(2026, 11, 1))
+            assertEquals(cfs, metrics.financialFreedomRatio, 0.000001)
+
+            for (lang in AppLanguage.values()) {
+                val opinion = AuditorAnalysisGenerator.generate(input, metrics, lang)
+                val item = (opinion.positive + opinion.neutral + opinion.negative).first { it.id == "cfs" }
+                assertEquals("$cfs $lang", expectedStatus, item.status)
+                assertEquals(FinancialMetricEvaluator.getCfsStatus(cfs), item.status)
+                assertEquals("$cfs $lang", FinancialMetricEvaluator.getCfsStageDescription(cfs, lang), item.text)
+            }
+        }
     }
 
     @Test

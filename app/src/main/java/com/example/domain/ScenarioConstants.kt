@@ -21,3 +21,27 @@ object ScenarioConstants {
     const val CHILD_DEPENDENT_EXPENSE_PERCENT = 25.0
     const val CHILD_DEPENDENT_DURATION_YEARS = 18.0
 }
+
+data class SimulationOngoingExpenses(
+    val beforeReduction: Double,
+    val effective: Double
+)
+
+/** Permanent expenses, excluding mortgage, car loan and child payments. */
+fun calculateSimulationOngoingExpenses(
+    monthlyExpenses: Double,
+    expenseReduction: Double,
+    expenseOptimization15: Boolean,
+    relocationLowerCost30: Boolean,
+    expensesPlus25: Boolean
+): SimulationOngoingExpenses {
+    val multiplier =
+        (if (expenseOptimization15) 1.0 - ScenarioConstants.EXPENSE_OPTIMIZATION_PERCENT / 100.0 else 1.0) *
+            (if (relocationLowerCost30) 1.0 - ScenarioConstants.RELOCATION_EXPENSE_REDUCTION_PERCENT / 100.0 else 1.0) *
+            (if (expensesPlus25) 1.0 + ScenarioConstants.EXPENSE_INFLATION_PERCENT / 100.0 else 1.0)
+    val beforeReduction = monthlyExpenses * multiplier.coerceAtLeast(0.10)
+    return SimulationOngoingExpenses(
+        beforeReduction = beforeReduction,
+        effective = (beforeReduction - expenseReduction).coerceAtLeast(monthlyExpenses * 0.10)
+    )
+}

@@ -20,7 +20,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -35,6 +34,17 @@ import com.example.util.Formatters
 import com.example.util.localization.LocalAppLanguage
 import com.example.util.localization.LocalAppStrings
 
+internal fun interpolateAccumulatedCapital(trajectory: List<TrajectoryPoint>, age: Double): Double? {
+    if (trajectory.isEmpty()) return null
+    val rightIndex = trajectory.indexOfFirst { it.age >= age }
+    if (rightIndex == 0) return trajectory.first().accumulatedCapital
+    if (rightIndex == -1) return trajectory.last().accumulatedCapital
+    val left = trajectory[rightIndex - 1]
+    val right = trajectory[rightIndex]
+    val fraction = (age - left.age) / (right.age - left.age)
+    return left.accumulatedCapital + fraction * (right.accumulatedCapital - left.accumulatedCapital)
+}
+
 @Composable
 fun FireTrajectoryChart(
     trajectory: List<TrajectoryPoint>,
@@ -48,7 +58,7 @@ fun FireTrajectoryChart(
 
     val lang = LocalAppLanguage.current
     val strings = LocalAppStrings.current
-    val maxCapital = trajectory.maxOfOrNull { maxOf(it.accumulatedCapital, it.requiredCapital) } ?: 1.0
+    val maxCapital = maxOf(trajectory.maxOf { maxOf(it.accumulatedCapital, it.requiredCapital) }, 1.0)
     val minAge = trajectory.first().age
     val maxAge = trajectory.last().age
     val retireAge = currentAge + yearsToRetire
@@ -92,6 +102,12 @@ fun FireTrajectoryChart(
             )
         }
 
+        Text(
+            text = Formatters.formatMoney(maxCapital, currencySymbol, lang),
+            style = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant),
+            modifier = Modifier.padding(start = 16.dp, bottom = 4.dp)
+        )
+
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -108,7 +124,7 @@ fun FireTrajectoryChart(
                 .padding(horizontal = 16.dp, vertical = 14.dp)
         ) {
             val gridColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f)
-            val textColor = MaterialTheme.colorScheme.onSurfaceVariant
+            val markerColor = MaterialTheme.colorScheme.onSurface
 
             Canvas(modifier = Modifier.matchParentSize()) {
                 val w = size.width
@@ -182,7 +198,7 @@ fun FireTrajectoryChart(
                 if (!isUnreachable) {
                     val retX = getX(retireAge)
                     drawLine(
-                        color = Color.White.copy(alpha = 0.6f),
+                        color = markerColor.copy(alpha = 0.6f),
                         start = Offset(retX, 0f),
                         end = Offset(retX, h),
                         strokeWidth = 1.5.dp.toPx(),
@@ -190,18 +206,13 @@ fun FireTrajectoryChart(
                     )
 
                     // Highlight retirement point circle
-                    val retPoint = trajectory.minByOrNull { kotlin.math.abs(it.age - retireAge) }
-                    if (retPoint != null) {
+                    val retirementCapital = interpolateAccumulatedCapital(trajectory, retireAge)
+                    if (retirementCapital != null) {
                         val px = getX(retireAge)
-                        val py = getY(retPoint.accumulatedCapital)
+                        val py = getY(retirementCapital)
                         drawCircle(
-                            color = SuccessGreen,
+                            color = markerColor,
                             radius = 6.dp.toPx(),
-                            center = Offset(px, py)
-                        )
-                        drawCircle(
-                            color = Color.White,
-                            radius = 3.dp.toPx(),
                             center = Offset(px, py)
                         )
                     }

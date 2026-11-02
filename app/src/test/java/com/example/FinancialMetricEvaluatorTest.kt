@@ -22,10 +22,111 @@ import org.junit.Test
 class FinancialMetricEvaluatorTest {
 
     @Test
-    fun testCfsWithNoExpensesUsesTopTierForPositiveNetWorth() {
-        assertTrue(FinancialMetricEvaluator.calculateCfs(netWorth = 1.0, annualExpenses = 0.0) >= 30.0)
+    fun `net worth status and color use asset share with inclusive fifty percent boundary`() {
+        data class Case(val netWorth: Double, val assets: Double, val status: AuditIndicatorStatus)
+        val cases = listOf(
+            Case(60.0, 100.0, AuditIndicatorStatus.POSITIVE),
+            Case(50.0, 100.0, AuditIndicatorStatus.POSITIVE),
+            Case(155_000.0, 335_000.0, AuditIndicatorStatus.NEUTRAL),
+            Case(0.0, 100.0, AuditIndicatorStatus.NEUTRAL),
+            Case(-1.0, 100.0, AuditIndicatorStatus.NEGATIVE),
+            Case(1.0, 0.0, AuditIndicatorStatus.POSITIVE),
+            Case(0.0, 0.0, AuditIndicatorStatus.NEUTRAL),
+            Case(-1.0, 0.0, AuditIndicatorStatus.NEGATIVE)
+        )
+
+        for (case in cases) {
+            val status = FinancialMetricEvaluator.getNetWorthStatus(case.netWorth, case.assets)
+            assertEquals(case.toString(), case.status, status)
+            val expectedColor = when (case.status) {
+                AuditIndicatorStatus.POSITIVE -> SuccessGreen
+                AuditIndicatorStatus.NEUTRAL -> WarningYellow
+                AuditIndicatorStatus.NEGATIVE -> AlertRed
+            }
+            assertEquals(case.toString(), expectedColor, StatusColors.getColor(status))
+        }
+    }
+
+    @Test
+    fun testCfsWithNoExpensesUsesNetWorthSign() {
+        assertEquals(30.0, FinancialMetricEvaluator.calculateCfs(netWorth = 1.0, annualExpenses = 0.0), 0.0)
         assertEquals(0.0, FinancialMetricEvaluator.calculateCfs(netWorth = 0.0, annualExpenses = 0.0), 0.0)
-        assertEquals(0.0, FinancialMetricEvaluator.calculateCfs(netWorth = -1.0, annualExpenses = 0.0), 0.0)
+        val debtCfs = FinancialMetricEvaluator.calculateCfs(netWorth = -1.0, annualExpenses = 0.0)
+        assertTrue(debtCfs.isFinite())
+        assertTrue(debtCfs < FinancialMetricEvaluator.CFS_THRESHOLD_DEBT)
+    }
+
+    @Test
+    fun `zero expenses preserve CFS stages and audit for all net worth signs`() {
+        data class Case(
+            val liquid: Double,
+            val property: Double,
+            val liabilities: Double,
+            val expectedNetWorth: Double,
+            val expectedCfs: Double,
+            val expectedSafety: Double,
+            val expectedScore: Int
+        )
+
+        val cases = listOf(
+            Case(100.0, 0.0, 0.0, 100.0, 30.0, 12.0, 10),
+            Case(0.0, 0.0, 100.0, -100.0, -1.0, 0.0, 0),
+            Case(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 2),
+            // Safety months depend on the emergency fund, independently of net worth.
+            Case(100.0, 0.0, 200.0, -100.0, -1.0, 12.0, 0),
+            Case(0.0, 100.0, 0.0, 100.0, 30.0, 0.0, 10)
+        )
+
+        for (case in cases) {
+            val input = FinancialInputData(
+                monthlyExpenses = 0.0,
+                liquidAssets = case.liquid,
+                financialAssets = 0.0,
+                propertyAssets = case.property,
+                liabilities = case.liabilities
+            )
+            val metrics = FinanceCalculator.calculate(input, today = java.time.LocalDate.of(2026, 11, 1))
+            assertEquals(case.expectedNetWorth, metrics.netWorth, 0.0)
+            assertEquals(case.expectedSafety, metrics.safetyMonths, 0.0)
+            assertEquals(case.expectedCfs, metrics.financialFreedomRatio, 0.0)
+            assertEquals(case.expectedScore, metrics.scores.cfsScore)
+
+            for (lang in AppLanguage.values()) {
+                val strings = getAppStrings(lang)
+                val expectedStage = when (case.expectedCfs) {
+                    30.0 -> strings.cfsStageIndependence(strings.formatThreshold(30.0))
+                    0.0 -> strings.cfsStageBuffer(strings.formatThreshold(0.0), strings.formatThreshold(0.5))
+                    else -> strings.cfsStageDebt(strings.formatThreshold(0.0))
+                }
+                assertEquals(expectedStage, FinanceCalculator.getCfsStageDescription(metrics.financialFreedomRatio, lang))
+
+                val opinion = AuditorAnalysisGenerator.generate(input, metrics, lang)
+                val items = opinion.positive + opinion.neutral + opinion.negative
+                val cfsItem = items.first { it.id == "cfs" }
+                assertEquals(
+                    if (case.expectedCfs == 30.0) AuditIndicatorStatus.POSITIVE else AuditIndicatorStatus.NEGATIVE,
+                    cfsItem.status
+                )
+                assertTrue(cfsItem.text.isNotBlank())
+                assertEquals(
+                    if (case.expectedSafety > 0.0) AuditIndicatorStatus.POSITIVE else AuditIndicatorStatus.NEGATIVE,
+                    items.first { it.id == "safety_months" }.status
+                )
+            }
+        }
+    }
+
+    @Test
+    fun `zero expenses with negative emergency fund give zero safety months`() {
+        val input = FinancialInputData(
+            monthlyExpenses = 0.0,
+            liquidAssets = -100.0,
+            financialAssets = 0.0,
+            propertyAssets = 0.0,
+            liabilities = 0.0
+        )
+        val metrics = FinanceCalculator.calculate(input, today = java.time.LocalDate.of(2026, 11, 1))
+        assertEquals(0.0, metrics.safetyMonths, 0.0)
     }
 
     @Test

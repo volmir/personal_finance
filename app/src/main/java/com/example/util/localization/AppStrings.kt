@@ -114,6 +114,7 @@ interface AppStrings {
     val birthDateLabel: String
     val invalidBirthDateError: String
     val lifeExpectancyLabel: String
+    val lifeExpectancyError: String
     val fireHorizonBreakdownName: String
     val fireHorizonHintCollapsed: String
     val fireHorizonHintExpanded: String

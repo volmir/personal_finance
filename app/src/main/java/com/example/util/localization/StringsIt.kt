@@ -274,6 +274,7 @@ val StringsIt: AppStrings = object : AppStrings {
     override val birthDateLabel: String = "Data di nascita (AAAA-MM-GG)"
     override val invalidBirthDateError: String = "Inserisci una data di nascita valida"
     override val lifeExpectancyLabel: String = "Aspettativa di vita (anni)"
+    override val lifeExpectancyError: String = "L'aspettativa di vita deve essere superiore all'età attuale e non superare i 120 anni"
     override val fireHorizonBreakdownName: String = "Età & Orizzonte FIRE"
     override val fireHorizonHintCollapsed: String = "Come determinare età e aspettativa di vita? (suggerimento)"
     override val fireHorizonHintExpanded: String = "Nascondi suggerimento età e orizzonte"
@@ -554,7 +555,7 @@ val StringsIt: AppStrings = object : AppStrings {
     override val fireAssumptionsBody: (returnRate: String, inflation: String) -> String = { returnRate, inflation -> "I calcoli ipotizzano un rendimento costante di $returnRate e un'inflazione di $inflation, senza considerare imposte, sequenza temporale dei rendimenti o inflazione dei redditi. Rappresenta una linea guida strategica, non una previsione o una garanzia." }
 
     // Pluralization & Formats
-    override val moneyFormat: String = "%2${'$'}s\u00A0%1${'$'}s"
+    override val moneyFormat: String = "%3${'$'}s%1${'$'}s%2${'$'}s%4${'$'}s"
     override val countFormat: String = "%1${'$'}s\u00A0%2${'$'}s"
     override val checkboxPluralForms = PluralForms(one = "casella", other = "caselle")
     override val yearPluralForms = PluralForms(one = "anno", other = "anni")

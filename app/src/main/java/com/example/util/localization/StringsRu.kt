@@ -274,6 +274,7 @@ val StringsRu: AppStrings = object : AppStrings {
     override val birthDateLabel: String = "Дата рождения (ГГГГ-ММ-ДД)"
     override val invalidBirthDateError: String = "Укажите корректную дату рождения"
     override val lifeExpectancyLabel: String = "Дожитие (лет)"
+    override val lifeExpectancyError: String = "Продолжительность жизни должна быть больше текущего возраста и не больше 120 лет"
     override val fireHorizonBreakdownName: String = "Возраст & Горизонт FIRE"
     override val fireHorizonHintCollapsed: String = "Как определить возраст и горизонт дожития? (подсказка)"
     override val fireHorizonHintExpanded: String = "Скрыть подсказку по возрасту и горизонту"

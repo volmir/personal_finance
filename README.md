@@ -96,7 +96,7 @@ The application is structured into 4 cohesive functional tabs:
 | **Storage** | ~25 MB free space | 50 MB |
 | **Internet permission** | Not requested by the app | — |
 | **Architecture** | `arm64-v8a`, `armeabi-v7a`, `x86_64` | `arm64-v8a` |
-| **Build Tools** | JDK 11+, Gradle 8.x+, Kotlin 2.2+ | JDK 17, Gradle 9.x |
+| **Build Tools** | JDK 17, Gradle 9.x, Kotlin 2.2+ | JDK 17, Gradle 9.3.1 (Gradle Wrapper) |
 
 ---
 
@@ -105,7 +105,6 @@ The application is structured into 4 cohesive functional tabs:
 ```
 app/src/main/java/com/example/
 ├── data/
-│   ├── db/                 # Room SQLite Database & Scenario DAO
 │   ├── model/              # FinancialInputData, CalculatedMetrics, TrajectoryPoint
 │   └── repository/         # LocalPreferencesManager (SharedPreferences), FinanceRepository
 ├── domain/                 # FinanceCalculator, FinancialMetricEvaluator, AuditorAnalysisGenerator
@@ -137,6 +136,9 @@ The project includes automated JVM unit and Robolectric integration test suites:
 - **Localization & Disclaimer Assertions:** Unit tests guaranteeing accuracy of legal disclosures in all locales.
 
 ### Running Tests Locally
+
+Для сборки, JVM-тестов, Robolectric-тестов и генерации скриншотов используется JDK 17. Общая конфигурация Robolectric в `app/src/test/resources/robolectric.properties` задаёт Android 15 (API 35); тест форматтеров сохраняет проверку на API 28. Тесты не эмулируют Android 16 (API 36), для которого Robolectric требует JDK 21 ([совместимость Robolectric](https://robolectric.org/compatibility_table/)). Значения `compileSdk` и `targetSdk` приложения остаются прежними.
+
 ```bash
 # Run all unit and Robolectric tests
 ./gradlew testDebugUnitTest
@@ -172,11 +174,17 @@ The APK will be generated at: `app/build/outputs/apk/release/app-release.apk`.
 ## 🏪 Distribution / Публикация в каталогах
 
 Подготовлены все необходимые файлы конфигураций и пошаговые инструкции для публикации:
-- 🤖 **[F-Droid Inclusion Guide (Официальный каталог F-Droid)](./FDROID_SETUP.md):** Манифест сборки `metadata/com.aistudio.finhealthfire.kzqpv.yml`, полная инструкция по созданию Merge Request в `fdroiddata` на GitLab.
+- 🤖 **[F-Droid Inclusion Guide (Официальный каталог F-Droid)](./FDROID_SETUP.md):** Манифест сборки `metadata/io.github.volmir.personalfinance.yml`, полная инструкция по созданию Merge Request в `fdroiddata` на GitLab.
 - 📦 **[IzzyOnDroid Distribution Guide](./IZZYON_DROID_SETUP.md):** Публикация готовых APK через GitHub Releases и авто-трекинг репозитория.
 - 🚀 **[GitHub Actions CI/CD Workflow](./.github/workflows/build-and-release.yml):** Автоматическая сборка подписанного релизного APK при публикации Git-тегов.
-- 📁 **Fastlane Metadata:** Локализованные метаданные `fastlane/metadata/android/` (`ru-RU`, `en-US`), иконки и описания для каталогов.
+- 📁 **Fastlane Metadata:** Единственный источник названий и описаний для каталогов — [fastlane/metadata/android](./fastlane/metadata/android): `title.txt`, `short_description.txt`, `full_description.txt` для `ru-RU`, `en-US`, `de-DE`, `es-ES`, `fr-FR`, `it-IT`. История версии находится в `changelogs/1.txt`, скриншоты — в `images/phoneScreenshots/` каждой локали.
 - 📄 **OSI-Approved License:** [MIT License](./LICENSE) в корне проекта.
+
+Скриншоты четырёх вкладок создаются из настоящего Compose-интерфейса приложения через Robolectric в светлой теме. Для повторной генерации с JDK 17 и установленным Android SDK:
+
+```bash
+GENERATE_STORE_SCREENSHOTS=1 ./gradlew testDebugUnitTest --tests com.example.StoreScreenshotsTest --rerun-tasks
+```
 
 ---
 
@@ -199,4 +207,6 @@ The APK will be generated at: `app/build/outputs/apk/release/app-release.apk`.
 ## 📄 License / Лицензия
 
 This project is open source and available under the terms of the **[MIT License](./LICENSE)**.
+
+Иконка адаптирована из исходного изображения проекта в прозрачный PNG с помощью image_gen; [источник и описание адаптации](./docs/icon-source.md), лицензия — [MIT](./LICENSE).
 

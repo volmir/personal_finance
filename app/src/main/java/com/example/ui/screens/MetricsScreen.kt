@@ -225,7 +225,7 @@ fun MetricsScreen(
                     formula = strings.metricEmergencyFundFormula,
                     description = strings.metricEmergencyFundDesc,
                     icon = Icons.Default.Shield,
-                    highlightColor = MaterialTheme.colorScheme.primary,
+                    highlightColor = StatusColors.getColor(FinancialMetricEvaluator.getSafetyMonthsStatus(metrics.safetyMonths)),
                     subValue = if (inputData.includeFinancialInEmergencyFund) strings.metricEmergencyFundSubLiquidPlusFin else strings.metricEmergencyFundSubOnlyLiquid
                 )
             }
@@ -292,7 +292,7 @@ fun MetricsScreen(
                     formula = strings.metricNetWorthFormula,
                     description = strings.metricNetWorthDesc,
                     icon = Icons.Default.AccountBalance,
-                    highlightColor = StatusColors.getColor(FinancialMetricEvaluator.getNetWorthStatus(metrics.netWorth)),
+                    highlightColor = StatusColors.getColor(FinancialMetricEvaluator.getNetWorthStatus(metrics.netWorth, metrics.totalAssets)),
                     subValue = if (metrics.netWorth >= 0) {
                         strings.metricNetWorthAssetsFormat(
                             strings.metricNetWorthSubPrefix,

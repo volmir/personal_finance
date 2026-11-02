@@ -81,12 +81,13 @@ object SimulatorScaleCalculator {
     /**
      * Шкала 2: Ежемесячные расходы (expenseReduction).
      * Динамически рассчитывает диапазон и шаг исходя из текущих ежемесячных расходов:
-     * положительное смещение = сокращение расходов (до 100%, т.е. до 0 расходов),
+     * положительное смещение = сокращение расходов (не более 90% базовых расходов),
      * отрицательное смещение = рост расходов (до 100%, т.е. удвоение расходов).
      */
     fun calculateExpensesConfig(
         monthlyExpenses: Double,
-        monthlyIncome: Double
+        monthlyIncome: Double,
+        ongoingExpenses: Double = monthlyExpenses
     ): SimulatorScaleConfig {
         val refExpenses = when {
             monthlyExpenses > 0.0 -> monthlyExpenses
@@ -94,11 +95,15 @@ object SimulatorScaleCalculator {
             else -> 10_000.0
         }
 
-        // Размах шкалы: от -refExpenses (рост) до +refExpenses (сокращение)
+        // Нижняя граница сохраняет диапазон роста расходов.
         val targetStep = (2.0 * refExpenses) / 25.0
         val stepSize = calculateNiceStep(targetStep)
 
-        val maxReduction = ceil(refExpenses / stepSize) * stepSize
+        val reductionLimit = if (monthlyExpenses > 0.0) {
+            minOf(monthlyExpenses * 0.90, (ongoingExpenses - monthlyExpenses * 0.10).coerceAtLeast(0.0))
+        } else 0.0
+        // Округление вниз сохраняет шаг и исключает участок без эффекта у верхней границы.
+        val maxReduction = floor(reductionLimit / stepSize) * stepSize
         val minReduction = -ceil(refExpenses / stepSize) * stepSize
 
         val span = maxReduction - minReduction

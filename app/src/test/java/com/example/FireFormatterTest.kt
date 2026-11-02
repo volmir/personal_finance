@@ -11,6 +11,37 @@ import org.junit.Test
 class FireFormatterTest {
 
     @Test
+    fun `target capital is unavailable for invalid age unreachable and exhausted horizon`() {
+        for (lang in AppLanguage.values()) {
+            val unavailable = com.example.util.localization.getAppStrings(lang).metricUnavailableValue
+            for (status in listOf(FireStatus.INVALID_AGE, FireStatus.UNREACHABLE, FireStatus.HORIZON_EXHAUSTED)) {
+                for (amount in listOf(0.0, 1_234_567.89)) {
+                    assertEquals(
+                        "$lang $status $amount",
+                        unavailable,
+                        Formatters.formatFireTargetCapital(amount, "€", status, lang)
+                    )
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `target capital keeps money formatting when FIRE is reached or reachable`() {
+        for (lang in AppLanguage.values()) {
+            for (status in listOf(FireStatus.REACHED_NOW, FireStatus.REACHABLE)) {
+                for (amount in listOf(0.0, 1_234_567.89)) {
+                    assertEquals(
+                        "$lang $status $amount",
+                        Formatters.formatMoney(amount, "€", lang),
+                        Formatters.formatFireTargetCapital(amount, "€", status, lang)
+                    )
+                }
+            }
+        }
+    }
+
+    @Test
     fun testFireUnreachableUsesStatus() {
         assertTrue(Formatters.isFireUnreachable(FireStatus.UNREACHABLE))
         assertFalse(Formatters.isFireUnreachable(FireStatus.REACHABLE))

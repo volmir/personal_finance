@@ -3,6 +3,8 @@ package com.example
 import com.example.data.model.FinancialInputData
 import com.example.data.model.FireStatus
 import com.example.domain.FinanceCalculator
+import com.example.domain.FinancialInputLimits
+import com.example.domain.ProjectionEngine
 import com.example.domain.ProjectionParams
 import java.time.LocalDate
 import org.junit.Assert.assertEquals
@@ -14,6 +16,43 @@ import org.junit.Ignore
 import org.junit.Test
 
 class FinanceCalculatorTest {
+
+    @Test
+    fun `bounded real return shown in metrics equals projection rate`() {
+        data class Case(val nominal: Double, val inflation: Double, val expected: Double)
+        val cases = listOf(
+            Case(-50.0, 100.0, -50.0),
+            Case(-50.0, -50.0, 0.0),
+            Case(100.0, -50.0, 300.0),
+            Case(100.0, 100.0, 0.0),
+            Case(5.0, 12.0, -6.25),
+            Case(-500.0, -100.0, 0.0),
+            Case(500.0, 500.0, 0.0),
+            Case(500.0, -500.0, 300.0),
+            Case(-500.0, 500.0, -50.0)
+        )
+        val today = LocalDate.of(2026, 10, 31)
+        for (case in cases) {
+            val input = FinancialInputData(nominalReturnPercent = case.nominal, inflationPercent = case.inflation)
+            val metrics = FinanceCalculator.calculate(input, today = today)
+            val engine = ProjectionEngine(ProjectionParams.from(input, today = today))
+            assertEquals(case.toString(), case.expected, metrics.realReturnPercent, 0.000001)
+            assertEquals(case.toString(), metrics.realReturnPercent, engine.r * 100.0, 0.000001)
+            assertEquals(engine.params.realReturnRate, engine.r, 0.0)
+        }
+    }
+
+    @Test
+    fun `capital gains input bounds are shared by metrics and projection`() {
+        for ((raw, expected) in listOf(-10.0 to 0.0, 0.0 to 0.0, 50.0 to 50.0, 100.0 to 100.0, 150.0 to 100.0)) {
+            val input = FinancialInputData(capitalGainsTaxPercent = raw)
+            val metrics = FinanceCalculator.calculate(input)
+            val params = ProjectionParams.from(input)
+            assertEquals(expected, FinancialInputLimits.clampTaxPercent(raw), 0.0)
+            assertEquals(expected, metrics.capitalGainsTaxPercent, 0.0)
+            assertEquals(expected, params.capitalGainsTaxPercent, 0.0)
+        }
+    }
 
     @Test
     fun `Fidelity uses liquid and financial capital after uncovered debt while CFS keeps net worth`() {
@@ -400,7 +439,7 @@ class FinanceCalculatorTest {
         assertEquals(0.0, metrics.annualExpenses, 0.001)
         assertEquals(100_000.0, metrics.cashFlow, 0.001)
         assertEquals(100.0, metrics.savingsRate, 0.001)
-        assertEquals(0.0, metrics.safetyMonths, 0.001)
+        assertEquals(com.example.domain.FinancialMetricEvaluator.SAFETY_MONTHS_TIER_EXCELLENT, metrics.safetyMonths, 0.001)
         assertEquals(0.0, metrics.yearsToRetirement, 0.001)
         assertEquals(0.0, metrics.retirementTargetCapital, 0.001)
         assertFalse(metrics.yearsToRetirement.isNaN())

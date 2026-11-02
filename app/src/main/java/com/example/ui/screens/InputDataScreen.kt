@@ -69,6 +69,7 @@ import com.example.data.model.CalculatedMetrics
 import com.example.data.model.FinancialInputData
 import com.example.domain.AuditorAnalysisGenerator
 import com.example.domain.FinancialMetricEvaluator
+import com.example.domain.FinancialInputLimits
 import com.example.ui.theme.AlertRed
 import com.example.ui.theme.StatusColors
 import com.example.ui.theme.SuccessGreen
@@ -203,7 +204,8 @@ fun InputDataScreen(
                     title = strings.cashFlowTitle,
                     formula = strings.cashFlowFormula,
                     value = Formatters.formatMoney(metrics.cashFlow, inputData.currencySymbol, lang),
-                    valueColor = StatusColors.getColor(FinancialMetricEvaluator.getCashFlowStatus(metrics.cashFlow))
+                    valueColor = StatusColors.getColor(FinancialMetricEvaluator.getCashFlowStatus(metrics.cashFlow)),
+                    modifier = Modifier.testTag("input_metric_cash_flow")
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -213,7 +215,8 @@ fun InputDataScreen(
                     title = strings.savingsRateTitle,
                     formula = strings.savingsRateFormula,
                     value = Formatters.formatPercent(metrics.savingsRate, lang),
-                    valueColor = StatusColors.getColor(FinancialMetricEvaluator.getSavingsRateStatus(metrics.savingsRate))
+                    valueColor = StatusColors.getColor(FinancialMetricEvaluator.getSavingsRateStatus(metrics.savingsRate)),
+                    modifier = Modifier.testTag("input_metric_savings_rate")
                 )
             }
         }
@@ -334,7 +337,8 @@ fun InputDataScreen(
                     title = strings.netWorthTitle,
                     formula = strings.netWorthFormula,
                     value = Formatters.formatMoney(metrics.netWorth, inputData.currencySymbol, lang),
-                    valueColor = StatusColors.getColor(FinancialMetricEvaluator.getNetWorthStatus(metrics.netWorth))
+                    valueColor = StatusColors.getColor(FinancialMetricEvaluator.getNetWorthStatus(metrics.netWorth, metrics.totalAssets)),
+                    modifier = Modifier.testTag("input_metric_net_worth")
                 )
             }
         }
@@ -355,7 +359,7 @@ fun InputDataScreen(
                             label = strings.nominalReturnLabel,
                             value = inputData.nominalReturnPercent,
                             currency = "%",
-                            onValueChange = { newVal -> onUpdate { it.copy(nominalReturnPercent = newVal) } },
+                            onValueChange = { newVal -> onUpdate { it.copy(nominalReturnPercent = FinancialInputLimits.clampRatePercent(newVal)) } },
                             testTag = "input_nominal_return",
                             allowNegative = true
                         )
@@ -365,7 +369,7 @@ fun InputDataScreen(
                             label = strings.inflationLabel,
                             value = inputData.inflationPercent,
                             currency = "%",
-                            onValueChange = { newVal -> onUpdate { it.copy(inflationPercent = newVal.coerceAtLeast(-99.99)) } },
+                            onValueChange = { newVal -> onUpdate { it.copy(inflationPercent = FinancialInputLimits.clampRatePercent(newVal)) } },
                             testTag = "input_inflation",
                             allowNegative = true
                         )
@@ -378,7 +382,7 @@ fun InputDataScreen(
                     label = strings.capitalGainsTaxLabel,
                     value = inputData.capitalGainsTaxPercent,
                     currency = "%",
-                    onValueChange = { newVal -> onUpdate { it.copy(capitalGainsTaxPercent = newVal.coerceIn(0.0, 100.0)) } },
+                    onValueChange = { newVal -> onUpdate { it.copy(capitalGainsTaxPercent = FinancialInputLimits.clampTaxPercent(newVal)) } },
                     testTag = "input_capital_gains_tax"
                 )
 
@@ -407,7 +411,8 @@ fun InputDataScreen(
                     title = strings.realReturnTitle,
                     formula = strings.realReturnFormula,
                     value = Formatters.formatPercent(metrics.realReturnPercent, lang),
-                    valueColor = StatusColors.getColor(FinancialMetricEvaluator.getRealReturnStatus(metrics.realReturnPercent))
+                    valueColor = StatusColors.getColor(FinancialMetricEvaluator.getRealReturnStatus(metrics.realReturnPercent)),
+                    modifier = Modifier.testTag("input_metric_real_return")
                 )
             }
         }
@@ -466,7 +471,7 @@ fun InputDataScreen(
                         label = { Text(strings.lifeExpectancyLabel) },
                         isError = lifeExpectancyInvalid,
                         supportingText = if (lifeExpectancyInvalid) {
-                            { Text(strings.invalidBirthDateError, color = MaterialTheme.colorScheme.error, fontSize = 11.sp) }
+                            { Text(strings.lifeExpectancyError, color = MaterialTheme.colorScheme.error, fontSize = 11.sp) }
                         } else null,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         singleLine = true,

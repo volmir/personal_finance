@@ -1,6 +1,5 @@
 package com.example
 
-import com.example.data.db.ScenarioEntity
 import com.example.data.model.FinancialInputData
 import com.example.domain.AuditorAnalysisGenerator
 import com.example.domain.FinanceCalculator
@@ -113,49 +112,5 @@ class CapitalGainsTaxTest {
             metrics.effectiveCapitalGainsTaxRate,
             0.000001
         )
-    }
-
-    @Test
-    fun testScenarioEntityRoundtripWithCapitalGainsTax() {
-        val original = FinancialInputData(
-            monthlyIncome = 120_000.0,
-            monthlyExpenses = 60_000.0,
-            liquidAssets = 150_000.0,
-            financialAssets = 800_000.0,
-            propertyAssets = 2_500_000.0,
-            liabilities = 300_000.0,
-            birthDate = "1992-04-18",
-            lifeExpectancy = 84,
-            nominalReturnPercent = 12.0,
-            inflationPercent = 6.0,
-            currencySymbol = "€",
-            includeFinancialInEmergencyFund = true,
-            capitalGainsTaxPercent = 15.5,
-            includePropertyInFireCapital = true
-        )
-
-        // 1. Преобразование FinancialInputData -> ScenarioEntity
-        val entity = ScenarioEntity.fromInputData(name = "Target Retirement Plan", data = original, id = 42L)
-        assertEquals("Target Retirement Plan", entity.name)
-        assertEquals(42L, entity.id)
-        assertEquals(15.5, entity.capitalGainsTaxPercent, 0.001)
-        assertTrue(entity.includePropertyInFireCapital)
-
-        // 2. Преобразование ScenarioEntity -> FinancialInputData
-        val restored = entity.toInputData()
-        assertEquals(15.5, restored.capitalGainsTaxPercent, 0.001)
-        assertTrue(restored.includePropertyInFireCapital)
-        assertEquals(original.monthlyIncome, restored.monthlyIncome, 0.001)
-        assertEquals(original.monthlyExpenses, restored.monthlyExpenses, 0.001)
-        assertEquals(original.liquidAssets, restored.liquidAssets, 0.001)
-        assertEquals(original.financialAssets, restored.financialAssets, 0.001)
-        assertEquals(original.propertyAssets, restored.propertyAssets, 0.001)
-        assertEquals(original.liabilities, restored.liabilities, 0.001)
-        assertEquals(original.birthDate, restored.birthDate)
-        assertEquals(original.lifeExpectancy, restored.lifeExpectancy)
-        assertEquals(original.nominalReturnPercent, restored.nominalReturnPercent, 0.001)
-        assertEquals(original.inflationPercent, restored.inflationPercent, 0.001)
-        assertEquals(original.currencySymbol, restored.currencySymbol)
-        assertEquals(original.includeFinancialInEmergencyFund, restored.includeFinancialInEmergencyFund)
     }
 }

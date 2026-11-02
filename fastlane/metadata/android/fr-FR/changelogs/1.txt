@@ -1,0 +1,4 @@
+• Première version de Personal Finance & FIRE Audit
+• 9 indicateurs de patrimoine et de santé financière
+• Planification de la retraite FIRE et simulateur de scénarios
+• Fonctionnement entièrement hors ligne, sans collecte de données

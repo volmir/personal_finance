@@ -7,8 +7,10 @@ import com.example.data.model.FinancialInputData
 import com.example.data.model.TrajectoryPoint
 import com.example.data.repository.LocalPreferencesManager
 import com.example.domain.FinanceCalculator
+import com.example.domain.FinancialInputLimits
 import com.example.domain.SimulatorScaleCalculator
 import com.example.domain.ScenarioConstants
+import com.example.domain.calculateSimulationOngoingExpenses
 import kotlinx.coroutines.flow.MutableStateFlow
 import com.example.util.localization.AppLanguage
 import com.example.util.localization.AppStrings
@@ -109,8 +111,10 @@ data class FireSimulationState(
 
 class MainViewModel @JvmOverloads constructor(
     application: Application,
-    private val today: LocalDate = LocalDate.now()
+    private val dateProvider: () -> LocalDate = { LocalDate.now() }
 ) : AndroidViewModel(application) {
+
+    constructor(application: Application, today: LocalDate) : this(application, { today })
 
     private val localPrefs: LocalPreferencesManager = LocalPreferencesManager(application)
     private var inputDataSaveJob: Job? = null
@@ -145,7 +149,7 @@ class MainViewModel @JvmOverloads constructor(
     private val _inputData = MutableStateFlow(localPrefs.loadData())
     val inputData: StateFlow<FinancialInputData> = _inputData.asStateFlow()
 
-    private val _metrics = MutableStateFlow(FinanceCalculator.calculate(_inputData.value, today = today))
+    private val _metrics = MutableStateFlow(FinanceCalculator.calculate(_inputData.value, today = dateProvider()))
     val metrics: StateFlow<CalculatedMetrics> = _metrics.asStateFlow()
 
     private val _fireSimulation = MutableStateFlow(localPrefs.loadSimulationState())
@@ -172,18 +176,26 @@ class MainViewModel @JvmOverloads constructor(
     fun updateInputData(transform: (FinancialInputData) -> FinancialInputData) {
         val updated = transform(_inputData.value)
         _inputData.value = updated
-        val updatedMetrics = FinanceCalculator.calculate(updated, today = today)
+        val updatedMetrics = FinanceCalculator.calculate(updated, today = dateProvider())
         val savingsConfig = SimulatorScaleCalculator.calculateSavingsConfig(
             currentSavings = updatedMetrics.cashFlow,
             monthlyIncome = updated.monthlyIncome,
             monthlyExpenses = updated.monthlyExpenses
         )
+        val currentSimulation = _fireSimulation.value
+        val ongoingExpenses = calculateSimulationOngoingExpenses(
+            updated.monthlyExpenses,
+            currentSimulation.expenseReduction,
+            currentSimulation.scenarios.expenseOptimization15,
+            currentSimulation.scenarios.relocationLowerCost30,
+            currentSimulation.scenarios.expensesPlus25
+        )
         val expensesConfig = SimulatorScaleCalculator.calculateExpensesConfig(
             monthlyExpenses = updated.monthlyExpenses,
-            monthlyIncome = updated.monthlyIncome
+            monthlyIncome = updated.monthlyIncome,
+            ongoingExpenses = ongoingExpenses.beforeReduction
         )
         val returnConfig = SimulatorScaleCalculator.calculateReturnConfig(updatedMetrics.realReturnPercent)
-        val currentSimulation = _fireSimulation.value
         val boundedSimulation = currentSimulation.copy(
             extraMonthlySavings = currentSimulation.extraMonthlySavings.coerceIn(
                 savingsConfig.minValue.toDouble(), savingsConfig.maxValue.toDouble()
@@ -207,6 +219,17 @@ class MainViewModel @JvmOverloads constructor(
         }
         // Dynamically recalculate all metrics in real-time
         recalculate()
+    }
+
+    fun flushPendingSave() {
+        inputDataSaveJob?.cancel()
+        inputDataSaveJob = null
+        localPrefs.saveData(_inputData.value, synchronous = true)
+    }
+
+    override fun onCleared() {
+        flushPendingSave()
+        super.onCleared()
     }
 
     fun updateSimulation(extraSavings: Double, realReturnDelta: Double, expReduction: Double) {
@@ -254,14 +277,15 @@ class MainViewModel @JvmOverloads constructor(
     }
 
     private fun recalculate() {
+        val today = dateProvider()
         val currentInput = _inputData.value
         val calc = FinanceCalculator.calculate(currentInput, today = today)
         _metrics.value = calc
         _trajectory.value = FinanceCalculator.generateTrajectory(calc, currentInput, today = today)
-        recalculateSimulation()
+        recalculateSimulation(today)
     }
 
-    private fun recalculateSimulation() {
+    private fun recalculateSimulation(today: LocalDate = dateProvider()) {
         val baseInput = _inputData.value
         val sim = _fireSimulation.value
         val sc = sim.scenarios
@@ -291,16 +315,15 @@ class MainViewModel @JvmOverloads constructor(
         // 4. Постоянные ежемесячные расходы:
         // Позитивное: Оптимизация расходов (-15%)
         // Позитивное: Переезд в регион с более низкой стоимостью (-30%)
-        val ongoingExpenseMultiplier =
-            (if (sc.expenseOptimization15) 1.0 - ScenarioConstants.EXPENSE_OPTIMIZATION_PERCENT / 100.0 else 1.0) *
-                (if (sc.relocationLowerCost30) 1.0 - ScenarioConstants.RELOCATION_EXPENSE_REDUCTION_PERCENT / 100.0 else 1.0) *
-                (if (sc.expensesPlus25) 1.0 + ScenarioConstants.EXPENSE_INFLATION_PERCENT / 100.0 else 1.0)
-        val baseOngoingExpenses = baseInput.monthlyExpenses * ongoingExpenseMultiplier.coerceAtLeast(0.10)
-
-        // Влияние ползунка сокращения/роста расходов (sim.expenseReduction)
-        val minimumOngoingExpenses = baseInput.monthlyExpenses * 0.10
-        val effectiveOngoingExpenses = (baseOngoingExpenses - sim.expenseReduction)
-            .coerceAtLeast(minimumOngoingExpenses)
+        val ongoingExpenses = calculateSimulationOngoingExpenses(
+            baseInput.monthlyExpenses,
+            sim.expenseReduction,
+            sc.expenseOptimization15,
+            sc.relocationLowerCost30,
+            sc.expensesPlus25
+        )
+        val baseOngoingExpenses = ongoingExpenses.beforeReduction
+        val effectiveOngoingExpenses = ongoingExpenses.effective
 
         // 5. Временные ежемесячные расходы:
         // Негативное 3. Ипотека на квартиру: 35% от ежемесячного дохода на период 20 лет
@@ -374,22 +397,17 @@ class MainViewModel @JvmOverloads constructor(
         val effectiveLiabilities = baseInput.liabilities + uncoveredExpenseDebt
 
         // 9. Реальная доходность капитала (3-й ползунок).
-        val effectiveInflationPercent = baseInput.inflationPercent
+        val effectiveInflationPercent = FinancialInputLimits.clampRatePercent(baseInput.inflationPercent)
         val effInfl = effectiveInflationPercent / 100.0
-        val baseNominal = baseInput.nominalReturnPercent / 100.0
 
         // Базовая реальная доходность с учетом заданной пользователем инфляции.
-        val baseRealReturn = if (effInfl != -1.0) {
-            ((1.0 + baseNominal) / (1.0 + effInfl) - 1.0)
-        } else 0.0
+        val baseRealReturn = FinanceCalculator.calculateRealReturnPercent(
+            baseInput.nominalReturnPercent, effectiveInflationPercent
+        ) / 100.0
 
         // Целевая реальная доходность с учетом ползунка настройки realReturnAdjustment
         val targetRealReturn = baseRealReturn + (sim.realReturnAdjustment / 100.0)
-        val effectiveNominal = if (effInfl != -1.0) {
-            ((1.0 + targetRealReturn) * (1.0 + effInfl) - 1.0) * 100.0
-        } else {
-            baseInput.nominalReturnPercent + sim.realReturnAdjustment
-        }
+        val effectiveNominal = ((1.0 + targetRealReturn) * (1.0 + effInfl) - 1.0) * 100.0
 
         val simulatedInput = baseInput.copy(
             monthlyIncome = baseIncome,

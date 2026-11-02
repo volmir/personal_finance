@@ -21,4 +21,9 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
+    override fun onStop() {
+        viewModel.flushPendingSave()
+        super.onStop()
+    }
 }

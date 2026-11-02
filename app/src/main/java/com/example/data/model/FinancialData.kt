@@ -14,8 +14,7 @@ data class FinancialInputData(
     val inflationPercent: Double = 2.5,
     val capitalGainsTaxPercent: Double = 20.0,
     val currencySymbol: String = "$",
-    val includeFinancialInEmergencyFund: Boolean = true,
-    val includePropertyInFireCapital: Boolean = false
+    val includeFinancialInEmergencyFund: Boolean = true
 ) {
     companion object {
         // Средние показатели жителя США (US Average Data)

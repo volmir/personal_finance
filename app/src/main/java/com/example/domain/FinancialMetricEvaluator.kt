@@ -117,15 +117,19 @@ object FinancialMetricEvaluator {
 
     // =========================================================================
     // 6. Чистый капитал (Net Worth)
-    // > 0: позитивный
-    // == 0: нейтральный
+    // > 0 и не менее 50% активов (либо активы == 0): позитивный
+    // == 0 или положительный, но менее 50% активов: нейтральный
     // < 0: негативный
     // =========================================================================
 
-    fun getNetWorthStatus(netWorth: Double): AuditIndicatorStatus = when {
-        netWorth > 0.0 -> AuditIndicatorStatus.POSITIVE
+    const val NET_WORTH_POSITIVE_SHARE_THRESHOLD = 0.5
+
+    fun getNetWorthStatus(netWorth: Double, totalAssets: Double): AuditIndicatorStatus = when {
+        netWorth < 0.0 -> AuditIndicatorStatus.NEGATIVE
         netWorth == 0.0 -> AuditIndicatorStatus.NEUTRAL
-        else -> AuditIndicatorStatus.NEGATIVE
+        netWorth > 0.0 && (totalAssets == 0.0 || netWorth / totalAssets >= NET_WORTH_POSITIVE_SHARE_THRESHOLD) ->
+            AuditIndicatorStatus.POSITIVE
+        else -> AuditIndicatorStatus.NEUTRAL
     }
 
     // =========================================================================
@@ -194,6 +198,7 @@ object FinancialMetricEvaluator {
         return when {
             annualExpenses > 0.0 -> netWorth / annualExpenses
             annualExpenses == 0.0 && netWorth > 0.0 -> CFS_THRESHOLD_INDEPENDENCE
+            annualExpenses == 0.0 && netWorth < 0.0 -> CFS_THRESHOLD_DEBT - 1.0
             else -> 0.0
         }
     }

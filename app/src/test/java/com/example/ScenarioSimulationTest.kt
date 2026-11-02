@@ -5,6 +5,7 @@ import com.example.domain.DeferredAsset
 import com.example.domain.FinanceCalculator
 import com.example.domain.SimulatorScaleCalculator
 import com.example.domain.TemporaryExpense
+import com.example.domain.calculateSimulationOngoingExpenses
 import com.example.ui.FireScenarioToggles
 import com.example.ui.FireSimulationState
 import com.example.util.Formatters
@@ -17,6 +18,36 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class ScenarioSimulationTest {
+
+    @Test
+    fun `shared ongoing expenses preserve scenario multipliers slider and ten percent floor`() {
+        data class Case(val optimization: Boolean, val relocation: Boolean, val inflation: Boolean, val before: Double)
+        val cases = listOf(
+            Case(false, false, false, 60_000.0),
+            Case(true, false, false, 51_000.0),
+            Case(false, true, false, 42_000.0),
+            Case(false, false, true, 75_000.0),
+            Case(true, true, false, 35_700.0),
+            Case(true, false, true, 63_750.0),
+            Case(false, true, true, 52_500.0),
+            Case(true, true, true, 44_625.0)
+        )
+        for (case in cases) {
+            for (reduction in listOf(-10_000.0, 0.0, 10_000.0, 54_000.0, 100_000.0)) {
+                val expenses = calculateSimulationOngoingExpenses(
+                    60_000.0, reduction, case.optimization, case.relocation, case.inflation
+                )
+                assertEquals(case.before, expenses.beforeReduction, 0.000001)
+                assertEquals(maxOf(case.before - reduction, 6_000.0), expenses.effective, 0.000001)
+            }
+        }
+    }
+
+    @Test
+    fun `shared ongoing expenses keep zero expenses and allow expense growth`() {
+        assertEquals(0.0, calculateSimulationOngoingExpenses(0.0, 500.0, true, true, true).effective, 0.0)
+        assertEquals(500.0, calculateSimulationOngoingExpenses(0.0, -500.0, true, true, true).effective, 0.0)
+    }
 
     @Test
     fun testSimulatorDynamicScalesRecalculation() {
@@ -67,7 +98,8 @@ class ScenarioSimulationTest {
             monthlyIncome = 5000.0
         )
         assertTrue(dollarExpensesConfig.stepSize in 100.0..500.0)
-        assertTrue(dollarExpensesConfig.maxValue >= 3500f)
+        assertTrue(dollarExpensesConfig.maxValue > 0f)
+        assertTrue(dollarExpensesConfig.maxValue <= 3500f * 0.9f)
     }
 
     @Test

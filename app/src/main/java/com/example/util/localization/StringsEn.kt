@@ -274,6 +274,7 @@ val StringsEn: AppStrings = object : AppStrings {
     override val birthDateLabel: String = "Birth date (YYYY-MM-DD)"
     override val invalidBirthDateError: String = "Please specify a valid birth date"
     override val lifeExpectancyLabel: String = "Life expectancy (yrs)"
+    override val lifeExpectancyError: String = "Life expectancy must be greater than your current age and no more than 120 years"
     override val fireHorizonBreakdownName: String = "Age & FIRE Horizon"
     override val fireHorizonHintCollapsed: String = "How to determine age and life expectancy? (hint)"
     override val fireHorizonHintExpanded: String = "Hide hint for age and horizon"
@@ -555,7 +556,7 @@ val StringsEn: AppStrings = object : AppStrings {
 
 
     // Pluralization
-    override val moneyFormat: String = "%1${'$'}s%2${'$'}s"
+    override val moneyFormat: String = "%3${'$'}s%1${'$'}s%2${'$'}s"
     override val countFormat: String = "%1${'$'}s\u00A0%2${'$'}s"
     override val checkboxPluralForms = PluralForms(one = "checkbox", other = "checkboxes")
     override val yearPluralForms = PluralForms(one = "year", other = "years")

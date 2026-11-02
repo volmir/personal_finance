@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -39,6 +40,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.CalculatedMetrics
@@ -46,7 +48,7 @@ import com.example.data.model.FireStatus
 import com.example.data.model.FinancialInputData
 import com.example.data.model.TrajectoryPoint
 import com.example.domain.SimulatorScaleCalculator
-import com.example.domain.ScenarioConstants
+import com.example.domain.calculateSimulationOngoingExpenses
 import com.example.ui.FireSimulationState
 import com.example.ui.components.FireTrajectoryChart
 import com.example.ui.components.ScenarioTogglesPanel
@@ -97,10 +99,18 @@ fun FireRetirementScreen(
         )
     }
 
-    val expensesConfig = remember(inputData.monthlyExpenses, inputData.monthlyIncome) {
+    val ongoingExpenses = calculateSimulationOngoingExpenses(
+        inputData.monthlyExpenses,
+        simulationState.expenseReduction,
+        simulationState.scenarios.expenseOptimization15,
+        simulationState.scenarios.relocationLowerCost30,
+        simulationState.scenarios.expensesPlus25
+    )
+    val expensesConfig = remember(inputData.monthlyExpenses, inputData.monthlyIncome, ongoingExpenses.beforeReduction) {
         SimulatorScaleCalculator.calculateExpensesConfig(
             monthlyExpenses = inputData.monthlyExpenses,
-            monthlyIncome = inputData.monthlyIncome
+            monthlyIncome = inputData.monthlyIncome,
+            ongoingExpenses = ongoingExpenses.beforeReduction
         )
     }
 
@@ -112,13 +122,8 @@ fun FireRetirementScreen(
 
     // Текущие динамические значения для симулятора (синхронно учитывают накопленный результат чекбоксов и ползунков)
     val currentEffectiveSavings = if (isSimulating) simulatedMetrics.cashFlow else metrics.cashFlow
-    val ongoingExpenseMultiplier =
-        (if (simulationState.scenarios.expenseOptimization15) 1.0 - ScenarioConstants.EXPENSE_OPTIMIZATION_PERCENT / 100.0 else 1.0) *
-            (if (simulationState.scenarios.relocationLowerCost30) 1.0 - ScenarioConstants.RELOCATION_EXPENSE_REDUCTION_PERCENT / 100.0 else 1.0) *
-            (if (simulationState.scenarios.expensesPlus25) 1.0 + ScenarioConstants.EXPENSE_INFLATION_PERCENT / 100.0 else 1.0)
     val currentEffectiveExpenses = if (isSimulating) {
-        (inputData.monthlyExpenses * ongoingExpenseMultiplier - simulationState.expenseReduction)
-            .coerceAtLeast(inputData.monthlyExpenses * 0.10)
+        simulatedMetrics.annualExpenses / 12.0
     } else inputData.monthlyExpenses
     val currentEffectiveReturn = if (isSimulating) simulatedMetrics.realReturnPercent else metrics.realReturnPercent
 
@@ -179,7 +184,10 @@ fun FireRetirementScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.weight(1f)
+                        ) {
                             Box(
                                 contentAlignment = Alignment.Center,
                                 modifier = Modifier
@@ -211,76 +219,73 @@ fun FireRetirementScreen(
                                 )
                             }
                         }
-                        if (isSimulating) {
-                            Surface(
-                                shape = RoundedCornerShape(8.dp),
-                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
-                            ) {
-                                Column(
-                                    horizontalAlignment = Alignment.End,
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                                ) {
-                                    Text(
-                                        text = strings.fireSimSummaryTitle,
-                                        style = MaterialTheme.typography.labelSmall.copy(
-                                            color = MaterialTheme.colorScheme.primary,
-                                            fontSize = 8.sp
-                                        ),
-                                        maxLines = 1,
-                                        softWrap = false
-                                    )
-                                    Text(
-                                        text = simulationBadge,
-                                        style = MaterialTheme.typography.labelSmall.copy(
-                                            fontWeight = FontWeight.Bold,
-                                            color = MaterialTheme.colorScheme.primary,
-                                            fontSize = 10.sp
-                                        ),
-                                        maxLines = 1,
-                                        softWrap = false
-                                    )
-                                }
-                            }
-                        }
                     }
 
                     Spacer(modifier = Modifier.height(14.dp))
 
-                    Text(
-                        text = strings.fireTimeToRetire,
-                        style = MaterialTheme.typography.bodyMedium.copy(
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    )
-
-                    if (fireStatusMessage != null) {
-                        Text(
-                            text = fireStatusMessage,
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = AlertRed
-                            ),
-                            modifier = Modifier
-                                .padding(vertical = 8.dp)
-                                .testTag("fire_unreachable_title")
-                        )
-                    } else {
-                        Row(verticalAlignment = Alignment.Bottom) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = Formatters.formatFireYearsToRetirement(displayMetrics.yearsToRetirement, displayMetrics.fireStatus, lang),
-                                style = MaterialTheme.typography.displayMedium.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    color = SuccessGreen
+                                text = strings.fireTimeToRetire,
+                                style = MaterialTheme.typography.bodyMedium.copy(
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             )
-                            Text(
-                                text = strings.fireYearsSuffix,
-                                style = MaterialTheme.typography.titleMedium.copy(
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                ),
-                                modifier = Modifier.padding(bottom = 8.dp, start = 6.dp)
-                            )
+
+                            if (fireStatusMessage != null) {
+                                Text(
+                                    text = fireStatusMessage,
+                                    style = MaterialTheme.typography.titleMedium.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = AlertRed
+                                    ),
+                                    modifier = Modifier
+                                        .padding(vertical = 8.dp)
+                                        .testTag("fire_unreachable_title")
+                                )
+                            } else {
+                                Row(verticalAlignment = Alignment.Bottom) {
+                                    Text(
+                                        text = Formatters.formatFireYearsToRetirement(displayMetrics.yearsToRetirement, displayMetrics.fireStatus, lang),
+                                        style = MaterialTheme.typography.displayMedium.copy(
+                                            fontWeight = FontWeight.Bold,
+                                            color = SuccessGreen
+                                        )
+                                    )
+                                    Text(
+                                        text = strings.fireYearsSuffix,
+                                        style = MaterialTheme.typography.titleMedium.copy(
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        ),
+                                        modifier = Modifier.padding(bottom = 8.dp, start = 6.dp)
+                                    )
+                                }
+                            }
+                        }
+                        if (isSimulating) {
+                            Surface(
+                                shape = RoundedCornerShape(8.dp),
+                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+                                modifier = Modifier.widthIn(max = 112.dp)
+                            ) {
+                                Text(
+                                    text = simulationBadge.replace('\u00A0', ' '),
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.primary,
+                                        fontSize = 10.sp
+                                    ),
+                                    textAlign = TextAlign.End,
+                                    maxLines = 3,
+                                    softWrap = true,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                )
+                            }
                         }
                     }
 
@@ -320,7 +325,12 @@ fun FireRetirementScreen(
                             ) {
                                 Text(strings.fireTargetCapitalLabel, style = MaterialTheme.typography.bodySmall)
                                 Text(
-                                    text = Formatters.formatMoney(displayMetrics.retirementTargetCapital, inputData.currencySymbol, lang),
+                                    text = Formatters.formatFireTargetCapital(
+                                        displayMetrics.retirementTargetCapital,
+                                        inputData.currencySymbol,
+                                        displayMetrics.fireStatus,
+                                        lang
+                                    ),
                                     style = MaterialTheme.typography.bodySmall.copy(
                                         fontWeight = FontWeight.Bold,
                                         color = MaterialTheme.colorScheme.primary
@@ -549,7 +559,7 @@ fun FireRetirementScreen(
                                 ) {
                                     Text(strings.fireSimExpensesRow, style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp))
                                     Text(
-                                        "${Formatters.formatMoney(inputData.monthlyExpenses, inputData.currencySymbol, lang)} ➔ ${Formatters.formatMoney(simulatedMetrics.annualExpenses / 12.0, inputData.currencySymbol, lang)}",
+                                        "${Formatters.formatMoney(inputData.monthlyExpenses, inputData.currencySymbol, lang)} ➔ ${Formatters.formatMoney(currentEffectiveExpenses, inputData.currencySymbol, lang)}",
                                         style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold, fontSize = 11.sp)
                                     )
                                 }
@@ -756,6 +766,10 @@ fun FireRetirementScreen(
                                                 val factors = mutableListOf<String>()
                                                 if (simulationState.scenarios.expenseOptimization15) factors.add(strings.scenarioExpenseOptTitle.lowercase())
                                                 if (simulationState.scenarios.relocationLowerCost30) factors.add(strings.scenarioRelocationTitle.lowercase())
+                                                if (simulationState.scenarios.expensesPlus25) factors.add(strings.scenarioInflationTitle.lowercase())
+                                                if (simulationState.scenarios.mortgage20Years35Income) factors.add(strings.scenarioMortgageTitle.lowercase())
+                                                if (simulationState.scenarios.carLoan5Years) factors.add(strings.scenarioCarLoanTitle.lowercase())
+                                                if (simulationState.scenarios.childOrDependent18Years) factors.add(strings.scenarioChildTitle.lowercase())
                                                 if (simulationState.expenseReduction != 0.0) {
                                                     val red = simulationState.expenseReduction
                                                     factors.add("${if (red > 0) "-" else "+"}${Formatters.formatMoney(kotlin.math.abs(red), inputData.currencySymbol, lang)}")

@@ -1,8 +1,8 @@
 # Руководство по публикации приложения в официальном каталоге F-Droid
 
-Данный документ содержит полное описание и пошаговую инструкцию по добавлению приложения **«Личные финансы & FIRE аудит»** (`com.aistudio.finhealthfire.kzqpv`) в официальный каталог свободных приложений **F-Droid**.
+Данный документ содержит полное описание и пошаговую инструкцию по добавлению приложения **«Личные финансы & FIRE аудит»** (`io.github.volmir.personalfinance`) в официальный каталог свободных приложений **F-Droid**.
 
-Полное описание экранов, параметров и финансовых формул: [APP_DESCRIPTION.md](./APP_DESCRIPTION.md). Короткое и полное описания для каталога находятся в `metadata/com.aistudio.finhealthfire.kzqpv.yml` и `fastlane/metadata/android/`.
+Полное описание экранов, параметров и финансовых формул: [APP_DESCRIPTION.md](./APP_DESCRIPTION.md). Единственный источник локализованных описаний для каталога — [fastlane/metadata/android](./fastlane/metadata/android): `title.txt`, `short_description.txt` и `full_description.txt`. Рецепты сборки не дублируют эти тексты.
 
 ---
 
@@ -26,7 +26,7 @@
 - [x] **Отсутствие Anti-Features:** нет платного контента, навязчивых сетевых сервисов или зависимостей от закрытых Google Play Services.
 - [x] **Наличие Gradle Wrapper:** в репозитории подготовлены скрипты `gradlew` и конфигурация `gradle-wrapper.properties` (Gradle 9.3.1).
 - [x] **Метаданные Fastlane:** подготовлены каталоги `fastlane/metadata/android/` с текстами для поддерживаемых языков (включая `en-US` и `ru-RU`), а также иконка `icon.png` и история изменений (`changelogs/1.txt`).
-- [x] **Файл рецепта сборки для F-Droid:** сгенерирован `metadata/com.aistudio.finhealthfire.kzqpv.yml`.
+- [x] **Файл рецепта сборки для F-Droid:** сгенерирован `metadata/io.github.volmir.personalfinance.yml`.
 
 Функции приложения: ввод месячного бюджета, активов и обязательств; 9 финансовых показателей; оценка от 0 до 10 и текстовый аудит; FIRE-модель с графиком капитала и 14 сценариями. Модель использует постоянную реальную доходность, не использует правило 4% и не включает стоимость имущества в FIRE-капитал. Подробные оговорки приведены в `APP_DESCRIPTION.md`.
 
@@ -35,7 +35,7 @@
 ## 3. Рецепт сборки для F-Droid (`fdroiddata`)
 
 Для добавления приложения в каталог F-Droid используется следующий файл манифеста сборки. Он уже создан в вашем репозитории по пути:
-`metadata/com.aistudio.finhealthfire.kzqpv.yml`
+`metadata/io.github.volmir.personalfinance.yml`
 
 ```yaml
 Categories:
@@ -60,15 +60,6 @@ Builds:
       - yes
 
 AutoName: Personal finance and FIRE
-Summary: Offline personal finance audit and FIRE projection
-Description: |-
-  Track monthly income, expenses, assets and liabilities. Review cash flow,
-  savings rate, emergency-fund coverage, net worth, debt ratio, Fidelity age
-  benchmark, financial freedom ratio, real return, and an overall financial
-  health score. Model FIRE with a constant real return, a target based on
-  expenses through the selected life-expectancy horizon, a capital trajectory,
-  adjustment sliders and 14 what-if scenarios. Includes English, Russian, German, French, Italian, and Spanish.
-  No internet permission is requested; data and calculations stay on-device.
 ```
 
 Ссылки в уже созданном манифесте настроены на `volmir/personal_finance`; проверьте их, если перенесёте проект в другой репозиторий.
@@ -94,23 +85,23 @@ Description: |-
 3. Нажмите кнопку **Fork** в правом верхнем углу.
 
 ### Шаг 3. Добавить файл метаданных в ваш Fork
-1. В своем форке создайте новую ветку, например: `add-kzqpv-fire`:
+1. В своем форке создайте новую ветку, например: `add-personalfinance-fire`:
    ```bash
-   git checkout -b add-kzqpv-fire
+   git checkout -b add-personalfinance-fire
    ```
-2. Создайте файл `metadata/com.aistudio.finhealthfire.kzqpv.yml` (содержимое из раздела 3 выше).
+2. Создайте файл `metadata/io.github.volmir.personalfinance.yml` (содержимое из раздела 3 выше).
 3. Закоммитьте и отправьте ветку:
    ```bash
-   git add metadata/com.aistudio.finhealthfire.kzqpv.yml
-   git commit -m "New app: com.aistudio.finhealthfire.kzqpv"
-   git push origin add-kzqpv-fire
+   git add metadata/io.github.volmir.personalfinance.yml
+   git commit -m "New app: io.github.volmir.personalfinance"
+   git push origin add-personalfinance-fire
    ```
 
 ### Шаг 4. Открыть Merge Request (MR)
 1. Перейдите на страницу вашего форка на GitLab.
 2. GitLab автоматически предложит **Create merge request**.
 3. Заполните форму:
-   - **Title:** `New app: com.aistudio.finhealthfire.kzqpv`
+   - **Title:** `New app: io.github.volmir.personalfinance`
    - В описании откроется стандартный шаблон `New App Submission`. Отметьте нужные пункты:
      - [x] The app complies with the inclusion criteria
      - [x] The app is not a duplicate

@@ -96,7 +96,7 @@ object AuditorAnalysisGenerator {
             metrics.cashFlow == 0.0 -> AuditIndicatorAnalysis(
                 id = "cash_flow",
                 title = strings.auditCashFlowTitle,
-                status = AuditIndicatorStatus.NEUTRAL,
+                status = FinancialMetricEvaluator.getCashFlowStatus(metrics.cashFlow),
                 text = String.format(Locale.ROOT, strings.auditCashFlowNeutral, currency)
             )
             else -> AuditIndicatorAnalysis(
@@ -248,26 +248,26 @@ object AuditorAnalysisGenerator {
                 text = String.format(Locale.ROOT,
                     strings.auditDebtRatioCritical,
                     Formatters.formatRatio(metrics.debtRatio, lang),
-                    Formatters.formatPercent(debtPct - 100.0, lang)
+                    if (debtPct.isFinite()) Formatters.formatPercent(debtPct - 100.0, lang) else strings.metricUnavailableValue
                 )
             )
         }
 
         // 6. Чистый капитал
-        val netWorthAnalysis = when {
-            metrics.netWorth > 0.0 && (metrics.totalAssets == 0.0 || metrics.netWorth / metrics.totalAssets >= 0.5) -> AuditIndicatorAnalysis(
+        val netWorthAnalysis = when (FinancialMetricEvaluator.getNetWorthStatus(metrics.netWorth, metrics.totalAssets)) {
+            AuditIndicatorStatus.POSITIVE -> AuditIndicatorAnalysis(
                 id = "net_worth",
                 title = strings.auditNetWorthTitle,
                 status = AuditIndicatorStatus.POSITIVE,
                 text = String.format(Locale.ROOT, strings.auditNetWorthStrong, Formatters.formatMoney(metrics.netWorth, currency, lang))
             )
-            metrics.netWorth >= 0.0 -> AuditIndicatorAnalysis(
+            AuditIndicatorStatus.NEUTRAL -> AuditIndicatorAnalysis(
                 id = "net_worth",
                 title = strings.auditNetWorthTitle,
                 status = AuditIndicatorStatus.NEUTRAL,
                 text = String.format(Locale.ROOT, strings.auditNetWorthBalanced, Formatters.formatMoney(metrics.netWorth, currency, lang))
             )
-            else -> AuditIndicatorAnalysis(
+            AuditIndicatorStatus.NEGATIVE -> AuditIndicatorAnalysis(
                 id = "net_worth",
                 title = strings.auditNetWorthTitle,
                 status = AuditIndicatorStatus.NEGATIVE,
@@ -338,7 +338,7 @@ object AuditorAnalysisGenerator {
                 id = "cfs",
                 title = strings.auditCfsTitle,
                 status = FinancialMetricEvaluator.getCfsStatus(cfs),
-                text = strings.auditCfsPathToIndependence
+                text = FinancialMetricEvaluator.getCfsStageDescription(cfs, lang)
             )
         }
 
@@ -441,7 +441,7 @@ object AuditorAnalysisGenerator {
             appendLine()
             appendLine(strings.exportSection4Title)
             appendLine(String.format(Locale.ROOT, strings.exportCfsLine, Formatters.formatRatio(metrics.financialFreedomRatio, lang), cfsDesc))
-            appendLine(String.format(Locale.ROOT, strings.exportFireTargetCapitalLine, Formatters.formatMoney(metrics.retirementTargetCapital, currency, lang)))
+            appendLine(String.format(Locale.ROOT, strings.exportFireTargetCapitalLine, Formatters.formatFireTargetCapital(metrics.retirementTargetCapital, currency, metrics.fireStatus, lang)))
             appendLine(String.format(
                 Locale.ROOT,
                 strings.exportFireTimeToRetirementLine,

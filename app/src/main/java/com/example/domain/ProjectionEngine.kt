@@ -63,7 +63,7 @@ data class ProjectionParams(
                 deferredAssets = deferredAssets,
                 financialAssets = input.financialAssets,
                 liquidAssets = input.liquidAssets,
-                capitalGainsTaxPercent = input.capitalGainsTaxPercent,
+                capitalGainsTaxPercent = FinancialInputLimits.clampTaxPercent(input.capitalGainsTaxPercent),
                 isAgeValid = isAgeValid
             )
         }
@@ -81,7 +81,7 @@ class ProjectionEngine(val params: ProjectionParams) {
     data class RetirementResult(val years: Double, val status: FireStatus)
 
     val maxYears: Double = (params.lifeExpectancy - params.currentAge).toDouble().coerceAtLeast(0.0)
-    val r: Double = params.realReturnRate.coerceAtLeast(-0.5)
+    val r: Double = params.realReturnRate.coerceAtLeast(FinancialInputLimits.MIN_REAL_RETURN_RATE)
     private val effectiveTemp: Double = minOf(params.temporaryExpenses.sumOf { it.annualAmount }, params.annualExpenses)
     val ongoingAnnualExpenses: Double = (params.annualExpenses - effectiveTemp).coerceAtLeast(0.0)
     val ongoingAnnualCashFlow: Double = params.annualCashFlow + effectiveTemp
@@ -95,6 +95,9 @@ class ProjectionEngine(val params: ProjectionParams) {
     } else 1.0
 
     internal fun taxInfo(t: Double, yearsInRetirement: Double, baseReq: Double): TaxInfo {
+        if (!params.isAgeValid || params.financialAssets == 0.0) {
+            return TaxInfo(gainShare = 0.0, effectiveRate = 0.0, factor = 1.0)
+        }
         val gainShare = if (yearsInRetirement <= 0.0 || finRatio == 0.0) {
             0.0
         } else {
@@ -113,7 +116,8 @@ class ProjectionEngine(val params: ProjectionParams) {
             params.capitalGainsTaxPercent > 0.0 &&
             yearsInRetirement > 0.0
         ) {
-            ((params.capitalGainsTaxPercent / 100.0) * gainShare * finRatio).coerceIn(0.0, 0.50)
+            ((FinancialInputLimits.clampTaxPercent(params.capitalGainsTaxPercent) / 100.0) * gainShare * finRatio)
+                .coerceIn(0.0, FinancialInputLimits.MAX_EFFECTIVE_TAX_RATE)
         } else 0.0
         val factor = if (effectiveRate > 0.0 && effectiveRate < 0.99) {
             1.0 / (1.0 - effectiveRate)
@@ -283,7 +287,7 @@ class ProjectionEngine(val params: ProjectionParams) {
         val remYearsAtRetire = (maxYears - yearsToRetire).coerceAtLeast(0.0)
         val baseReqAtRetire = computeBaseRequirement(yearsToRetire, remYearsAtRetire)
         val taxFactorAtRetirement = if (effectiveTaxRate != null) {
-            val clamped = effectiveTaxRate.coerceIn(0.0, 0.50)
+            val clamped = effectiveTaxRate.coerceIn(0.0, FinancialInputLimits.MAX_EFFECTIVE_TAX_RATE)
             if (clamped > 0.0 && clamped < 0.99) {
                 1.0 / (1.0 - clamped)
             } else {

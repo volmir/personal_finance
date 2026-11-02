@@ -21,6 +21,20 @@ data class DeferredAsset(
     val afterYears: Double
 )
 
+object FinancialInputLimits {
+    const val MIN_RATE_PERCENT = -50.0
+    const val MAX_RATE_PERCENT = 100.0
+    const val MIN_TAX_PERCENT = 0.0
+    const val MAX_TAX_PERCENT = 100.0
+
+    // Existing projection limits also govern displayed values and trajectories.
+    const val MIN_REAL_RETURN_RATE = -0.5
+    const val MAX_EFFECTIVE_TAX_RATE = 0.50
+
+    fun clampRatePercent(value: Double): Double = value.coerceIn(MIN_RATE_PERCENT, MAX_RATE_PERCENT)
+    fun clampTaxPercent(value: Double): Double = value.coerceIn(MIN_TAX_PERCENT, MAX_TAX_PERCENT)
+}
+
 object FinanceCalculator {
 
     /**
@@ -37,11 +51,10 @@ object FinanceCalculator {
     }
 
     internal fun calculateRealReturnPercent(nominalReturnPercent: Double, inflationPercent: Double): Double {
-        val nominalRate = nominalReturnPercent / 100.0
-        val inflationRate = inflationPercent / 100.0
-        return if (inflationRate != -1.0) {
-            ((1.0 + nominalRate) / (1.0 + inflationRate) - 1.0) * 100.0
-        } else 0.0
+        val nominalRate = FinancialInputLimits.clampRatePercent(nominalReturnPercent) / 100.0
+        val inflationRate = FinancialInputLimits.clampRatePercent(inflationPercent) / 100.0
+        val realRate = (1.0 + nominalRate) / (1.0 + inflationRate) - 1.0
+        return realRate.coerceAtLeast(FinancialInputLimits.MIN_REAL_RETURN_RATE) * 100.0
     }
 
     fun calculate(
@@ -65,9 +78,12 @@ object FinanceCalculator {
             input.liquidAssets
         }
 
-        val safetyMonths = if (input.monthlyExpenses > 0) {
-            emergencyFund / input.monthlyExpenses
-        } else 0.0
+        val safetyMonths = when {
+            input.monthlyExpenses > 0 -> emergencyFund / input.monthlyExpenses
+            input.monthlyExpenses == 0.0 && emergencyFund > 0.0 ->
+                FinancialMetricEvaluator.SAFETY_MONTHS_TIER_EXCELLENT
+            else -> 0.0
+        }
 
         val debtRatio = if (totalAssets > 0) {
             input.liabilities / totalAssets
@@ -146,7 +162,7 @@ object FinanceCalculator {
             fireStatus = retirementResult.status,
             retirementTargetCapital = targetRetirementCapital,
             scores = scores,
-            capitalGainsTaxPercent = input.capitalGainsTaxPercent,
+            capitalGainsTaxPercent = FinancialInputLimits.clampTaxPercent(input.capitalGainsTaxPercent),
             effectiveCapitalGainsTaxRate = taxInfo.effectiveRate * 100.0,
             capitalGainsGainSharePercent = taxInfo.gainShare * 100.0,
             isAgeValid = isAgeValid
@@ -245,7 +261,8 @@ object FinanceCalculator {
             today = today
         )
         val engine = ProjectionEngine(params)
-        val effectiveTaxRate = (metrics.effectiveCapitalGainsTaxRate / 100.0).coerceIn(0.0, 0.50)
+        val effectiveTaxRate = (metrics.effectiveCapitalGainsTaxRate / 100.0)
+            .coerceIn(0.0, FinancialInputLimits.MAX_EFFECTIVE_TAX_RATE)
         return engine.buildTrajectory(
             precomputedYearsToRetire = metrics.yearsToRetirement,
             effectiveTaxRate = effectiveTaxRate

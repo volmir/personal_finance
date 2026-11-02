@@ -1,6 +1,7 @@
 package com.example
 
 import com.example.domain.ProjectionEngine
+import com.example.domain.FinancialInputLimits
 import com.example.domain.ProjectionParams
 import com.example.domain.TemporaryExpense
 import com.example.data.model.FireStatus
@@ -9,6 +10,26 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class ProjectionEngineTest {
+
+    @Test
+    fun `projection rate and tax clamps use shared named limits`() {
+        val engine = ProjectionEngine(ProjectionParams(
+            currentAge = 35,
+            lifeExpectancy = 80,
+            startCapital = 100_000.0,
+            annualCashFlow = 0.0,
+            annualExpenses = 1_000_000.0,
+            realReturnRate = -0.75,
+            financialAssets = 100_000.0,
+            capitalGainsTaxPercent = 100.0
+        ))
+        assertEquals(FinancialInputLimits.MIN_REAL_RETURN_RATE, engine.r, 0.0)
+        assertEquals(FinancialInputLimits.MAX_EFFECTIVE_TAX_RATE * 100.0,
+            engine.getEffectiveTaxRateAt(0.0, 30.0, 0.0), 0.0)
+        val trajectory = engine.buildTrajectory(precomputedYearsToRetire = 0.0, effectiveTaxRate = 0.9)
+        val expectedFactor = 1.0 / (1.0 - FinancialInputLimits.MAX_EFFECTIVE_TAX_RATE)
+        assertEquals(engine.requiredCapitalAt(0.0, fixedTaxFactor = expectedFactor), trajectory.first().requiredCapital, 0.0)
+    }
 
     @Test
     fun testBaseScenario() {
@@ -174,7 +195,7 @@ class ProjectionEngineTest {
     }
 
     @Test
-    fun testNoAssetsAssumesFutureSavingsAreInvested() {
+    fun testNoFinancialAssetsKeepTaxZeroEvenWithoutLiquidAssets() {
         val common = ProjectionParams(
             currentAge = 35,
             lifeExpectancy = 80,
@@ -185,16 +206,14 @@ class ProjectionEngineTest {
             capitalGainsTaxPercent = 20.0
         )
         val noAssets = ProjectionEngine(common.copy(financialAssets = 0.0, liquidAssets = 0.0))
-        val financialAsset = ProjectionEngine(common.copy(financialAssets = 1.0, liquidAssets = 0.0))
+        val withoutTax = ProjectionEngine(common.copy(capitalGainsTaxPercent = 0.0))
 
         assertEquals(1.0, noAssets.finRatio, 0.0)
+        assertEquals(0.0, noAssets.getEffectiveTaxRateAt(0.0, 30.0, 0.0), 0.0)
+        assertEquals(0.0, noAssets.getGainShareAt(0.0, 30.0, 0.0), 0.0)
+        assertEquals(1.0, noAssets.getTaxFactorAt(0.0, 30.0, 0.0), 0.0)
         assertEquals(
-            financialAsset.getEffectiveTaxRateAt(0.0, 30.0, 0.0),
-            noAssets.getEffectiveTaxRateAt(0.0, 30.0, 0.0),
-            0.000001
-        )
-        assertEquals(
-            financialAsset.findYearsToRetirement().years,
+            withoutTax.findYearsToRetirement().years,
             noAssets.findYearsToRetirement().years,
             0.01
         )

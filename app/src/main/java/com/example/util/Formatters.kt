@@ -23,12 +23,24 @@ object Formatters {
     }
 
     fun formatMoney(amount: Double, currency: String = "$", lang: AppLanguage): String {
+        if (!amount.isFinite()) return com.example.util.localization.getAppStrings(lang).metricUnavailableValue
         val strings = com.example.util.localization.getAppStrings(lang)
-        val formattedAmount = decimalFormat(lang, 2).format(amount)
-        return String.format(java.util.Locale.ROOT, strings.moneyFormat, currency, formattedAmount)
+        val minusBeforeCurrency = lang != AppLanguage.RU && amount.toRawBits() < 0L
+        val formattedAmount = decimalFormat(lang, 2).format(if (minusBeforeCurrency) kotlin.math.abs(amount) else amount)
+        // Preserve the existing suffix currency for positive DE/FR/IT/ES amounts.
+        val currencyAtEnd = lang != AppLanguage.RU && lang != AppLanguage.EN && !minusBeforeCurrency
+        return String.format(
+            java.util.Locale.ROOT,
+            strings.moneyFormat,
+            if (currencyAtEnd) "" else currency,
+            formattedAmount,
+            if (minusBeforeCurrency) "-" else "",
+            if (currencyAtEnd) "\u00A0$currency" else ""
+        )
     }
 
     fun formatNumber(amount: Double, lang: AppLanguage): String {
+        if (!amount.isFinite()) return com.example.util.localization.getAppStrings(lang).metricUnavailableValue
         val clamped = amount.coerceIn(-MAX_INPUT_VALUE, MAX_INPUT_VALUE)
         return decimalFormat(lang, 2).format(clamped)
     }
@@ -50,6 +62,7 @@ object Formatters {
     }
 
     fun formatPercent(value: Double, lang: AppLanguage): String {
+        if (!value.isFinite()) return com.example.util.localization.getAppStrings(lang).metricUnavailableValue
         return "${decimalFormat(lang, 2).format(value)}%"
     }
 
@@ -123,6 +136,18 @@ object Formatters {
     }
 
     fun isFireUnreachable(status: FireStatus): Boolean = status == FireStatus.UNREACHABLE
+
+    fun formatFireTargetCapital(
+        amount: Double,
+        currency: String,
+        status: FireStatus,
+        lang: AppLanguage
+    ): String {
+        return when (status) {
+            FireStatus.REACHED_NOW, FireStatus.REACHABLE -> formatMoney(amount, currency, lang)
+            else -> com.example.util.localization.getAppStrings(lang).metricUnavailableValue
+        }
+    }
 
     /**
      * Форматирует срок до пенсии в годах:
