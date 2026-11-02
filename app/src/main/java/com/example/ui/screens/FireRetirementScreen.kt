@@ -91,11 +91,12 @@ fun FireRetirementScreen(
     val simulationBadge = Formatters.formatSimulationBadge(activeScenariosCount, hasSliders, lang)
 
     // Динамический расчет шкал и шагов симулятора исходя из текущих значений показателей
-    val savingsConfig = remember(metrics.cashFlow, inputData.monthlyIncome, inputData.monthlyExpenses) {
+    val savingsConfig = remember(metrics.cashFlow, inputData.monthlyIncome, inputData.monthlyExpenses, inputData.currencySymbol) {
         SimulatorScaleCalculator.calculateSavingsConfig(
             currentSavings = metrics.cashFlow,
             monthlyIncome = inputData.monthlyIncome,
-            monthlyExpenses = inputData.monthlyExpenses
+            monthlyExpenses = inputData.monthlyExpenses,
+            currency = inputData.currencySymbol
         )
     }
 
@@ -106,11 +107,12 @@ fun FireRetirementScreen(
         simulationState.scenarios.relocationLowerCost30,
         simulationState.scenarios.expensesPlus25
     )
-    val expensesConfig = remember(inputData.monthlyExpenses, inputData.monthlyIncome, ongoingExpenses.beforeReduction) {
+    val expensesConfig = remember(inputData.monthlyExpenses, inputData.monthlyIncome, ongoingExpenses.beforeReduction, inputData.currencySymbol) {
         SimulatorScaleCalculator.calculateExpensesConfig(
             monthlyExpenses = inputData.monthlyExpenses,
             monthlyIncome = inputData.monthlyIncome,
-            ongoingExpenses = ongoingExpenses.beforeReduction
+            ongoingExpenses = ongoingExpenses.beforeReduction,
+            currency = inputData.currencySymbol
         )
     }
 

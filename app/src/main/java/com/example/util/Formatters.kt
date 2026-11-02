@@ -4,9 +4,13 @@ import com.example.util.localization.AppLanguage
 import com.example.data.model.FireStatus
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
+import java.math.RoundingMode
 
 object Formatters {
     const val MAX_INPUT_VALUE: Double = 1e12
+
+    // ¥ в списке валют означает только JPY
+    fun currencyFractionDigits(symbol: String): Int = if (symbol == "¥") 0 else 2
 
     private fun decimalFormat(lang: AppLanguage, fractionDigits: Int): DecimalFormat {
         val symbols = DecimalFormatSymbols.getInstance(lang.locale).apply {
@@ -16,7 +20,8 @@ object Formatters {
                 groupingSeparator = ' '
             }
         }
-        return DecimalFormat("#,##0.${"0".repeat(fractionDigits)}", symbols).apply {
+        val pattern = if (fractionDigits == 0) "#,##0" else "#,##0.${"0".repeat(fractionDigits)}"
+        return DecimalFormat(pattern, symbols).apply {
             minimumFractionDigits = fractionDigits
             maximumFractionDigits = fractionDigits
         }
@@ -26,7 +31,9 @@ object Formatters {
         if (!amount.isFinite()) return com.example.util.localization.getAppStrings(lang).metricUnavailableValue
         val strings = com.example.util.localization.getAppStrings(lang)
         val minusBeforeCurrency = lang != AppLanguage.RU && amount.toRawBits() < 0L
-        val formattedAmount = decimalFormat(lang, 2).format(if (minusBeforeCurrency) kotlin.math.abs(amount) else amount)
+        val formattedAmount = decimalFormat(lang, currencyFractionDigits(currency)).apply {
+            roundingMode = RoundingMode.HALF_UP
+        }.format(if (minusBeforeCurrency) kotlin.math.abs(amount) else amount)
         // Preserve the existing suffix currency for positive DE/FR/IT/ES amounts.
         val currencyAtEnd = lang != AppLanguage.RU && lang != AppLanguage.EN && !minusBeforeCurrency
         return String.format(
@@ -39,13 +46,23 @@ object Formatters {
         )
     }
 
-    fun formatNumber(amount: Double, lang: AppLanguage): String {
+    fun formatNumber(
+        amount: Double,
+        lang: AppLanguage,
+        fractionDigits: Int = 2,
+        roundingMode: RoundingMode = RoundingMode.HALF_EVEN
+    ): String {
         if (!amount.isFinite()) return com.example.util.localization.getAppStrings(lang).metricUnavailableValue
         val clamped = amount.coerceIn(-MAX_INPUT_VALUE, MAX_INPUT_VALUE)
-        return decimalFormat(lang, 2).format(clamped)
+        return decimalFormat(lang, fractionDigits).apply { this.roundingMode = roundingMode }.format(clamped)
     }
 
-    fun formatRawNumber(amount: Double, lang: AppLanguage = AppLanguage.RU): String {
+    fun formatRawNumber(
+        amount: Double,
+        lang: AppLanguage = AppLanguage.RU,
+        fractionDigits: Int = 2,
+        roundingMode: RoundingMode = RoundingMode.HALF_EVEN
+    ): String {
         if (amount == 0.0) return ""
         val clamped = amount.coerceIn(-MAX_INPUT_VALUE, MAX_INPUT_VALUE)
         val isInteger = clamped % 1.0 == 0.0 || Math.abs(clamped - Math.round(clamped)) < 1e-9
@@ -56,7 +73,8 @@ object Formatters {
         val df = DecimalFormat("#.##", symbols).apply {
             isGroupingUsed = false
             minimumFractionDigits = 0
-            maximumFractionDigits = 2
+            maximumFractionDigits = fractionDigits
+            this.roundingMode = roundingMode
         }
         return df.format(clamped)
     }

@@ -1,5 +1,6 @@
 package com.example.domain
 
+import com.example.util.Formatters
 import kotlin.math.abs
 import kotlin.math.ceil
 import kotlin.math.floor
@@ -15,6 +16,17 @@ data class SimulatorScaleConfig(
 )
 
 object SimulatorScaleCalculator {
+
+    private fun calculateMoneyStep(targetStep: Double, currency: String): Double {
+        val step = calculateNiceStep(targetStep)
+        return if (Formatters.currencyFractionDigits(currency) == 0) {
+            when {
+                step < 1.0 -> 1.0
+                step == 2.5 -> 5.0
+                else -> step
+            }
+        } else step
+    }
 
     /**
      * Находит удобный, человекочитаемый шаг (1, 2, 2.5, 5, 10, 20, 25, 50, 100 и т.д.)
@@ -42,7 +54,8 @@ object SimulatorScaleCalculator {
     fun calculateSavingsConfig(
         currentSavings: Double,
         monthlyIncome: Double,
-        monthlyExpenses: Double
+        monthlyExpenses: Double,
+        currency: String = "$"
     ): SimulatorScaleConfig {
         val refSavings = when {
             currentSavings > 0.0 -> currentSavings
@@ -53,7 +66,7 @@ object SimulatorScaleCalculator {
 
         // Целимся в ~25 интервалов по всей шкале
         val targetStep = (refSavings * 3.0) / 25.0
-        val stepSize = calculateNiceStep(targetStep)
+        val stepSize = calculateMoneyStep(targetStep, currency)
 
         // Нижняя граница: позволяет снизить сбережения до нуля (или небольшого дефицита)
         val minDelta = if (currentSavings > 0.0) {
@@ -87,7 +100,8 @@ object SimulatorScaleCalculator {
     fun calculateExpensesConfig(
         monthlyExpenses: Double,
         monthlyIncome: Double,
-        ongoingExpenses: Double = monthlyExpenses
+        ongoingExpenses: Double = monthlyExpenses,
+        currency: String = "$"
     ): SimulatorScaleConfig {
         val refExpenses = when {
             monthlyExpenses > 0.0 -> monthlyExpenses
@@ -97,7 +111,7 @@ object SimulatorScaleCalculator {
 
         // Нижняя граница сохраняет диапазон роста расходов.
         val targetStep = (2.0 * refExpenses) / 25.0
-        val stepSize = calculateNiceStep(targetStep)
+        val stepSize = calculateMoneyStep(targetStep, currency)
 
         val reductionLimit = if (monthlyExpenses > 0.0) {
             minOf(monthlyExpenses * 0.90, (ongoingExpenses - monthlyExpenses * 0.10).coerceAtLeast(0.0))

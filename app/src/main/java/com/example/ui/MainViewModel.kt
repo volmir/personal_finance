@@ -180,7 +180,8 @@ class MainViewModel @JvmOverloads constructor(
         val savingsConfig = SimulatorScaleCalculator.calculateSavingsConfig(
             currentSavings = updatedMetrics.cashFlow,
             monthlyIncome = updated.monthlyIncome,
-            monthlyExpenses = updated.monthlyExpenses
+            monthlyExpenses = updated.monthlyExpenses,
+            currency = updated.currencySymbol
         )
         val currentSimulation = _fireSimulation.value
         val ongoingExpenses = calculateSimulationOngoingExpenses(
@@ -193,7 +194,8 @@ class MainViewModel @JvmOverloads constructor(
         val expensesConfig = SimulatorScaleCalculator.calculateExpensesConfig(
             monthlyExpenses = updated.monthlyExpenses,
             monthlyIncome = updated.monthlyIncome,
-            ongoingExpenses = ongoingExpenses.beforeReduction
+            ongoingExpenses = ongoingExpenses.beforeReduction,
+            currency = updated.currencySymbol
         )
         val returnConfig = SimulatorScaleCalculator.calculateReturnConfig(updatedMetrics.realReturnPercent)
         val boundedSimulation = currentSimulation.copy(

@@ -20,6 +20,45 @@ import org.robolectric.annotation.Config
 @Config(sdk = [28])
 class LocalizationFormattersTest {
     @Test
+    fun yenUsesWholeUnitsWithLocalizedGroupingAndExistingSignPlacement() {
+        val numbers = mapOf(
+            "en" to "1,235", "de" to "1.235", "fr" to "1 235",
+            "it" to "1.235", "es" to "1.235", "ru" to "1 235", "be" to "1 235"
+        )
+        for ((code, number) in numbers) {
+            val lang = AppLanguage.fromLocaleCode(code)
+            val positive = when (lang) {
+                AppLanguage.EN -> "¥$number"
+                AppLanguage.RU -> "$number ¥"
+                else -> "$number\u00A0¥"
+            }
+            val negative = if (lang == AppLanguage.RU) "-$number ¥" else "-¥$number"
+            assertEquals(code, positive, Formatters.formatMoney(1234.5, "¥", lang))
+            assertEquals(code, negative, Formatters.formatMoney(-1234.5, "¥", lang))
+            assertEquals(code, if (lang == AppLanguage.RU) "-0 ¥" else "-¥0", Formatters.formatMoney(-0.0, "¥", lang))
+        }
+    }
+
+    @Test
+    fun currencyPrecisionAndHalfUpRoundingApplyOnlyToMoney() {
+        assertEquals(0, Formatters.currencyFractionDigits("¥"))
+        for (currency in listOf("$", "€", "CHF", "₽", "unknown")) {
+            assertEquals(currency, 2, Formatters.currencyFractionDigits(currency))
+        }
+        assertEquals("¥3", Formatters.formatMoney(2.5, "¥", AppLanguage.EN))
+        assertEquals("-¥3", Formatters.formatMoney(-2.5, "¥", AppLanguage.EN))
+        for (currency in listOf("$", "€")) {
+            assertEquals("${currency}1,234.50", Formatters.formatMoney(1234.5, currency, AppLanguage.EN))
+            assertEquals("${currency}1.13", Formatters.formatMoney(1.125, currency, AppLanguage.EN))
+            assertEquals("-${currency}1.13", Formatters.formatMoney(-1.125, currency, AppLanguage.EN))
+        }
+        assertEquals("1.12%", Formatters.formatPercent(1.125, AppLanguage.EN))
+        assertEquals("1.12", Formatters.formatRatio(1.125, AppLanguage.EN))
+        assertEquals("1.2", Formatters.formatScore(1.25, AppLanguage.EN))
+        assertEquals("1.12", Formatters.formatNumber(1.125, AppLanguage.EN))
+    }
+
+    @Test
     fun negativeMoneyPlacesSignBeforeCurrencyExceptRussianAndPreservesPositiveFormat() {
         val numbers = mapOf(
             AppLanguage.RU to "1 000,00",
@@ -51,6 +90,7 @@ class LocalizationFormattersTest {
         for (lang in AppLanguage.values()) {
             for (value in listOf(Double.NaN, Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY)) {
                 assertEquals("$lang $value money", "—", Formatters.formatMoney(value, "€", lang))
+                assertEquals("$lang $value yen", "—", Formatters.formatMoney(value, "¥", lang))
                 assertEquals("$lang $value number", "—", Formatters.formatNumber(value, lang))
                 assertEquals("$lang $value percentage", "—", Formatters.formatPercent(value, lang))
             }

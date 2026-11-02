@@ -60,6 +60,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import java.text.DecimalFormatSymbols
+import java.math.BigDecimal
+import java.math.RoundingMode
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -361,6 +363,7 @@ fun InputDataScreen(
                             currency = "%",
                             onValueChange = { newVal -> onUpdate { it.copy(nominalReturnPercent = FinancialInputLimits.clampRatePercent(newVal)) } },
                             testTag = "input_nominal_return",
+                            isMoney = false,
                             allowNegative = true
                         )
                     }
@@ -371,6 +374,7 @@ fun InputDataScreen(
                             currency = "%",
                             onValueChange = { newVal -> onUpdate { it.copy(inflationPercent = FinancialInputLimits.clampRatePercent(newVal)) } },
                             testTag = "input_inflation",
+                            isMoney = false,
                             allowNegative = true
                         )
                     }
@@ -383,7 +387,8 @@ fun InputDataScreen(
                     value = inputData.capitalGainsTaxPercent,
                     currency = "%",
                     onValueChange = { newVal -> onUpdate { it.copy(capitalGainsTaxPercent = FinancialInputLimits.clampTaxPercent(newVal)) } },
-                    testTag = "input_capital_gains_tax"
+                    testTag = "input_capital_gains_tax",
+                    isMoney = false
                 )
 
                 CategoryBreakdownHint(
@@ -656,17 +661,27 @@ fun NumberInputField(
     onValueChange: (Double) -> Unit,
     testTag: String,
     modifier: Modifier = Modifier,
-    allowNegative: Boolean = false
+    allowNegative: Boolean = false,
+    isMoney: Boolean = true
 ) {
     val lang = LocalAppLanguage.current
-    var isFocused by remember { mutableStateOf(false) }
-    var textValue by remember {
-        mutableStateOf(if (value == 0.0) "" else Formatters.formatNumber(value, lang))
+    val fractionDigits = if (isMoney) Formatters.currencyFractionDigits(currency) else 2
+    val roundingMode = if (isMoney) RoundingMode.HALF_UP else RoundingMode.HALF_EVEN
+    val wholeMoney = isMoney && fractionDigits == 0
+    fun formattedValue(raw: Boolean = false): String = when {
+        value == 0.0 -> ""
+        raw -> Formatters.formatRawNumber(value, lang, fractionDigits, roundingMode)
+        else -> Formatters.formatNumber(value, lang, fractionDigits, roundingMode)
     }
 
-    LaunchedEffect(value, lang) {
+    var isFocused by remember { mutableStateOf(false) }
+    var textValue by remember(lang, currency, isMoney) {
+        mutableStateOf(formattedValue(raw = isFocused))
+    }
+
+    LaunchedEffect(value, lang, currency, isMoney) {
         if (!isFocused) {
-            val formatted = if (value == 0.0) "" else Formatters.formatNumber(value, lang)
+            val formatted = formattedValue()
             if (textValue != formatted) {
                 textValue = formatted
             }
@@ -680,9 +695,16 @@ fun NumberInputField(
     OutlinedTextField(
         value = textValue,
         onValueChange = { inputStr ->
-            val formattedCurrent = if (value == 0.0) "" else Formatters.formatNumber(value, lang)
+            if (wholeMoney) {
+                // A separator typed on its own is ignored; a pasted fraction is rounded below.
+                val prefixLength = textValue.commonPrefixWith(inputStr).length
+                val suffixLength = textValue.drop(prefixLength).commonSuffixWith(inputStr.drop(prefixLength)).length
+                val inserted = inputStr.substring(prefixLength, inputStr.length - suffixLength)
+                if (inserted == "." || inserted == localDecimal.toString()) return@OutlinedTextField
+            }
+            val formattedCurrent = formattedValue()
             val effectiveInput = if (textValue == formattedCurrent && inputStr.startsWith(textValue) && value != 0.0) {
-                Formatters.formatRawNumber(value, lang) + inputStr.removePrefix(textValue)
+                formattedValue(raw = true) + inputStr.removePrefix(textValue)
             } else {
                 inputStr
             }
@@ -705,14 +727,21 @@ fun NumberInputField(
                     }
                 }
             }
-            textValue = filtered
+            if (wholeMoney && filtered == textValue) return@OutlinedTextField
             val parsed = Formatters.parseDouble(filtered, lang)
             val clamped = if (allowNegative) {
                 parsed.coerceIn(-Formatters.MAX_INPUT_VALUE, Formatters.MAX_INPUT_VALUE)
             } else {
                 parsed.coerceIn(0.0, Formatters.MAX_INPUT_VALUE)
             }
-            onValueChange(clamped)
+            if (wholeMoney) {
+                val rounded = BigDecimal.valueOf(clamped).setScale(0, RoundingMode.HALF_UP)
+                textValue = if (filtered.contains(localDecimal) || filtered.contains('.')) rounded.toPlainString() else filtered
+                onValueChange(rounded.toDouble())
+            } else {
+                textValue = filtered
+                onValueChange(clamped)
+            }
         },
         label = { Text(label, fontSize = 12.sp) },
         trailingIcon = {
@@ -726,7 +755,7 @@ fun NumberInputField(
             )
         },
         singleLine = true,
-        keyboardOptions = KeyboardOptions(keyboardType = if (allowNegative) KeyboardType.Decimal else KeyboardType.Number),
+        keyboardOptions = KeyboardOptions(keyboardType = if (allowNegative && !wholeMoney) KeyboardType.Decimal else KeyboardType.Number),
         colors = OutlinedTextFieldDefaults.colors(
             focusedBorderColor = MaterialTheme.colorScheme.primary,
             unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
@@ -738,9 +767,9 @@ fun NumberInputField(
                 if (isFocused != focusState.isFocused) {
                     isFocused = focusState.isFocused
                     if (focusState.isFocused) {
-                        textValue = if (value == 0.0) "" else Formatters.formatRawNumber(value, lang)
+                        textValue = formattedValue(raw = true)
                     } else {
-                        textValue = if (value == 0.0) "" else Formatters.formatNumber(value, lang)
+                        textValue = formattedValue()
                     }
                 }
             }

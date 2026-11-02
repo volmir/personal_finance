@@ -2,6 +2,7 @@ package com.example
 
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.foundation.layout.Column
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -29,6 +30,95 @@ class NumberInputFieldRobolectricTest {
     private fun SemanticsNodeInteraction.assertEditableTextEquals(expected: String) {
         val actual = fetchSemanticsNode().config.getOrElse(SemanticsProperties.EditableText) { AnnotatedString("") }.text
         assertEquals(expected, actual)
+    }
+
+    @Test
+    fun `yen pasted fractions round half up with dot and local separators`() {
+        val value = mutableStateOf(0.0)
+        val language = mutableStateOf(AppLanguage.EN)
+        composeRule.setContent {
+            CompositionLocalProvider(LocalAppLanguage provides language.value) {
+                NumberInputField("Money", value.value, "¥", { value.value = it }, "yen", allowNegative = true)
+            }
+        }
+
+        for (lang in AppLanguage.values()) {
+            composeRule.runOnIdle { language.value = lang }
+            val separator = java.text.DecimalFormatSymbols.getInstance(lang.locale).decimalSeparator
+            for ((input, expected) in listOf("1500.7" to "1501", "1500${separator}5" to "1501", "1500.4" to "1500", "-2.5" to "-3")) {
+                composeRule.onNodeWithTag("yen").performTextClearance()
+                composeRule.onNodeWithTag("yen").performTextInput(input)
+                composeRule.onNodeWithTag("yen").assertEditableTextEquals(expected)
+                assertEquals("$lang $input", expected.toDouble(), value.value, 0.0)
+            }
+        }
+    }
+
+    @Test
+    fun `yen ignores typed decimal separators without changing saved fractions`() {
+        val value = mutableStateOf(1500.7)
+        var changes = 0
+        composeRule.setContent {
+            CompositionLocalProvider(LocalAppLanguage provides AppLanguage.RU) {
+                NumberInputField("Money", value.value, "¥", { value.value = it; changes++ }, "yen")
+            }
+        }
+        composeRule.onNodeWithTag("yen").performClick()
+        composeRule.onNodeWithTag("yen").assertEditableTextEquals("1501")
+        for (separator in listOf(".", ",")) {
+            composeRule.onNodeWithTag("yen").performTextInput(separator)
+            composeRule.onNodeWithTag("yen").assertEditableTextEquals("1501")
+            assertEquals(1500.7, value.value, 0.0)
+            assertEquals(0, changes)
+        }
+        composeRule.onNodeWithTag("yen").performTextInput("2")
+        composeRule.onNodeWithTag("yen").assertEditableTextEquals("15012")
+        assertEquals(15012.0, value.value, 0.0)
+    }
+
+    @Test
+    fun `currency changes and focus only reformat saved fractions`() {
+        val value = mutableStateOf(1500.7)
+        val currency = mutableStateOf("$")
+        var changes = 0
+        composeRule.setContent {
+            CompositionLocalProvider(LocalAppLanguage provides AppLanguage.EN) {
+                Column {
+                    NumberInputField("Money", value.value, currency.value, { value.value = it; changes++ }, "money")
+                    NumberInputField("Other", 0.0, "%", {}, "other", isMoney = false)
+                }
+            }
+        }
+        composeRule.onNodeWithTag("money").assertEditableTextEquals("1,500.70")
+        composeRule.runOnIdle { currency.value = "¥" }
+        composeRule.onNodeWithTag("money").assertEditableTextEquals("1,501")
+        composeRule.onNodeWithTag("money").performClick()
+        composeRule.onNodeWithTag("money").assertEditableTextEquals("1501")
+        composeRule.runOnIdle { currency.value = "$" }
+        composeRule.onNodeWithTag("money").assertEditableTextEquals("1500.7")
+        composeRule.runOnIdle { currency.value = "¥" }
+        composeRule.onNodeWithTag("money").assertEditableTextEquals("1501")
+        composeRule.onNodeWithTag("other").performClick()
+        composeRule.onNodeWithTag("money").assertEditableTextEquals("1,501")
+        composeRule.runOnIdle { currency.value = "$" }
+        composeRule.onNodeWithTag("money").assertEditableTextEquals("1,500.70")
+        assertEquals(1500.7, value.value, 0.0)
+        assertEquals(0, changes)
+    }
+
+    @Test
+    fun `percentage fields keep fractional input and half even display`() {
+        val value = mutableStateOf(1.125)
+        composeRule.setContent {
+            CompositionLocalProvider(LocalAppLanguage provides AppLanguage.EN) {
+                NumberInputField("Rate", value.value, "%", { value.value = it }, "rate", allowNegative = true, isMoney = false)
+            }
+        }
+        composeRule.onNodeWithTag("rate").assertEditableTextEquals("1.12")
+        composeRule.onNodeWithTag("rate").performTextClearance()
+        composeRule.onNodeWithTag("rate").performTextInput("-1.5")
+        composeRule.onNodeWithTag("rate").assertEditableTextEquals("-1.5")
+        assertEquals(-1.5, value.value, 0.0)
     }
 
     @Test
@@ -69,7 +159,7 @@ class NumberInputFieldRobolectricTest {
     fun `negative input is accepted for negative enabled fields`() {
         val value = mutableStateOf(0.0)
         composeRule.setContent {
-            NumberInputField("Value", value.value, "%", { value.value = it }, "number_input", allowNegative = true)
+            NumberInputField("Value", value.value, "%", { value.value = it }, "number_input", allowNegative = true, isMoney = false)
         }
 
         composeRule.onNodeWithTag("number_input").performTextInput("-1")
