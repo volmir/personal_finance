@@ -6,6 +6,8 @@ import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
 
 object Formatters {
+    const val MAX_INPUT_VALUE: Double = 1e12
+
     private fun decimalFormat(lang: AppLanguage, fractionDigits: Int): DecimalFormat {
         val symbols = DecimalFormatSymbols.getInstance(lang.locale).apply {
             // Keep the existing Russian display separator while taking decimal/grouping
@@ -27,7 +29,24 @@ object Formatters {
     }
 
     fun formatNumber(amount: Double, lang: AppLanguage): String {
-        return decimalFormat(lang, 2).format(amount)
+        val clamped = amount.coerceIn(-MAX_INPUT_VALUE, MAX_INPUT_VALUE)
+        return decimalFormat(lang, 2).format(clamped)
+    }
+
+    fun formatRawNumber(amount: Double, lang: AppLanguage = AppLanguage.RU): String {
+        if (amount == 0.0) return ""
+        val clamped = amount.coerceIn(-MAX_INPUT_VALUE, MAX_INPUT_VALUE)
+        val isInteger = clamped % 1.0 == 0.0 || Math.abs(clamped - Math.round(clamped)) < 1e-9
+        if (isInteger) {
+            return Math.round(clamped).toLong().toString()
+        }
+        val symbols = DecimalFormatSymbols.getInstance(lang.locale)
+        val df = DecimalFormat("#.##", symbols).apply {
+            isGroupingUsed = false
+            minimumFractionDigits = 0
+            maximumFractionDigits = 2
+        }
+        return df.format(clamped)
     }
 
     fun formatPercent(value: Double, lang: AppLanguage): String {
@@ -43,13 +62,42 @@ object Formatters {
         return decimalFormat(lang, 1).format(value)
     }
 
-    fun parseDouble(input: String): Double {
-        val cleaned = input.replace(" ", "")
-            .replace(",", ".")
-            .replace("\u00A0", "")
-            .trim()
-        if (cleaned.isEmpty() || cleaned == "-" || cleaned == "." || cleaned == "-.") return 0.0
-        return cleaned.toDoubleOrNull() ?: 0.0
+    fun parseDouble(input: String, lang: AppLanguage = AppLanguage.RU): Double {
+        val trimmed = input.trim()
+        if (trimmed.isEmpty() || trimmed == "-" || trimmed == "." || trimmed == "," || trimmed == "-." || trimmed == "-,") {
+            return 0.0
+        }
+
+        val isNegative = trimmed.startsWith("-")
+        val localDecimal = DecimalFormatSymbols.getInstance(lang.locale).decimalSeparator
+
+        val hasLocalDecimal = trimmed.contains(localDecimal)
+        val hasDot = trimmed.contains('.')
+
+        val decimalChar: Char? = when {
+            hasLocalDecimal -> localDecimal
+            hasDot -> '.'
+            else -> null
+        }
+
+        val parsed = if (decimalChar != null) {
+            val parts = trimmed.split(decimalChar, limit = 2)
+            val integerDigits = parts[0].filter { it.isDigit() }
+            val fractionDigits = parts.getOrNull(1)?.filter { it.isDigit() } ?: ""
+            val intPart = if (integerDigits.isEmpty()) "0" else integerDigits
+            val raw = "${if (isNegative) "-" else ""}$intPart.$fractionDigits"
+            raw.toDoubleOrNull() ?: 0.0
+        } else {
+            val digits = trimmed.filter { it.isDigit() }
+            if (digits.isEmpty()) 0.0
+            else {
+                val raw = "${if (isNegative) "-" else ""}$digits"
+                raw.toDoubleOrNull() ?: 0.0
+            }
+        }
+
+        if (parsed.isNaN() || parsed.isInfinite()) return 0.0
+        return parsed.coerceIn(-MAX_INPUT_VALUE, MAX_INPUT_VALUE)
     }
 
     /**

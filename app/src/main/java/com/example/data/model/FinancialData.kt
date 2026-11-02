@@ -70,13 +70,13 @@ data class CalculatedMetrics(
     val realReturnPercent: Double,
     val yearsToRetirement: Double,
     val retirementAge: Double,
-    val fireStatus: FireStatus = FireStatus.REACHABLE,
+    val fireStatus: FireStatus,
     val retirementTargetCapital: Double,
     val scores: FinancialScores,
-    val capitalGainsTaxPercent: Double = 20.0,
-    val effectiveCapitalGainsTaxRate: Double = 12.0,
-    val capitalGainsGainSharePercent: Double = 60.0,
-    val isAgeValid: Boolean = true
+    val capitalGainsTaxPercent: Double,
+    val effectiveCapitalGainsTaxRate: Double,
+    val capitalGainsGainSharePercent: Double,
+    val isAgeValid: Boolean
 ) {
     val fidelityRatio: Double get() = com.example.domain.FinancialMetricEvaluator.calculateFidelityRatio(fidelityCapital, fidelityTarget)
     val fidelityPercent: Double get() = com.example.domain.FinancialMetricEvaluator.calculateFidelityPercent(fidelityCapital, fidelityTarget)

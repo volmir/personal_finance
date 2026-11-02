@@ -54,10 +54,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import java.text.DecimalFormatSymbols
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -652,30 +654,60 @@ fun NumberInputField(
     allowNegative: Boolean = false
 ) {
     val lang = LocalAppLanguage.current
+    var isFocused by remember { mutableStateOf(false) }
     var textValue by remember {
         mutableStateOf(if (value == 0.0) "" else Formatters.formatNumber(value, lang))
     }
-    LaunchedEffect(value) {
-        if (Formatters.parseDouble(textValue) != value) {
-            textValue = if (value == 0.0) "" else Formatters.formatNumber(value, lang)
+
+    LaunchedEffect(value, lang) {
+        if (!isFocused) {
+            val formatted = if (value == 0.0) "" else Formatters.formatNumber(value, lang)
+            if (textValue != formatted) {
+                textValue = formatted
+            }
         }
+    }
+
+    val localDecimal = remember(lang) {
+        DecimalFormatSymbols.getInstance(lang.locale).decimalSeparator
     }
 
     OutlinedTextField(
         value = textValue,
         onValueChange = { inputStr ->
+            val formattedCurrent = if (value == 0.0) "" else Formatters.formatNumber(value, lang)
+            val effectiveInput = if (textValue == formattedCurrent && inputStr.startsWith(textValue) && value != 0.0) {
+                Formatters.formatRawNumber(value, lang) + inputStr.removePrefix(textValue)
+            } else {
+                inputStr
+            }
+
+            val hasLocal = effectiveInput.contains(localDecimal)
             val filtered = buildString {
-                inputStr.forEachIndexed { index, char ->
+                var hasDecimal = false
+                effectiveInput.forEachIndexed { index, char ->
                     when {
                         char.isDigit() -> append(char)
-                        (char == '.' || char == ',') && none { it == '.' || it == ',' } -> append(char)
                         char == '-' && allowNegative && index == 0 && isEmpty() -> append(char)
+                        char == localDecimal && !hasDecimal -> {
+                            append(char)
+                            hasDecimal = true
+                        }
+                        char == '.' && localDecimal != '.' && !hasLocal && !hasDecimal -> {
+                            append(char)
+                            hasDecimal = true
+                        }
                     }
                 }
             }
             textValue = filtered
-            val parsed = Formatters.parseDouble(filtered)
-            onValueChange(parsed)
+            val parsed = Formatters.parseDouble(filtered, lang)
+            val clamped = if (allowNegative) {
+                parsed.coerceIn(-Formatters.MAX_INPUT_VALUE, Formatters.MAX_INPUT_VALUE)
+            } else {
+                parsed.coerceIn(0.0, Formatters.MAX_INPUT_VALUE)
+            }
+            onValueChange(clamped)
         },
         label = { Text(label, fontSize = 12.sp) },
         trailingIcon = {
@@ -697,6 +729,16 @@ fun NumberInputField(
         modifier = modifier
             .fillMaxWidth()
             .testTag(testTag)
+            .onFocusChanged { focusState ->
+                if (isFocused != focusState.isFocused) {
+                    isFocused = focusState.isFocused
+                    if (focusState.isFocused) {
+                        textValue = if (value == 0.0) "" else Formatters.formatRawNumber(value, lang)
+                    } else {
+                        textValue = if (value == 0.0) "" else Formatters.formatNumber(value, lang)
+                    }
+                }
+            }
     )
 }
 
