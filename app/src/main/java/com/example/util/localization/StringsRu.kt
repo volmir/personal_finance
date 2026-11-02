@@ -563,7 +563,7 @@ val StringsRu: AppStrings = object : AppStrings {
     override val monthPluralForms = PluralForms(one = "месяц", few = "месяца", many = "месяцев", other = "месяца")
     override val pointPluralForms = PluralForms(one = "пункт", few = "пункта", many = "пунктов", other = "пункта")
     override val simulationBadgeSlidersSuffix: String = "ползунки"
-    override val simulationBadgeOnlySliders: String = "Ползунки настройки"
+    override val simulationBadgeOnlySliders: String = "Ползунки"
 
     // Score & Safety Months formats
     override val safetyMonthsValueFormat: String = "%1${'$'}s мес."

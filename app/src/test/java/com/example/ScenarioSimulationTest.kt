@@ -442,7 +442,7 @@ class ScenarioSimulationTest {
         assertEquals("1\u00A0чекбокс", Formatters.formatSimulationBadge(1, false, AppLanguage.RU))
         assertEquals("1\u00A0чекбокс\u00A0+\u00A0ползунки", Formatters.formatSimulationBadge(1, true, AppLanguage.RU))
         assertEquals("2\u00A0чекбокса\u00A0+\u00A0ползунки", Formatters.formatSimulationBadge(2, true, AppLanguage.RU))
-        assertEquals("Ползунки настройки", Formatters.formatSimulationBadge(0, true, AppLanguage.RU))
+        assertEquals("Ползунки", Formatters.formatSimulationBadge(0, true, AppLanguage.RU))
     }
 
     @Test

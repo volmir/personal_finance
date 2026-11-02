@@ -242,14 +242,14 @@ class AuditorAnalysisTest {
                 .first { it.id == "cfs" }.text
         }
 
-        assertEquals(FinancialMetricEvaluator.getCfsStageDescription(14.0, AppLanguage.RU), cfsOpinion(14.0))
-        assertEquals("Вы близки: капитал покрывает 50% от целевого.", cfsOpinion(15.0))
-        assertEquals("Вы близки: капитал покрывает 80% от целевого.", cfsOpinion(24.0))
-        assertEquals("Вы близки: капитал покрывает 100% от целевого.", cfsOpinion(29.99))
-        assertEquals("Вы достигли финансовой независимости: КФС не менее 30.", cfsOpinion(30.0))
+        assertEquals("✅ " + FinancialMetricEvaluator.getCfsStageDescription(14.0, AppLanguage.RU), cfsOpinion(14.0))
+        assertEquals("✅ Вы близки: капитал покрывает 50% от целевого.", cfsOpinion(15.0))
+        assertEquals("✅ Вы близки: капитал покрывает 80% от целевого.", cfsOpinion(24.0))
+        assertEquals("✅ Вы близки: капитал покрывает 100% от целевого.", cfsOpinion(29.99))
+        assertEquals("🎉 Вы достигли финансовой независимости: КФС не менее 30.", cfsOpinion(30.0))
 
         val independentEn = cfsOpinion(30.0, AppLanguage.EN)
-        assertEquals("You have achieved financial independence: CFS is at least 30.", independentEn)
+        assertEquals("🎉 You have achieved financial independence: CFS is at least 30.", independentEn)
         assertFalse(independentEn.contains("4%"))
     }
 
@@ -278,10 +278,33 @@ class AuditorAnalysisTest {
             for (lang in AppLanguage.values()) {
                 val opinion = AuditorAnalysisGenerator.generate(input, metrics, lang)
                 val item = (opinion.positive + opinion.neutral + opinion.negative).first { it.id == "cfs" }
+                val expectedIcon = when (expectedStatus) {
+                    AuditIndicatorStatus.POSITIVE -> if (cfs >= 30.0) "🎉" else "✅"
+                    AuditIndicatorStatus.NEUTRAL -> "ℹ️"
+                    AuditIndicatorStatus.NEGATIVE -> if (cfs < 0.0) "🚨" else "⚠️"
+                }
                 assertEquals("$cfs $lang", expectedStatus, item.status)
                 assertEquals(FinancialMetricEvaluator.getCfsStatus(cfs), item.status)
-                assertEquals("$cfs $lang", FinancialMetricEvaluator.getCfsStageDescription(cfs, lang), item.text)
+                assertEquals("$cfs $lang", "$expectedIcon ${FinancialMetricEvaluator.getCfsStageDescription(cfs, lang)}", item.text)
             }
+        }
+    }
+
+    @Test
+    fun testAnalyticsShareExportsCfsWithIcon() {
+        val input = FinancialInputData.usAverageData()
+        val metrics = FinanceCalculator.calculate(input)
+        for (lang in AppLanguage.values()) {
+            val opinion = AuditorAnalysisGenerator.generate(input, metrics, lang)
+            val shareText = opinion.toFormattedShareText(input, metrics, lang)
+            val cfsItem = (opinion.positive + opinion.neutral + opinion.negative).first { it.id == "cfs" }
+            assertTrue("Share text must contain CFS item with icon", shareText.contains(cfsItem.text))
+            assertTrue(
+                "CFS item in export must start with an icon",
+                cfsItem.text.startsWith("✅") || cfsItem.text.startsWith("ℹ️") ||
+                        cfsItem.text.startsWith("⚠️") || cfsItem.text.startsWith("🚨") ||
+                        cfsItem.text.startsWith("🎉")
+            )
         }
     }
 

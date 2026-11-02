@@ -318,29 +318,28 @@ object AuditorAnalysisGenerator {
 
         // 8. Коэффициент финансовой свободы (КФС)
         val cfs = metrics.financialFreedomRatio
-        val cfsAnalysis = when {
-            cfs >= FinancialMetricEvaluator.CFS_THRESHOLD_INDEPENDENCE -> AuditIndicatorAnalysis(
-                id = "cfs",
-                title = strings.auditCfsTitle,
-                status = AuditIndicatorStatus.POSITIVE,
-                text = strings.auditCfsFinanciallyIndependent
-            )
+        val (cfsStatus, rawCfsText) = when {
+            cfs >= FinancialMetricEvaluator.CFS_THRESHOLD_INDEPENDENCE ->
+                AuditIndicatorStatus.POSITIVE to strings.auditCfsFinanciallyIndependent
             cfs >= FinancialMetricEvaluator.CFS_THRESHOLD_STABILITY &&
-                    cfs < FinancialMetricEvaluator.CFS_THRESHOLD_INDEPENDENCE -> AuditIndicatorAnalysis(
-                id = "cfs",
-                title = strings.auditCfsTitle,
-                status = AuditIndicatorStatus.POSITIVE,
-                text = strings.auditCfsCloseToIndependence(
+                    cfs < FinancialMetricEvaluator.CFS_THRESHOLD_INDEPENDENCE ->
+                AuditIndicatorStatus.POSITIVE to strings.auditCfsCloseToIndependence(
                     (cfs / FinancialMetricEvaluator.CFS_THRESHOLD_INDEPENDENCE * 100.0).roundToInt()
                 )
-            )
-            else -> AuditIndicatorAnalysis(
-                id = "cfs",
-                title = strings.auditCfsTitle,
-                status = FinancialMetricEvaluator.getCfsStatus(cfs),
-                text = FinancialMetricEvaluator.getCfsStageDescription(cfs, lang)
-            )
+            else ->
+                FinancialMetricEvaluator.getCfsStatus(cfs) to FinancialMetricEvaluator.getCfsStageDescription(cfs, lang)
         }
+        val cfsIcon = when (cfsStatus) {
+            AuditIndicatorStatus.POSITIVE -> if (cfs >= FinancialMetricEvaluator.CFS_THRESHOLD_INDEPENDENCE) "🎉" else "✅"
+            AuditIndicatorStatus.NEUTRAL -> "ℹ️"
+            AuditIndicatorStatus.NEGATIVE -> if (cfs < 0.0) "🚨" else "⚠️"
+        }
+        val cfsAnalysis = AuditIndicatorAnalysis(
+            id = "cfs",
+            title = strings.auditCfsTitle,
+            status = cfsStatus,
+            text = "$cfsIcon $rawCfsText"
+        )
 
         // 9. Реальная доходность капитала
         val realReturnAnalysis = when {
