@@ -44,6 +44,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -462,7 +463,7 @@ fun AuditScoreScreen(
                     } else {
                         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             opinion.positive.forEach { item ->
-                                AuditOpinionIndicatorItem(text = item.text, status = item.status)
+                                AuditOpinionIndicatorItem(text = item.text, status = item.status, id = item.id)
                             }
                         }
                     }
@@ -496,7 +497,7 @@ fun AuditScoreScreen(
                     } else {
                         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             opinion.neutral.forEach { item ->
-                                AuditOpinionIndicatorItem(text = item.text, status = item.status)
+                                AuditOpinionIndicatorItem(text = item.text, status = item.status, id = item.id)
                             }
                         }
                     }
@@ -532,7 +533,7 @@ fun AuditScoreScreen(
                     } else {
                         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             opinion.negative.forEach { item ->
-                                AuditOpinionIndicatorItem(text = item.text, status = item.status)
+                                AuditOpinionIndicatorItem(text = item.text, status = item.status, id = item.id)
                             }
                         }
                     }
@@ -758,10 +759,18 @@ fun ScoreItemCard(
     }
 }
 
+private val KNOWN_AUDIT_ICONS = listOf("✅", "ℹ️", "ℹ", "⚠️", "⚠", "🚨", "🎉", "📈", "⭐️", "📊", "💡", "📋")
+
+private fun hasLeadingAuditIcon(text: String): Boolean {
+    val trimmed = text.trimStart()
+    return KNOWN_AUDIT_ICONS.any { trimmed.startsWith(it) }
+}
+
 @Composable
-private fun AuditOpinionIndicatorItem(
+internal fun AuditOpinionIndicatorItem(
     text: String,
-    status: AuditIndicatorStatus
+    status: AuditIndicatorStatus,
+    id: String = ""
 ) {
     val (bgColor, borderColor) = when (status) {
         AuditIndicatorStatus.POSITIVE -> SuccessGreen.copy(alpha = 0.08f) to SuccessGreen.copy(alpha = 0.22f)
@@ -769,14 +778,28 @@ private fun AuditOpinionIndicatorItem(
         AuditIndicatorStatus.NEGATIVE -> AlertRed.copy(alpha = 0.08f) to AlertRed.copy(alpha = 0.25f)
     }
 
+    val displayText = if (hasLeadingAuditIcon(text)) {
+        text
+    } else {
+        val icon = when (status) {
+            AuditIndicatorStatus.POSITIVE -> if (text.contains("30") || text.contains("🎉")) "🎉" else "✅"
+            AuditIndicatorStatus.NEUTRAL -> "ℹ️"
+            AuditIndicatorStatus.NEGATIVE -> if (text.contains("< 0") || text.contains("долг", ignoreCase = true) || text.contains("debt", ignoreCase = true)) "🚨" else "⚠️"
+        }
+        "$icon $text"
+    }
+
     Surface(
         shape = RoundedCornerShape(10.dp),
         color = bgColor,
         border = BorderStroke(1.dp, borderColor),
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag(if (id.isNotEmpty()) "audit_indicator_$id" else "audit_indicator")
+            .semantics(mergeDescendants = true) {}
     ) {
         Text(
-            text = text,
+            text = displayText,
             style = MaterialTheme.typography.bodyMedium.copy(
                 fontSize = 12.5.sp,
                 lineHeight = 18.sp,
