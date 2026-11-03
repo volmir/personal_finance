@@ -1,7 +1,7 @@
 # Local F-Droid build configuration file
 # Can be tested locally using the `fdroid build` command
 Categories:
-  - Money
+  - Finance Manager
 License: MIT
 AuthorName: Personal Finance & FIRE
 SourceCode: https://github.com/volmir/personal_finance

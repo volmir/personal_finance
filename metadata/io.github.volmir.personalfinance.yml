@@ -1,25 +1,29 @@
 Categories:
-  - Money
+  - Finance Manager
 License: MIT
 AuthorName: Personal Finance & FIRE
 SourceCode: https://github.com/volmir/personal_finance
 IssueTracker: https://github.com/volmir/personal_finance/issues
 Changelog: https://github.com/volmir/personal_finance/releases
 
+AutoName: Personal finance and FIRE
+
 RepoType: git
 Repo: https://github.com/volmir/personal_finance.git
+Binaries: https://github.com/volmir/personal_finance/releases/download/v%v/PersonalFinance-v%v.apk
+
+AllowedAPKSigningKeys:
+  - d67a62a233c26662269925955c653464820bf121e155ca827359c3b99d9b6609
+
+Builds:
+  - versionName: '1.0'
+    versionCode: 1
+    commit: d2c01ccb94d4340e799735002b7a0e4f92f60a37
+    subdir: app
+    gradle:
+      - yes
 
 AutoUpdateMode: Version
 UpdateCheckMode: Tags
 CurrentVersion: '1.0'
 CurrentVersionCode: 1
-
-Builds:
-  - versionName: '1.0'
-    versionCode: 1
-    commit: v1.0
-    subdir: app
-    gradle:
-      - yes
-
-AutoName: Personal finance and FIRE

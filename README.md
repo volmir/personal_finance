@@ -14,7 +14,7 @@
 
 - Download the signed APK from [GitHub Releases](https://github.com/volmir/personal_finance/releases).
 - For update tracking with [Obtainium](https://github.com/ImranR98/Obtainium), add `https://github.com/volmir/personal_finance` as the app source. Obtainium checks GitHub Releases for updates; it does not require a store listing.
-- Signing certificate SHA-256: see [SIGNING_CERTIFICATE.txt](https://github.com/volmir/personal_finance/releases/latest/download/SIGNING_CERTIFICATE.txt). Each release also includes `SHA256SUMS.txt` for checking the downloaded APK.
+- Signing certificate SHA-256: `D6:7A:62:A2:33:C2:66:62:26:99:25:95:5C:65:34:64:82:0B:F1:21:E1:55:CA:82:73:59:C3:B9:9D:9B:66:09`. See [SIGNING_CERTIFICATE.txt](https://github.com/volmir/personal_finance/releases/latest/download/SIGNING_CERTIFICATE.txt) for certificate details. Each release also includes `SHA256SUMS.txt` for checking the downloaded APK.
 - The app works offline and does not request the internet permission.
 
 Direct link for devices with Obtainium installed:
@@ -200,7 +200,7 @@ Distribution uses signed GitHub Releases, with Obtainium available for update tr
 - 📁 **Fastlane Metadata:** The single source of store titles and descriptions is [fastlane/metadata/android](./fastlane/metadata/android): `title.txt`, `short_description.txt`, and `full_description.txt` for `ru-RU`, `en-US`, `de-DE`, `es-ES`, `fr-FR`, and `it-IT`. Release notes are in `changelogs/1.txt`, and screenshots are in `images/phoneScreenshots/` for each locale.
 - 📄 **OSI-Approved License:** [MIT License](./LICENSE) in the project root.
 
-Independent verification of reproducible builds, including comparison with the GitHub APK using `apksigcopier`, is documented in the [F-Droid guide](./FDROID_SETUP.md). A verified signature and an APK checksum do not establish reproducibility; independent rebuild verification is still pending.
+For `v1.0`, a local rebuild in the official F-Droid buildserver container passed comparison with the published APK using `apksigcopier`. The [F-Droid guide](./FDROID_SETUP.md) records the verification and recipe for retaining the developer's signature. Official repository verification and inclusion are still pending.
 
 F-Droid's [inclusion policy](https://f-droid.org/en/docs/Inclusion_Policy/) also allows distribution through a separate app repository. A self-hosted or third-party F-Droid repository is an optional future distribution channel.
 
