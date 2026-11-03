@@ -1,4 +1,4 @@
-# Personal finance and FIRE (Личные финансы & FIRE аудит)
+# Personal Finance & FIRE Audit
 
 [![Platform](https://img.shields.io/badge/Platform-Android-green.svg)](https://www.android.com/)
 [![Min SDK](https://img.shields.io/badge/Min_SDK-24%2B_%28Android_7.0%29-blue.svg)](https://developer.android.com/about/versions/nougat)
@@ -10,9 +10,9 @@
 
 ---
 
-## 📖 App Description / Описание приложения
+## 📖 App Description
 
-Полное описание экранов, полей, формул FIRE и ограничений модели находится в [APP_DESCRIPTION.md](./APP_DESCRIPTION.md).
+A complete description of the screens, fields, FIRE formulas, and model limitations is available in [APP_DESCRIPTION.md](./APP_DESCRIPTION.md).
 
 **Personal Finance & FIRE Audit** is an open-source, offline-first personal wealth management and early retirement modeling application built natively for Android using modern Jetpack Compose and Material 3.
 
@@ -25,45 +25,45 @@ The app helps users record a household budget and balance sheet, review calculat
 
 ---
 
-## ✨ Features / Возможности
+## ✨ Features
 
 The application is structured into 4 cohesive functional tabs:
 
-### 1. Данные для расчетов (Input Data & Budgeting)
+### 1. Input Data & Budgeting
 - **Income & Expenses:** Monthly income and expenses with expandable category guidance.
 - **Three Asset Types:**
-  - *Liquid Assets (Подушка):* Cash, high-yield checking, bank deposits.
-  - *Financial Assets (Инвестиции):* Stock portfolios, index funds/ETFs, bonds, retirement accounts.
-  - *Property Assets (Недвижимость и имущество):* Primary residence, vehicles, real estate equity.
+  - *Liquid Assets:* Cash, high-yield checking, bank deposits.
+  - *Financial Assets:* Stock portfolios, index funds/ETFs, bonds, retirement accounts.
+  - *Property Assets:* Primary residence, vehicles, real estate equity.
 - **Liabilities:** Enter a total for mortgages, car loans, consumer loans, credit balances, or other obligations.
 - **Emergency Fund Setting:** Choose whether financial assets are included with liquid assets when calculating the emergency reserve.
 - **Demographics & Investment Parameters:** Birth date, life expectancy, expected nominal return, inflation, and capital-gains tax assumption.
 - **Currency Display:** Choose among USD, EUR, RUB, UAH, KZT, BYN, AMD, GBP, JPY, CHF, CAD, AUD, and INR symbols. This changes displayed units; it does not convert amounts or fetch exchange rates.
 - **Dynamic Cash Flow & Savings Rate Preview:** Real-time feedback directly on the input cards.
 
-### 2. Расчет показателей (9 Core Financial Metrics)
-1. **Денежный поток (Cash Flow):** `Monthly Income - Monthly Expenses` (net monthly surplus/deficit).
-2. **Норма сбережений (Savings Rate):** `(Cash Flow / Income) * 100%` (budget surplus as a share of income).
-3. **Подушка безопасности (Emergency Fund):** Total crisis buffer volume with dynamic color-coding.
-4. **Запас месячных расходов (Safety Months):** Runway duration in months of living expenses.
-5. **Коэффициент задолженности (Debt Ratio):** `Liabilities / Total Assets`.
-6. **Чистый капитал (Net Worth):** `Total Assets - Total Liabilities`.
-7. **Бенчмарк Fidelity:** Age-based milestone target (`Annual Income * Age Multiplier`), interpolated between age checkpoints.
-8. **Коэффициент финансовой свободы (КФС / CFS):** `Net Worth / Annual Expenses`, shown as years of current expenses represented by net worth.
-9. **Реальная доходность капитала (Real Return):** Fisher equation `r = (1 + R) / (1 + i) - 1`, accounting for inflation drag.
+### 2. 9 Core Financial Metrics
+1. **Cash Flow:** `Monthly Income - Monthly Expenses` (net monthly surplus/deficit).
+2. **Savings Rate:** `(Cash Flow / Income) * 100%` (budget surplus as a share of income).
+3. **Emergency Fund:** Total crisis buffer volume with dynamic color-coding.
+4. **Safety Months:** Runway duration in months of living expenses.
+5. **Debt Ratio:** `Liabilities / Total Assets`.
+6. **Net Worth:** `Total Assets - Total Liabilities`.
+7. **Fidelity Benchmark:** Age-based milestone target (`Annual Income * Age Multiplier`), interpolated between age checkpoints.
+8. **Financial Freedom Ratio (CFS):** `Net Worth / Annual Expenses`, shown as years of current expenses represented by net worth.
+9. **Real Return:** Fisher equation `r = (1 + R) / (1 + i) - 1`, accounting for inflation drag.
 
-### 3. Набранные баллы и аудит (Scores & Auditor Opinion)
-- **Financial Health Score:** Итоговый балл от **0 до 10**: КФС 45%, норма сбережений 25%, резерв и долговая нагрузка по 15%. / Overall score from **0 to 10**: CFS 45%, savings rate 25%, emergency-fund runway and debt ratio 15% each.
+### 3. Scores & Auditor Opinion
+- **Financial Health Score:** Overall score from **0 to 10**: CFS 45%, savings rate 25%, emergency-fund runway and debt ratio 15% each.
 - **Component Progress Indicators:** Individual ratings for each key pillar.
 - **Automated Auditor Opinion:** Qualitative analysis classifying indicators into **Positive (🟢)**, **Neutral (🟡)**, and **Risk/Negative (🔴)** zones.
 - **Shareable Reports:** Generate and share the financial summary and auditor opinion using Android's share menu.
 
-### 4. Финансовая свобода и симулятор «Что если?» (FIRE & Pension Simulator)
-- **Метод FIRE:** Прогноз накопления и расходования капитала до указанного возраста дожития при постоянной реальной доходности. Целевой капитал рассчитывается по приведенной стоимости будущих расходов; правило 4% и Trinity Study не используются.
-- **Стартовый капитал FIRE:** `max(0, ликвидные активы + финансовые активы + min(0, имущество - долги))`. Имущество не включается в инвестируемый капитал; долг вычитается только в части сверх стоимости имущества. Переключатель «Учитывать имущество и долги в расчёте FIRE» в текущем интерфейсе отсутствует и на расчёт не влияет.
-- **Целевой капитал:** Приведённая стоимость будущих расходов до заданного возраста дожития с поправкой на реальную доходность. Сценарии могут менять временные и будущие расходы и добавлять разовые поступления; при наличии финансовых активов может применяться оценка налога на прирост капитала.
-- **Срок до FIRE:** Модель ищет момент, когда прогноз накопленного капитала достигает требуемой суммы. Результат зависит от текущего капитала, денежного потока, реальной доходности, расходов и горизонта планирования.
-- **Симуляция:** Ползунки и переключатели меняют отдельный расчёт «Что если?»; исходные введённые данные не переписываются. Состояние симуляции сохраняется локально и сбрасывается кнопкой сброса.
+### 4. FIRE & Pension Simulator
+- **FIRE Method:** Projects capital accumulation and drawdown through the selected life-expectancy age at a constant real return. Target capital is calculated as the present value of future expenses; the 4% rule and Trinity Study are not used.
+- **Starting FIRE Capital:** `max(0, liquid assets + financial assets + min(0, property - liabilities))`. Property is excluded from investable capital; liabilities are deducted only to the extent that they exceed property value. The "Include property and liabilities in FIRE calculations" toggle is absent from the current interface and has no effect on the calculation.
+- **Target Capital:** The present value of future expenses through the selected life-expectancy age, adjusted for real return. Scenarios can change temporary and future expenses and add one-off income; an estimated capital-gains tax may apply when financial assets are present.
+- **Time to FIRE:** The model finds the point when projected accumulated capital reaches the required amount. The result depends on current capital, cash flow, real return, expenses, and the planning horizon.
+- **Simulation:** Sliders and toggles change a separate "What if?" calculation without overwriting the original inputs. Simulator state is saved locally and can be cleared with the reset button.
 - **Three Sliders:** Adjust the monthly savings/income level, monthly expenses, and real investment return for the hypothetical projection.
 - **14 Built-in Scenarios:**
   - *Positive:* income +20%; financial assets +25%; expenses −15%; cost of living −30%; a one-off inheritance of 12 monthly incomes; property sale proceeds capped at 20 monthly incomes and property value; expenses −25% after 18 years.
@@ -72,21 +72,21 @@ The application is structured into 4 cohesive functional tabs:
 
 ---
 
-## 🌐 Languages & Localization / Языки и локализация
+## 🌐 Languages & Localization
 
-- **Application Languages (6 языковых версий):**
+- **Application Languages (6 supported languages):**
   - 🇬🇧 **English** — default language for all other system locales.
-  - 🇷🇺 **Russian (Русский)** — automatically selected for `ru` and `be` locales.
-  - 🇩🇪 **German (Deutsch)** — automatically selected for `de` locales.
-  - 🇫🇷 **French (Français)** — automatically selected for `fr` locales.
-  - 🇮🇹 **Italian (Italiano)** — automatically selected for `it` locales.
-  - 🇪🇸 **Spanish (Español)** — automatically selected for `es` locales.
+  - 🇷🇺 **Russian** — automatically selected for `ru` and `be` locales.
+  - 🇩🇪 **German** — automatically selected for `de` locales.
+  - 🇫🇷 **French** — automatically selected for `fr` locales.
+  - 🇮🇹 **Italian** — automatically selected for `it` locales.
+  - 🇪🇸 **Spanish** — automatically selected for `es` locales.
   - *Detection:* System locale is checked on first launch; the selected language is stored locally.
 - **Currency symbols:** $, €, ₽, ₴, ₸, Br, ֏, £, ¥, CHF, C$, A$, ₹. Values are not converted between currencies.
 
 ---
 
-## 📋 Requirements / Системные требования
+## 📋 Requirements
 
 | Parameter | Minimum Requirement | Recommended |
 | :--- | :--- | :--- |
@@ -100,7 +100,7 @@ The application is structured into 4 cohesive functional tabs:
 
 ---
 
-## 🏗 Technical Notes & Architecture / Техническая архитектура
+## 🏗 Technical Notes & Architecture
 
 ```
 app/src/main/java/com/example/
@@ -127,7 +127,7 @@ app/src/main/java/com/example/
 
 ---
 
-## 🧪 Tests & Quality Assurance / Тестирование
+## 🧪 Tests & Quality Assurance
 
 The project includes automated JVM unit and Robolectric integration test suites:
 - **Formula Accuracy Tests:** Precision validation of Cash Flow, Savings Rate, Net Worth, Fisher Real Return, and Fidelity multiplier steps.
@@ -137,7 +137,7 @@ The project includes automated JVM unit and Robolectric integration test suites:
 
 ### Running Tests Locally
 
-Для сборки, JVM-тестов, Robolectric-тестов и генерации скриншотов используется JDK 17. Общая конфигурация Robolectric в `app/src/test/resources/robolectric.properties` задаёт Android 15 (API 35); тест форматтеров сохраняет проверку на API 28. Тесты не эмулируют Android 16 (API 36), для которого Robolectric требует JDK 21 ([совместимость Robolectric](https://robolectric.org/compatibility_table/)). Значения `compileSdk` и `targetSdk` приложения остаются прежними.
+JDK 17 is used for builds, JVM tests, Robolectric tests, and screenshot generation. The shared Robolectric configuration in `app/src/test/resources/robolectric.properties` specifies Android 15 (API 35); the formatter test retains coverage on API 28. The tests do not emulate Android 16 (API 36), for which Robolectric requires JDK 21 ([Robolectric compatibility](https://robolectric.org/compatibility_table/)). The app's `compileSdk` and `targetSdk` values remain unchanged.
 
 ```bash
 # Run all unit and Robolectric tests
@@ -149,7 +149,7 @@ The project includes automated JVM unit and Robolectric integration test suites:
 
 ---
 
-## 📦 Building & Installation / Сборка проекта
+## 📦 Building & Installation
 
 ### 1. Clone the repository
 ```bash
@@ -171,16 +171,16 @@ The APK will be generated at: `app/build/outputs/apk/release/app-release.apk`.
 
 ---
 
-## 🏪 Distribution / Публикация в каталогах
+## 🏪 Distribution
 
-Подготовлены все необходимые файлы конфигураций и пошаговые инструкции для публикации:
-- 🤖 **[F-Droid Inclusion Guide (Официальный каталог F-Droid)](./FDROID_SETUP.md):** Манифест сборки `metadata/io.github.volmir.personalfinance.yml`, полная инструкция по созданию Merge Request в `fdroiddata` на GitLab.
-- 📦 **[IzzyOnDroid Distribution Guide](./IZZYON_DROID_SETUP.md):** Публикация готовых APK через GitHub Releases и авто-трекинг репозитория.
-- 🚀 **[GitHub Actions CI/CD Workflow](./.github/workflows/build-and-release.yml):** Автоматическая сборка подписанного релизного APK при публикации Git-тегов.
-- 📁 **Fastlane Metadata:** Единственный источник названий и описаний для каталогов — [fastlane/metadata/android](./fastlane/metadata/android): `title.txt`, `short_description.txt`, `full_description.txt` для `ru-RU`, `en-US`, `de-DE`, `es-ES`, `fr-FR`, `it-IT`. История версии находится в `changelogs/1.txt`, скриншоты — в `images/phoneScreenshots/` каждой локали.
-- 📄 **OSI-Approved License:** [MIT License](./LICENSE) в корне проекта.
+All necessary configuration files and step-by-step publishing instructions are provided:
+- 🤖 **[F-Droid Inclusion Guide](./FDROID_SETUP.md):** Build manifest at `metadata/io.github.volmir.personalfinance.yml` and complete instructions for creating a merge request in `fdroiddata` on GitLab for inclusion in the official F-Droid repository.
+- 📦 **[IzzyOnDroid Distribution Guide](./IZZYON_DROID_SETUP.md):** Publish prebuilt APKs through GitHub Releases with automatic repository tracking.
+- 🚀 **[GitHub Actions CI/CD Workflow](./.github/workflows/build-and-release.yml):** Automatically builds a signed release APK when Git tags are published.
+- 📁 **Fastlane Metadata:** The single source of store titles and descriptions is [fastlane/metadata/android](./fastlane/metadata/android): `title.txt`, `short_description.txt`, and `full_description.txt` for `ru-RU`, `en-US`, `de-DE`, `es-ES`, `fr-FR`, and `it-IT`. Release notes are in `changelogs/1.txt`, and screenshots are in `images/phoneScreenshots/` for each locale.
+- 📄 **OSI-Approved License:** [MIT License](./LICENSE) in the project root.
 
-Скриншоты четырёх вкладок создаются из настоящего Compose-интерфейса приложения через Robolectric в светлой теме. Для повторной генерации с JDK 17 и установленным Android SDK:
+Screenshots of the four tabs are generated from the app's actual Compose interface using Robolectric with the light theme. To regenerate them with JDK 17 and the Android SDK installed:
 
 ```bash
 GENERATE_STORE_SCREENSHOTS=1 ./gradlew testDebugUnitTest --tests com.example.StoreScreenshotsTest --rerun-tasks
@@ -188,25 +188,17 @@ GENERATE_STORE_SCREENSHOTS=1 ./gradlew testDebugUnitTest --tests com.example.Sto
 
 ---
 
-## ⚠️ Отказ от отвествености / Developer Disclaimer
+## ⚠️ Developer Disclaimer
 
-### Русский
-> **Заголовок:** Отказ от отвествености  
-> **Важно:** Проект является персональной разработкой и предоставляется исключительно в ознакомительных целях «как есть». Автор не несет ответственности за возможные сбои, потерю данных или иной ущерб, возникший в ходе использования данного ПО. Все расчеты, формулы, метрики и симуляции носят исключительно информационно-ознакомительный характер и не являются индивидуальной финансовой, инвестиционной или налоговой рекомендацией. Вы используете этот инструмент на свой собственный страх и риск.
-> 
-> *Примечание:* Данное приложение не связано с компанией Fidelity Investments и использует исключительно открытые исследовательские ориентиры и общедоступную финансовую методологию.
-
-### English
-> **Title:** Disclaimer  
 > **Important:** This project is a personal development and is provided solely for informational purposes "as is". The author is not responsible for any malfunctions, data loss, or other damages arising from the use of this software. All calculations, formulas, metrics, and simulations are for informational purposes only and do not constitute individual financial, investment, or tax advice. You use this tool at your own risk.
 > 
 > *Note:* This application is not affiliated with or endorsed by Fidelity Investments and solely uses publicly available research milestones and educational benchmarks.
 
 ---
 
-## 📄 License / Лицензия
+## 📄 License
 
 This project is open source and available under the terms of the **[MIT License](./LICENSE)**.
 
-Иконка адаптирована из исходного изображения проекта в прозрачный PNG с помощью image_gen; [источник и описание адаптации](./docs/icon-source.md), лицензия — [MIT](./LICENSE).
+The icon was adapted from the project's original image into a transparent PNG using image_gen; see the [source and adaptation details](./docs/icon-source.md). It is licensed under [MIT](./LICENSE).
 
