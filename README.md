@@ -82,7 +82,7 @@ The application is structured into 4 cohesive functional tabs:
   - 🇮🇹 **Italian** — automatically selected for `it` locales.
   - 🇪🇸 **Spanish** — automatically selected for `es` locales.
   - *Detection:* System locale is checked on first launch; the selected language is stored locally.
-- **Currency symbols:** $, €, ₽, ₴, ₸, Br, ֏, £, ¥, CHF, C$, A$, ₹. Values are not converted between currencies.
+- **Currency symbols:** `$`, `€`, `₽`, `₴`, `₸`, `Br`, `֏`, `£`, `¥`, `CHF`, `C$`, `A$`, `₹`. Values are not converted between currencies.
 
 ---
 
