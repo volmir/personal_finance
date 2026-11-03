@@ -186,7 +186,7 @@ The APK will be generated at: `app/build/outputs/apk/debug/app-debug.apk`.
 ```bash
 bash ./gradlew assembleRelease
 ```
-With the signing environment configured as described in the [release guide](./GITHUB_RELEASE_SETUP.md), the signed APK will be generated at `app/build/outputs/apk/release/app-release.apk`. Without it, Gradle produces `app-release-unsigned.apk`.
+With `KEYSTORE_PATH`, `STORE_PASSWORD`, `KEY_PASSWORD`, and `KEY_ALIAS` set for your release keystore, the signed APK will be generated at `app/build/outputs/apk/release/app-release.apk`. Without signing configuration, Gradle produces `app-release-unsigned.apk`.
 
 ---
 
@@ -194,7 +194,7 @@ With the signing environment configured as described in the [release guide](./GI
 
 Distribution uses signed GitHub Releases, with Obtainium available for update tracking:
 
-- 📦 **[GitHub Release Guide](./GITHUB_RELEASE_SETUP.md):** Prepare the signing key, verify the APK, and publish a tagged release.
+- 📦 **[GitHub Releases](https://github.com/volmir/personal_finance/releases):** Signed APKs, APK checksums, and public signing certificate information.
 - 🤖 **[F-Droid Inclusion Guide](./FDROID_SETUP.md):** Prepare and test the build recipe in advance. Submit to the official repository no earlier than **January 10, 2027**, after three months of active development since October 10, 2026, unless a documented policy exception applies. Inclusion remains subject to review.
 - 🚀 **[GitHub Actions CI/CD Workflow](./.github/workflows/build-and-release.yml):** Builds the release APK on version tags, verifies its signature, and publishes it with APK checksums and public certificate information.
 - 📁 **Fastlane Metadata:** The single source of store titles and descriptions is [fastlane/metadata/android](./fastlane/metadata/android): `title.txt`, `short_description.txt`, and `full_description.txt` for `ru-RU`, `en-US`, `de-DE`, `es-ES`, `fr-FR`, and `it-IT`. Release notes are in `changelogs/1.txt`, and screenshots are in `images/phoneScreenshots/` for each locale.
