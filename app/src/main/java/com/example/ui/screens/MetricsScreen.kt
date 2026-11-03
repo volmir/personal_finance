@@ -206,7 +206,6 @@ fun MetricsScreen(
                         strings.formatThreshold(FinancialMetricEvaluator.SAVINGS_RATE_POSITIVE_THRESHOLD)
                     ),
                     icon = Icons.Default.Savings,
-                    score = metrics.scores.savingsRateScore,
                     highlightColor = StatusColors.getColor(FinancialMetricEvaluator.getSavingsRateStatus(metrics.savingsRate)),
                     subValue = strings.metricSavingsRateSub(
                         strings.formatThreshold(FinancialMetricEvaluator.SAVINGS_RATE_NEUTRAL_THRESHOLD),
@@ -244,7 +243,6 @@ fun MetricsScreen(
                         strings.formatThreshold(FinancialMetricEvaluator.SAFETY_MONTHS_TIER_EXCELLENT)
                     ),
                     icon = Icons.Default.AvTimer,
-                    score = metrics.scores.safetyMonthsScore,
                     highlightColor = StatusColors.getColor(FinancialMetricEvaluator.getSafetyMonthsStatus(metrics.safetyMonths)),
                     subValue = strings.metricSafetyMonthsSub(
                         strings.formatThreshold(FinancialMetricEvaluator.SAFETY_MONTHS_NEUTRAL_THRESHOLD),
@@ -269,7 +267,6 @@ fun MetricsScreen(
                         strings.formatDebtRatioThreshold(FinancialMetricEvaluator.DEBT_RATIO_TIER_CRITICAL)
                     ),
                     icon = Icons.Default.AccountBalanceWallet,
-                    score = metrics.scores.debtRatioScore,
                     highlightColor = StatusColors.getColor(FinancialMetricEvaluator.getDebtRatioStatus(metrics.debtRatio)),
                     subValue = when (FinancialMetricEvaluator.getDebtRatioStatus(metrics.debtRatio)) {
                         AuditIndicatorStatus.POSITIVE -> strings.metricDebtRatioLowSub
@@ -407,7 +404,6 @@ fun MetricsScreen(
                         strings.formatThreshold(FinancialMetricEvaluator.CFS_THRESHOLD_INDEPENDENCE)
                     ),
                     icon = Icons.Default.CompassCalibration,
-                    score = metrics.scores.cfsScore,
                     highlightColor = StatusColors.getColor(FinancialMetricEvaluator.getCfsStatus(metrics.financialFreedomRatio)),
                     subValue = FinancialMetricEvaluator.getCfsStageDescription(metrics.financialFreedomRatio, lang)
                 )
