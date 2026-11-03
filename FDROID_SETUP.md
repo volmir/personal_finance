@@ -1,139 +1,170 @@
-# Руководство по публикации приложения в официальном каталоге F-Droid
+# Первая публикация в официальном F-Droid
 
-Данный документ содержит полное описание и пошаговую инструкцию по добавлению приложения **«Личные финансы & FIRE аудит»** (`io.github.volmir.personalfinance`) в официальный каталог свободных приложений **F-Droid**.
+Проверено 3 ноября 2026 года. Начальная версия приложения: `io.github.volmir.personalfinance`, versionName `1.0`, versionCode `1`, тег `v1.0`.
 
-Полное описание экранов, параметров и финансовых формул: [APP_DESCRIPTION.md](./APP_DESCRIPTION.md). Единственный источник локализованных описаний для каталога — [fastlane/metadata/android](./fastlane/metadata/android): `title.txt`, `short_description.txt` и `full_description.txt`. Рецепты сборки не дублируют эти тексты.
+Перед этой инструкцией выполнить [сборку и GitHub Release](./GITHUB_RELEASE_SETUP.md). Для обычной сборки F-Droid опубликованный APK необязателен, но доступный релиз помогает тестированию и нужен для проверки воспроизводимости с подписью разработчика. Заявка в IzzyOnDroid независима.
 
----
+## Что мешает считать приложение готовым
 
-## 1. Чем официальный F-Droid отличается от IzzyOnDroid?
+1. В исходном `metadata/io.github.volmir.personalfinance.yml` отсутствуют `RepoType` и `Repo`. Поле `SourceCode` их не заменяет: без `RepoType` автоматическая сборка отключена. Ниже дан полный рецепт для форка `fdroiddata`.
+2. Тега `v1.0` ещё нет. В инструкции GitHub используется именно он, чтобы согласовать версию и тег.
+3. Проект создан 10.10.2026. Текущая политика F-Droid обычно требует минимум три месяца активной разработки; исключения — наличие пользователей, сопровождение автором других приложений в F-Droid либо разработка для мероприятия. На 03.11.2026 основание для исключения не подтверждено. При отсутствии исключения ориентир по сроку — **10.01.2027**, при продолжающейся разработке.
+4. Успех сборки через F-Droid CI и воспроизводимость ещё не проверены.
 
-| Параметр | IzzyOnDroid | Официальный F-Droid |
-| :--- | :--- | :--- |
-| **Способ поставки** | Скачивает ваши готовые APK из GitHub Releases | Собирает APK **напрямую из исходного кода** на изолированных сборочных серверах F-Droid |
-| **Подпись APK** | Ваш личный ключ (Upload Keystore) | Официальный мастер-ключ F-Droid |
-| **Требования к коду** | Достаточно открытого репозитория и лицензии | Строгий аудит: 100% FOSS, отсутствие проприетарных SDK, трекеров и бинарных блобов |
-| **Аудитория** | Репозиторий для энтузиастов и бета-релизов | Миллионы пользователей открытого ПО по всему миру (встроен по умолчанию во многие кастомные прошивки: LineageOS, GrapheneOS, /e/OS, CalyxOS) |
+MIT, публичный код, отсутствие INTERNET в исходном манифесте и подготовленный Fastlane — положительные результаты проверки. Зависимости в Gradle относятся к AndroidX, Kotlin, Coroutines и desugaring; окончательная проверка дерева зависимостей и лицензий остаётся частью сборки и ревью каталога. Из отслеживаемых файлов JAR/AAR/SO/APK найден только стандартный `gradle-wrapper.jar`.
 
----
+Условия возраста и исключений, лицензий и ресурсов: [Inclusion Policy](https://f-droid.org/en/docs/Inclusion_Policy/). Значение полей рецепта: [Build Metadata Reference](https://f-droid.org/docs/Build_Metadata_Reference/).
 
-## 2. Чек-лист готовности приложения
+## Шаг 1. Выбрать подпись до первой публикации
 
-Технические сведения для подготовки заявки (окончательное решение о соответствии критериям принимает F-Droid):
+| Вариант | Результат |
+| --- | --- |
+| Обычная сборка F-Droid | F-Droid собирает исходники и подписывает APK отдельным ключом приложения; подпись отличается от GitHub/IzzyOnDroid |
+| Воспроизводимая сборка с подписью разработчика | F-Droid проверяет совпадение своей сборки с APK GitHub и распространяет APK с вашей подписью |
 
-- [x] **Лицензия с открытым исходным кодом:** проект распространяется под лицензией **MIT** (файл `LICENSE` в корне репозитория).
-- [x] **Нет сетевого разрешения:** в `AndroidManifest.xml` нет `android.permission.INTERNET`; приложение не подключается к банкам и не получает котировки.
-- [x] **Отсутствие Anti-Features:** нет платного контента, навязчивых сетевых сервисов или зависимостей от закрытых Google Play Services.
-- [x] **Наличие Gradle Wrapper:** в репозитории подготовлены скрипты `gradlew` и конфигурация `gradle-wrapper.properties` (Gradle 9.3.1).
-- [x] **Метаданные Fastlane:** подготовлены каталоги `fastlane/metadata/android/` с текстами для поддерживаемых языков (включая `en-US` и `ru-RU`), а также иконка `icon.png` и история изменений (`changelogs/1.txt`).
-- [x] **Файл рецепта сборки для F-Droid:** сгенерирован `metadata/io.github.volmir.personalfinance.yml`.
+Для обновлений между каталогами без переустановки предпочтителен второй вариант. Его работоспособность в проекте пока не доказана. Одинаковый код и успешная компиляция сами по себе не гарантируют побайтового совпадения.
 
-Функции приложения: ввод месячного бюджета, активов и обязательств; 9 финансовых показателей; оценка от 0 до 10 и текстовый аудит; FIRE-модель с графиком капитала и 14 сценариями. Модель использует постоянную реальную доходность, не использует правило 4% и не включает стоимость имущества в FIRE-капитал. Подробные оговорки приведены в `APP_DESCRIPTION.md`.
+При разных ключах Android обычно не позволяет обновление поверх установленного приложения. Здесь `allowBackup=false`; удаление приложения для смены источника может привести к потере локальных финансовых данных. Подпись F-Droid — не единый «мастер-ключ» для всех приложений.
 
----
+Описание механизма: [Reproducible Builds](https://f-droid.org/docs/Reproducible_Builds/).
 
-## 3. Рецепт сборки для F-Droid (`fdroiddata`)
+## Шаг 2. Создать форк и ветку fdroiddata
 
-Для добавления приложения в каталог F-Droid используется следующий файл манифеста сборки. Он уже создан в вашем репозитории по пути:
-`metadata/io.github.volmir.personalfinance.yml`
+Войти в GitLab, открыть [fdroid/fdroiddata](https://gitlab.com/fdroid/fdroiddata) и нажать **Fork**. Это отдельный репозиторий каталога, не репозиторий приложения. Заменить `YOUR_GITLAB_USERNAME` своим именем GitLab:
 
-```yaml
+```bash
+export GITLAB_USER=YOUR_GITLAB_USERNAME
+mkdir -p "$HOME/src"
+cd "$HOME/src"
+git clone --depth 1 "https://gitlab.com/$GITLAB_USER/fdroiddata.git" fdroiddata-personal-finance
+cd fdroiddata-personal-finance
+git remote add upstream https://gitlab.com/fdroid/fdroiddata.git
+git switch -c add-personal-finance
+```
+
+## Шаг 3. Создать полный рецепт для опубликованного коммита
+
+Тег должен быть уже отправлен по инструкции GitHub. Выполнить в форке `fdroiddata`:
+
+```bash
+RELEASE_COMMIT=$(git -C /var/www/personal_finance rev-parse 'v1.0^{commit}')
+printf 'Release commit: %s\n' "$RELEASE_COMMIT"
+cat > metadata/io.github.volmir.personalfinance.yml <<EOF
 Categories:
   - Money
 License: MIT
-AuthorName: Personal Finance & FIRE
+AuthorName: PersonalFinance
 SourceCode: https://github.com/volmir/personal_finance
 IssueTracker: https://github.com/volmir/personal_finance/issues
 Changelog: https://github.com/volmir/personal_finance/releases
+
+RepoType: git
+Repo: https://github.com/volmir/personal_finance.git
+
+Builds:
+  - versionName: '1.0'
+    versionCode: 1
+    commit: $RELEASE_COMMIT
+    subdir: app
+    gradle:
+      - 'yes'
 
 AutoUpdateMode: Version
 UpdateCheckMode: Tags
 CurrentVersion: '1.0'
 CurrentVersionCode: 1
-
-Builds:
-  - versionName: '1.0'
-    versionCode: 1
-    commit: v1.0
-    subdir: app
-    gradle:
-      - yes
-
-AutoName: Personal finance and FIRE
+EOF
 ```
 
-Ссылки в уже созданном манифесте настроены на `volmir/personal_finance`; проверьте их, если перенесёте проект в другой репозиторий.
+Используется полный SHA коммита, на который указывает тег. Пароли и ключ подписи в рецепт не включать. Описания и изображения берутся из `fastlane/metadata/android` репозитория приложения; копировать переводы в YAML не нужно. Подробности приложения: [APP_DESCRIPTION.md](./APP_DESCRIPTION.md).
 
----
+Для варианта с подписью разработчика **дополнительно** добавить в этот YAML:
 
-## 4. Пошаговая инструкция по подаче заявки в F-Droid
-
-Добавление в F-Droid происходит через создание **Merge Request** в официальный репозиторий [`fdroiddata`](https://gitlab.com/fdroid/fdroiddata) на GitLab.
-
-### Шаг 1. Опубликовать проект на GitHub и создать Git-тег
-1. Отправьте проект в ваш публичный репозиторий GitHub:
-   ```bash
-   git add .
-   git commit -m "feat: Initial release v1.0"
-   git tag v1.0
-   git push origin main --tags
-   ```
-
-### Шаг 2. Сделать Fork репозитория `fdroiddata`
-1. Зайдите на GitLab: [https://gitlab.com](https://gitlab.com) (зарегистрируйтесь, если у вас нет учетной записи).
-2. Перейдите в репозиторий каталога F-Droid: [https://gitlab.com/fdroid/fdroiddata](https://gitlab.com/fdroid/fdroiddata).
-3. Нажмите кнопку **Fork** в правом верхнем углу.
-
-### Шаг 3. Добавить файл метаданных в ваш Fork
-1. В своем форке создайте новую ветку, например: `add-personalfinance-fire`:
-   ```bash
-   git checkout -b add-personalfinance-fire
-   ```
-2. Создайте файл `metadata/io.github.volmir.personalfinance.yml` (содержимое из раздела 3 выше).
-3. Закоммитьте и отправьте ветку:
-   ```bash
-   git add metadata/io.github.volmir.personalfinance.yml
-   git commit -m "New app: io.github.volmir.personalfinance"
-   git push origin add-personalfinance-fire
-   ```
-
-### Шаг 4. Открыть Merge Request (MR)
-1. Перейдите на страницу вашего форка на GitLab.
-2. GitLab автоматически предложит **Create merge request**.
-3. Заполните форму:
-   - **Title:** `New app: io.github.volmir.personalfinance`
-   - В описании откроется стандартный шаблон `New App Submission`. Отметьте нужные пункты:
-     - [x] The app complies with the inclusion criteria
-     - [x] The app is not a duplicate
-     - [x] I am the author of the app
-4. Нажмите **Create merge request**.
-
----
-
-## 5. Что происходит после отправки MR?
-
-1. **Автоматический CI бот F-Droid:**
-   - Запустит проверку линтера `fdroid lint`.
-   - Запустит тестовую сборку APK в изолированном Docker-контейнере.
-   - Проверит соответствие лицензии и отсутствие закрытых библиотек.
-2. **Ревью мейнтейнеров:**
-   - Волонтеры F-Droid могут оставить комментарии или подтвердить сборку.
-   - Результат проверки зависит от актуальной версии исходного кода, зависимостей и правил каталога.
-3. **Слияние и публикация:**
-   - После слияния MR сборочный сервер F-Droid скомпилирует релиз, подпишет его ключом F-Droid и добавит в официальный индекс каталога.
-   - Приложение станет доступно для установки через клиент F-Droid, Aurora Droid, Neo Store и веб-сайт [f-droid.org](https://f-droid.org).
-
----
-
-## 6. Как работают дальнейшие обновления версий?
-
-Благодаря строкам в рецепте:
 ```yaml
-AutoUpdateMode: Version
-UpdateCheckMode: Tags
+Binaries: https://github.com/volmir/personal_finance/releases/download/v%v/PersonalFinance-v%v.apk
+AllowedAPKSigningKeys:
+  - YOUR_RELEASE_CERTIFICATE_SHA256
 ```
-Вам **не нужно** будет каждый раз создавать новый Merge Request на GitLab!
-Робот F-Droid `checkupdates` регулярно сканирует теги в вашем GitHub-репозитории. Когда вы выпускаете новую версию (например, тег `v1.1`), F-Droid автоматически:
-1. Заметит новый тег.
-2. Подтянет обновленный `versionCode` и `versionName`.
-3. Запустит сборку новой версии и опубликует обновление в каталоге.
+
+Заменить `YOUR_RELEASE_CERTIFICATE_SHA256` отпечатком сертификата из `apksigner verify --print-certs`, 64 шестнадцатеричных символа без двоеточий. Это не хеш файла из `sha256sum`. Не добавлять эти поля как обещание воспроизводимости без успешной проверки ниже.
+
+## Шаг 4. Установить инструменты и проверить рецепт
+
+Для локальной сборки подготовить JDK 17 и Android SDK по инструкции GitHub. Создать отдельное Python-окружение; если используемая версия Python не поддерживается актуальным `fdroidserver`, использовать поддерживаемую версию согласно сообщению установщика:
+
+```bash
+sudo apt-get install -y python3-venv
+python3 -m venv "$HOME/.venvs/fdroidserver"
+source "$HOME/.venvs/fdroidserver/bin/activate"
+python -m pip install --upgrade pip
+python -m pip install fdroidserver apksigcopier
+fdroid --version
+```
+
+В каталоге форка создать минимальный локальный конфиг; файл не включать в коммит:
+
+```bash
+cd "$HOME/src/fdroiddata-personal-finance"
+python3 - <<'PY'
+from pathlib import Path
+import os
+import yaml
+p = Path('config.yml')
+config = yaml.safe_load(p.read_text()) if p.exists() else {}
+config = config or {}
+config['sdk_path'] = os.environ['ANDROID_HOME']
+config['java_paths'] = {'17': os.environ['JAVA_HOME']}
+p.write_text(yaml.safe_dump(config, sort_keys=False))
+PY
+fdroid rewritemeta io.github.volmir.personalfinance
+fdroid lint io.github.volmir.personalfinance
+unset KEYSTORE_PATH STORE_PASSWORD KEY_PASSWORD KEY_ALIAS
+fdroid build --verbose io.github.volmir.personalfinance:1
+```
+
+Ожидается `unsigned/io.github.volmir.personalfinance_1.apk`. Локальная сборка зависит от установленных инструментов и не заменяет F-Droid CI. Если линтер или сканер указывает на проблему, исправить причину и повторить проверку; не отключать сканирование всего проекта.
+
+Для проверки воспроизводимости сравнить с APK GitHub:
+
+```bash
+mkdir -p /tmp/personal-finance-v1.0
+gh release download v1.0 --repo volmir/personal_finance \
+  --pattern 'PersonalFinance-v1.0.apk' --dir /tmp/personal-finance-v1.0
+apksigcopier compare --unsigned \
+  /tmp/personal-finance-v1.0/PersonalFinance-v1.0.apk \
+  unsigned/io.github.volmir.personalfinance_1.apk
+```
+
+Если файл уже скачан, повторно скачивать его не нужно. Успех сравнения позволяет продолжить проверку варианта с подписью разработчика; окончательное подтверждение — успешная независимая сборка F-Droid. При несовпадении проверить JDK, SDK/Build Tools, R8 и упаковку APK, согласовать рецепт с мейнтейнерами. Либо осознанно выбрать отдельную подпись F-Droid и убрать `Binaries`/`AllowedAPKSigningKeys`.
+
+Официальные справочники: [установка fdroidserver](https://f-droid.org/en/docs/Installing_the_Server_and_Repo_Tools/), [fdroid build](https://f-droid.org/docs/Building_Applications/), [apksigcopier](https://github.com/obfusk/apksigcopier).
+
+## Шаг 5. Отправить ветку и открыть Merge Request
+
+Только когда выполнено условие возраста проекта или есть подтверждённое основание для исключения:
+
+```bash
+cd "$HOME/src/fdroiddata-personal-finance"
+git diff --check
+git add -- metadata/io.github.volmir.personalfinance.yml
+git diff --cached
+git commit -m "New App: io.github.volmir.personalfinance"
+git push -u origin add-personal-finance
+```
+
+Открыть на GitLab **Create merge request**: исходная ветка — `add-personal-finance` вашего форка; целевой проект — `fdroid/fdroiddata`, ветка — `master`. Заполнить актуальный шаблон новой программы. Указать:
+
+- исходники и релиз `https://github.com/volmir/personal_finance/releases/tag/v1.0`;
+- MIT, приложение для ручного учёта финансов, без сетевого подключения;
+- наличие Fastlane и результат тестирования на устройстве;
+- выбранную схему подписи и результат проверки воспроизводимости;
+- основание для исключения по возрасту, если оно требуется;
+- происхождение ресурсов, включая обработку иконки, описанную в [docs/icon-source.md](./docs/icon-source.md).
+
+Веб-форму и переписку с мейнтейнерами выполняет автор. Создание YAML в собственном GitHub-репозитории само по себе не является заявкой в каталог. Подготовка MR описана в [официальной инструкции](https://f-droid.org/docs/Submitting_to_F-Droid_Quick_Start_Guide/).
+
+## Шаг 6. Пройти CI и ревью, дождаться индекса
+
+Проверить pipeline MR, ответить на замечания, при необходимости отправить исправленный рецепт в ту же ветку. Слияние MR и появление приложения в индексе — разные этапы; фиксированного срока включения нет.
+
+После публикации проверить страницу `https://f-droid.org/packages/io.github.volmir.personalfinance/`, версию и подпись скачанного APK. Для следующих релизов повышать `versionCode`, менять `versionName`, добавлять `changelogs/<versionCode>.txt`, создавать соответствующий тег. Автообновление рецепта не гарантирует успешную сборку или немедленную публикацию каждой версии.

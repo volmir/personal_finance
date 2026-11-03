@@ -1,122 +1,95 @@
-# Публикация приложения в репозитории IzzyOnDroid и F-Droid
+# Первая публикация в IzzyOnDroid
 
-## Как устроен IzzyOnDroid
-В отличие от официального F-Droid (который сам компилирует проект из исходного кода на собственных серверах), **IzzyOnDroid** — это автоматизированный репозиторий готовых бинарных сборок:
-1. Вы создаете открытый репозиторий на **GitHub** (или GitLab/Codeberg).
-2. Вы публикуете релиз (**GitHub Release**) с тегом `v*`, а GitHub Actions автоматически собирает релизный APK, подписывает его вашим персональным релизным ключом и прикрепляет файл `PersonalFinance-v*.apk` к релизу.
-3. Робот IzzyOnDroid регулярно опрашивает ваши релизы на GitHub, скачивает подписанный APK, проверяет его сигнатуру и метаданные и доставляет обновление пользователям через клиент F-Droid.
+Проверено 3 ноября 2026 года. Выполнить после [первой сборки и GitHub Release](./GITHUB_RELEASE_SETUP.md). Ждать принятия в официальный F-Droid не требуется. IzzyOnDroid скачивает готовый APK разработчика; обычный F-Droid собирает приложение из исходников.
 
----
+## Шаг 1. Проверить соответствие правилам до подачи заявки
 
-## Релизный ключ
+Сначала прочитать актуальную [App Inclusion Policy](https://izzyondroid.org/docs/general/AppInclusionPolicy/), особенно **AI policy**. В ней отклоняются vibe-coded приложения и код, созданный LLM; использование LLM для документации и исследований допускается.
 
-Для публикации в IzzyOnDroid и создания официальных релизов APK **обязательно** должен быть подписан вашим постоянным релизным ключом. Использование стандартного ключа отладки (Debug Keystore) строго запрещено.
+В этом проекте [docs/icon-source.md](./docs/icon-source.md) явно указывает на обработку иконки через `image_gen`. Это установленный факт об изображении, а не доказательство происхождения всего кода. Применимость правила к такой обработке ресурса нужно уточнить у мейнтейнеров. Если в приложении есть сгенерированный LLM код, считать соответствие правилам неподтверждённым и не заявлять обратное. Удаление упоминаний ИИ из документации не решает вопрос соответствия.
 
-### 1. Генерация файла ключа (Keystore)
+Технические предпосылки в проекте есть: публичный репозиторий, MIT, уникальный applicationId, Fastlane на шести языках. Подписанного опубликованного APK на дату проверки ещё нет. Существующий неподписанный файл около 1,77 MiB даёт лишь предварительный ориентир по размеру; проверить нужно итоговый APK.
 
-Выполните команду в терминале на вашем компьютере:
+## Шаг 2. Проверить опубликованный релиз v1.0
+
+Команды для Bash/Ubuntu; GitHub CLI, Android SDK Build Tools 36.0.0 и platform-tools должны быть доступны, как в инструкции GitHub:
 
 ```bash
-keytool -genkeypair -v -keystore release.jks -alias upload -keyalg RSA -keysize 2048 -validity 10000
+gh release view v1.0 --repo volmir/personal_finance
+mkdir -p /tmp/personal-finance-v1.0
+gh release download v1.0 --repo volmir/personal_finance \
+  --pattern 'PersonalFinance-v1.0.apk' --dir /tmp/personal-finance-v1.0
+export APK_FILE=/tmp/personal-finance-v1.0/PersonalFinance-v1.0.apk
+apksigner verify --verbose --print-certs "$APK_FILE"
+aapt2 dump badging "$APK_FILE"
+aapt2 dump xmltree "$APK_FILE" --file AndroidManifest.xml
+stat -c '%s bytes' "$APK_FILE"
+sha256sum "$APK_FILE"
 ```
 
-Утилита запросит:
-- Пароль хранилища ключей (**Store Password**) и пароль ключа (**Key Password**). Запомните или сохраните их.
-- Ваши данные (имя/организацию, город, страну).
+Если APK уже скачан по предыдущей инструкции, пропустить команду скачивания. Убедиться, что релиз опубликован, не draft/prerelease, а APK доступен без авторизации по адресу:
 
-В текущей папке появится файл `release.jks`.
+```text
+https://github.com/volmir/personal_finance/releases/download/v1.0/PersonalFinance-v1.0.apk
+```
 
-### 2. Кодирование ключа в Base64
+Ожидаются `io.github.volmir.personalfinance`, versionName `1.0`, versionCode `1`, постоянный релизный сертификат; `debuggable` и `testOnly` должны отсутствовать либо быть `false`. Обычный лимит IzzyOnDroid — около 30 MB на APK/приложение; не рассчитывать на исключение. Не загружать debug APK или `app-release-unsigned.apk`.
 
-Для безопасной передачи файла ключа через переменные CI закодируйте его в Base64:
+Проверить именно этот файл на тестовом устройстве:
 
-- **Linux**:
-  ```bash
-  base64 -w 0 release.jks > release.jks.base64
-  ```
-- **macOS**:
-  ```bash
-  base64 -i release.jks -o release.jks.base64
-  ```
-- **Windows (PowerShell)**:
-  ```powershell
-  [Convert]::ToBase64String([IO.File]::ReadAllBytes("release.jks")) | Out-File -Encoding ascii release.jks.base64
-  ```
+```bash
+adb devices
+adb install -r "$APK_FILE"
+adb shell am start -n io.github.volmir.personalfinance/com.example.MainActivity
+```
 
-### 3. Добавление секретов в GitHub Secrets
+Проверить ввод данных, четыре вкладки, сохранение после перезапуска, симулятор и отправку отчёта. При конфликте подписи с уже установленной debug-версией использовать чистое тестовое устройство: удаление приложения уничтожит его локальные данные.
 
-В вашем репозитории на GitHub перейдите в:  
-**Settings** → **Secrets and variables** → **Actions** → нажмите **New repository secret** и добавьте 4 секрета:
+## Шаг 3. Проверить данные для карточки приложения
 
-1. `KEYSTORE_BASE64` — всё содержимое созданного файла `release.jks.base64` (одна длинная строка без переносов).
-2. `STORE_PASSWORD` — пароль хранилища, указанный при создании ключа.
-3. `KEY_PASSWORD` — пароль алиаса ключа (если не задавался отдельно, совпадает со `STORE_PASSWORD`).
-4. `KEY_ALIAS` — имя алиаса ключа (в примере выше — `upload`).
+```bash
+cd /var/www/personal_finance
+for locale in en-US ru-RU de-DE fr-FR it-IT es-ES; do
+  printf '%s\n' "$locale"
+  wc -m "fastlane/metadata/android/$locale/title.txt" \
+    "fastlane/metadata/android/$locale/short_description.txt" \
+    "fastlane/metadata/android/$locale/full_description.txt" \
+    "fastlane/metadata/android/$locale/changelogs/1.txt"
+done
+ls fastlane/metadata/android/en-US/images
+ls fastlane/metadata/android/en-US/images/phoneScreenshots
+```
 
----
+Проверка 03.11.2026: короткие описания — 62–73 символа, полные — 1780–2630, changelog — 164–236 символов без завершающего перевода строки и 173–430 байт в файле; по четыре скриншота на язык, английская и русская иконки 512×512. Английские изображения служат базовым набором. Описания не нужно дублировать в README или рецепте сборки; актуальные поля и требования к изображениям сверять с [Fastlane](https://izzyondroid.org/docs/general/Fastlane/).
 
-### Резервная копия ключа
+Скриншоты имеют размер 1080×2400, отношение длинной стороны к короткой — 2,22. Документация Fastlane предупреждает, что некоторые валидаторы требуют не больше 2:1. Перед подачей проверить их выбранным валидатором; если он отклоняет пропорции, добавить поля до 1200×2400, сохранив содержимое экрана. Сам по себе этот результат не подтверждает отказ каталога.
 
-> **Критически важное предупреждение:**  
-> При первой публикации робот IzzyOnDroid навсегда запоминает SHA-256 отпечаток сертификата подписи вашего APK.  
-> Если вы потеряете файл `release.jks` или пароль к нему, выпустить обновления в каталог IzzyOnDroid будет **невозможно**: каталог отклонит любые последующие APK с другой подписью.  
-> **Обязательно сохраните файл `release.jks` и пароли в надёжном резервном хранилище** (защищённый архив, менеджер паролей).
+## Шаг 4. Подать заявку в актуальный трекер
 
----
+Официальный FAQ направляет заявки в [Codeberg: IzzyOnDroid/repodata](https://codeberg.org/IzzyOnDroid/repodata/issues). Старый адрес `gitlab.com/IzzyOnDroid/repo` из предыдущей инструкции больше не использовать как основной путь подачи. См. [официальный FAQ](https://izzyondroid.org/faq/).
 
-### ℹ️ Различие в подписи: IzzyOnDroid vs Официальный F-Droid
+Войти в Codeberg, проверить отсутствие уже поданной заявки по `io.github.volmir.personalfinance`, нажать **New issue**, выбрать актуальный шаблон добавления приложения. Это действие в веб-интерфейсе; команды `gh` работают с GitHub и такую заявку не создают.
 
-- **IzzyOnDroid** распространяет ваш готовый APK, собранный и подписанный в GitHub Actions вашим релизным ключом `release.jks`.
-- **Официальный F-Droid** компилирует приложение самостоятельно из исходного кода и подписывает его **своим собственным приватным ключом F-Droid**.
-- Поэтому цифровые подписи и SHA-256 сертификата в двух каталогах будут **разными**. Если пользователь установил приложение из IzzyOnDroid, а затем захочет обновиться из основного F-Droid (или наоборот), Android потребует предварительно удалить приложение, так как подписи ключей не совпадут.
+Данные для заполнения:
 
----
+```text
+App: Personal Finance & FIRE Audit
+Application ID: io.github.volmir.personalfinance
+Source: https://github.com/volmir/personal_finance
+License: MIT
+Release: https://github.com/volmir/personal_finance/releases/tag/v1.0
+APK: https://github.com/volmir/personal_finance/releases/download/v1.0/PersonalFinance-v1.0.apk
+Version: 1.0 (versionCode 1)
+Fastlane: https://github.com/volmir/personal_finance/tree/v1.0/fastlane/metadata/android
+Description: Offline personal finance calculator and FIRE retirement simulator.
+```
 
-## Что уже настроено в проекте:
-- ✅ **Локальная работа**: манифест приложения не запрашивает `android.permission.INTERNET`; банковских подключений и загрузки котировок нет. Данные и расчёты остаются на устройстве; отчёт передаётся во внешнее приложение только после выбора пользователем действия «Поделиться».
-- ✅ **Лицензия MIT**: файл `LICENSE` размещен в корне проекта.
-- ✅ **Отказ от ответственности (Disclaimer)**: размещен в `README.md` и в приложении.
-- ✅ **Структура Fastlane**: в каталоге `fastlane/metadata/android/` созданы `en-US` и `ru-RU` с названием, кратким описанием, полным описанием и changelog. Эти файлы содержат описание приложения для каталогов; полный перечень экранов, параметров и ограничений модели см. в [APP_DESCRIPTION.md](./APP_DESCRIPTION.md).
-- ✅ **Безопасная конфигурация подписи в Gradle (`app/build.gradle.kts`)**:
-  - Локальная и CI сборка без секретов собирает неподписанный релиз без сбоев (для сборщика официального F-Droid).
-  - При наличии секретов автоматически применяется релизная подпись.
-  - Сохранён стабильный debug-ключ для локальной отладки.
-- ✅ **CI/CD в GitHub Actions (`.github/workflows/build-and-release.yml`)**:
-  - Запуск тестов на каждый `push` и `pull_request`.
-  - Автоматическая сборка релизного APK при создании тега `v*`.
-  - Верификация подписи через `apksigner` с выводом SHA-256 и блокировкой сборки при обнаружении отладочного сертификата `CN=Android Debug`.
-  - Проверка отсутствия флагов `debuggable` и `testOnly` в релизном APK.
-  - Именование релизного файла: `PersonalFinance-${tag}.apk`.
-  - Debug-APK не прикрепляется к GitHub Releases и не предназначен для публикации в F-Droid или IzzyOnDroid.
+Приложить фактический SHA-256 **сертификата подписи**, размер APK и результаты проверки на устройстве. Честно описать использование ИИ согласно шагу 1 и приложить ссылку на происхождение иконки. Не отправлять заявку с утверждением о соответствии, если известен конфликт с политикой каталога.
 
----
+## Шаг 5. Пройти проверку и выпускать обновления
 
-## Пошаговая инструкция для публикации:
+Следить за заявкой, отвечать на замечания, дождаться появления карточки `https://apt.izzysoft.de/fdroid/index/apk/io.github.volmir.personalfinance`. Одобрение заявки и загрузка в индекс занимают отдельное время; обещания срока первой публикации нет.
 
-### Шаг 1. Подготовка репозитория GitHub
-Создайте или используйте публичный репозиторий GitHub с исходным кодом приложения.
+После включения каталог обычно проверяет релизы ежедневно. Для дальнейших версий сохранять ключ, повышать `versionCode`, менять `versionName`, добавлять changelog с новым кодом и публиковать новый тег с подписанным APK. Не подменять APK под существующим тегом. Воспроизводимые сборки — дополнительная проверка, она пока не настроена и не подтверждена.
 
-### Шаг 2. Настройка секретов GitHub Actions
-Добавьте 4 секрета (`KEYSTORE_BASE64`, `STORE_PASSWORD`, `KEY_PASSWORD`, `KEY_ALIAS`), как описано в разделе выше.
-
-### Шаг 3. Создание релиза (Release v1.0.0)
-1. В вашем репозитории на GitHub перейдите во вкладку **Releases** → **Draft a new release**.
-2. В поле тега введите `v1.0.0`, нажмите «Create new tag: v1.0.0 on publish».
-3. Заполните название («Release 1.0.0») и описание изменений.
-4. Нажмите **Publish release**.
-5. GitHub Actions запустит workflow, прогонит тесты, раскодирует релизный ключ, соберёт APK, проверит валидность сертификата и прикрепит файл `PersonalFinance-v1.0.0.apk` к созданному релизу.
-
----
-
-### Шаг 4. Подача заявки в каталог IzzyOnDroid
-1. Перейдите в официальный трекер заявок IzzyOnDroid:  
-   👉 **https://gitlab.com/IzzyOnDroid/repo/-/issues**
-2. Нажмите кнопку **«New issue»**.
-3. В выпадающем списке шаблонов («Template») выберите: **`inclusion-request`** (Запрос на включение приложения).
-4. Заполните поля шаблона:
-   - **App Name**: `Personal Finance & FIRE` (Личные финансы)
-   - **Repository URL**: ссылка на ваш репозиторий GitHub (например, `https://github.com/<ваш-логин>/personal-finance-fire`)
-   - **License**: `MIT`
-   - **APK source**: `GitHub Releases`
-5. Отправьте тикет. Модератор IzzyOnDroid (Izzy) обычно проверяет и добавляет приложение в течение 1–3 дней.
-6. После одобрения все последующие релизы с тегом `v*` будут автоматически подхватываться роботом IzzyOnDroid!
+GitHub и IzzyOnDroid распространяют APK с вашей подписью. Если официальный F-Droid использует отдельный ключ, обновление между источниками потребует переустановки; для общей подписи заранее пройти настройку воспроизводимости по [инструкции F-Droid](./FDROID_SETUP.md).

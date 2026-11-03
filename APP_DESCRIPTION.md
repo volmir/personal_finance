@@ -1,84 +1,84 @@
-# Полное описание приложения
+# Complete App Description
 
-«Личные финансы & FIRE аудит» — Android-приложение для ручного учёта месячного бюджета и баланса активов, расчёта финансовых показателей и моделирования сценария FIRE (Financial Independence, Retire Early). Это калькулятор и образовательный инструмент, а не подключённый к банкам менеджер финансов.
+**Personal Finance & FIRE Audit** is an Android app for manually recording a monthly budget and balance sheet, calculating financial indicators, and modeling a FIRE (Financial Independence, Retire Early) scenario. It is a calculator and educational tool, with no connection to banks.
 
-## Экраны приложения
+## App Screens
 
-### 1. Данные
+### 1. Input Data
 
-Пользователь вводит:
+The user enters:
 
-- месячный доход и расходы;
-- ликвидные активы, финансовые активы и имущество;
-- общую сумму обязательств;
-- ожидаемую номинальную доходность, инфляцию и ставку налога на прирост капитала;
-- дату рождения и возраст дожития, до которого строится прогноз.
+- monthly income and expenses;
+- liquid assets, financial assets, and property;
+- total liabilities;
+- expected nominal return, inflation, and the capital-gains tax rate;
+- birth date and the life-expectancy age through which the projection runs.
 
-Для доходов, расходов, активов, обязательств, инвестиций и параметров горизонта доступны раскрывающиеся подсказки с примерами категорий. Переключатель фонда безопасности задаёт, включать ли финансовые активы в резерв: резерв равен либо ликвидным активам, либо ликвидным и финансовым активам вместе. По умолчанию форма заполнена демонстрационными значениями, обозначенными в коде как средние данные США; это исходный пример, а не оценка пользователя или локальная статистика.
+Expandable guidance with category examples is available for income, expenses, assets, liabilities, investments, and planning-horizon parameters. The emergency-fund toggle determines whether financial assets count toward the reserve: the reserve equals either liquid assets alone or liquid and financial assets combined. By default, the form contains demonstration values identified in the code as US averages; these are a starting example, not an assessment of the user or local statistics.
 
-Можно выбрать один из 13 символов валюты: $, €, ₽, ₴, ₸, Br, ֏, £, ¥, CHF, C$, A$, ₹. Выбор меняет отображаемое обозначение, но не конвертирует суммы и не использует курсы валют.
+Users can choose among 13 currency symbols: `$`, `€`, `₽`, `₴`, `₸`, `Br`, `֏`, `£`, `¥`, `CHF`, `C$`, `A$`, `₹`. The selection changes the displayed symbol without converting amounts or using exchange rates.
 
-### 2. Показатели
+### 2. Financial Metrics
 
-Приложение рассчитывает девять показателей:
+The app calculates nine metrics:
 
-1. **Денежный поток:** месячный доход минус месячные расходы.
-2. **Норма сбережений:** денежный поток, делённый на доход, в процентах.
-3. **Резерв безопасности:** выбранная комбинация ликвидных и финансовых активов.
-4. **Запас в месяцах:** резерв, делённый на месячные расходы.
-5. **Коэффициент задолженности:** обязательства, делённые на суммарные активы.
-6. **Чистый капитал:** все активы минус обязательства.
-7. **Ориентир Fidelity:** годовой доход, умноженный на возрастной коэффициент. Коэффициенты заданы контрольными возрастными точками и интерполируются между ними.
-8. **Коэффициент финансовой свободы (КФС / CFS):** чистый капитал, делённый на годовые расходы. Значение показывает, скольким годам расходов соответствует чистый капитал по простому отношению; это не отдельная симуляция доходности.
-9. **Реальная доходность:** номинальная доходность с поправкой на инфляцию по формуле Фишера: `(1 + номинальная доходность) / (1 + инфляция) − 1`.
+1. **Cash Flow:** monthly income minus monthly expenses.
+2. **Savings Rate:** cash flow divided by income, expressed as a percentage.
+3. **Emergency Fund:** the selected combination of liquid and financial assets.
+4. **Safety Months:** the reserve divided by monthly expenses.
+5. **Debt Ratio:** liabilities divided by total assets.
+6. **Net Worth:** all assets minus liabilities.
+7. **Fidelity Benchmark:** annual income multiplied by an age-based factor. Factors are defined at age checkpoints and interpolated between them.
+8. **Financial Freedom Ratio (CFS):** net worth divided by annual expenses. This simple ratio expresses net worth in years of expenses; it is not a separate investment-return simulation.
+9. **Real Return:** nominal return adjusted for inflation using the Fisher equation: `(1 + nominal return) / (1 + inflation) − 1`.
 
-Значения сопровождаются цветовой оценкой и краткими пояснениями.
+Values are accompanied by color-coded assessments and brief explanations.
 
-### 3. Оценка и аудит
+### 3. Score & Audit
 
-Общий балл финансового здоровья рассчитывается по шкале от 0 до 10. Веса компонентов: КФС — 45%, норма сбережений — 25%, запас резерва — 15%, коэффициент долга — 15%. Экран показывает общий балл, оценки компонентов и сформированное по метрикам текстовое заключение с позитивными, нейтральными и негативными сигналами. Сводку и полный текст заключения можно передать через системное меню «Поделиться» Android.
+The overall financial health score ranges from 0 to 10. Component weights are CFS 45%, savings rate 25%, emergency-fund runway 15%, and debt ratio 15%. The screen shows the overall score, component ratings, and an assessment generated from the metrics, with positive, neutral, and negative signals. The summary and full assessment can be shared through Android's system share menu.
 
-### 4. FIRE и «Что если?»
+### 4. FIRE & "What if?"
 
-Экран показывает прогнозируемое время и возраст достижения FIRE, требуемый капитал и график прогнозируемого капитала относительно требуемого до указанного возраста дожития. Если расчёт не находит достижимую точку в заданном горизонте, экран показывает соответствующее сообщение.
+The screen shows the projected time and age at which FIRE is reached, the required capital, and a chart comparing projected capital with required capital through the selected life-expectancy age. If the calculation finds no attainable FIRE point within the planning horizon, the screen displays a corresponding message.
 
-**Стартовый капитал FIRE** считается так:
+**Starting FIRE capital** is calculated as:
 
 ```text
-max(0, ликвидные активы + финансовые активы + min(0, имущество − обязательства))
+max(0, liquid assets + financial assets + min(0, property − liabilities))
 ```
 
-Имущество не добавляется к инвестируемым активам. Обязательства уменьшают стартовый капитал только на сумму, превышающую стоимость имущества.
+Property is not added to investable assets. Liabilities reduce starting capital only by the amount exceeding property value.
 
-**Требуемый капитал** моделируется как приведённая стоимость расходов на оставшийся период от предполагаемого выхода на пенсию до возраста дожития при постоянной реальной доходности. В зависимости от сценария расчёт может учитывать временные расходы, снижение расходов в будущем, разовые поступления от симуляционных событий и оценку налога на прирост финансовых активов. Правило 4% и Trinity Study не используются.
+**Required capital** is modeled as the present value of expenses for the remaining period from the assumed retirement date to the life-expectancy age, at a constant real return. Depending on the scenario, the calculation may account for temporary expenses, lower future expenses, one-off proceeds from simulated events, and an estimated tax on gains in financial assets. The 4% rule and Trinity Study are not used.
 
-Момент выхода находится сравнением прогнозируемого капитала (стартовые активы и накопление положительного денежного потока с учётом реальной доходности) с целевым капиталом. Доходность и инфляция берутся из экрана «Данные»; целевой горизонт — возраст дожития минус текущий возраст.
+The retirement point is found by comparing projected capital (starting assets plus accumulated positive cash flow, accounting for real return) with target capital. Return and inflation come from the Input Data screen; the planning horizon is life-expectancy age minus current age.
 
-**Три ползунка симулятора** позволяют менять месячные сбережения/доход, расходы и поправку к реальной доходности. Изменения применяются к отдельному расчёту «Что если?» и не перезаписывают исходные финансовые данные.
+**Three simulator sliders** adjust monthly savings/income, expenses, and the real-return adjustment. Changes apply to a separate "What if?" calculation without overwriting the original financial inputs.
 
-**14 встроенных сценариев:**
+**14 built-in scenarios:**
 
-- доход увеличивается на 20%;
-- финансовые активы увеличиваются на 25%;
-- постоянные расходы снижаются на 15%;
-- расходы снижаются на 30% при переезде;
-- разовое наследство/подарок — 12 месячных доходов;
-- продажа имущества — поступление ограничено меньшим из стоимости имущества и 20 месячных доходов;
-- расходы снижаются на 25% через 18 лет;
-- стресс потери работы: разовый расход из активов в размере 12 месячных доходов (текущий доход при этом не обнуляется);
-- финансовые активы снижаются на 30%;
-- ипотечные платежи — 35% месячного дохода в течение 20 лет;
-- платежи за автомобиль — 20% месячного дохода в течение 5 лет;
-- крупная разовая трата — 5 месячных доходов;
-- расходы увеличиваются на 25% (в интерфейсе сценарий назван ростом инфляции);
-- расходы на ребёнка или иждивенца увеличиваются на 25% от исходных расходов на 18 лет.
+- income increases by 20%;
+- financial assets increase by 25%;
+- ongoing expenses decrease by 15%;
+- expenses decrease by 30% after relocation;
+- a one-off inheritance/gift equals 12 monthly incomes;
+- property sale proceeds are capped at the lower of property value and 20 monthly incomes;
+- expenses decrease by 25% after 18 years;
+- job-loss stress: a one-off draw from assets equal to 12 monthly incomes (current income is not set to zero);
+- financial assets decrease by 30%;
+- mortgage payments equal 35% of monthly income for 20 years;
+- car payments equal 20% of monthly income for 5 years;
+- a large one-off expense equals 5 monthly incomes;
+- expenses increase by 25% (the interface labels this scenario as rising inflation);
+- child or dependent costs add 25% of original expenses for 18 years.
 
-Ползунки и сценарии можно сбросить. Состояние симуляции сохраняется локально между запусками.
+Sliders and scenarios can be reset. Simulator state is saved locally between app launches.
 
-## Язык, хранение и ограничения
+## Language, Storage & Limitations
 
-- Интерфейс поддерживает 6 языков: английский (по умолчанию), русский (для системных локалей `ru` и `be`), немецкий (`de`), французский (`fr`), итальянский (`it`) и испанский (`es`). Языковая версия определяется автоматически по системной локали Android без лишних элементов в интерфейсе.
-- Приложение не запрашивает разрешение `INTERNET`; входные данные и расчёты обрабатываются локально. Поделиться отчётом можно только по инициативе пользователя через Android и выбранное им приложение.
-- Приложение не подключается к банкам, не импортирует транзакции и не загружает котировки или валютные курсы.
-- Прогноз предполагает постоянную реальную доходность и опирается на введённые пользователем суммы и сценарные упрощения. Это не обещание доходности и не персональная финансовая, инвестиционная или налоговая рекомендация.
-- Fidelity используется как возрастной ориентир; приложение не связано с Fidelity Investments.
+- The interface supports 6 languages: English (default), Russian (for system locales `ru` and `be`), German (`de`), French (`fr`), Italian (`it`), and Spanish (`es`). The language is selected automatically from the Android system locale without additional interface controls.
+- The app does not request the `INTERNET` permission; inputs and calculations are processed locally. Reports are shared only at the user's initiative through Android and an app of their choice.
+- The app does not connect to banks, import transactions, or download market quotes or exchange rates.
+- The projection assumes a constant real return and relies on user-entered amounts and simplified scenarios. It is not a promise of returns or personalized financial, investment, or tax advice.
+- Fidelity is used as an age-based benchmark; the app is not affiliated with Fidelity Investments.
