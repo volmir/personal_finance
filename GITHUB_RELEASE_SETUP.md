@@ -1,14 +1,14 @@
 # Первая сборка и первый релиз на GitHub
 
-Проверено 3 ноября 2026 года для `volmir/personal_finance`, коммит приложения `d18261d`. Команды рассчитаны на Bash в Ubuntu x86_64. Первый релиз: **versionName `1.0`, versionCode `1`, тег `v1.0`**. Эти значения уже заданы в `app/build.gradle.kts` и рецепте F-Droid.
+Проверено 3 ноября 2026 года для `volmir/personal_finance`. Команды рассчитаны на Bash в Ubuntu x86_64. Первый релиз: **versionName `1.0`, versionCode `1`, тег `v1.0`**. Эти значения уже заданы в `app/build.gradle.kts` и рецепте F-Droid.
 
-## Последовательность трёх инструкций
+## Последовательность распространения
 
 1. Выполнить эту инструкцию: подготовить окружение и постоянный ключ → собрать и проверить APK → проверить приложение на устройстве → добавить секреты GitHub → отправить тег → дождаться APK в GitHub Release.
-2. Подать заявку в [F-Droid](./FDROID_SETUP.md), когда выполнены условия включения.
-3. Подать заявку в [IzzyOnDroid](./IZZYON_DROID_SETUP.md), если проект соответствует его правилам.
+2. Распространять APK через GitHub Releases. Для отслеживания обновлений в Obtainium добавить `https://github.com/volmir/personal_finance`.
+3. Заранее подготовить и проверить рецепт в `fdroiddata`; подать заявку в [F-Droid](./FDROID_SETUP.md) не раньше **10.01.2027**, если нет подтверждённого исключения из правила трёх месяцев.
 
-После публикации GitHub Release заявки в два каталога независимы: их можно готовить параллельно, ждать одобрения одного перед другим не требуется. До подачи в F-Droid выбрать способ подписи: собственная подпись через воспроизводимую сборку либо отдельная подпись F-Droid.
+До подачи в F-Droid выбрать способ подписи: собственная подпись через воспроизводимую сборку либо отдельная подпись F-Droid. Публикация через GitHub Releases и использование Obtainium доступны до включения в каталог.
 
 ## Результат проверки готовности
 
@@ -17,15 +17,14 @@
 | Репозиторий | Публичный, `main`, лицензия MIT |
 | Версия | `io.github.volmir.personalfinance`, `1.0` / `1`, minSdk 24, targetSdk 36 |
 | Инструменты проекта | AGP 9.1.1, Gradle Wrapper 9.3.1, JDK 17, compileSdk 36.1 |
-| Тесты текущего коммита в GitHub Actions | Успешны: [запуск 41610943612](https://github.com/volmir/personal_finance/actions/runs/41610943612) |
+| Тесты коммита `0e6a229` в GitHub Actions | Успешны: [запуск 41630516759](https://github.com/volmir/personal_finance/actions/runs/41630516759) |
 | Релизы и теги | Ещё не созданы |
-| Секреты подписи GitHub | Все четыре отсутствуют; релизная задача без них завершится ошибкой |
+| Секреты подписи GitHub | Наличие `KEYSTORE_BASE64`, `STORE_PASSWORD`, `KEY_PASSWORD`, `KEY_ALIAS` подтверждено; соответствие ключа и паролей проверяется релизной сборкой |
 | Локальная повторная сборка | Заблокирована окружением: `sdk.dir` указывает на отсутствующий `/tmp/personal-finance-build-tools/android-sdk`; JDK по умолчанию — 25 |
 | Существующий APK | `app-release-unsigned.apk`, 1 851 647 байт, от 02.11.2026; подписи нет, публиковать и устанавливать его нельзя |
 | Новая релизная сборка и Android Lint | Не подтверждены: локальная команда остановилась до запуска задач из-за отсутствия SDK |
 | Fastlane | 6 языков, по 4 скриншота; иконки 512×512; длины текстов укладываются в лимиты. Пропорции скриншотов 1080×2400 могут потребовать полей для валидаторов с ограничением 2:1 |
-| F-Droid | В рецепте отсутствуют `RepoType` и `Repo`; тег `v1.0` отсутствует. Дополнительно проверить условие возраста проекта и сборку в F-Droid CI |
-| IzzyOnDroid | Требуется подписанный APK; отдельно проверить применимость AI policy |
+| F-Droid | `RepoType` и `Repo` добавлены. Подготовить рецепт, полный SHA коммита и проверки сборки; дата подачи без исключения — 10.01.2027 |
 
 Вывод: проект подготовлен к выпуску частично. Успешный запуск тестов на `main` ещё не подтверждает сборку и работоспособность подписанного release APK: в текущем workflow релизная задача запускается только по тегу.
 
@@ -86,19 +85,19 @@ bash ./gradlew --version
 
 ## Шаг 2. Создать постоянный ключ подписи
 
-Выполнять генерацию только один раз. Если релизный ключ уже существует, использовать его вместо создания нового.
+Выполнять генерацию только один раз. В этом проекте четыре секрета GitHub уже добавлены: использовать существующий ключ и не создавать замену. Команды генерации ниже предназначены для первоначальной настройки нового ключа.
 
 ```bash
 umask 077
 mkdir -p "$HOME/.local/share/personal-finance-signing"
 export KEYSTORE_PATH="$HOME/.local/share/personal-finance-signing/release.p12"
-export KEY_ALIAS=upload
+export KEY_ALIAS=personalfinance
 test ! -e "$KEYSTORE_PATH" && keytool -genkeypair -v \
   -storetype PKCS12 -keystore "$KEYSTORE_PATH" -alias "$KEY_ALIAS" \
   -keyalg RSA -keysize 3072 -validity 10000
 ```
 
-Ввести пароль и данные сертификата. Для этого PKCS12 использовать одинаковый пароль хранилища и ключа. Сохранить ключ и пароль в отдельном защищённом резервном хранилище до публикации: последующие обновления должны сохранять совместимую подпись.
+Ввести пароль и данные сертификата. `personalfinance` — пример алиаса; для существующего ключа использовать фактический алиас, сохранённый в `KEY_ALIAS`. Для этого PKCS12 использовать одинаковый пароль хранилища и ключа. Сохранить ключ и пароль в отдельном защищённом резервном хранилище до публикации: последующие обновления должны сохранять совместимую подпись.
 
 Загрузить пароли в переменные текущего терминала без вывода на экран:
 
@@ -129,7 +128,7 @@ stat -c '%s bytes' "$APK_FILE"
 
 Продолжать только после успешной сборки и проверки подписи. В APK должны быть пакет `io.github.volmir.personalfinance`, версия `1.0`, код `1`; `debuggable` и `testOnly` должны отсутствовать либо быть `false`. Сертификат должен совпадать с ключом из шага 2, а не с Android Debug.
 
-Отчёты: `app/build/reports/tests/testDebugUnitTest/index.html` и `app/build/reports/lint-results-release.html`. Файл `app-release-unsigned.apk` появляется при сборке без переменных подписи; для GitHub/IzzyOnDroid он не подходит.
+Отчёты: `app/build/reports/tests/testDebugUnitTest/index.html` и `app/build/reports/lint-results-release.html`. Файл `app-release-unsigned.apk` появляется при сборке без переменных подписи; для распространения через GitHub он не подходит.
 
 Подключить тестовое устройство с USB debugging:
 
@@ -143,7 +142,7 @@ adb shell am start -n io.github.volmir.personalfinance/com.example.MainActivity
 
 ## Шаг 4. Добавить четыре секрета GitHub Actions
 
-Команды используют те же ключ и пароли, которыми проверена локальная сборка:
+Секреты уже созданы. Для проверки их наличия достаточно `gh secret list --repo volmir/personal_finance`; повторно загружать их не требуется. При первоначальной настройке или исправлении значений команды используют те же ключ и пароли, которыми проверена локальная сборка:
 
 ```bash
 gh auth status
@@ -155,7 +154,7 @@ gh secret list --repo volmir/personal_finance
 unset STORE_PASSWORD KEY_PASSWORD
 ```
 
-В списке должны быть `KEYSTORE_BASE64`, `STORE_PASSWORD`, `KEY_PASSWORD`, `KEY_ALIAS`. Base64 — представление файла, а не шифрование; промежуточный файл в репозитории не нужен. См. [gh secret set](https://cli.github.com/manual/gh_secret_set).
+В списке должны быть `KEYSTORE_BASE64`, `STORE_PASSWORD`, `KEY_PASSWORD`, `KEY_ALIAS`. `KEY_ALIAS` должен совпадать с алиасом в хранилище, например `personalfinance`; пароль хранилища и пароль ключа должны соответствовать ему. Base64 — представление файла, а не шифрование; промежуточный файл в репозитории не нужен. Для Linux: `base64 -w0 release.keystore`; для macOS: `base64 -i release.keystore`. См. [gh secret set](https://cli.github.com/manual/gh_secret_set).
 
 ## Шаг 5. Зафиксировать подготовку и отправить тег
 
@@ -166,7 +165,7 @@ cd /var/www/personal_finance
 git status --short
 git diff --check
 git diff
-git add -- GITHUB_RELEASE_SETUP.md FDROID_SETUP.md IZZYON_DROID_SETUP.md APP_DESCRIPTION.md
+git add -- README.md GITHUB_RELEASE_SETUP.md FDROID_SETUP.md .github/workflows/build-and-release.yml
 git diff --cached
 git commit -m "docs: prepare first release guides and English app description"
 git push origin main
@@ -210,6 +209,19 @@ sha256sum /tmp/personal-finance-v1.0/PersonalFinance-v1.0.apk
 ```
 
 Ожидается `conclusion: success` и файл **`PersonalFinance-v1.0.apk`** на странице [релиза v1.0](https://github.com/volmir/personal_finance/releases/tag/v1.0). Проверить совпадение отпечатка сертификата с шагом 2 и повторить проверку на устройстве именно скачанным файлом. Совпадение хеша APK локальной и CI-сборки пока не подтверждено; это отдельная проверка воспроизводимости.
+
+CI также прикрепляет `SHA256SUMS.txt` и `SIGNING_CERTIFICATE.txt`. Скачать их в тот же каталог и проверить APK:
+
+```bash
+gh release download v1.0 --repo volmir/personal_finance \
+  --pattern SHA256SUMS.txt --pattern SIGNING_CERTIFICATE.txt \
+  --dir /tmp/personal-finance-v1.0
+cd /tmp/personal-finance-v1.0
+sha256sum -c SHA256SUMS.txt
+cat SIGNING_CERTIFICATE.txt
+```
+
+Отпечаток сертификата из этого файла используется в README и при подготовке `AllowedAPKSigningKeys` для F-Droid. Проверка подписи и контрольной суммы не заменяет независимую проверку воспроизводимости по инструкции F-Droid.
 
 Если задача упала только из-за отсутствовавших секретов, после их добавления можно повторить запуск:
 

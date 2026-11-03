@@ -10,6 +10,25 @@
 
 ---
 
+## 📲 Installation
+
+- Download the signed APK from [GitHub Releases](https://github.com/volmir/personal_finance/releases).
+- For update tracking with [Obtainium](https://github.com/ImranR98/Obtainium), add `https://github.com/volmir/personal_finance` as the app source. Obtainium checks GitHub Releases for updates; it does not require a store listing.
+- Signing certificate SHA-256: see [SIGNING_CERTIFICATE.txt](https://github.com/volmir/personal_finance/releases/latest/download/SIGNING_CERTIFICATE.txt). Each release also includes `SHA256SUMS.txt` for checking the downloaded APK.
+- The app works offline and does not request the internet permission.
+
+Direct link for devices with Obtainium installed:
+
+[![Add to Obtainium](https://img.shields.io/badge/Obtainium-Add_app-536DFE.svg)](https://apps.obtainium.imranr.dev/redirect?r=obtainium://app/%7B%22id%22%3A%22io.github.volmir.personalfinance%22%2C%22url%22%3A%22https%3A%2F%2Fgithub.com%2Fvolmir%2Fpersonal_finance%22%2C%22author%22%3A%22volmir%22%2C%22name%22%3A%22Personal%20Finance%20%26%20FIRE%20Audit%22%7D)
+
+```text
+obtainium://add/https://github.com/volmir/personal_finance
+```
+
+See the [Obtainium deep-link documentation](https://wiki.obtainium.imranr.dev/deep_links/) for supported link formats.
+
+---
+
 ## 📖 App Description
 
 A complete description of the screens, fields, FIRE formulas, and model limitations is available in [APP_DESCRIPTION.md](./APP_DESCRIPTION.md).
@@ -141,10 +160,10 @@ JDK 17 is used for builds, JVM tests, Robolectric tests, and screenshot generati
 
 ```bash
 # Run all unit and Robolectric tests
-./gradlew testDebugUnitTest
+bash ./gradlew testDebugUnitTest
 
 # Run specific test suite
-./gradlew testDebugUnitTest --tests "com.example.ExampleRobolectricTest"
+bash ./gradlew testDebugUnitTest --tests "com.example.MainActivityRobolectricTest"
 ```
 
 ---
@@ -153,37 +172,42 @@ JDK 17 is used for builds, JVM tests, Robolectric tests, and screenshot generati
 
 ### 1. Clone the repository
 ```bash
-git clone https://github.com/<your-username>/<your-repo-name>.git
-cd <your-repo-name>
+git clone https://github.com/volmir/personal_finance.git
+cd personal_finance
 ```
 
 ### 2. Build Debug APK
 ```bash
-./gradlew assembleDebug
+bash ./gradlew assembleDebug
 ```
 The APK will be generated at: `app/build/outputs/apk/debug/app-debug.apk`.
 
 ### 3. Build Release APK
 ```bash
-./gradlew assembleRelease
+bash ./gradlew assembleRelease
 ```
-The APK will be generated at: `app/build/outputs/apk/release/app-release.apk`.
+With the signing environment configured as described in the [release guide](./GITHUB_RELEASE_SETUP.md), the signed APK will be generated at `app/build/outputs/apk/release/app-release.apk`. Without it, Gradle produces `app-release-unsigned.apk`.
 
 ---
 
 ## 🏪 Distribution
 
-All necessary configuration files and step-by-step publishing instructions are provided:
-- 🤖 **[F-Droid Inclusion Guide](./FDROID_SETUP.md):** Build manifest at `metadata/io.github.volmir.personalfinance.yml` and complete instructions for creating a merge request in `fdroiddata` on GitLab for inclusion in the official F-Droid repository.
-- 📦 **[IzzyOnDroid Distribution Guide](./IZZYON_DROID_SETUP.md):** Publish prebuilt APKs through GitHub Releases with automatic repository tracking.
-- 🚀 **[GitHub Actions CI/CD Workflow](./.github/workflows/build-and-release.yml):** Automatically builds a signed release APK when Git tags are published.
+Distribution uses signed GitHub Releases, with Obtainium available for update tracking:
+
+- 📦 **[GitHub Release Guide](./GITHUB_RELEASE_SETUP.md):** Prepare the signing key, verify the APK, and publish a tagged release.
+- 🤖 **[F-Droid Inclusion Guide](./FDROID_SETUP.md):** Prepare and test the build recipe in advance. Submit to the official repository no earlier than **January 10, 2027**, after three months of active development since October 10, 2026, unless a documented policy exception applies. Inclusion remains subject to review.
+- 🚀 **[GitHub Actions CI/CD Workflow](./.github/workflows/build-and-release.yml):** Builds the release APK on version tags, verifies its signature, and publishes it with APK checksums and public certificate information.
 - 📁 **Fastlane Metadata:** The single source of store titles and descriptions is [fastlane/metadata/android](./fastlane/metadata/android): `title.txt`, `short_description.txt`, and `full_description.txt` for `ru-RU`, `en-US`, `de-DE`, `es-ES`, `fr-FR`, and `it-IT`. Release notes are in `changelogs/1.txt`, and screenshots are in `images/phoneScreenshots/` for each locale.
 - 📄 **OSI-Approved License:** [MIT License](./LICENSE) in the project root.
+
+Independent verification of reproducible builds, including comparison with the GitHub APK using `apksigcopier`, is documented in the [F-Droid guide](./FDROID_SETUP.md). A verified signature and an APK checksum do not establish reproducibility; independent rebuild verification is still pending.
+
+F-Droid's [inclusion policy](https://f-droid.org/en/docs/Inclusion_Policy/) also allows distribution through a separate app repository. A self-hosted or third-party F-Droid repository is an optional future distribution channel.
 
 Screenshots of the four tabs are generated from the app's actual Compose interface using Robolectric with the light theme. To regenerate them with JDK 17 and the Android SDK installed:
 
 ```bash
-GENERATE_STORE_SCREENSHOTS=1 ./gradlew testDebugUnitTest --tests com.example.StoreScreenshotsTest --rerun-tasks
+GENERATE_STORE_SCREENSHOTS=1 bash ./gradlew testDebugUnitTest --tests com.example.StoreScreenshotsTest --rerun-tasks
 ```
 
 ---
