@@ -6,6 +6,9 @@ SourceCode: https://github.com/volmir/personal_finance
 IssueTracker: https://github.com/volmir/personal_finance/issues
 Changelog: https://github.com/volmir/personal_finance/releases
 
+RepoType: git
+Repo: https://github.com/volmir/personal_finance.git
+
 AutoUpdateMode: Version
 UpdateCheckMode: Tags
 CurrentVersion: '1.0'
