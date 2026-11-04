@@ -238,6 +238,7 @@ interface AppStrings {
     val fireHeroSubtitle: String
     val fireTimeToRetire: String
     val fireYearsSuffix: String
+    fun fireYearsSuffix(years: Double): String = plural(years, yearPluralForms)
     val fireHeroAssumption: String
     val fireRetirementAgeLabel: String
     val fireRetirementAgeValue: (age: String) -> String

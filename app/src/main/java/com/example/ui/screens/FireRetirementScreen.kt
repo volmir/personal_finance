@@ -259,7 +259,7 @@ fun FireRetirementScreen(
                                         )
                                     )
                                     Text(
-                                        text = strings.fireYearsSuffix,
+                                        text = strings.fireYearsSuffix(displayMetrics.yearsToRetirement),
                                         style = MaterialTheme.typography.titleMedium.copy(
                                             fontWeight = FontWeight.SemiBold,
                                             color = MaterialTheme.colorScheme.onSurface

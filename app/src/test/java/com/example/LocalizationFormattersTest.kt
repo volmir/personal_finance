@@ -190,4 +190,59 @@ class LocalizationFormattersTest {
         val enRatio = getAppStrings(AppLanguage.EN).fidelityProgressRatioFormat("$55,000", "$187,200")
         org.junit.Assert.assertEquals("($55,000 of $187,200)", enRatio)
     }
+
+    @Test
+    fun testFireYearsSuffixPluralization() {
+        val ru = getAppStrings(AppLanguage.RU)
+        val en = getAppStrings(AppLanguage.EN)
+        val de = getAppStrings(AppLanguage.DE)
+        val fr = getAppStrings(AppLanguage.FR)
+        val es = getAppStrings(AppLanguage.ES)
+        val it = getAppStrings(AppLanguage.IT)
+
+        // Fractional numbers in Russian take genitive singular: "года"
+        org.junit.Assert.assertEquals("года", ru.fireYearsSuffix(27.18))
+        org.junit.Assert.assertEquals("года", ru.fireYearsSuffix(15.5))
+
+        // Russian integer numbers
+        org.junit.Assert.assertEquals("год", ru.fireYearsSuffix(1.0))
+        org.junit.Assert.assertEquals("года", ru.fireYearsSuffix(2.0))
+        org.junit.Assert.assertEquals("лет", ru.fireYearsSuffix(5.0))
+        org.junit.Assert.assertEquals("лет", ru.fireYearsSuffix(11.0))
+        org.junit.Assert.assertEquals("год", ru.fireYearsSuffix(21.0))
+        org.junit.Assert.assertEquals("года", ru.fireYearsSuffix(23.0))
+        org.junit.Assert.assertEquals("лет", ru.fireYearsSuffix(25.0))
+
+        // English: 1.0 year, others years
+        org.junit.Assert.assertEquals("year", en.fireYearsSuffix(1.0))
+        org.junit.Assert.assertEquals("years", en.fireYearsSuffix(2.0))
+        org.junit.Assert.assertEquals("years", en.fireYearsSuffix(27.18))
+
+        // German: 1.0 Jahr, others Jahre
+        org.junit.Assert.assertEquals("Jahr", de.fireYearsSuffix(1.0))
+        org.junit.Assert.assertEquals("Jahre", de.fireYearsSuffix(2.0))
+        org.junit.Assert.assertEquals("Jahre", de.fireYearsSuffix(27.18))
+
+        // French: 1.0 an, 2.0+ ans
+        org.junit.Assert.assertEquals("an", fr.fireYearsSuffix(1.0))
+        org.junit.Assert.assertEquals("ans", fr.fireYearsSuffix(2.0))
+        org.junit.Assert.assertEquals("ans", fr.fireYearsSuffix(27.18))
+
+        // Spanish: 1.0 año, others años
+        org.junit.Assert.assertEquals("año", es.fireYearsSuffix(1.0))
+        org.junit.Assert.assertEquals("años", es.fireYearsSuffix(2.0))
+        org.junit.Assert.assertEquals("años", es.fireYearsSuffix(27.18))
+
+        // Italian: 1.0 anno, others anni
+        org.junit.Assert.assertEquals("anno", it.fireYearsSuffix(1.0))
+        org.junit.Assert.assertEquals("anni", it.fireYearsSuffix(2.0))
+        org.junit.Assert.assertEquals("anni", it.fireYearsSuffix(27.18))
+
+        // Verify no language returns any parenthesis or placeholder in fireYearsSuffix
+        listOf(ru, en, de, fr, es, it).forEach { strings ->
+            org.junit.Assert.assertFalse(strings.fireYearsSuffix(27.18).contains("("))
+            org.junit.Assert.assertFalse(strings.fireYearsSuffix(1.0).contains("("))
+            org.junit.Assert.assertFalse(strings.fireYearsSuffix.contains("("))
+        }
+    }
 }
