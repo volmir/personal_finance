@@ -13,19 +13,8 @@
 ## 📲 Installation
 
 - Download the signed APK from [GitHub Releases](https://github.com/volmir/personal_finance/releases).
-- For update tracking with [Obtainium](https://github.com/ImranR98/Obtainium), add `https://github.com/volmir/personal_finance` as the app source. Obtainium checks GitHub Releases for updates; it does not require a store listing.
 - Signing certificate SHA-256: `D6:7A:62:A2:33:C2:66:62:26:99:25:95:5C:65:34:64:82:0B:F1:21:E1:55:CA:82:73:59:C3:B9:9D:9B:66:09`. See [SIGNING_CERTIFICATE.txt](https://github.com/volmir/personal_finance/releases/latest/download/SIGNING_CERTIFICATE.txt) for certificate details. Each release also includes `SHA256SUMS.txt` for checking the downloaded APK.
 - The app works offline and does not request the internet permission.
-
-Direct link for devices with Obtainium installed:
-
-[![Add to Obtainium](https://img.shields.io/badge/Obtainium-Add_app-536DFE.svg)](https://apps.obtainium.imranr.dev/redirect?r=obtainium://app/%7B%22id%22%3A%22io.github.volmir.personalfinance%22%2C%22url%22%3A%22https%3A%2F%2Fgithub.com%2Fvolmir%2Fpersonal_finance%22%2C%22author%22%3A%22volmir%22%2C%22name%22%3A%22Personal%20Finance%20%26%20FIRE%20Audit%22%7D)
-
-```text
-obtainium://add/https://github.com/volmir/personal_finance
-```
-
-See the [Obtainium deep-link documentation](https://wiki.obtainium.imranr.dev/deep_links/) for supported link formats.
 
 ---
 
@@ -192,7 +181,7 @@ With `KEYSTORE_PATH`, `STORE_PASSWORD`, `KEY_PASSWORD`, and `KEY_ALIAS` set for 
 
 ## 🏪 Distribution
 
-Distribution uses signed GitHub Releases, with Obtainium available for update tracking:
+Distribution uses signed GitHub Releases:
 
 - 📦 **[GitHub Releases](https://github.com/volmir/personal_finance/releases):** Signed APKs, APK checksums, and public signing certificate information.
 - 🤖 **[F-Droid Inclusion Guide](./FDROID_SETUP.md):** Prepare and test the build recipe in advance. Submit to the official repository no earlier than **January 10, 2027**, after three months of active development since October 10, 2026, unless a documented policy exception applies. Inclusion remains subject to review.
