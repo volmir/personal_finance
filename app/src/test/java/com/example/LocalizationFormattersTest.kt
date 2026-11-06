@@ -123,6 +123,18 @@ class LocalizationFormattersTest {
     }
 
     @Test
+    fun ratioAndScoreDoNotDisplayMinusForRoundedZeroInEveryLanguage() {
+        for (lang in AppLanguage.values()) {
+            val zeroRatio = if (lang == AppLanguage.EN) "0.00" else "0,00"
+            val zeroScore = if (lang == AppLanguage.EN) "0.0" else "0,0"
+            for (value in listOf(-0.001, -0.0)) {
+                assertEquals("$lang ratio $value", zeroRatio, Formatters.formatRatio(value, lang))
+                assertEquals("$lang score $value", zeroScore, Formatters.formatScore(value, lang))
+            }
+        }
+    }
+
+    @Test
     fun nonFiniteMoneyNumbersAndPercentagesAreUnavailableInEveryLanguage() {
         for (lang in AppLanguage.values()) {
             for (value in listOf(Double.NaN, Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY)) {

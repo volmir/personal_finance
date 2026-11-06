@@ -645,6 +645,50 @@ class FinanceCalculatorTest {
     }
 
     @Test
+    fun `currency rounding feeds cash flow savings safety debt and cfs metrics`() {
+        val today = LocalDate.of(2026, 11, 6)
+        for ((currency, fraction) in listOf("$" to 0.005, "¥" to 0.5)) {
+            val unit = if (currency == "¥") 1.0 else 0.01
+            val input = FinancialInputData(
+                monthlyIncome = 100.0,
+                monthlyExpenses = 50.0,
+                liquidAssets = 100.0,
+                financialAssets = fraction,
+                propertyAssets = 100.0,
+                liabilities = 100.0,
+                includeFinancialInEmergencyFund = true,
+                currencySymbol = currency
+            )
+            val metrics = FinanceCalculator.calculate(input, extraMonthlyCashFlow = fraction, today = today)
+            assertEquals(currency, 50.0 + unit, metrics.cashFlow, 0.0)
+            assertEquals(currency, 200.0 + unit, metrics.totalAssets, 0.0)
+            assertEquals(currency, 100.0 + unit, metrics.netWorth, 0.0)
+            assertEquals(currency, 100.0 + unit, metrics.emergencyFund, 0.0)
+            assertEquals(currency, 100.0 + unit, metrics.fidelityCapital, 0.0)
+            assertEquals(currency, (50.0 + unit) / 100.0 * 100.0, metrics.savingsRate, 0.0)
+            assertEquals(currency, (100.0 + unit) / 50.0, metrics.safetyMonths, 0.0)
+            assertEquals(currency, 100.0 / (200.0 + unit), metrics.debtRatio, 0.0)
+            assertEquals(currency, (100.0 + unit) / 600.0, metrics.financialFreedomRatio, 0.0)
+
+            val zero = FinanceCalculator.calculate(input.copy(
+                monthlyIncome = 50.0,
+                liquidAssets = fraction / 2.0,
+                financialAssets = 0.0,
+                propertyAssets = 0.0,
+                liabilities = 0.0
+            ), extraMonthlyCashFlow = -fraction / 2.0, today = today)
+            assertEquals(currency, 0.0, zero.cashFlow, 0.0)
+            assertEquals(currency, 0.0, zero.savingsRate, 0.0)
+            assertEquals(currency, 0.0, zero.totalAssets, 0.0)
+            assertEquals(currency, 0.0, zero.emergencyFund, 0.0)
+            assertEquals(currency, 0.0, zero.safetyMonths, 0.0)
+            assertEquals(currency, 0.0, zero.netWorth, 0.0)
+            assertEquals(currency, 0.0, zero.fidelityCapital, 0.0)
+            assertEquals(currency, 0.0, zero.financialFreedomRatio, 0.0)
+        }
+    }
+
+    @Test
     fun `total score combinatorial status matches formatted string with specific rounding edges`() {
         val savingsList = listOf(0, 5, 6, 7, 8, 9, 10)
         val safetyList = listOf(0, 2, 4, 7, 9, 10)

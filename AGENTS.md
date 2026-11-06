@@ -139,7 +139,6 @@ Order for multi-step plans: numeric foundation (rounding, score) → status/text
 
 ## 9. Known open defects (remove a line when fixed)
 
-- Money sums compared with `== 0.0`; input fields keep more decimals than shown; formatters can print "-0,00".
 - Total score: display vs status mismatch at 6.95 and 3.5 (float sum).
 - Net worth subtitle prints a doubled colon (all six languages).
 - FIRE "assumptions" text says calculations ignore taxes (contradicts the tax model), in all six languages and in the export.

@@ -395,6 +395,23 @@ class NumberInputFieldRobolectricTest {
     }
 
     @Test
+    fun `percentage input saves half up ties while preserving focused text`() {
+        val value = mutableStateOf(0.0)
+        composeRule.setContent {
+            CompositionLocalProvider(LocalAppLanguage provides AppLanguage.EN) {
+                NumberInputField("Percent", value.value, "%", { value.value = it }, "percent", allowNegative = true, isMoney = false)
+            }
+        }
+        composeRule.onNodeWithTag("percent").performClick()
+        for ((input, expected) in listOf("7.545" to 7.55, "-7.545" to -7.55, "-0.001" to 0.0)) {
+            composeRule.onNodeWithTag("percent").performTextClearance()
+            composeRule.onNodeWithTag("percent").performTextInput(input)
+            composeRule.onNodeWithTag("percent").assertEditableTextEquals(input)
+            assertEquals(expected, value.value, 0.0)
+        }
+    }
+
+    @Test
     fun `yen input and value are whole integers`() {
         val yenValue = mutableStateOf(0.0)
         composeRule.setContent {
