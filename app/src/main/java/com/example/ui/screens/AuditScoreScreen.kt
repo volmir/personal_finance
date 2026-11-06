@@ -782,9 +782,9 @@ internal fun AuditOpinionIndicatorItem(
         text
     } else {
         val icon = when (status) {
-            AuditIndicatorStatus.POSITIVE -> if (text.contains("30") || text.contains("🎉")) "🎉" else "✅"
+            AuditIndicatorStatus.POSITIVE -> "✅"
             AuditIndicatorStatus.NEUTRAL -> "ℹ️"
-            AuditIndicatorStatus.NEGATIVE -> if (text.contains("< 0") || text.contains("долг", ignoreCase = true) || text.contains("debt", ignoreCase = true)) "🚨" else "⚠️"
+            AuditIndicatorStatus.NEGATIVE -> "⚠️"
         }
         "$icon $text"
     }

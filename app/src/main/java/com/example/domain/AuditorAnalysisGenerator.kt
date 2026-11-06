@@ -86,105 +86,109 @@ object AuditorAnalysisGenerator {
         val strings = getAppStrings(lang)
 
         // 1. Денежный поток (Cash Flow)
+        val cashFlowStatus = FinancialMetricEvaluator.getCashFlowStatus(metrics.cashFlow)
         val cashFlowAnalysis = when {
-            metrics.cashFlow > 0.0 -> AuditIndicatorAnalysis(
+            cashFlowStatus == AuditIndicatorStatus.POSITIVE -> AuditIndicatorAnalysis(
                 id = "cash_flow",
                 title = strings.auditCashFlowTitle,
-                status = AuditIndicatorStatus.POSITIVE,
+                status = cashFlowStatus,
                 text = String.format(Locale.ROOT, strings.auditCashFlowPositive, Formatters.formatMoney(metrics.cashFlow, currency, lang))
             )
             metrics.cashFlow == 0.0 -> AuditIndicatorAnalysis(
                 id = "cash_flow",
                 title = strings.auditCashFlowTitle,
-                status = FinancialMetricEvaluator.getCashFlowStatus(metrics.cashFlow),
+                status = cashFlowStatus,
                 text = String.format(Locale.ROOT, strings.auditCashFlowNeutral, currency)
             )
             else -> AuditIndicatorAnalysis(
                 id = "cash_flow",
                 title = strings.auditCashFlowTitle,
-                status = AuditIndicatorStatus.NEGATIVE,
+                status = cashFlowStatus,
                 text = String.format(Locale.ROOT, strings.auditCashFlowNegative, Formatters.formatMoney(metrics.cashFlow, currency, lang))
             )
         }
 
         // 2. Норма сбережений
-        val savingsRateAnalysis = when {
-            metrics.savingsRate > FinancialMetricEvaluator.SAVINGS_RATE_POSITIVE_THRESHOLD -> AuditIndicatorAnalysis(
+        val savingsRateStatus = FinancialMetricEvaluator.getSavingsRateStatus(metrics.savingsRate)
+        val savingsRateAnalysis = when (savingsRateStatus) {
+            AuditIndicatorStatus.POSITIVE -> AuditIndicatorAnalysis(
                 id = "savings_rate",
                 title = strings.auditSavingsRateTitle,
-                status = AuditIndicatorStatus.POSITIVE,
+                status = savingsRateStatus,
                 text = strings.auditSavingsRatePositive(
                     Formatters.formatPercent(metrics.savingsRate, lang),
                     strings.formatThreshold(FinancialMetricEvaluator.SAVINGS_RATE_POSITIVE_THRESHOLD)
                 )
             )
-            metrics.savingsRate > FinancialMetricEvaluator.SAVINGS_RATE_NEUTRAL_THRESHOLD -> AuditIndicatorAnalysis(
+            AuditIndicatorStatus.NEUTRAL -> AuditIndicatorAnalysis(
                 id = "savings_rate",
                 title = strings.auditSavingsRateTitle,
-                status = AuditIndicatorStatus.NEUTRAL,
+                status = savingsRateStatus,
                 text = strings.auditSavingsRateNeutral(
                     Formatters.formatPercent(metrics.savingsRate, lang),
                     strings.formatThreshold(FinancialMetricEvaluator.SAVINGS_RATE_NEUTRAL_THRESHOLD),
                     strings.formatThreshold(FinancialMetricEvaluator.SAVINGS_RATE_POSITIVE_THRESHOLD)
                 )
             )
-            else -> AuditIndicatorAnalysis(
+            AuditIndicatorStatus.NEGATIVE -> AuditIndicatorAnalysis(
                 id = "savings_rate",
                 title = strings.auditSavingsRateTitle,
-                status = AuditIndicatorStatus.NEGATIVE,
+                status = savingsRateStatus,
                 text = String.format(Locale.ROOT, strings.auditSavingsRateNegative, Formatters.formatPercent(metrics.savingsRate, lang))
             )
         }
 
         // 3. Подушка безопасности (сумма)
-        val emergencyFundAnalysis = when {
-            metrics.safetyMonths >= FinancialMetricEvaluator.SAFETY_MONTHS_POSITIVE_THRESHOLD -> AuditIndicatorAnalysis(
+        val safetyMonthsStatus = FinancialMetricEvaluator.getSafetyMonthsStatus(metrics.safetyMonths)
+        val emergencyFundAnalysis = when (safetyMonthsStatus) {
+            AuditIndicatorStatus.POSITIVE -> AuditIndicatorAnalysis(
                 id = "emergency_fund",
                 title = strings.auditEmergencyFundTitle,
-                status = AuditIndicatorStatus.POSITIVE,
+                status = safetyMonthsStatus,
                 text = String.format(Locale.ROOT, strings.auditEmergencyFundPositive, Formatters.formatMoney(metrics.emergencyFund, currency, lang))
             )
-            metrics.safetyMonths >= FinancialMetricEvaluator.SAFETY_MONTHS_NEUTRAL_THRESHOLD -> AuditIndicatorAnalysis(
+            AuditIndicatorStatus.NEUTRAL -> AuditIndicatorAnalysis(
                 id = "emergency_fund",
                 title = strings.auditEmergencyFundTitle,
-                status = AuditIndicatorStatus.NEUTRAL,
+                status = safetyMonthsStatus,
                 text = strings.auditEmergencyFundNeutral(
                     Formatters.formatMoney(metrics.emergencyFund, currency, lang),
                     strings.formatThreshold(FinancialMetricEvaluator.SAFETY_MONTHS_POSITIVE_THRESHOLD)
                 )
             )
-            else -> AuditIndicatorAnalysis(
+            AuditIndicatorStatus.NEGATIVE -> AuditIndicatorAnalysis(
                 id = "emergency_fund",
                 title = strings.auditEmergencyFundTitle,
-                status = AuditIndicatorStatus.NEGATIVE,
+                status = safetyMonthsStatus,
                 text = String.format(Locale.ROOT, strings.auditEmergencyFundNegative, Formatters.formatMoney(metrics.emergencyFund, currency, lang))
             )
         }
 
         // 4. Запас месячных расходов
         val safetyMonthsAnalysis = when {
-            metrics.safetyMonths >= FinancialMetricEvaluator.SAFETY_MONTHS_TIER_EXCELLENT -> AuditIndicatorAnalysis(
+            safetyMonthsStatus == AuditIndicatorStatus.POSITIVE &&
+                metrics.safetyMonths >= FinancialMetricEvaluator.SAFETY_MONTHS_TIER_EXCELLENT -> AuditIndicatorAnalysis(
                 id = "safety_months",
                 title = strings.auditSafetyMonthsTitle,
-                status = AuditIndicatorStatus.POSITIVE,
+                status = safetyMonthsStatus,
                 text = strings.auditSafetyMonthsHigh(
                     Formatters.formatRatio(metrics.safetyMonths, lang),
                     strings.formatThreshold(FinancialMetricEvaluator.SAFETY_MONTHS_TIER_EXCELLENT)
                 )
             )
-            metrics.safetyMonths >= FinancialMetricEvaluator.SAFETY_MONTHS_POSITIVE_THRESHOLD -> AuditIndicatorAnalysis(
+            safetyMonthsStatus == AuditIndicatorStatus.POSITIVE -> AuditIndicatorAnalysis(
                 id = "safety_months",
                 title = strings.auditSafetyMonthsTitle,
-                status = AuditIndicatorStatus.POSITIVE,
+                status = safetyMonthsStatus,
                 text = strings.auditSafetyMonthsTarget(
                     Formatters.formatRatio(metrics.safetyMonths, lang),
                     strings.formatThreshold(FinancialMetricEvaluator.SAFETY_MONTHS_POSITIVE_THRESHOLD)
                 )
             )
-            metrics.safetyMonths >= FinancialMetricEvaluator.SAFETY_MONTHS_NEUTRAL_THRESHOLD -> AuditIndicatorAnalysis(
+            safetyMonthsStatus == AuditIndicatorStatus.NEUTRAL -> AuditIndicatorAnalysis(
                 id = "safety_months",
                 title = strings.auditSafetyMonthsTitle,
-                status = AuditIndicatorStatus.NEUTRAL,
+                status = safetyMonthsStatus,
                 text = strings.auditSafetyMonthsNeutral(
                     Formatters.formatRatio(metrics.safetyMonths, lang),
                     strings.formatThreshold(FinancialMetricEvaluator.SAFETY_MONTHS_POSITIVE_THRESHOLD)
@@ -193,7 +197,7 @@ object AuditorAnalysisGenerator {
             else -> AuditIndicatorAnalysis(
                 id = "safety_months",
                 title = strings.auditSafetyMonthsTitle,
-                status = AuditIndicatorStatus.NEGATIVE,
+                status = safetyMonthsStatus,
                 text = strings.auditSafetyMonthsNegative(
                     Formatters.formatRatio(metrics.safetyMonths, lang),
                     strings.formatThreshold(FinancialMetricEvaluator.SAFETY_MONTHS_NEUTRAL_THRESHOLD),
@@ -204,27 +208,28 @@ object AuditorAnalysisGenerator {
 
         // 5. Коэффициент задолженности
         val debtPct = metrics.debtRatio * 100.0
+        val debtRatioStatus = FinancialMetricEvaluator.getDebtRatioStatus(metrics.debtRatio)
         val debtRatioAnalysis = when {
             metrics.debtRatio == 0.0 -> AuditIndicatorAnalysis(
                 id = "debt_ratio",
                 title = strings.auditDebtRatioTitle,
-                status = AuditIndicatorStatus.POSITIVE,
+                status = debtRatioStatus,
                 text = strings.auditDebtRatioZero
             )
-            metrics.debtRatio <= FinancialMetricEvaluator.DEBT_RATIO_POSITIVE_THRESHOLD -> AuditIndicatorAnalysis(
+            debtRatioStatus == AuditIndicatorStatus.POSITIVE -> AuditIndicatorAnalysis(
                 id = "debt_ratio",
                 title = strings.auditDebtRatioTitle,
-                status = AuditIndicatorStatus.POSITIVE,
+                status = debtRatioStatus,
                 text = String.format(Locale.ROOT,
                     strings.auditDebtRatioConservative,
                     Formatters.formatRatio(metrics.debtRatio, lang),
                     Formatters.formatPercent(debtPct, lang)
                 )
             )
-            metrics.debtRatio <= FinancialMetricEvaluator.DEBT_RATIO_NEUTRAL_THRESHOLD -> AuditIndicatorAnalysis(
+            debtRatioStatus == AuditIndicatorStatus.NEUTRAL -> AuditIndicatorAnalysis(
                 id = "debt_ratio",
                 title = strings.auditDebtRatioTitle,
-                status = AuditIndicatorStatus.NEUTRAL,
+                status = debtRatioStatus,
                 text = String.format(Locale.ROOT,
                     strings.auditDebtRatioModerate,
                     Formatters.formatRatio(metrics.debtRatio, lang),
@@ -234,7 +239,7 @@ object AuditorAnalysisGenerator {
             metrics.debtRatio <= FinancialMetricEvaluator.DEBT_RATIO_TIER_CRITICAL -> AuditIndicatorAnalysis(
                 id = "debt_ratio",
                 title = strings.auditDebtRatioTitle,
-                status = AuditIndicatorStatus.NEGATIVE,
+                status = debtRatioStatus,
                 text = String.format(Locale.ROOT,
                     strings.auditDebtRatioHigh,
                     Formatters.formatRatio(metrics.debtRatio, lang),
@@ -244,7 +249,7 @@ object AuditorAnalysisGenerator {
             else -> AuditIndicatorAnalysis(
                 id = "debt_ratio",
                 title = strings.auditDebtRatioTitle,
-                status = AuditIndicatorStatus.NEGATIVE,
+                status = debtRatioStatus,
                 text = String.format(Locale.ROOT,
                     strings.auditDebtRatioCritical,
                     Formatters.formatRatio(metrics.debtRatio, lang),

@@ -151,11 +151,15 @@ object FinancialMetricEvaluator {
         return liquid + financial - maxOf(0.0, liabilities - property)
     }
 
+    /**
+     * Вызывать только при CalculatedMetrics.isFidelityAvailable == true.
+     * При target <= 0 ориентир недоступен; возвращается 0.0, а не достижение цели.
+     */
     fun calculateFidelityRatio(capital: Double, target: Double): Double {
         return if (target > 0.0) {
             capital / target
         } else {
-            if (capital >= 0.0) 1.0 else 0.0
+            0.0
         }
     }
 
@@ -169,9 +173,13 @@ object FinancialMetricEvaluator {
         else -> AuditIndicatorStatus.NEGATIVE
     }
 
+    /**
+     * Вызывать только при CalculatedMetrics.isFidelityAvailable == true.
+     * При target <= 0 ориентир недоступен; возвращается NEUTRAL независимо от капитала.
+     */
     fun getFidelityStatus(capital: Double, target: Double): AuditIndicatorStatus {
         if (target <= 0.0) {
-            return if (capital >= 0.0) AuditIndicatorStatus.POSITIVE else AuditIndicatorStatus.NEGATIVE
+            return AuditIndicatorStatus.NEUTRAL
         }
         val ratio = capital / target
         return getFidelityStatus(ratio)

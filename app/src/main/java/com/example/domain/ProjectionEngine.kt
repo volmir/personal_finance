@@ -28,7 +28,9 @@ data class ProjectionParams(
     companion object {
         // Капитал FIRE = ликвидные + финансовые; имущество не учитывается; долги вычитаются только в части, не покрытой имуществом (покрытые имуществом долги обслуживаются через расходы)
         fun fireStartCapital(input: FinancialInputData): Double {
-            return maxOf(0.0, input.liquidAssets + input.financialAssets + minOf(0.0, input.propertyAssets - input.liabilities))
+            return maxOf(0.0, FinancialMetricEvaluator.fidelityCapital(
+                input.liquidAssets, input.financialAssets, input.propertyAssets, input.liabilities
+            ))
         }
 
         fun from(

@@ -1,5 +1,6 @@
 package com.example
 
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
@@ -16,6 +17,24 @@ import org.robolectric.RobolectricTestRunner
 class AuditScoreScreenRobolectricTest {
     @get:Rule
     val composeRule = createComposeRule()
+
+    @Test
+    fun `fallback icon depends only on status and ignores numbers debt words and embedded icons`() {
+        val current = mutableStateOf(AuditIndicatorStatus.POSITIVE to "30")
+        composeRule.setContent {
+            AuditOpinionIndicatorItem(text = current.value.second, status = current.value.first, id = "fallback")
+        }
+        for ((status, icon) in listOf(
+            AuditIndicatorStatus.POSITIVE to "✅", AuditIndicatorStatus.NEUTRAL to "ℹ️", AuditIndicatorStatus.NEGATIVE to "⚠️"
+        )) {
+            for (text in listOf("30", "< 0", "долг", "debt", "value 🎉")) {
+                composeRule.runOnIdle { current.value = status to text }
+                val node = composeRule.onNodeWithTag("audit_indicator_fallback").fetchSemanticsNode()
+                val displayed = node.config[SemanticsProperties.Text].joinToString(" ") { it.text }
+                assertEquals("$icon $text", displayed)
+            }
+        }
+    }
 
     @Test
     fun `CFS indicator in analytics block displays leading icon on positive status`() {
@@ -41,7 +60,7 @@ class AuditScoreScreenRobolectricTest {
     fun `CFS indicator in analytics block displays alert icon when CFS is in debt`() {
         composeRule.setContent {
             AuditOpinionIndicatorItem(
-                text = "КФС < 0 — Вы в долгах",
+                text = "🚨 КФС < 0 — Вы в долгах",
                 status = AuditIndicatorStatus.NEGATIVE,
                 id = "cfs"
             )
