@@ -14,6 +14,11 @@ object FinancialMetricEvaluator {
     // 1. Денежный поток (Cash Flow)
     // =========================================================================
 
+    /**
+     * Статус денежного потока:
+     * > 0 — позитивный,
+     * <= 0 — негативный.
+     */
     fun getCashFlowStatus(cashFlow: Double): AuditIndicatorStatus = when {
         cashFlow > 0.0 -> AuditIndicatorStatus.POSITIVE
         else -> AuditIndicatorStatus.NEGATIVE

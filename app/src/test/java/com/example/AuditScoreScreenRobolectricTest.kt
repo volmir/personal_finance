@@ -114,4 +114,36 @@ class AuditScoreScreenRobolectricTest {
 
         assertEquals(originalText, displayedText)
     }
+
+    @Test
+    fun `cash flow indicator with zero cash flow displays warning icon and negative status`() {
+        val input = com.example.data.model.FinancialInputData(
+            monthlyIncome = 50_000.0,
+            monthlyExpenses = 50_000.0
+        )
+        val metrics = com.example.domain.FinanceCalculator.calculate(input)
+        val opinion = com.example.domain.AuditorAnalysisGenerator.generate(input, metrics, com.example.util.localization.AppLanguage.RU)
+        val item = opinion.negative.first { it.id == "cash_flow" }
+
+        composeRule.setContent {
+            AuditOpinionIndicatorItem(
+                text = item.text,
+                status = item.status,
+                id = item.id
+            )
+        }
+
+        val node = composeRule.onNodeWithTag("audit_indicator_cash_flow").fetchSemanticsNode()
+        val textList = node.config.getOrElse(SemanticsProperties.Text) { emptyList() }
+        val displayedText = textList.joinToString(" ") { it.text }
+
+        assertTrue(
+            "Cash flow indicator text '$displayedText' should start with warning icon",
+            displayedText.startsWith("⚠️")
+        )
+        assertTrue(
+            "Cash flow indicator text should mention income equals expenses",
+            displayedText.contains("доходы равны расходам")
+        )
+    }
 }

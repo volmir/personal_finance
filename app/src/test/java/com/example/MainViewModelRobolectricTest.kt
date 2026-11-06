@@ -12,8 +12,12 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
+import com.example.domain.SimulatorScaleCalculator
+import com.example.domain.calculateSimulationOngoingExpenses
+import com.example.ui.FireSimulationState
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -124,5 +128,111 @@ class MainViewModelRobolectricTest {
         assertEquals(38.0, viewModel.trajectory.value.first().age, 0.0)
         assertEquals(viewModel.trajectory.value, viewModel.simulatedTrajectory.value)
         viewModel.flushPendingSave()
+    }
+
+    @Test
+    fun `expenseReduction at max scale re-clamps below new max when relocation scenario is toggled`() {
+        val viewModel = MainViewModel(app) { today }
+        viewModel.updateInputData { it.copy(monthlyIncome = 100_000.0, monthlyExpenses = 60_000.0) }
+        val input = viewModel.inputData.value
+        val ongoingBefore = calculateSimulationOngoingExpenses(
+            input.monthlyExpenses, 0.0, false, false, false
+        ).beforeReduction
+        val initialScale = SimulatorScaleCalculator.calculateExpensesConfig(
+            input.monthlyExpenses, input.monthlyIncome, ongoingBefore
+        )
+        val maxReduction = initialScale.maxValue.toDouble()
+
+        viewModel.updateSimulation(extraSavings = 0.0, realReturnDelta = 0.0, expReduction = maxReduction)
+        assertEquals(maxReduction, viewModel.fireSimulation.value.expenseReduction, 0.001)
+
+        // Включаем переезд (relocationLowerCost30: -30% к расходам)
+        viewModel.toggleScenario("pos_relocation")
+
+        val currentSim = viewModel.fireSimulation.value
+        val ongoingWithRelocation = calculateSimulationOngoingExpenses(
+            input.monthlyExpenses,
+            currentSim.expenseReduction,
+            currentSim.scenarios.expenseOptimization15,
+            currentSim.scenarios.relocationLowerCost30,
+            currentSim.scenarios.expensesPlus25
+        )
+        val newScale = SimulatorScaleCalculator.calculateExpensesConfig(
+            input.monthlyExpenses, input.monthlyIncome, ongoingWithRelocation.beforeReduction
+        )
+
+        // Значение <= нового максимума
+        assertTrue(currentSim.expenseReduction <= newScale.maxValue.toDouble())
+        assertEquals(newScale.maxValue.toDouble(), currentSim.expenseReduction, 0.001)
+
+        // Расчет совпадает с ползунком
+        assertEquals(ongoingWithRelocation.effective, viewModel.simulatedMetrics.value.annualExpenses / 12.0, 0.001)
+        viewModel.flushPendingSave()
+    }
+
+    @Test
+    fun `nominal return at 100 and inflation at 2_5 percent ensures all slider positions change metrics`() {
+        val viewModel = MainViewModel(app) { today }
+        viewModel.updateInputData {
+            it.copy(nominalReturnPercent = 100.0, inflationPercent = 2.5)
+        }
+        val input = viewModel.inputData.value
+        val metrics = viewModel.metrics.value
+        val returnConfig = SimulatorScaleCalculator.calculateReturnConfig(
+            realReturnPercent = metrics.realReturnPercent,
+            inflationPercent = input.inflationPercent
+        )
+
+        // При nominal = 100% шкала не должна позволять положительные дельты, создающие мёртвую зону
+        assertTrue(returnConfig.maxValue <= 0.0f)
+        assertTrue(returnConfig.steps > 0)
+
+        var previousRealReturn = Double.NEGATIVE_INFINITY
+        for (i in 0..returnConfig.steps + 1) {
+            val delta = (returnConfig.minValue + i * returnConfig.stepSize.toFloat()).toDouble()
+            viewModel.updateSimulation(extraSavings = 0.0, realReturnDelta = delta, expReduction = 0.0)
+            val simMetrics = viewModel.simulatedMetrics.value
+            // Метрики строго монотонно меняются при каждом положении ползунка
+            assertTrue("Step $i ($delta%) must change real return: ${simMetrics.realReturnPercent} > $previousRealReturn",
+                simMetrics.realReturnPercent > previousRealReturn)
+            previousRealReturn = simMetrics.realReturnPercent
+        }
+        viewModel.flushPendingSave()
+    }
+
+    @Test
+    fun `saved simulation state out of scale is bounded on launch`() {
+        val prefs = LocalPreferencesManager(app)
+        val outOfBoundsSim = FireSimulationState(
+            extraMonthlySavings = 100_000_000.0,
+            realReturnAdjustment = 500.0,
+            expenseReduction = 100_000_000.0
+        )
+        prefs.saveSimulationState(outOfBoundsSim)
+
+        val restartedViewModel = MainViewModel(app) { today }
+        val bounded = restartedViewModel.fireSimulation.value
+
+        val input = restartedViewModel.inputData.value
+        val metrics = restartedViewModel.metrics.value
+        val savingsConfig = SimulatorScaleCalculator.calculateSavingsConfig(
+            currentSavings = metrics.cashFlow,
+            monthlyIncome = input.monthlyIncome,
+            monthlyExpenses = input.monthlyExpenses,
+            currency = input.currencySymbol
+        )
+        val expensesConfig = SimulatorScaleCalculator.calculateExpensesConfig(
+            monthlyExpenses = input.monthlyExpenses,
+            monthlyIncome = input.monthlyIncome
+        )
+        val returnConfig = SimulatorScaleCalculator.calculateReturnConfig(
+            realReturnPercent = metrics.realReturnPercent,
+            inflationPercent = input.inflationPercent
+        )
+
+        assertEquals(savingsConfig.maxValue.toDouble(), bounded.extraMonthlySavings, 0.001)
+        assertEquals(expensesConfig.maxValue.toDouble(), bounded.expenseReduction, 0.001)
+        assertEquals(returnConfig.maxValue.toDouble(), bounded.realReturnAdjustment, 0.001)
+        assertEquals(bounded, prefs.loadSimulationState())
     }
 }

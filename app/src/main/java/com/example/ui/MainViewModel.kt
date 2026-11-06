@@ -165,6 +165,12 @@ class MainViewModel @JvmOverloads constructor(
     val simulatedTrajectory: StateFlow<List<TrajectoryPoint>> = _simulatedTrajectory.asStateFlow()
 
     init {
+        val loadedSim = _fireSimulation.value
+        val bounded = boundedSimulation(_inputData.value, _metrics.value, loadedSim)
+        if (bounded != loadedSim) {
+            _fireSimulation.value = bounded
+            localPrefs.saveSimulationState(bounded)
+        }
         recalculate()
     }
 
@@ -173,42 +179,53 @@ class MainViewModel @JvmOverloads constructor(
         localPrefs.saveCurrentTab(tab)
     }
 
+    private fun boundedSimulation(
+        input: FinancialInputData,
+        metrics: CalculatedMetrics,
+        sim: FireSimulationState
+    ): FireSimulationState {
+        val savingsConfig = SimulatorScaleCalculator.calculateSavingsConfig(
+            currentSavings = metrics.cashFlow,
+            monthlyIncome = input.monthlyIncome,
+            monthlyExpenses = input.monthlyExpenses,
+            currency = input.currencySymbol
+        )
+        val ongoingExpenses = calculateSimulationOngoingExpenses(
+            input.monthlyExpenses,
+            sim.expenseReduction,
+            sim.scenarios.expenseOptimization15,
+            sim.scenarios.relocationLowerCost30,
+            sim.scenarios.expensesPlus25
+        )
+        val expensesConfig = SimulatorScaleCalculator.calculateExpensesConfig(
+            monthlyExpenses = input.monthlyExpenses,
+            monthlyIncome = input.monthlyIncome,
+            ongoingExpenses = ongoingExpenses.beforeReduction,
+            currency = input.currencySymbol
+        )
+        val returnConfig = SimulatorScaleCalculator.calculateReturnConfig(
+            realReturnPercent = metrics.realReturnPercent,
+            inflationPercent = input.inflationPercent
+        )
+        return sim.copy(
+            extraMonthlySavings = sim.extraMonthlySavings.coerceIn(
+                savingsConfig.minValue.toDouble(), savingsConfig.maxValue.toDouble()
+            ),
+            expenseReduction = sim.expenseReduction.coerceIn(
+                expensesConfig.minValue.toDouble(), expensesConfig.maxValue.toDouble()
+            ),
+            realReturnAdjustment = sim.realReturnAdjustment.coerceIn(
+                returnConfig.minValue.toDouble(), returnConfig.maxValue.toDouble()
+            )
+        )
+    }
+
     fun updateInputData(transform: (FinancialInputData) -> FinancialInputData) {
         val updated = transform(_inputData.value)
         _inputData.value = updated
         val updatedMetrics = FinanceCalculator.calculate(updated, today = dateProvider())
-        val savingsConfig = SimulatorScaleCalculator.calculateSavingsConfig(
-            currentSavings = updatedMetrics.cashFlow,
-            monthlyIncome = updated.monthlyIncome,
-            monthlyExpenses = updated.monthlyExpenses,
-            currency = updated.currencySymbol
-        )
         val currentSimulation = _fireSimulation.value
-        val ongoingExpenses = calculateSimulationOngoingExpenses(
-            updated.monthlyExpenses,
-            currentSimulation.expenseReduction,
-            currentSimulation.scenarios.expenseOptimization15,
-            currentSimulation.scenarios.relocationLowerCost30,
-            currentSimulation.scenarios.expensesPlus25
-        )
-        val expensesConfig = SimulatorScaleCalculator.calculateExpensesConfig(
-            monthlyExpenses = updated.monthlyExpenses,
-            monthlyIncome = updated.monthlyIncome,
-            ongoingExpenses = ongoingExpenses.beforeReduction,
-            currency = updated.currencySymbol
-        )
-        val returnConfig = SimulatorScaleCalculator.calculateReturnConfig(updatedMetrics.realReturnPercent)
-        val boundedSimulation = currentSimulation.copy(
-            extraMonthlySavings = currentSimulation.extraMonthlySavings.coerceIn(
-                savingsConfig.minValue.toDouble(), savingsConfig.maxValue.toDouble()
-            ),
-            expenseReduction = currentSimulation.expenseReduction.coerceIn(
-                expensesConfig.minValue.toDouble(), expensesConfig.maxValue.toDouble()
-            ),
-            realReturnAdjustment = currentSimulation.realReturnAdjustment.coerceIn(
-                returnConfig.minValue.toDouble(), returnConfig.maxValue.toDouble()
-            )
-        )
+        val boundedSimulation = boundedSimulation(updated, updatedMetrics, currentSimulation)
         if (boundedSimulation != currentSimulation) {
             _fireSimulation.value = boundedSimulation
             localPrefs.saveSimulationState(boundedSimulation)
@@ -235,12 +252,14 @@ class MainViewModel @JvmOverloads constructor(
     }
 
     fun updateSimulation(extraSavings: Double, realReturnDelta: Double, expReduction: Double) {
-        _fireSimulation.value = _fireSimulation.value.copy(
+        val target = _fireSimulation.value.copy(
             extraMonthlySavings = extraSavings,
             realReturnAdjustment = realReturnDelta,
             expenseReduction = expReduction
         )
-        localPrefs.saveSimulationState(_fireSimulation.value)
+        val bounded = boundedSimulation(_inputData.value, _metrics.value, target)
+        _fireSimulation.value = bounded
+        localPrefs.saveSimulationState(bounded)
         recalculateSimulation()
     }
 
@@ -266,15 +285,18 @@ class MainViewModel @JvmOverloads constructor(
             "child_dependent" -> current.copy(childOrDependent18Years = !current.childOrDependent18Years)
             else -> current
         }
-        _fireSimulation.value = _fireSimulation.value.copy(scenarios = updated)
-        localPrefs.saveSimulationState(_fireSimulation.value)
+        val target = _fireSimulation.value.copy(scenarios = updated)
+        val bounded = boundedSimulation(_inputData.value, _metrics.value, target)
+        _fireSimulation.value = bounded
+        localPrefs.saveSimulationState(bounded)
         recalculateSimulation()
     }
 
     fun resetSimulation() {
         val resetState = FireSimulationState()
-        _fireSimulation.value = resetState
-        localPrefs.saveSimulationState(resetState)
+        val bounded = boundedSimulation(_inputData.value, _metrics.value, resetState)
+        _fireSimulation.value = bounded
+        localPrefs.saveSimulationState(bounded)
         recalculateSimulation()
     }
 

@@ -89,4 +89,22 @@ class SimulatorScaleCalculatorTest {
             assertTrue(config.stepSize > 0.0)
         }
     }
+
+    @Test
+    fun `return config with inflation clamps effective nominal between minus fifty and one hundred`() {
+        val nominal = 100.0
+        val inflation = 2.5
+        val real = com.example.domain.FinanceCalculator.calculateRealReturnPercent(nominal, inflation)
+        val config = SimulatorScaleCalculator.calculateReturnConfig(real, inflation)
+
+        assertTrue(config.maxValue <= 0.0f)
+        for (i in 0..config.steps + 1) {
+            val delta = config.minValue + i * config.stepSize.toFloat()
+            val targetReal = (real + delta) / 100.0
+            val effInfl = inflation / 100.0
+            val effectiveNominal = ((1.0 + targetReal) * (1.0 + effInfl) - 1.0) * 100.0
+            assertTrue(effectiveNominal >= -50.0 - 0.00001)
+            assertTrue(effectiveNominal <= 100.0 + 0.00001)
+        }
+    }
 }

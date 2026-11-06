@@ -6,6 +6,7 @@ import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
 import com.example.data.model.FinancialInputData
 import com.example.domain.FinanceCalculator
 import com.example.ui.screens.MetricsScreen
@@ -45,5 +46,27 @@ class MetricsScreenRobolectricTest {
 
         // None of the individual score badges (e.g. "/ 10") should appear in MetricsScreen
         composeRule.onAllNodesWithText("/ 10", substring = true).assertCountEquals(0)
+    }
+
+    @Test
+    fun `when cashFlow is zero MetricsScreen displays income equals expenses subtitle`() {
+        val input = FinancialInputData(
+            monthlyIncome = 50_000.0,
+            monthlyExpenses = 50_000.0
+        )
+        val metrics = FinanceCalculator.calculate(input, today = LocalDate.of(2025, 1, 1))
+
+        composeRule.setContent {
+            MaterialTheme {
+                CompositionLocalProvider(
+                    LocalAppLanguage provides AppLanguage.RU,
+                    LocalAppStrings provides StringsRu
+                ) {
+                    MetricsScreen(inputData = input, metrics = metrics)
+                }
+            }
+        }
+
+        composeRule.onNodeWithText(StringsRu.metricCashFlowNeutralSub).assertExists()
     }
 }

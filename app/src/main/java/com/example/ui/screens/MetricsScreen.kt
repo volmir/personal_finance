@@ -185,10 +185,10 @@ fun MetricsScreen(
                     description = strings.metricCashFlowDesc,
                     icon = Icons.Default.MonetizationOn,
                     highlightColor = StatusColors.getColor(FinancialMetricEvaluator.getCashFlowStatus(metrics.cashFlow)),
-                    subValue = when (FinancialMetricEvaluator.getCashFlowStatus(metrics.cashFlow)) {
-                        AuditIndicatorStatus.POSITIVE -> strings.metricCashFlowPositiveSub
-                        AuditIndicatorStatus.NEUTRAL -> strings.metricCashFlowNeutralSub
-                        AuditIndicatorStatus.NEGATIVE -> strings.metricCashFlowNegativeSub
+                    subValue = when {
+                        metrics.cashFlow > 0.0 -> strings.metricCashFlowPositiveSub
+                        metrics.cashFlow == 0.0 -> strings.metricCashFlowNeutralSub
+                        else -> strings.metricCashFlowNegativeSub
                     }
                 )
             }

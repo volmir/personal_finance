@@ -593,7 +593,7 @@ val StringsFr: AppStrings = object : AppStrings {
     // Auditor Indicators
     override val auditCashFlowTitle: String = "Flux de trésorerie (Cash-flow)"
     override val auditCashFlowPositive: String = "✅ Cash-flow (+%1${'$'}s/mois) : Excédent budgétaire. Vos revenus dépassent vos dépenses, dégageant une capacité régulière d'investissement et d'enrichissement."
-    override val auditCashFlowNeutral: String = "ℹ️ Cash-flow (0 %1${'$'}s/mois) : Budget à l'équilibre (revenus égaux aux dépenses). Aucun endettement supplémentaire, mais aucun surplus pour bâtir un capital."
+    override val auditCashFlowNeutral: String = "⚠️ Cash-flow (0 %1${'$'}s/mois) : Budget à l'équilibre (revenus égaux aux dépenses). Aucun endettement supplémentaire, mais aucun surplus pour bâtir un capital. Il n'y a pas de ressource disponible pour l'épargne, l'indicateur est donc négatif."
     override val auditCashFlowNegative: String = "🚨 Cash-flow (%1${'$'}s/mois) : Déficit budgétaire ! Les dépenses courantes dépassent les revenus, entamant l'épargne ou creusant la dette."
 
     override val auditSavingsRateTitle: String = "Taux d'épargne"

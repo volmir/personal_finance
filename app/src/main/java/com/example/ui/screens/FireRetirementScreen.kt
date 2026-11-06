@@ -116,9 +116,10 @@ fun FireRetirementScreen(
         )
     }
 
-    val returnConfig = remember(metrics.realReturnPercent) {
+    val returnConfig = remember(metrics.realReturnPercent, inputData.inflationPercent) {
         SimulatorScaleCalculator.calculateReturnConfig(
-            realReturnPercent = metrics.realReturnPercent
+            realReturnPercent = metrics.realReturnPercent,
+            inflationPercent = inputData.inflationPercent
         )
     }
 
@@ -695,14 +696,13 @@ fun FireRetirementScreen(
                             )
                         }
                         Slider(
-                            value = simulationState.extraMonthlySavings.toFloat()
-                                .coerceIn(savingsConfig.minValue, savingsConfig.maxValue),
+                            value = simulationState.extraMonthlySavings.toFloat(),
                             onValueChange = { rawValue ->
                                 val snapped = kotlin.math.round(rawValue / savingsConfig.stepSize) * savingsConfig.stepSize
                                 onUpdateSimulation(
-                                    snapped.coerceIn(savingsConfig.minValue.toDouble(), savingsConfig.maxValue.toDouble()),
-                                    simulationState.realReturnAdjustment.coerceIn(returnConfig.minValue.toDouble(), returnConfig.maxValue.toDouble()),
-                                    simulationState.expenseReduction.coerceIn(expensesConfig.minValue.toDouble(), expensesConfig.maxValue.toDouble())
+                                    snapped,
+                                    simulationState.realReturnAdjustment,
+                                    simulationState.expenseReduction
                                 )
                             },
                             valueRange = savingsConfig.minValue..savingsConfig.maxValue,
@@ -800,14 +800,13 @@ fun FireRetirementScreen(
                             )
                         }
                         Slider(
-                            value = simulationState.expenseReduction.toFloat()
-                                .coerceIn(expensesConfig.minValue, expensesConfig.maxValue),
+                            value = simulationState.expenseReduction.toFloat(),
                             onValueChange = { rawValue ->
                                 val snapped = kotlin.math.round(rawValue / expensesConfig.stepSize) * expensesConfig.stepSize
                                 onUpdateSimulation(
-                                    simulationState.extraMonthlySavings.coerceIn(savingsConfig.minValue.toDouble(), savingsConfig.maxValue.toDouble()),
-                                    simulationState.realReturnAdjustment.coerceIn(returnConfig.minValue.toDouble(), returnConfig.maxValue.toDouble()),
-                                    snapped.coerceIn(expensesConfig.minValue.toDouble(), expensesConfig.maxValue.toDouble())
+                                    simulationState.extraMonthlySavings,
+                                    simulationState.realReturnAdjustment,
+                                    snapped
                                 )
                             },
                             valueRange = expensesConfig.minValue..expensesConfig.maxValue,
@@ -890,14 +889,13 @@ fun FireRetirementScreen(
                             )
                         }
                         Slider(
-                            value = simulationState.realReturnAdjustment.toFloat()
-                                .coerceIn(returnConfig.minValue, returnConfig.maxValue),
+                            value = simulationState.realReturnAdjustment.toFloat(),
                             onValueChange = { rawValue ->
                                 val snapped = kotlin.math.round(rawValue / returnConfig.stepSize) * returnConfig.stepSize
                                 onUpdateSimulation(
-                                    simulationState.extraMonthlySavings.coerceIn(savingsConfig.minValue.toDouble(), savingsConfig.maxValue.toDouble()),
-                                    snapped.coerceIn(returnConfig.minValue.toDouble(), returnConfig.maxValue.toDouble()),
-                                    simulationState.expenseReduction.coerceIn(expensesConfig.minValue.toDouble(), expensesConfig.maxValue.toDouble())
+                                    simulationState.extraMonthlySavings,
+                                    snapped,
+                                    simulationState.expenseReduction
                                 )
                             },
                             valueRange = returnConfig.minValue..returnConfig.maxValue,

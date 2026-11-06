@@ -141,11 +141,9 @@ Order for multi-step plans: numeric foundation (rounding, score) → status/text
 
 - Money sums compared with `== 0.0`; input fields keep more decimals than shown; formatters can print "-0,00".
 - Total score: display vs status mismatch at 6.95 and 3.5 (float sum).
-- Cash flow exactly 0: status NEGATIVE but texts say "income equals expenses" (Metrics subtitle, Audit icon and group).
 - Net worth subtitle prints a doubled colon (all six languages).
 - FIRE "assumptions" text says calculations ignore taxes (contradicts the tax model), in all six languages and in the export.
 - CFS description intervals use `<=` upper bounds; code uses `[a, b)`. Audit CFS texts do not mention that property is included.
-- Slider values are not re-clamped after scenario toggles or on restore from preferences; return slider ignores the 100% nominal clamp.
 - `loadData` / `loadSimulationState` do not sanitize values.
 - Invalid birth date shows "0 years / 0.00x" instead of "—"; Russian age phrases use the wrong plural ("возраст 22 лет").
 - "Job loss" scenario uses base income while mortgage/car use income after the salary raise; scenario descriptions can differ from computed amounts.

@@ -135,9 +135,12 @@ object SimulatorScaleCalculator {
     /**
      * Шкала 3: Реальная доходность капитала (realReturnAdjustment).
      * Динамически рассчитывает диапазон и шаг исходя из текущей реальной доходности капитала.
+     * При заданной инфляции ограничивает диапазон так, чтобы эффективная номинальная доходность
+     * оставалась в пределах [-50%; 100%] (FinancialInputLimits). Границы округляются внутрь шага.
      */
     fun calculateReturnConfig(
-        realReturnPercent: Double
+        realReturnPercent: Double,
+        inflationPercent: Double? = null
     ): SimulatorScaleConfig {
         val absReturn = abs(realReturnPercent)
 
@@ -153,10 +156,28 @@ object SimulatorScaleCalculator {
         } else {
             -(maxOf(absReturn * 1.5, 3.0))
         }
-        val minAdjustment = -(ceil(abs(targetMin) / stepSize) * stepSize)
+        var minAdjustment = -(ceil(abs(targetMin) / stepSize) * stepSize)
 
         val targetMax = maxOf(absReturn * 1.5, 5.0)
-        val maxAdjustment = ceil(targetMax / stepSize) * stepSize
+        var maxAdjustment = ceil(targetMax / stepSize) * stepSize
+
+        if (inflationPercent != null) {
+            val effInfl = FinancialInputLimits.clampRatePercent(inflationPercent) / 100.0
+            val maxAllowedReal = ((1.0 + FinancialInputLimits.MAX_RATE_PERCENT / 100.0) / (1.0 + effInfl) - 1.0) * 100.0
+            val minAllowedReal = ((1.0 + FinancialInputLimits.MIN_RATE_PERCENT / 100.0) / (1.0 + effInfl) - 1.0) * 100.0
+            val maxAllowedDelta = maxAllowedReal - realReturnPercent
+            val minAllowedDelta = minAllowedReal - realReturnPercent
+
+            val boundedMax = floor((maxAllowedDelta + 1e-9) / stepSize) * stepSize
+            val boundedMin = ceil((minAllowedDelta - 1e-9) / stepSize) * stepSize
+
+            maxAdjustment = minOf(maxAdjustment, boundedMax)
+            minAdjustment = maxOf(minAdjustment, boundedMin)
+
+            if (maxAdjustment < minAdjustment) {
+                maxAdjustment = minAdjustment
+            }
+        }
 
         val span = maxAdjustment - minAdjustment
         val intervals = (span / stepSize).roundToInt().coerceAtLeast(1)
