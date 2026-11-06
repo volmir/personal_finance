@@ -302,6 +302,8 @@ class MainViewModel @JvmOverloads constructor(
         recalculateSimulation()
     }
 
+    fun refresh() = recalculate()
+
     private fun recalculate() {
         val today = dateProvider()
         val currentInput = _inputData.value

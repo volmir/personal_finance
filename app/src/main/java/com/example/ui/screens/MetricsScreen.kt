@@ -324,7 +324,9 @@ fun MetricsScreen(
                     description = strings.metricFidelityDesc,
                     icon = Icons.Default.Flag,
                     highlightColor = fidelityColor,
-                    subValue = strings.metricFidelitySubFormat(metrics.currentAge, Formatters.formatRatio(metrics.fidelityMultiplier, lang)),
+                    subValue = if (metrics.isAgeValid) {
+                        strings.metricFidelitySubFormat(metrics.currentAge, Formatters.formatRatio(metrics.fidelityMultiplier, lang))
+                    } else strings.metricUnavailableValue,
                     extraContent = {
                         Column {
                             Row(

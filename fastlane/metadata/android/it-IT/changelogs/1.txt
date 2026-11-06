@@ -4,3 +4,4 @@
 • Funzionamento completamente offline, senza raccolta di dati
 • Chiariti etichetta e avviso per il flusso di cassa nullo.
 • Corretto il caricamento di dati numerici e impostazioni del simulatore danneggiati.
+• Corretti i suggerimenti sull'orizzonte e l'aggiornamento dell'età al ritorno nell'app.

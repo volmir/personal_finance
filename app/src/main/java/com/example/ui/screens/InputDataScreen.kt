@@ -461,7 +461,7 @@ fun InputDataScreen(
                     }
                     val currentAge = metrics.currentAge
                     val enteredLifeExpectancy = lifeExpectancyText.toIntOrNull()
-                    val lifeExpectancyInvalid = enteredLifeExpectancy != null &&
+                    val lifeExpectancyInvalid = enteredLifeExpectancy == null ||
                         enteredLifeExpectancy !in ((currentAge + 1)..120)
                     OutlinedTextField(
                         value = lifeExpectancyText,
@@ -476,7 +476,12 @@ fun InputDataScreen(
                         label = { Text(strings.lifeExpectancyLabel) },
                         isError = lifeExpectancyInvalid,
                         supportingText = if (lifeExpectancyInvalid) {
-                            { Text(strings.lifeExpectancyError, color = MaterialTheme.colorScheme.error, fontSize = 11.sp) }
+                            {
+                                Column {
+                                    Text(strings.lifeExpectancyError, color = MaterialTheme.colorScheme.error, fontSize = 11.sp)
+                                    Text(strings.lifeExpectancyUsedValueFormat(inputData.lifeExpectancy), fontSize = 11.sp)
+                                }
+                            }
                         } else null,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         singleLine = true,
@@ -506,7 +511,9 @@ fun InputDataScreen(
                 MetricIndicatorRow(
                     title = strings.horizonTitle,
                     formula = strings.horizonFormula,
-                    value = strings.horizonValueFormat(metrics.remainingYearsHorizon, metrics.currentAge),
+                    value = if (metrics.isAgeValid) {
+                        strings.horizonValueFormat(metrics.remainingYearsHorizon, metrics.currentAge)
+                    } else strings.metricUnavailableValue,
                     valueColor = MaterialTheme.colorScheme.primary
                 )
             }

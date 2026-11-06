@@ -115,6 +115,7 @@ interface AppStrings {
     val invalidBirthDateError: String
     val lifeExpectancyLabel: String
     val lifeExpectancyError: String
+    val lifeExpectancyUsedValueFormat: (years: Int) -> String
     val fireHorizonBreakdownName: String
     val fireHorizonHintCollapsed: String
     val fireHorizonHintExpanded: String

@@ -275,6 +275,7 @@ val StringsEn: AppStrings = object : AppStrings {
     override val invalidBirthDateError: String = "Please specify a valid birth date"
     override val lifeExpectancyLabel: String = "Life expectancy (yrs)"
     override val lifeExpectancyError: String = "Life expectancy must be greater than your current age and no more than 120 years"
+    override val lifeExpectancyUsedValueFormat: (years: Int) -> String = { years -> "Calculation: $years ${plural(years, yearPluralForms)}" }
     override val fireHorizonBreakdownName: String = "Age & FIRE Horizon"
     override val fireHorizonHintCollapsed: String = "How to determine age and life expectancy? (hint)"
     override val fireHorizonHintExpanded: String = "Hide hint for age and horizon"

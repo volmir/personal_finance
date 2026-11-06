@@ -143,9 +143,8 @@ Order for multi-step plans: numeric foundation (rounding, score) → status/text
 - Net worth subtitle prints a doubled colon (all six languages).
 - FIRE "assumptions" text says calculations ignore taxes (contradicts the tax model), in all six languages and in the export.
 - CFS description intervals use `<=` upper bounds; code uses `[a, b)`. Audit CFS texts do not mention that property is included.
-- Invalid birth date shows "0 years / 0.00x" instead of "—"; Russian age phrases use the wrong plural ("возраст 22 лет").
+- Russian age phrases use the wrong plural ("возраст 22 лет").
 - "Job loss" scenario uses base income while mortgage/car use income after the salary raise; scenario descriptions can differ from computed amounts.
-- Metrics are not recalculated on app resume (age can be stale across a date change).
 
 ## 10. Release and F-Droid
 

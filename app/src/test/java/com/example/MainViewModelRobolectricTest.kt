@@ -295,6 +295,28 @@ class MainViewModelRobolectricTest {
     }
 
     @Test
+    fun `refresh advances age on birthday in base and simulated metrics without changing saved input`() {
+        var currentDate = today
+        val viewModel = MainViewModel(app) { currentDate }
+        viewModel.updateInputData { it.copy(birthDate = "1988-11-01") }
+        viewModel.toggleScenario("pos_relocation")
+        viewModel.flushPendingSave()
+        val input = viewModel.inputData.value
+        val simulation = viewModel.fireSimulation.value
+        assertEquals(37, viewModel.metrics.value.currentAge)
+
+        currentDate = today.plusDays(1)
+        viewModel.refresh()
+
+        assertEquals(38, viewModel.metrics.value.currentAge)
+        assertEquals(38, viewModel.simulatedMetrics.value.currentAge)
+        assertEquals(38.0, viewModel.trajectory.value.first().age, 0.0)
+        assertEquals(38.0, viewModel.simulatedTrajectory.value.first().age, 0.0)
+        assertEquals(input, viewModel.inputData.value)
+        assertEquals(input, LocalPreferencesManager(app).loadData())
+        assertEquals(simulation, viewModel.fireSimulation.value)
+    }
+    @Test
     fun `expenseReduction at max scale re-clamps below new max when relocation scenario is toggled`() {
         val viewModel = MainViewModel(app) { today }
         viewModel.updateInputData { it.copy(monthlyIncome = 100_000.0, monthlyExpenses = 60_000.0) }

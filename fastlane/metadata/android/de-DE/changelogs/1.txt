@@ -4,3 +4,4 @@
 • Vollständig offline, ohne Datenerfassung
 • Beschriftung und Warnhinweis für einen Cashflow von null präzisiert.
 • Laden beschädigter Zahlendaten und Simulatoreinstellungen korrigiert.
+• Horizonthinweise und Altersaktualisierung bei Rückkehr zur App korrigiert.

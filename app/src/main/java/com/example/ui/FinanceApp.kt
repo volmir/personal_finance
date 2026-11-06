@@ -54,6 +54,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import com.example.ui.screens.AuditScoreScreen
 import com.example.ui.screens.FireRetirementScreen
 import com.example.ui.screens.InputDataScreen
@@ -70,6 +72,9 @@ import com.example.util.localization.getAppStrings
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FinanceApp(viewModel: MainViewModel) {
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        viewModel.refresh()
+    }
     val configuration = LocalConfiguration.current
     val systemLanguageCode = configuration.locales.get(0)?.language ?: configuration.locale.language
     LaunchedEffect(systemLanguageCode) {

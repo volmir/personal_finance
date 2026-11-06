@@ -35,6 +35,33 @@ class MetricsScreenRobolectricTest {
     val composeRule = createComposeRule()
 
     @Test
+    fun `invalid birth date shows unavailable Fidelity subtitle in every language`() {
+        val input = FinancialInputData.usAverageData().copy(birthDate = "invalid-date")
+        val metrics = FinanceCalculator.calculate(input, today = LocalDate.of(2026, 11, 6))
+        val language = mutableStateOf(AppLanguage.RU)
+        composeRule.setContent {
+            MaterialTheme {
+                CompositionLocalProvider(
+                    LocalAppLanguage provides language.value,
+                    LocalAppStrings provides getAppStrings(language.value)
+                ) {
+                    MetricsScreen(inputData = input, metrics = metrics, modifier = Modifier.testTag("invalid_age_metrics_list"))
+                }
+            }
+        }
+        composeRule.onNodeWithText(getAppStrings(AppLanguage.RU).categoryBenchmarks).performClick()
+        for (lang in AppLanguage.values()) {
+            composeRule.runOnIdle { language.value = lang }
+            val strings = getAppStrings(lang)
+            val cardTag = "metric_card_${strings.metricFidelityTitle.replace(" ", "_")}"
+            composeRule.onNodeWithTag("invalid_age_metrics_list").performScrollToNode(hasTestTag(cardTag))
+            composeRule.onNodeWithText(strings.metricFidelitySubFormat(0, if (lang == AppLanguage.EN) "0.00" else "0,00")).assertDoesNotExist()
+            val texts = composeRule.onNodeWithTag(cardTag).fetchSemanticsNode().config[SemanticsProperties.Text]
+            assertTrue("$lang subtitle, target and progress must be unavailable", texts.count { it.text == strings.metricUnavailableValue } >= 3)
+        }
+    }
+
+    @Test
     fun `zero cash flow subtitle says income equals expenses in every language`() {
         val input = FinancialInputData.usAverageData().copy(monthlyIncome = 4_800.0, monthlyExpenses = 4_800.0)
         val metrics = FinanceCalculator.calculate(input, today = LocalDate.of(2026, 11, 6))

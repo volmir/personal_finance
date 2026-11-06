@@ -4,3 +4,4 @@
 • Fonctionnement entièrement hors ligne, sans collecte de données
 • Libellé et avertissement précisés pour un flux de trésorerie nul.
 • Correction du chargement des données numériques et paramètres de simulation corrompus.
+• Correction des indications d'horizon et de l'âge au retour dans l'application.
