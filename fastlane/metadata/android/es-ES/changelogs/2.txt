@@ -1,0 +1,6 @@
+• Corregidos el redondeo monetario, el cero negativo y los umbrales de puntuación.
+• Alineados los rangos del simulador, cálculos y descripciones de escenarios.
+• Corregidos los datos guardados no válidos y la edad al volver a la aplicación.
+• Aclaradas las indicaciones de edad y horizonte FIRE.
+• Corregidos los textos sobre impuestos, CFS y flujo de caja nulo en los seis idiomas.
+• Actualizadas las capturas.

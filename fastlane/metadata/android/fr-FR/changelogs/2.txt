@@ -1,0 +1,6 @@
+• Correction des arrondis monétaires, du zéro négatif et des seuils de score.
+• Harmonisation des curseurs, calculs et descriptions des scénarios.
+• Correction des données enregistrées invalides et de l’âge au retour dans l’application.
+• Précision des indications d’âge et d’horizon FIRE.
+• Correction des textes sur les impôts, le CFS et le flux de trésorerie nul dans les six langues.
+• Captures d’écran actualisées.

@@ -1,0 +1,6 @@
+• Währungsrundung, negative Null und Bewertungsgrenzen korrigiert.
+• Simulatorbereiche, Szenarioberechnungen und Beschreibungen abgestimmt.
+• Laden ungültiger Daten und Altersaktualisierung bei Rückkehr zur App korrigiert.
+• Hinweise zu Alter und FIRE-Zeithorizont präzisiert.
+• Texte zu Steuern, CFS und ausgeglichenem Cashflow in allen sechs Sprachen korrigiert.
+• Screenshots aktualisiert.

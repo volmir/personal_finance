@@ -1,0 +1,6 @@
+• Fixed currency rounding, negative zero and score boundaries.
+• Aligned simulator ranges, scenario calculations and descriptions.
+• Fixed invalid saved data handling and age refresh when returning to the app.
+• Clarified age and FIRE horizon hints.
+• Corrected tax, CFS and zero cash flow texts in all six languages.
+• Updated screenshots.
