@@ -3,9 +3,11 @@ package com.example.data.repository
 import android.content.Context
 import android.content.SharedPreferences
 import com.example.data.model.FinancialInputData
+import com.example.domain.FinancialInputLimits
 import com.example.ui.AppTab
 import com.example.ui.FireScenarioToggles
 import com.example.ui.FireSimulationState
+import com.example.util.Formatters
 import com.example.util.localization.AppLanguage
 
 class LocalPreferencesManager(context: Context) {
@@ -57,6 +59,12 @@ class LocalPreferencesManager(context: Context) {
 
     fun isFirstLaunch(): Boolean = !prefs.getBoolean(KEY_INITIALIZED, false)
 
+    private fun loadDouble(key: String, defaultValue: Double): Double =
+        prefs.getString(key, null)?.toDoubleOrNull()?.takeUnless { it.isNaN() } ?: defaultValue
+
+    private fun loadAmount(key: String, defaultValue: Double): Double =
+        loadDouble(key, defaultValue).takeIf { it.isFinite() && it in 0.0..Formatters.MAX_INPUT_VALUE } ?: defaultValue
+
     fun loadData(): FinancialInputData {
         if (!prefs.getBoolean(KEY_INITIALIZED, false)) {
             // First run: assign and persist default US average data
@@ -66,17 +74,17 @@ class LocalPreferencesManager(context: Context) {
         }
 
         return FinancialInputData(
-            monthlyIncome = prefs.getString(KEY_MONTHLY_INCOME, "6000.0")?.toDoubleOrNull() ?: 6000.0,
-            monthlyExpenses = prefs.getString(KEY_MONTHLY_EXPENSES, "4800.0")?.toDoubleOrNull() ?: 4800.0,
-            liquidAssets = prefs.getString(KEY_LIQUID_ASSETS, "15000.0")?.toDoubleOrNull() ?: 15000.0,
-            financialAssets = prefs.getString(KEY_FINANCIAL_ASSETS, "40000.0")?.toDoubleOrNull() ?: 40000.0,
-            propertyAssets = prefs.getString(KEY_PROPERTY_ASSETS, "280000.0")?.toDoubleOrNull() ?: 280000.0,
-            liabilities = prefs.getString(KEY_LIABILITIES, "180000.0")?.toDoubleOrNull() ?: 180000.0,
+            monthlyIncome = loadAmount(KEY_MONTHLY_INCOME, 6000.0),
+            monthlyExpenses = loadAmount(KEY_MONTHLY_EXPENSES, 4800.0),
+            liquidAssets = loadAmount(KEY_LIQUID_ASSETS, 15000.0),
+            financialAssets = loadAmount(KEY_FINANCIAL_ASSETS, 40000.0),
+            propertyAssets = loadAmount(KEY_PROPERTY_ASSETS, 280000.0),
+            liabilities = loadAmount(KEY_LIABILITIES, 180000.0),
             birthDate = prefs.getString(KEY_BIRTH_DATE, "1988-06-15") ?: "1988-06-15",
-            lifeExpectancy = prefs.getInt(KEY_LIFE_EXPECTANCY, 82),
-            nominalReturnPercent = prefs.getString(KEY_NOMINAL_RETURN, "7.5")?.toDoubleOrNull() ?: 7.5,
-            inflationPercent = prefs.getString(KEY_INFLATION, "2.5")?.toDoubleOrNull() ?: 2.5,
-            capitalGainsTaxPercent = prefs.getString(KEY_CAPITAL_GAINS_TAX, "20.0")?.toDoubleOrNull() ?: 20.0,
+            lifeExpectancy = prefs.getInt(KEY_LIFE_EXPECTANCY, 82).takeIf { it in 1..120 } ?: 82,
+            nominalReturnPercent = FinancialInputLimits.clampRatePercent(loadDouble(KEY_NOMINAL_RETURN, 7.5)),
+            inflationPercent = FinancialInputLimits.clampRatePercent(loadDouble(KEY_INFLATION, 2.5)),
+            capitalGainsTaxPercent = FinancialInputLimits.clampTaxPercent(loadDouble(KEY_CAPITAL_GAINS_TAX, 20.0)),
             currencySymbol = prefs.getString(KEY_CURRENCY, "$") ?: "$",
             includeFinancialInEmergencyFund = prefs.getBoolean(KEY_INCLUDE_FINANCIAL_EMERGENCY, true)
         )
@@ -146,9 +154,9 @@ class LocalPreferencesManager(context: Context) {
             childOrDependent18Years = prefs.getBoolean(KEY_SC_CHILD_DEPENDENT, false)
         )
         return FireSimulationState(
-            extraMonthlySavings = prefs.getString(KEY_SIM_EXTRA_SAVINGS, "0.0")?.toDoubleOrNull() ?: 0.0,
-            realReturnAdjustment = prefs.getString(KEY_SIM_RETURN_ADJUSTMENT, "0.0")?.toDoubleOrNull() ?: 0.0,
-            expenseReduction = prefs.getString(KEY_SIM_EXPENSE_REDUCTION, "0.0")?.toDoubleOrNull() ?: 0.0,
+            extraMonthlySavings = loadDouble(KEY_SIM_EXTRA_SAVINGS, 0.0).takeIf { it.isFinite() } ?: 0.0,
+            realReturnAdjustment = loadDouble(KEY_SIM_RETURN_ADJUSTMENT, 0.0).takeIf { it.isFinite() } ?: 0.0,
+            expenseReduction = loadDouble(KEY_SIM_EXPENSE_REDUCTION, 0.0).takeIf { it.isFinite() } ?: 0.0,
             scenarios = scenarios
         )
     }

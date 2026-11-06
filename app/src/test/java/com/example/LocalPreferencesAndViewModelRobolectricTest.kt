@@ -6,6 +6,7 @@ import com.example.data.model.FinancialInputData
 import com.example.data.repository.LocalPreferencesManager
 import com.example.ui.AppTab
 import com.example.ui.FireSimulationState
+import com.example.util.Formatters
 import com.example.util.localization.AppLanguage
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -16,6 +17,84 @@ import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
 class LocalPreferencesAndViewModelRobolectricTest {
+
+    @Test
+    fun `invalid saved amounts use defaults while valid currency bounds are preserved`() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val prefs = context.getSharedPreferences("user_finance_data", Context.MODE_PRIVATE)
+        prefs.edit().clear().commit()
+        val manager = LocalPreferencesManager(context)
+        val defaults = manager.loadData()
+        val keys = listOf("monthly_income", "monthly_expenses", "liquid_assets", "financial_assets", "property_assets", "liabilities")
+        for (raw in listOf("NaN", "Infinity", "-Infinity", "-5", "abc", (Formatters.MAX_INPUT_VALUE + 1.0).toString())) {
+            prefs.edit().apply { keys.forEach { putString(it, raw) } }.commit()
+            assertEquals(raw, defaults, manager.loadData())
+        }
+        for (value in listOf(0.0, 0.01, Formatters.MAX_INPUT_VALUE)) {
+            prefs.edit().apply { keys.forEach { putString(it, value.toString()) } }.commit()
+            assertEquals(defaults.copy(
+                monthlyIncome = value, monthlyExpenses = value,
+                liquidAssets = value, financialAssets = value,
+                propertyAssets = value, liabilities = value
+            ), manager.loadData())
+        }
+    }
+
+    @Test
+    fun `saved rates clamp infinities and bounds but use defaults for NaN and malformed text`() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val prefs = context.getSharedPreferences("user_finance_data", Context.MODE_PRIVATE)
+        prefs.edit().clear().commit()
+        val manager = LocalPreferencesManager(context)
+        val defaults = manager.loadData()
+        val cases = listOf(
+            "NaN" to defaults,
+            "abc" to defaults,
+            "Infinity" to defaults.copy(nominalReturnPercent = 100.0, inflationPercent = 100.0, capitalGainsTaxPercent = 100.0),
+            "-Infinity" to defaults.copy(nominalReturnPercent = -50.0, inflationPercent = -50.0, capitalGainsTaxPercent = 0.0),
+            "-50.01" to defaults.copy(nominalReturnPercent = -50.0, inflationPercent = -50.0, capitalGainsTaxPercent = 0.0),
+            "-50" to defaults.copy(nominalReturnPercent = -50.0, inflationPercent = -50.0, capitalGainsTaxPercent = 0.0),
+            "-5" to defaults.copy(nominalReturnPercent = -5.0, inflationPercent = -5.0, capitalGainsTaxPercent = 0.0),
+            "0" to defaults.copy(nominalReturnPercent = 0.0, inflationPercent = 0.0, capitalGainsTaxPercent = 0.0),
+            "100" to defaults.copy(nominalReturnPercent = 100.0, inflationPercent = 100.0, capitalGainsTaxPercent = 100.0),
+            "100.01" to defaults.copy(nominalReturnPercent = 100.0, inflationPercent = 100.0, capitalGainsTaxPercent = 100.0)
+        )
+        for ((raw, expected) in cases) {
+            prefs.edit().putString("nominal_return", raw).putString("inflation", raw).putString("capital_gains_tax", raw).commit()
+            assertEquals(raw, expected, manager.loadData())
+        }
+    }
+
+    @Test
+    fun `life expectancy falls back outside bounds and invalid birth date remains unchanged`() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val prefs = context.getSharedPreferences("user_finance_data", Context.MODE_PRIVATE)
+        prefs.edit().clear().commit()
+        val manager = LocalPreferencesManager(context)
+        manager.loadData()
+        for ((saved, expected) in listOf(-1 to 82, 0 to 82, 1 to 1, 82 to 82, 120 to 120, 121 to 82, 500 to 82)) {
+            prefs.edit().putInt("life_expectancy", saved).putString("birth_date", "invalid-date").commit()
+            val loaded = manager.loadData()
+            assertEquals(expected, loaded.lifeExpectancy)
+            assertEquals("invalid-date", loaded.birthDate)
+        }
+    }
+
+    @Test
+    fun `simulation load replaces nonfinite values with zero and preserves finite adjustments`() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val prefs = context.getSharedPreferences("user_finance_data", Context.MODE_PRIVATE)
+        prefs.edit().clear().commit()
+        val manager = LocalPreferencesManager(context)
+        val keys = listOf("sim_extra_savings", "sim_return_adjustment", "sim_expense_reduction")
+        for ((raw, expected) in listOf("NaN" to 0.0, "Infinity" to 0.0, "-Infinity" to 0.0, "abc" to 0.0, "-5" to -5.0, "5" to 5.0)) {
+            prefs.edit().apply { keys.forEach { putString(it, raw) } }.commit()
+            val sim = manager.loadSimulationState()
+            assertEquals(raw, expected, sim.extraMonthlySavings, 0.0)
+            assertEquals(raw, expected, sim.realReturnAdjustment, 0.0)
+            assertEquals(raw, expected, sim.expenseReduction, 0.0)
+        }
+    }
 
     @Test
     fun `legacy property in FIRE preference is ignored without changing saved data`() {

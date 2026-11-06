@@ -3,3 +3,4 @@
 • FIRE retirement modeling & What-if simulator
 • 100% offline and privacy-first
 • Clarified the label and warning for zero cash flow.
+• Fixed loading of corrupted numeric data and simulator settings.

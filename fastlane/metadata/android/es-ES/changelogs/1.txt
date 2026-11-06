@@ -3,3 +3,4 @@
 • Planificación de la jubilación FIRE y simulador de escenarios
 • Funcionamiento totalmente sin conexión y sin recopilación de datos
 • Aclarados la etiqueta y el aviso para el flujo de caja cero.
+• Corregida la carga de datos numéricos y ajustes del simulador dañados.

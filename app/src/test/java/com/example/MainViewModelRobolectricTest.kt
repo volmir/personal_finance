@@ -133,6 +133,50 @@ class MainViewModelRobolectricTest {
     }
 
     @Test
+    fun `corrupted preferences restore finite metrics and simulation within all scales`() {
+        val prefs = app.getSharedPreferences("user_finance_data", Context.MODE_PRIVATE)
+        val manager = LocalPreferencesManager(app)
+        val numericKeys = listOf(
+            "monthly_income", "monthly_expenses", "liquid_assets", "financial_assets", "property_assets", "liabilities",
+            "nominal_return", "inflation", "capital_gains_tax",
+            "sim_extra_savings", "sim_return_adjustment", "sim_expense_reduction"
+        )
+        val metricFields = CalculatedMetrics::class.java.declaredFields.filter { it.type == Double::class.javaPrimitiveType }
+        for (raw in listOf("NaN", "Infinity", "-Infinity", "-5", "abc", (Formatters.MAX_INPUT_VALUE + 1.0).toString())) {
+            manager.saveData(FinancialInputData.usAverageData())
+            prefs.edit().apply {
+                numericKeys.forEach { putString(it, raw) }
+                putInt("life_expectancy", 500)
+                putBoolean("sc_relocation", true)
+            }.commit()
+
+            val viewModel = MainViewModel(app) { today }
+            val input = viewModel.inputData.value
+            val metrics = viewModel.metrics.value
+            val sim = viewModel.fireSimulation.value
+            assertEquals(raw, 82, input.lifeExpectancy)
+            for (calculated in listOf(metrics, viewModel.simulatedMetrics.value)) {
+                for (field in metricFields) {
+                    field.isAccessible = true
+                    assertTrue("$raw ${field.name}", field.getDouble(calculated).isFinite())
+                }
+                assertTrue("$raw fidelityRatio", calculated.fidelityRatio.isFinite())
+                assertTrue("$raw fidelityPercent", calculated.fidelityPercent.isFinite())
+            }
+
+            val savings = SimulatorScaleCalculator.calculateSavingsConfig(metrics.cashFlow, input.monthlyIncome, input.monthlyExpenses, input.currencySymbol)
+            val ongoing = calculateSimulationOngoingExpenses(input.monthlyExpenses, sim.expenseReduction, false, true, false)
+            val expenses = SimulatorScaleCalculator.calculateExpensesConfig(input.monthlyExpenses, input.monthlyIncome, ongoing.beforeReduction, input.currencySymbol)
+            val returns = SimulatorScaleCalculator.calculateReturnConfig(metrics.realReturnPercent, input.inflationPercent)
+            assertTrue("$raw savings", sim.extraMonthlySavings in savings.minValue.toDouble()..savings.maxValue.toDouble())
+            assertTrue("$raw expenses", sim.expenseReduction in expenses.minValue.toDouble()..expenses.maxValue.toDouble())
+            assertTrue("$raw return", sim.realReturnAdjustment in returns.minValue.toDouble()..returns.maxValue.toDouble())
+            assertTrue(sim.scenarios.relocationLowerCost30)
+            assertEquals(sim, manager.loadSimulationState())
+        }
+    }
+
+    @Test
     fun `every return slider step changes metrics at maximum nominal return`() {
         val viewModel = MainViewModel(app) { today }
         viewModel.updateInputData { it.copy(nominalReturnPercent = 100.0, inflationPercent = 2.5) }
