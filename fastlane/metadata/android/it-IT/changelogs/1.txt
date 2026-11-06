@@ -2,3 +2,4 @@
 • 9 indicatori del patrimonio e della salute finanziaria
 • Pianificazione della pensione FIRE e simulatore di scenari
 • Funzionamento completamente offline, senza raccolta di dati
+• Chiariti etichetta e avviso per il flusso di cassa nullo.

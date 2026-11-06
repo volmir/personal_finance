@@ -16,6 +16,31 @@ import org.junit.Test
 class AuditorAnalysisTest {
 
     @Test
+    fun `zero cash flow stays negative with a warning and explanation in every language`() {
+        val input = FinancialInputData.usAverageData().copy(monthlyIncome = 4_800.0, monthlyExpenses = 4_800.0)
+        val metrics = FinanceCalculator.calculate(input, today = java.time.LocalDate.of(2026, 11, 6))
+        val explanations = mapOf(
+            AppLanguage.RU to "Свободного ресурса для накоплений нет, поэтому показатель негативный.",
+            AppLanguage.EN to "There is no surplus available for savings, so this indicator is negative.",
+            AppLanguage.DE to "Es bleibt kein Überschuss zum Sparen, daher wird dieser Indikator negativ bewertet.",
+            AppLanguage.FR to "Aucun surplus n'est disponible pour épargner, cet indicateur est donc négatif.",
+            AppLanguage.IT to "Non ci sono risorse disponibili per il risparmio, quindi questo indicatore è negativo.",
+            AppLanguage.ES to "No hay recursos disponibles para ahorrar, por lo que este indicador es negativo."
+        )
+
+        assertEquals(0.0, metrics.cashFlow, 0.0)
+        for ((lang, explanation) in explanations) {
+            val opinion = AuditorAnalysisGenerator.generate(input, metrics, lang)
+            val item = opinion.negative.single { it.id == "cash_flow" }
+            assertEquals("$lang", FinancialMetricEvaluator.getCashFlowStatus(0.0), item.status)
+            assertFalse("$lang", opinion.positive.any { it.id == "cash_flow" })
+            assertFalse("$lang", opinion.neutral.any { it.id == "cash_flow" })
+            assertTrue("$lang", item.text.startsWith("⚠️"))
+            assertTrue("$lang", item.text.contains(explanation))
+        }
+    }
+
+    @Test
     fun `net worth audit matches shared screen status and preserves text for all asset shares`() {
         val defaults = FinancialInputData.usAverageData()
         val base = defaults.copy(liquidAssets = 100.0, financialAssets = 0.0, propertyAssets = 0.0)

@@ -2,3 +2,4 @@
 • 9 Kennzahlen zu Vermögen und finanzieller Gesundheit
 • FIRE-Ruhestandsplanung und Was-wäre-wenn-Simulator
 • Vollständig offline, ohne Datenerfassung
+• Beschriftung und Warnhinweis für einen Cashflow von null präzisiert.
