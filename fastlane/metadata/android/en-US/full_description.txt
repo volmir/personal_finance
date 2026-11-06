@@ -1,20 +1,24 @@
-Personal Finance & FIRE Audit helps you track a household budget and balance sheet, review financial indicators, and model a possible path to FIRE—financial independence and early retirement.
+Personal Finance & FIRE Audit is an offline calculator for a monthly budget, assets, debts and a possible path to financial independence and early retirement (FIRE). Enter monthly totals and current balances manually to review your financial position and explore assumptions.
 
 FOUR SCREENS
 
-• Input Data: monthly income and expenses, liquid and financial assets, property, liabilities, expected return, inflation, capital-gains tax assumption, date of birth and life-expectancy age. Expandable hints explain input categories.
-• Metrics: cash flow, savings rate, emergency reserve and months of coverage, debt ratio, net worth, Fidelity age-based savings benchmark, financial freedom ratio, and real return.
-• Score & Audit: an overall score from 0 to 10, individual indicator ratings, and a written audit opinion. Share the summary or opinion through Android's system share menu.
-• FIRE: target capital, projected time and age to retirement, and a chart comparing capital accumulation and withdrawals through the selected life-expectancy horizon. Sliders adjust savings/income, expenses and real return. Fourteen scenarios model hypothetical positive events and stress tests.
+• Inputs: income and expenses, liquid and financial assets, full property value, liabilities, nominal return, inflation, capital-gains tax, birth date and life-expectancy age. Expandable hints explain the categories. Choose whether financial assets count toward the emergency reserve.
+• Metrics: cash flow, savings rate, emergency reserve, months of coverage, debt ratio, net worth, Fidelity age-based savings benchmark, financial freedom ratio (CFS) and real return.
+• Scores & Audit: a total score from 0 to 10, component ratings and an automated assessment grouped into positive, neutral and negative indicators. Share the base summary or assessment through Android's share menu.
+• FIRE: estimated retirement time and age, target capital and a capital trajectory chart through the chosen horizon. Three sliders and 14 scenarios adjust a separate simulation; saved base inputs remain intact.
 
-ABOUT THE FIRE MODEL
+MODEL AND SCENARIOS
 
-The projection uses a constant real return and estimates the present value of expenses through the selected life-expectancy age. It does not use the 4% rule or Trinity Study. Starting capital includes liquid and financial assets; property is excluded, and liabilities are deducted only to the extent they exceed property value. Scenarios can change temporary and future expenses and add one-off proceeds; the model can also estimate tax on gains from financial assets.
+FIRE uses a constant real return and the present value of future expenses. Starting capital is liquid plus financial assets minus debts not covered by property, with a zero floor. Property itself is excluded from investable capital. The model does not use the 4% rule or Trinity Study.
 
-Scenarios include: income +20%; financial assets +25%; expenses −15% or −30%; a one-off inheritance equal to 12 monthly incomes; property-sale proceeds capped at 20 monthly incomes; expenses −25% after 18 years; a one-off reserve draw equal to 12 monthly incomes for job loss; financial assets −30%; mortgage payments of 35% of income for 20 years; car payments of 20% of income for 5 years; a one-off expense of 5 monthly incomes; expenses +25% (labeled as inflation in the app); and child/dependent costs of 25% of expenses for 18 years.
+CFS includes property in net worth. Readiness to live on capital income is assessed separately on the FIRE tab. A neutral CFS can coexist with a green total score.
 
-The interface is available in 6 languages: English, Russian, German, French, Italian, and Spanish (automatically selected based on device system locale). The app does not request internet access; calculations and user data remain on-device. Choose from 13 currency symbols; values are not automatically converted and no exchange rates are provided.
+Scenarios include salary growth, market changes, expense reductions, inheritance, property sales, job loss and temporary mortgage/car/dependent costs. Job loss is a one-off stress expense equal to 12 current monthly incomes; ongoing income is preserved. Job-loss and loan amounts include the salary-increase scenario. Inheritance, sale limits and large one-off expenses use the original income. A sale is capped at the lower of property value and 20 monthly incomes. Uncovered one-off expenses become additional debt.
 
-All calculations are informational and are not financial, investment or tax advice. Results depend on entered data and the model's simplified assumptions.
+Capital-gains tax is estimated in a simplified way for the financial-assets share only when the initial financial-assets balance is positive. Other taxes, market-event ordering and income inflation are excluded. Results are guidance, not forecasts, guarantees or personalized financial, investment or tax advice.
 
-Job-loss reserves and mortgage/car payments include the salary-increase scenario. Inheritance, property sales and large one-off expenses use the original income. Property-sale proceeds cannot exceed the property value.
+LANGUAGES AND DATA
+
+The interface follows the device language: English, Russian, German, French, Italian or Spanish. Choose among 13 currency symbols; amounts are not converted and no exchange rates are downloaded. Yen amounts use whole units.
+
+The app works fully offline, requires no account and requests no internet permission. Inputs and simulator state are stored locally. Reports are shared only at your initiative through Android and the app you select.

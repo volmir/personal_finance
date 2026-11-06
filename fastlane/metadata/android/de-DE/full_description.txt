@@ -1,16 +1,24 @@
-«Personal Finance & FIRE» hilft Ihnen, Einnahmen, Ausgaben, Vermögen und Schulden zu erfassen, finanzielle Schlüsselkennzahlen zu analysieren und den Weg zur finanziellen Unabhängigkeit (FIRE) zu simulieren.
+«Persönliche Finanzen & FIRE-Audit» ist ein Offline-Rechner für Monatsbudget, Vermögen, Schulden und einen möglichen Weg zur finanziellen Unabhängigkeit und zum vorzeitigen Ruhestand (FIRE). Geben Sie monatliche Summen und aktuelle Vermögensstände manuell ein und prüfen Sie Ihre Annahmen.
 
-Das Programm umfasst vier Hauptbereiche:
+VIER BEREICHE
 
-• Daten: Monatseinkommen und Ausgaben, liquide Mittel, Finanz- und Sachwerte, Verbindlichkeiten, Renditeerwartung, Inflation, Kapitalertragsteuer, Geburtsdatum und Lebenserwartung. 13 Währungssymbole verfügbar (reine Symbolanzeige ohne automatische Währungsumrechnung).
-• Kennzahlen: Cashflow, Sparquote, Notfallpuffer und Pufferreichweite in Monaten, Verschuldungsgrad, Nettovermögen, Fidelity-Altersziel, Freiheitsquote (CFS) und Realrendite.
-• Bewertung & Prüfung: Gesamtnote von 0 bis 10 Punkten, Einzelnoten der Säulen und detaillierte automatisierte Beurteilung mit Stärken und Risikofaktoren. Berichte können über das Android-Teilen-Menü geteilt werden.
-• FIRE & Simulation: Prognostizierte Jahre bis zur Rente, Zielkapital, Rentenalter und Vermögensverlaufsgrafik bis zur Lebenserwartung. Regler zur Anpassung von Ersparnissen, Ausgaben und Realrendite sowie 14 Was-wäre-wenn-Szenarien.
+• Eingaben: Einnahmen, Ausgaben, liquide Mittel, Finanzanlagen, voller Sachwert, Verbindlichkeiten, Nominalrendite, Inflation, Kapitalertragsteuer, Geburtsdatum und Lebenserwartung. Hinweise erläutern die Kategorien. Finanzanlagen können zum Notfallpuffer zählen.
+• Kennzahlen: Cashflow, Sparquote, Notfallpuffer, Reichweite in Monaten, Verschuldungsgrad, Reinvermögen, Fidelity-Altersziel, finanzielle Freiheitsquote (CFS) und Realrendite.
+• Bewertung & Audit: Gesamtnote von 0 bis 10, Einzelnoten und automatische Beurteilung mit positiven, neutralen und negativen Kennzahlen. Basisbericht und Beurteilung lassen sich über das Android-Teilen-Menü weitergeben.
+• FIRE: geschätzter Rentenzeitpunkt, Rentenalter, Zielkapital und Kapitalverlauf bis zum gewählten Lebensalter. Drei Regler und 14 Szenarien verändern eine separate Simulation; die gespeicherten Basisdaten bleiben erhalten.
 
-Das FIRE-Modell basiert auf konstanter Realrendite und abgezinsten künftigen Ausgaben. Das 4%-Modell und Trinity Study finden keine Anwendung. Immobilien fließen nicht in das liquide FIRE-Startkapital ein.
+MODELL UND SZENARIEN
 
-Die App unterstützt 6 Sprachen (Englisch, Deutsch, Französisch, Italienisch, Spanisch, Russisch), ermittelt anhand der Systemsprache. Die Anwendung funktioniert komplett offline ohne Internetberechtigung; sämtliche Daten und Berechnungen verbleiben ausschließlich lokal auf Ihrem Gerät.
+FIRE nutzt eine konstante Realrendite und den Barwert künftiger Ausgaben. Das Startkapital besteht aus liquiden Mitteln und Finanzanlagen abzüglich der nicht durch Sachwerte gedeckten Schulden, mindestens jedoch null. Sachwerte selbst zählen nicht zum investierbaren Kapital. Die 4%-Regel und Trinity Study werden nicht verwendet.
 
-Alle Berechnungen dienen reinen Informations- und Bildungszwecken und stellen keine individuelle Finanz-, Anlage- oder Steuerberatung dar.
+CFS berücksichtigt Immobilien im Reinvermögen. Ob Sie von Kapitalerträgen leben können, bewertet der FIRE-Bereich. Eine neutrale CFS-Kennzahl kann mit einer grünen Gesamtnote einhergehen.
 
-Die Rücklage bei Jobverlust und die Raten für Hypothek und Autokredit berücksichtigen das Szenario einer Gehaltserhöhung. Erbschaft, Immobilienverkauf und große Einmalausgaben basieren auf dem ursprünglichen Einkommen. Der Verkaufserlös ist auf den Immobilienwert begrenzt.
+Szenarien umfassen Gehaltserhöhung, Markt- und Ausgabenänderungen, Erbschaft, Sachwertverkauf, Jobverlust und befristete Hypotheken-, Auto- und Unterhaltskosten. Jobverlust ist eine einmalige Belastung von 12 aktuellen Monatseinkommen; das laufende Einkommen bleibt bestehen. Diese Belastung und Kreditraten berücksichtigen die Gehaltserhöhung. Erbschaft, Verkaufsgrenze und große Einmalausgaben nutzen das ursprüngliche Einkommen. Verkaufserlöse sind auf Sachwert und 20 Monatseinkommen begrenzt. Ungedeckte Einmalausgaben werden zu zusätzlichen Schulden.
+
+Die Steuer auf Kapitalerträge wird vereinfacht nur für den Finanzanlagenanteil bei positivem anfänglichem Finanzvermögen geschätzt. Andere Steuern, die Reihenfolge der Marktereignisse und Einkommensinflation bleiben unberücksichtigt. Ergebnisse sind eine Orientierung, keine Prognose, Garantie oder individuelle Finanz-, Anlage- oder Steuerberatung.
+
+SPRACHEN UND DATEN
+
+Die Oberfläche folgt der Gerätesprache: Englisch, Russisch, Deutsch, Französisch, Italienisch oder Spanisch. 13 Währungssymbole stehen ohne Umrechnung oder Kursabruf zur Wahl. Yen-Beträge werden ganzzahlig eingegeben und angezeigt.
+
+Die App arbeitet vollständig offline, ohne Internetberechtigung oder Konto. Eingaben und Simulatorzustand werden lokal gespeichert. Berichte werden nur auf Ihre Initiative über Android und die gewählte App geteilt.

@@ -5,7 +5,7 @@ Personal Finance & FIRE Audit — offline Android app (Kotlin, Jetpack Compose, 
 ## 0. Working rules
 
 - Reply to the user in **Russian**, briefly. Code identifiers and commit messages stay in English.
-- Current phase: **release hardening for v1.0**. Fix defects and logical inconsistencies only. **No new features, no behavior changes beyond the fix, no refactors that are not needed for the fix.** If a fix would change a user-visible number, say so before applying it.
+- Current phase: **release hardening after v1.0; next planned release v1.0.1**. Fix defects and logical inconsistencies only. **No new features, no behavior changes beyond the fix, no refactors that are not needed for the fix.** If a fix would change a user-visible number, say so before applying it.
 - Minimal diffs: do not reformat, rename, or reorder untouched code. One logical change per commit.
 - Never silently edit a test expectation to make a test pass. If an expectation must change, state which value changed, by how much, and why.
 - Every bug fix ships with a regression test (boundary values for formulas).
@@ -19,8 +19,9 @@ Personal Finance & FIRE Audit — offline Android app (Kotlin, Jetpack Compose, 
 | applicationId | `io.github.volmir.personalfinance` (**never change**: it is the app identity for updates and F-Droid) |
 | namespace / package | `com.example` (keep until after 1.0; renaming is a repo-wide refactor with no user benefit) |
 | Version | `versionName 1.0`, `versionCode 1` (`app/build.gradle.kts`) |
+| Next release | Planned `v1.0.1`, `versionName 1.0.1`, `versionCode 2`; do not bump the version or create the tag until requested |
 | SDK | minSdk 24, targetSdk 36, compileSdk 36.1 (`release(36) { minorApiLevel = 1 }`) |
-| Toolchain | JDK 17, AGP 9.1.1, Kotlin 2.2.10, Compose BOM 2024.09.00, core library desugaring 2.1.5 |
+| Toolchain | JDK 17 in CI; JDK 21 verified locally. AGP 9.1.1, Kotlin 2.2.10, Compose BOM 2024.09.00, core library desugaring 2.1.5 |
 | Dependencies | all in `gradle/libs.versions.toml`; FLOSS only |
 | Distribution | F-Droid only (IzzyOnDroid is declined; do not add anything for it). GitHub Releases via `v*` tags |
 | Network | app has **no INTERNET permission** and works fully offline. Do not add one, no analytics, no ads, no proprietary SDKs |
@@ -50,7 +51,7 @@ Source root: `app/src/main/java/com/example/`
 | `domain/FinanceCalculator.kt` | `FinancialInputLimits`, `FinanceCalculator.calculate(...)`: all base metrics, scores, Fidelity, FIRE call |
 | `domain/FinancialMetricEvaluator.kt` | **Only place for thresholds** and status/score tiers of every metric |
 | `domain/ProjectionEngine.kt` | FIRE math: accumulation, required capital, tax factor, bisection for years to retirement, trajectory |
-| `domain/ScenarioConstants.kt` | Scenario percentages and multipliers |
+| `domain/ScenarioConstants.kt` | Scenario constants and shared scenario amount calculations |
 | `domain/SimulatorScaleCalculator.kt` | Slider ranges and steps for the FIRE simulator |
 | `domain/AuditorAnalysisGenerator.kt` | Audit texts grouped into positive / neutral / negative, export summary |
 | `ui/MainViewModel.kt` | State (`inputData`, `metrics`, `fireSimulation`, `simulatedMetrics`, trajectories), debounced save, scenario logic (`recalculateSimulation`) |
@@ -105,7 +106,7 @@ Use `bash ./gradlew` (wrapper is checked in). Iterate narrow, finish wide.
 bash ./gradlew testDebugUnitTest --tests com.example.ProjectionEngineTest
 bash ./gradlew testDebugUnitTest --tests "com.example.FinanceCalculatorTest.*"
 
-# before declaring done: everything (130 tests, JVM + Robolectric)
+# before declaring done: all JVM + Robolectric tests
 bash ./gradlew testDebugUnitTest
 
 # release checks (needs signing env for a signed APK)
@@ -139,16 +140,12 @@ Order for multi-step plans: numeric foundation (rounding, score) → status/text
 
 ## 9. Known open defects (remove a line when fixed)
 
-- Total score: display vs status mismatch at 6.95 and 3.5 (float sum).
-- Net worth subtitle prints a doubled colon (all six languages).
-- FIRE "assumptions" text says calculations ignore taxes (contradicts the tax model), in all six languages and in the export.
-- CFS description intervals use `<=` upper bounds; code uses `[a, b)`. Audit CFS texts do not mention that property is included.
-- Russian age phrases use the wrong plural ("возраст 22 лет").
+Current verification results and their limits are recorded in `docs/release-readiness-1.0.1.md`. The former total-score rounding defect is covered by `FinanceCalculatorTest` boundary regressions and is no longer an open item.
 
 ## 10. Release and F-Droid
 
-- Before tagging `v1.0`: tests green, `lintRelease` clean, two release builds byte-identical, signed APK checked, run on emulators API 24 and 36, store screenshots refreshed after text changes, GitHub Actions secrets set (`KEYSTORE_BASE64`, `STORE_PASSWORD`, `KEY_PASSWORD`, `KEY_ALIAS`).
-- `metadata/io.github.volmir.personalfinance.yml` pins a commit hash; it must equal the commit of the `v1.0` tag. Verify that the F-Droid build server supports compileSdk 36.1 (fallback: compileSdk 36).
+- Before tagging the planned `v1.0.1`: tests green, `lintRelease` clean, two release builds byte-identical, signed APK checked, run on emulators API 24 and 36, store screenshots refreshed after text changes, GitHub Actions secrets set (`KEYSTORE_BASE64`, `STORE_PASSWORD`, `KEY_PASSWORD`, `KEY_ALIAS`).
+- `metadata/io.github.volmir.personalfinance.yml` currently pins the published `v1.0`. Add the next build only when its release commit is known; its hash must match the new tag. Verify that the F-Droid build server supports compileSdk 36.1 (fallback: compileSdk 36).
 - F-Droid requires about 3 months of active development: submit the request no earlier than ~2027-01-10.
 - Pushing a `v*` tag triggers the signed release workflow (`.github/workflows/build-and-release.yml`). Never push tags unless the user asks. Never delete or move a published tag.
 - Release signing uses `KEYSTORE_PATH`, `STORE_PASSWORD`, `KEY_PASSWORD`, `KEY_ALIAS`. Keep keystores, passwords, tokens and `local.properties` out of Git. Preserve the signing key.

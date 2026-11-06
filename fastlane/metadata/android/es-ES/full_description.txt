@@ -1,16 +1,24 @@
-«Personal Finance & FIRE» te ayuda a registrar ingresos, gastos, activos y deudas, analizar indicadores financieros clave y modelar el camino hacia la independencia financiera (FIRE).
+«Finanzas Personales & Auditoría FIRE» es una calculadora sin conexión del presupuesto mensual, los activos, las deudas y un posible camino hacia la independencia financiera y la jubilación anticipada (FIRE). Introduce manualmente los totales mensuales y los saldos actuales para revisar tus indicadores y supuestos.
 
-La app consta de cuatro pantallas:
+CUATRO PANTALLAS
 
-• Datos: Ingresos y gastos mensuales, activos líquidos, financieros e inmobiliarios, pasivos, rentabilidad nominal prevista, inflación, impuestos sobre plusvalías, fecha de nacimiento y esperanza de vida. 13 símbolos de moneda disponibles (visualización sin conversión de divisas).
-• Indicadores: Flujo de caja, tasa de ahorro, colchón de emergencia y cobertura en meses, ratio de endeudamiento, patrimonio neto, objetivo de ahorro por edad Fidelity, ratio de libertad financiera (CFS) y rentabilidad real.
-• Puntuación & Auditoría: Puntuación general de salud financiera de 0 a 10 puntos, valoraciones individuales de cada pilar e informe de auditoría automatizado con fortalezas y riesgos. Informes compartibles mediante el menú nativo de Android.
-• FIRE & Escenarios: Plazo estimado hasta la jubilación, capital objetivo, edad de retiro y gráfico interactivo de la trayectoria del capital hasta la esperanza de vida. Deslizadores para ajustar ahorro, gastos y rentabilidad real, con 14 escenarios de simulación.
+• Datos: ingresos, gastos, activos líquidos y financieros, valor total de los bienes, deudas, rentabilidad nominal, inflación, impuesto sobre plusvalías, fecha de nacimiento y esperanza de vida. Las indicaciones explican las categorías. Los activos financieros pueden formar parte del fondo de emergencia.
+• Indicadores: flujo de caja, tasa de ahorro, reserva, cobertura en meses, endeudamiento, patrimonio neto, referencia Fidelity por edad, ratio de libertad financiera (CFS) y rentabilidad real.
+• Puntuación & Auditoría: nota global de 0 a 10, notas de los componentes y evaluación automática de indicadores positivos, neutros y negativos. Comparte el resumen de base o la evaluación desde el menú de Android.
+• FIRE: plazo y edad de jubilación estimados, capital objetivo y trayectoria del capital hasta la edad elegida. Tres deslizadores y 14 escenarios modifican una simulación separada; los datos de base se conservan.
 
-El modelo aplica una rentabilidad real constante y el valor actual de los gastos futuros (no se utilizan la regla del 4% ni el Trinity Study). Los bienes inmuebles no se incluyen en el capital FIRE líquido inicial.
+MODELO Y ESCENARIOS
 
-La interfaz está disponible en 6 idiomas (inglés, español, alemán, francés, italiano, ruso), determinados automáticamente por el idioma del sistema operativo. La app funciona 100% sin conexión y no solicita permisos de internet; todos los datos y cálculos permanecen en tu dispositivo.
+FIRE utiliza una rentabilidad real constante y el valor actual de los gastos futuros. El capital inicial son los activos líquidos y financieros menos las deudas no cubiertas por los bienes, con un mínimo de cero. Los propios bienes quedan fuera del capital invertible. No se utilizan la regla del 4% ni el Trinity Study.
 
-Todos los cálculos tienen carácter meramente informativo y divulgativo, y no constituyen asesoramiento financiero, de inversión o tributario personalizado.
+El CFS incluye los inmuebles en el patrimonio neto. La pestaña FIRE evalúa si puedes vivir de los ingresos del capital. Un CFS neutro puede coexistir con una puntuación global verde.
 
-La reserva por pérdida de empleo y las cuotas de hipoteca y préstamo de coche incluyen el escenario de aumento salarial. La herencia, la venta de bienes y los grandes gastos puntuales se calculan con los ingresos iniciales. La venta no supera el valor del bien.
+Los escenarios incluyen subidas salariales, cambios de mercado y gastos, herencias, venta de bienes, pérdida de empleo y costes temporales de préstamos o personas a cargo. La pérdida de empleo es un gasto puntual de 12 ingresos mensuales actuales; se conservan los ingresos recurrentes. Este gasto y las cuotas de préstamos incluyen la subida salarial. La herencia, el límite de venta y los grandes gastos puntuales usan los ingresos originales. La venta no supera el valor del bien ni 20 ingresos mensuales. Los gastos puntuales no cubiertos pasan a ser deuda adicional.
+
+El impuesto sobre las plusvalías se estima de forma simplificada para la proporción de activos financieros, solo si su saldo inicial es positivo. Se excluyen otros impuestos, el orden de los eventos del mercado y la inflación de los ingresos. Los resultados son una referencia, no una previsión, garantía ni asesoramiento financiero, de inversión o fiscal personalizado.
+
+IDIOMAS Y DATOS
+
+La interfaz sigue el idioma del dispositivo: inglés, ruso, alemán, francés, italiano o español. Se ofrecen 13 símbolos de moneda, sin conversión ni descarga de tipos de cambio. Los importes en yenes se introducen y muestran como enteros.
+
+La aplicación funciona sin conexión, sin permisos de Internet ni cuenta. Los datos y el estado del simulador se guardan localmente. Los informes se comparten solo por iniciativa tuya mediante Android y la aplicación elegida.

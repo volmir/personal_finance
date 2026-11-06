@@ -1,16 +1,24 @@
-«Personal Finance & FIRE» ti aiuta a registrare entrate, uscite, attività e passività, analizzare gli indicatori finanziari chiave e modellare la strada verso l'indipendenza finanziaria (FIRE).
+«Finanza Personale & Audit FIRE» è un calcolatore offline del budget mensile, del patrimonio, dei debiti e di un possibile percorso verso l’indipendenza finanziaria e la pensione anticipata (FIRE). Inserisci manualmente totali mensili e saldi attuali per esaminare gli indicatori e le tue ipotesi.
 
-L'app si suddivide in quattro schermate:
+QUATTRO SCHERMATE
 
-• Dati: Entrate e spese mensili, attività liquide, finanziarie e immobiliari, debiti, rendimento nominale atteso, inflazione, tassazione sui guadagni di capitale, data di nascita e aspettativa di vita. Scelta tra 13 simboli di valuta (visualizzazione simboli senza conversione automatica).
-• Indicatori: Flusso di cassa, tasso di risparmio, cuscino di emergenza e copertura in mesi, rapporto d'indebitamento, patrimonio netto, benchmark di risparmio per età Fidelity, rapporto di libertà finanziaria (CFS) e rendimento reale.
-• Punteggio & Audit: Punteggio complessivo di salute finanziaria da 0 a 10 punti, valutazioni dei singoli pilastri e parere di audit automatizzato con punti di forza e fattori di rischio. Condivisione dei report tramite il menu di sistema Android.
-• FIRE & Scenari: Tempo stimato alla pensione, capitale target, età di uscita e grafico dell'evoluzione del capitale fino all'aspettativa di vita. Cursori di regolazione per risparmi, spese e rendimento reale, con 14 scenari simulati.
+• Dati: entrate, spese, attività liquide e finanziarie, valore complessivo dei beni, debiti, rendimento nominale, inflazione, imposta sulle plusvalenze, data di nascita e aspettativa di vita. Le indicazioni spiegano le categorie. Le attività finanziarie possono contribuire alla riserva d’emergenza.
+• Indicatori: flusso di cassa, tasso di risparmio, riserva, copertura in mesi, indebitamento, patrimonio netto, riferimento Fidelity per età, rapporto di libertà finanziaria (CFS) e rendimento reale.
+• Punteggio & Audit: voto complessivo da 0 a 10, voti delle componenti e valutazione automatica degli indicatori positivi, neutri e negativi. Il riepilogo di base e la valutazione si condividono dal menu Android.
+• FIRE: tempo ed età di pensionamento stimati, capitale necessario e andamento del capitale fino all’età scelta. Tre cursori e 14 scenari modificano una simulazione separata; i dati di base restano salvati.
 
-Il modello adotta un rendimento reale costante e l'attualizzazione delle spese future (non si utilizzano la regola del 4% né il Trinity Study). I beni immobili non vengono inclusi nel capitale liquido di partenza FIRE.
+MODELLO E SCENARI
 
-L'interfaccia supporta 6 lingue (inglese, italiano, tedesco, francese, spagnolo, russo), selezionate automaticamente in base alla lingua del dispositivo. L'app funziona completamente offline senza permessi Internet; tutti i tuoi dati rimangono esclusivamente sul tuo dispositivo.
+FIRE usa un rendimento reale costante e il valore attuale delle spese future. Il capitale iniziale è dato dalle attività liquide e finanziarie meno i debiti non coperti dai beni, con un minimo di zero. I beni stessi sono esclusi dal capitale investibile. Non si usano la regola del 4% né il Trinity Study.
 
-Tutti i calcoli hanno scopo puramente informativo ed educativo e non costituiscono consulenza finanziaria, di investimento o fiscale.
+Il CFS include gli immobili nel patrimonio netto. La scheda FIRE valuta la possibilità di vivere dei redditi del capitale. Un CFS neutro può coesistere con un punteggio complessivo verde.
 
-La riserva per la perdita del lavoro e le rate di mutuo e prestito auto tengono conto dello scenario di aumento dello stipendio. Eredità, vendita di immobili e grandi spese una tantum si basano sul reddito iniziale. Il ricavato della vendita non supera il valore dell'immobile.
+Gli scenari comprendono aumenti salariali, variazioni di mercato e spese, eredità, vendita di beni, perdita del lavoro e costi temporanei di mutuo, auto o persone a carico. La perdita del lavoro è una spesa una tantum pari a 12 redditi mensili attuali; il reddito corrente resta invariato. Questa spesa e le rate dei prestiti includono l’aumento salariale. Eredità, limite di vendita e grandi spese una tantum usano il reddito iniziale. La vendita non supera il valore del bene né 20 redditi mensili. Le spese una tantum non coperte diventano debiti aggiuntivi.
+
+L’imposta sulle plusvalenze è stimata in modo semplificato per la quota di attività finanziarie, solo se il loro importo iniziale è positivo. Altre imposte, ordine degli eventi di mercato e inflazione dei redditi sono esclusi. I risultati sono un riferimento, non una previsione, una garanzia o una consulenza finanziaria, d’investimento o fiscale personale.
+
+LINGUE E DATI
+
+L’interfaccia segue la lingua del dispositivo: inglese, russo, tedesco, francese, italiano o spagnolo. Sono disponibili 13 simboli di valuta, senza conversione né download dei tassi di cambio. Gli importi in yen sono inseriti e mostrati come numeri interi.
+
+L’app funziona completamente offline, senza permessi Internet né account. Dati e stato del simulatore vengono salvati localmente. I report sono condivisi solo su tua iniziativa tramite Android e l’app scelta.

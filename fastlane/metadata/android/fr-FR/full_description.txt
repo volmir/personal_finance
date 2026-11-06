@@ -1,16 +1,24 @@
-« Personal Finance & FIRE » vous aide à enregistrer vos revenus, dépenses, actifs et dettes, à analyser vos indicateurs financiers clés et à modéliser votre trajectoire vers l'indépendance financière (FIRE).
+« Finances Personnelles & Audit FIRE » est un calculateur hors ligne du budget mensuel, des actifs, des dettes et d’un parcours possible vers l’indépendance financière et la retraite anticipée (FIRE). Saisissez manuellement les totaux mensuels et les soldes actuels pour examiner vos indicateurs et vos hypothèses.
 
-L'application comprend quatre écrans :
+QUATRE ÉCRANS
 
-• Données : Revenus et dépenses mensuels, actifs liquides, financiers et immobiliers, passifs, rendement nominal attendu, inflation, fiscalité des plus-values, date de naissance et espérance de vie. Choix parmi 13 symboles monétaires (affichage des symboles sans conversion de devises).
-• Indicateurs : Cash-flow, taux d'épargne, coussin de sécurité et autonomie en mois, ratio d'endettement, valeur nette, cible d'épargne par âge Fidelity, ratio de liberté financière (CFS) et rendement réel.
-• Score & Audit : Score global de santé financière de 0 à 10, notes des piliers et avis d'audit automatisé avec points forts et facteurs de risque. Rapports partageables via le menu Android.
-• FIRE & Scénarios : Délai prévisionnel jusqu'à la retraite, capital cible, âge de départ et graphique d'évolution du capital jusqu'à l'espérance de vie. Curseurs d'ajustement pour l'épargne, les dépenses et le rendement réel, plus 14 scénarios de simulation.
+• Données : revenus, dépenses, actifs liquides et financiers, valeur totale des biens, dettes, rendement nominal, inflation, impôt sur les plus-values, date de naissance et espérance de vie. Des indications expliquent les catégories. Les actifs financiers peuvent compter dans la réserve d’urgence.
+• Indicateurs : flux de trésorerie, taux d’épargne, réserve, autonomie en mois, endettement, patrimoine net, repère Fidelity lié à l’âge, ratio de liberté financière (CFS) et rendement réel.
+• Score & Audit : note globale de 0 à 10, notes des composantes et évaluation automatique des indicateurs positifs, neutres et négatifs. Le résumé de base et l’évaluation se partagent via le menu Android.
+• FIRE : délai et âge de départ estimés, capital cible et trajectoire du capital jusqu’à l’âge choisi. Trois curseurs et 14 scénarios modifient une simulation distincte ; les données de base sont conservées.
 
-Le modèle applique un rendement réel constant et l'actualisation des dépenses futures (la règle des 4% et l'étude Trinity ne sont pas utilisées). Les biens immobiliers ne sont pas inclus dans le capital FIRE liquide de départ.
+MODÈLE ET SCÉNARIOS
 
-L'interface est disponible en 6 langues (anglais, français, allemand, espagnol, italien, russe), déterminée par la langue du système. L'application fonctionne entièrement hors ligne sans autorisation Internet ; toutes vos données restent sur votre appareil.
+FIRE utilise un rendement réel constant et la valeur actuelle des dépenses futures. Le capital initial correspond aux actifs liquides et financiers, moins les dettes non couvertes par les biens, avec un minimum de zéro. Les biens eux-mêmes sont exclus du capital investissable. La règle des 4 % et l’étude Trinity ne sont pas utilisées.
 
-Tous les calculs ont une vocation informative et éducative et ne constituent pas un conseil financier, d'investissement ou fiscal personnalisé.
+Le CFS inclut l’immobilier dans le patrimoine net. L’onglet FIRE évalue la possibilité de vivre des revenus du capital. Un CFS neutre peut coexister avec une note globale verte.
 
-La réserve en cas de perte d'emploi et les mensualités des prêts immobilier et automobile tiennent compte du scénario de hausse de salaire. L'héritage, la vente de biens et les dépenses ponctuelles importantes reposent sur le revenu initial. Le produit de la vente est plafonné à la valeur du bien.
+Les scénarios couvrent la hausse de salaire, les variations du marché et des dépenses, l’héritage, la vente de biens, la perte d’emploi et les coûts temporaires de prêts ou de personnes à charge. La perte d’emploi représente une dépense ponctuelle de 12 revenus mensuels actuels ; le revenu courant est conservé. Cette dépense et les mensualités de prêt intègrent la hausse de salaire. L’héritage, le plafond de vente et les grosses dépenses ponctuelles utilisent le revenu initial. La vente est plafonnée à la valeur du bien et à 20 revenus mensuels. Toute dépense ponctuelle non couverte devient une dette supplémentaire.
+
+L’impôt sur les plus-values est estimé de manière simplifiée pour la part des actifs financiers, uniquement si leur montant initial est positif. Les autres impôts, l’ordre des événements de marché et l’inflation des revenus sont exclus. Les résultats sont un repère, pas une prévision, une garantie ou un conseil financier, d’investissement ou fiscal personnalisé.
+
+LANGUES ET DONNÉES
+
+L’interface suit la langue de l’appareil : anglais, russe, allemand, français, italien ou espagnol. Choix de 13 symboles monétaires, sans conversion ni téléchargement des taux de change. Les montants en yens sont saisis et affichés en nombres entiers.
+
+L’application fonctionne entièrement hors ligne, sans autorisation Internet ni compte. Les données et l’état du simulateur sont enregistrés localement. Les rapports sont partagés uniquement à votre initiative via Android et l’application choisie.
