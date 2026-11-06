@@ -1,6 +1,7 @@
 package com.example.util.localization
 
 import androidx.compose.runtime.compositionLocalOf
+import com.example.util.Formatters
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
 import java.text.NumberFormat
@@ -239,7 +240,10 @@ interface AppStrings {
     val fireHeroSubtitle: String
     val fireTimeToRetire: String
     val fireYearsSuffix: String
-    fun fireYearsSuffix(years: Double): String = plural(years, yearPluralForms)
+    fun fireYearsSuffix(years: Double): String = plural(
+        Formatters.parseDouble(Formatters.formatRatio(years, language), language),
+        yearPluralForms
+    )
     val fireHeroAssumption: String
     val fireRetirementAgeLabel: String
     val fireRetirementAgeValue: (age: String) -> String
@@ -509,7 +513,7 @@ interface AppStrings {
     val exportFinancialAssetsLine: String
     val exportPropertyAssetsLine: String
     val exportLiabilitiesLine: String
-    val exportAgeHorizonLine: String
+    val exportAgeHorizonLine: (age: Int, lifeExpectancy: Int, horizon: Int) -> String
     val exportReturnsInflationLine: String
     val exportTaxLine: String
 

@@ -268,13 +268,14 @@ class AuditorAnalysisTest {
         }
 
         assertEquals("✅ " + FinancialMetricEvaluator.getCfsStageDescription(14.0, AppLanguage.RU), cfsOpinion(14.0))
-        assertEquals("✅ Вы близки: капитал покрывает 50% от целевого.", cfsOpinion(15.0))
-        assertEquals("✅ Вы близки: капитал покрывает 80% от целевого.", cfsOpinion(24.0))
-        assertEquals("✅ Вы близки: капитал покрывает 100% от целевого.", cfsOpinion(29.99))
-        assertEquals("🎉 Вы достигли финансовой независимости: КФС не менее 30.", cfsOpinion(30.0))
+        val propertyAndFireRu = " Чистый капитал включает недвижимость; готовность жить на доход от капитала показывает вкладка FIRE."
+        assertEquals("✅ Вы близки: капитал покрывает 50% от целевого.$propertyAndFireRu", cfsOpinion(15.0))
+        assertEquals("✅ Вы близки: капитал покрывает 80% от целевого.$propertyAndFireRu", cfsOpinion(24.0))
+        assertEquals("✅ Вы близки: капитал покрывает 100% от целевого.$propertyAndFireRu", cfsOpinion(29.99))
+        assertEquals("🎉 Вы достигли финансовой независимости: КФС не менее 30.$propertyAndFireRu", cfsOpinion(30.0))
 
         val independentEn = cfsOpinion(30.0, AppLanguage.EN)
-        assertEquals("🎉 You have achieved financial independence: CFS is at least 30.", independentEn)
+        assertEquals("🎉 You have achieved financial independence: CFS is at least 30. Net worth includes property; the FIRE tab assesses readiness to live on capital income.", independentEn)
         assertFalse(independentEn.contains("4%"))
     }
 

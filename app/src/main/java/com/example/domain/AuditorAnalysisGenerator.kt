@@ -418,7 +418,7 @@ object AuditorAnalysisGenerator {
             appendLine(String.format(Locale.ROOT, strings.exportFinancialAssetsLine, Formatters.formatMoney(inputData.financialAssets, currency, lang)))
             appendLine(String.format(Locale.ROOT, strings.exportPropertyAssetsLine, Formatters.formatMoney(inputData.propertyAssets, currency, lang)))
             appendLine(String.format(Locale.ROOT, strings.exportLiabilitiesLine, Formatters.formatMoney(inputData.liabilities, currency, lang)))
-            appendLine(String.format(Locale.ROOT, strings.exportAgeHorizonLine, metrics.currentAge, metrics.lifeExpectancy, metrics.remainingYearsHorizon))
+            appendLine(strings.exportAgeHorizonLine(metrics.currentAge, metrics.lifeExpectancy, metrics.remainingYearsHorizon))
             appendLine(String.format(Locale.ROOT, strings.exportReturnsInflationLine, Formatters.formatPercent(inputData.nominalReturnPercent, lang), Formatters.formatPercent(inputData.inflationPercent, lang)))
             appendLine(String.format(Locale.ROOT, strings.exportTaxLine, Formatters.formatPercent(inputData.capitalGainsTaxPercent, lang)))
             appendLine()

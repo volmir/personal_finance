@@ -1,5 +1,7 @@
 package com.example.util.localization
 
+import com.example.util.Formatters
+
 val StringsRu: AppStrings = object : AppStrings {
     override val language: AppLanguage = AppLanguage.RU
 
@@ -308,7 +310,7 @@ val StringsRu: AppStrings = object : AppStrings {
     )
     override val horizonTitle: String = "Горизонт дожития:"
     override val horizonFormula: String = "(Возраст дожития - Текущий возраст)"
-    override val horizonValueFormat: (horizon: Int, age: Int) -> String = { horizon, age -> "$horizon ${plural(horizon, yearPluralForms)} (возраст $age лет)" }
+    override val horizonValueFormat: (horizon: Int, age: Int) -> String = { horizon, age -> "$horizon ${plural(horizon, yearPluralForms)} (возраст $age ${plural(age, yearPluralForms)})" }
     override val includePropertyInFireLabel: String = "Учитывать имущество и долги в расчёте FIRE"
     override val includePropertyInFireSubOn: String = "Используется чистый капитал (net worth), включая недвижимость за вычетом долгов"
     override val includePropertyInFireSubOff: String = "Используются только инвестируемые активы (ликвидные + финансовые)"
@@ -364,20 +366,20 @@ val StringsRu: AppStrings = object : AppStrings {
     override val metricNetWorthDesc: String = "Общая стоимость активов за вычетом всех обязательств. Это те средства, что останутся у собственника после продажи всех активов и погашения всех долгов."
     override val metricNetWorthSubPrefix: String = "Активы: "
     override val metricNetWorthNegativeSub: String = "Отрицательный баланс (дефицит!)"
-    override val metricNetWorthAssetsFormat: (prefix: String, amount: String) -> String = { prefix, amount -> "$prefix: $amount" }
-    override val metricNetWorthNegativeAssetsFormat: (prefix: String, amount: String, negative: String) -> String = { prefix, amount, negative -> "$prefix: $amount ($negative)" }
+    override val metricNetWorthAssetsFormat: (prefix: String, amount: String) -> String = { prefix, amount -> "$prefix$amount" }
+    override val metricNetWorthNegativeAssetsFormat: (prefix: String, amount: String, negative: String) -> String = { prefix, amount, negative -> "$prefix$amount ($negative)" }
 
     override val metricFidelityTitle: String = "Бенчмарк: целевые показатели по Fidelity"
     override val metricFidelityFormula: String = "Годовой доход * Множитель"
     override val metricFidelityDesc: String = "Приведены контрольные точки Fidelity: 30 лет — 1x, 40 — 3x, 50 — 6x, 60 — 8x, 67 — 10x. Между точками приложение применяет линейную интерполяцию, до 25 лет используется множитель 0.5x (упрощение приложения). Сравнение ведётся с ликвидными и финансовыми активами за вычетом долгов, не покрытых недвижимостью; сама недвижимость в расчёт не входит.\n\nПример: если вам 40 лет и ваш годовой доход — 100 000, целевая сумма составляет 300 000.\n\nПримечание: Данное приложение не связано с компанией Fidelity Investments и использует исключительно открытые исследовательские ориентиры и общедоступную финансовую методологию."
-    override val metricFidelitySubFormat: (age: Int, mult: String) -> String = { age, mult -> "Возраст: $age лет | Множитель: ${mult}x" }
+    override val metricFidelitySubFormat: (age: Int, mult: String) -> String = { age, mult -> "Возраст: $age ${plural(age, yearPluralForms)} | Множитель: ${mult}x" }
     override val metricFidelityProgress: String = "Прогресс к ориентиру Fidelity:"
     override val metricFidelityCapitalFormat: (capital: String) -> String = { capital -> "Учитываемый капитал: $capital" }
     override val fidelityProgressRatioFormat: (String, String) -> String = { capital, target -> "($capital из $target)" }
 
     override val metricCfsTitle: String = "Коэффициент финансовой свободы"
     override val metricCfsFormula: String = "(Чистый капитал, включая недвижимость / Годовые расходы)"
-    override val metricCfsDesc: (String, String, String, String, String, String) -> String = { debt, buffer, neutral, positive, stability, independence -> "Чистый капитал = все активы, включая недвижимость, минус все долги. Показатель не означает готовности жить на доход от капитала — её оценивает вкладка FIRE, где недвижимость не учитывается.\n\nПоказывает, сколько годовых расходов покрывают ваши чистые активы (чистый капитал).\n\n• КФС < $debt — Вы в долгах\n• КФС >= $debt и КФС <= $buffer — У вас есть минимальная «подушка безопасности»\n• КФС > $buffer и КФС <= $neutral — Вы начали формировать свой финансовый капитал\n• КФС > $neutral и КФС <= $positive — Вы можете начать заниматься долгосрочными инвестициями\n• КФС > $positive и КФС <= $stability — Доходы от капитала могут приносить вам существенную прибавку. Инфляция все более значительно влияет на капитал\n• КФС >= $stability и КФС < $independence — Крепкая финансовая стабильность. На что вы тратите свой невосполнимый капитал времени?\n• КФС >= $independence — Вы достигли финансовой независимости" }
+    override val metricCfsDesc: (String, String, String, String, String, String) -> String = { debt, buffer, neutral, positive, stability, independence -> "Чистый капитал = все активы, включая недвижимость, минус все долги. Показатель не означает готовности жить на доход от капитала — её оценивает вкладка FIRE, где недвижимость не учитывается.\n\nПоказывает, сколько годовых расходов покрывают ваши чистые активы (чистый капитал).\n\n• КФС < $debt — Вы в долгах\n• КФС >= $debt и < $buffer — У вас есть минимальная «подушка безопасности»\n• КФС >= $buffer и < $neutral — Вы начали формировать свой финансовый капитал\n• КФС >= $neutral и < $positive — Вы можете начать заниматься долгосрочными инвестициями\n• КФС >= $positive и < $stability — Доходы от капитала могут приносить вам существенную прибавку. Инфляция все более значительно влияет на капитал\n• КФС >= $stability и < $independence — Крепкая финансовая стабильность. На что вы тратите свой невосполнимый капитал времени?\n• КФС >= $independence — Вы достигли финансовой независимости" }
 
     override val metricRealReturnTitle: String = "Реальная доходность капитала, %"
     override val metricRealReturnFormula: String = "(1 + Номинальная доходность) / (1 + Инфляция) - 1"
@@ -437,14 +439,14 @@ val StringsRu: AppStrings = object : AppStrings {
     override val fireYearsSuffix: String = " года"
     override val fireHeroAssumption: String = "Расчёт FIRE учитывает ликвидные и финансовые активы; имущество не учитывается, а долги вычитаются только в части, превышающей стоимость имущества"
     override val fireRetirementAgeLabel: String = "Возраст выхода на пенсию:"
-    override val fireRetirementAgeValue: (age: String) -> String = { age -> "$age лет" }
+    override val fireRetirementAgeValue: (age: String) -> String = { age -> "$age ${plural(Formatters.parseDouble(age, language), yearPluralForms)}" }
     override val fireTargetCapitalLabel: String = "Требуемый целевой капитал:"
     override val fireParamsTitle: String = "Параметры возраста и горизонта"
     override val fireBirthDateLabel: String = "Дата рождения:"
     override val fireCurrentAgeLabel: String = "Текущий возраст:"
-    override val fireCurrentAgeValue: (age: Int) -> String = { age -> "$age лет" }
+    override val fireCurrentAgeValue: (age: Int) -> String = { age -> "$age ${plural(age, yearPluralForms)}" }
     override val fireLifeExpectancyLabel: String = "Возраст дожития:"
-    override val fireLifeExpectancyValue: (exp: Int) -> String = { exp -> "$exp лет" }
+    override val fireLifeExpectancyValue: (exp: Int) -> String = { exp -> "$exp ${plural(exp, yearPluralForms)}" }
     override val fireHorizonLabel: String = "(Возраст дожития - Текущий возраст):"
     override val fireHorizonValue: (h: Int) -> String = { h -> "$h ${plural(h, yearPluralForms)}" }
     override val fireRealReturnLabel: String = "Реальная доходность капитала:"
@@ -551,9 +553,9 @@ val StringsRu: AppStrings = object : AppStrings {
     override val disclaimerTitle: String = "Отказ от отвествености"
     override val disclaimerText: String = "Важно: Проект является персональной разработкой и предоставляется исключительно в ознакомительных целях «как есть». Автор не несет ответственности за возможные сбои, потерю данных или иной ущерб, возникший в ходе использования данного ПО. Все расчеты, формулы, метрики и симуляции носят исключительно информационно-ознакомительный характер и не являются индивидуальной финансовой, инвестиционной или налоговой рекомендацией. Вы используете этот инструмент на свой собственный страх и риск."
     override val assumptionsDisclaimerTitle: String = "Дисклеймер"
-    override val assumptionsDisclaimerBody: (returnRate: String, inflation: String) -> String = { returnRate, inflation -> "Расчёты основаны на постоянной доходности $returnRate и инфляции $inflation, без учёта налогов и порядка рыночных событий. Это модель, а не прогноз.\n\nМодель не учитывает налоги, порядок рыночных событий и инфляцию доходов. Это ориентир, а не гарантия." }
+    override val assumptionsDisclaimerBody: (returnRate: String, inflation: String) -> String = { returnRate, inflation -> fireAssumptionsBody(returnRate, inflation) }
     override val fireAssumptionsTitle: String = "Допущения модели"
-    override val fireAssumptionsBody: (returnRate: String, inflation: String) -> String = { returnRate, inflation -> "Расчёты основаны на постоянной доходности $returnRate и инфляции $inflation без учёта налогов, порядка рыночных событий и инфляции доходов. Это ориентир, а не прогноз и не гарантия." }
+    override val fireAssumptionsBody: (returnRate: String, inflation: String) -> String = { returnRate, inflation -> "Расчёты основаны на постоянной доходности $returnRate и инфляции $inflation. Налог на прирост капитала учитывается упрощённо и только для доли финансовых активов; прочие налоги, порядок рыночных событий и инфляция доходов не учитываются. Это ориентир, а не прогноз и не гарантия." }
 
 
     // Pluralization
@@ -572,11 +574,11 @@ val StringsRu: AppStrings = object : AppStrings {
 
     // CFS Stage descriptions
     override val cfsStageDebt: (String) -> String = { debt -> "КФС < $debt — Вы в долгах" }
-    override val cfsStageBuffer: (String, String) -> String = { debt, buffer -> "КФС $debt..$buffer — У вас есть минимальная «подушка безопасности»" }
-    override val cfsStageCapital: (String, String) -> String = { buffer, neutral -> "КФС $buffer..$neutral — Вы начали формировать свой финансовый капитал" }
-    override val cfsStageInvesting: (String, String) -> String = { neutral, positive -> "КФС $neutral..$positive — Вы можете начать заниматься долгосрочными инвестициями" }
-    override val cfsStageReturns: (String, String) -> String = { positive, stability -> "КФС $positive..$stability — Доходы от капитала могут приносить вам существенную прибавку. Инфляция все более значительно влияет на капитал" }
-    override val cfsStageStability: (String, String) -> String = { stability, independence -> "КФС >= $stability и КФС < $independence — Крепкая финансовая стабильность. На что вы тратите свой невосполнимый капитал времени?" }
+    override val cfsStageBuffer: (String, String) -> String = { debt, buffer -> "КФС >= $debt и < $buffer — У вас есть минимальная «подушка безопасности»" }
+    override val cfsStageCapital: (String, String) -> String = { buffer, neutral -> "КФС >= $buffer и < $neutral — Вы начали формировать свой финансовый капитал" }
+    override val cfsStageInvesting: (String, String) -> String = { neutral, positive -> "КФС >= $neutral и < $positive — Вы можете начать заниматься долгосрочными инвестициями" }
+    override val cfsStageReturns: (String, String) -> String = { positive, stability -> "КФС >= $positive и < $stability — Доходы от капитала могут приносить вам существенную прибавку. Инфляция все более значительно влияет на капитал" }
+    override val cfsStageStability: (String, String) -> String = { stability, independence -> "КФС >= $stability и < $independence — Крепкая финансовая стабильность. На что вы тратите свой невосполнимый капитал времени?" }
     override val cfsStageIndependence: (String) -> String = { independence -> "КФС >= $independence — чистый капитал, включая недвижимость, превышает $independence годовых расходов" }
 
     // Auditor Opinion Share Text
@@ -623,7 +625,7 @@ val StringsRu: AppStrings = object : AppStrings {
 
     override val auditNetWorthTitle: String = "Чистый капитал"
     override val auditNetWorthStrong: String = "✅ Чистый капитал (Собственные средства: %1${'$'}s): Положительный чистый баланс. Ваши совокупные активы уверенно превышают финансовые обязательства, формируя прочный финансовый фундамент."
-    override val auditNetWorthBalanced: String = "ℹ️ Чистый капитал (Собственные средства: %1${'$'}s): Активы и обязательства находятся в близком балансе. Ваша финансовая стоимость положительна, но существенная часть активов обременена долгами."
+    override val auditNetWorthBalanced: String = "ℹ️ Чистый капитал (Собственные средства: %1${'$'}s): Активы и обязательства уравновешены."
     override val auditNetWorthNegative: String = "🚨 Чистый капитал (Отрицательный баланс: %1${'$'}s): Отрицательный чистый капитал (техническая неплатежеспособность). Обязательства превышают стоимость всего имеющегося имущества."
 
     override val auditFidelityTitle: String = "Бенчмарк Fidelity"
@@ -640,8 +642,8 @@ val StringsRu: AppStrings = object : AppStrings {
     override val auditCfsNegative: String = "🚨 Финансовая свобода (КФС: %1${'$'}s): Отрицательный показатель (%2${'$'}s). Долги превышают стоимость всех активов, включая недвижимость; чистый капитал отрицателен."
     override val auditCfsBuffer: (String, String) -> String = { cfs, buffer -> "📈 Финансовая свобода (КФС: $cfs): Чистый капитал, включая недвижимость, пока покрывает не более $buffer годовых расходов." }
     override val auditCfsPathToIndependence: String = "Вы на пути к независимости, но пока далеко от цели."
-    override val auditCfsCloseToIndependence: (percent: Int) -> String = { percent -> "Вы близки: капитал покрывает $percent% от целевого." }
-    override val auditCfsFinanciallyIndependent: String = "Вы достигли финансовой независимости: КФС не менее 30."
+    override val auditCfsCloseToIndependence: (percent: Int) -> String = { percent -> "Вы близки: капитал покрывает $percent% от целевого. Чистый капитал включает недвижимость; готовность жить на доход от капитала показывает вкладка FIRE." }
+    override val auditCfsFinanciallyIndependent: String = "Вы достигли финансовой независимости: КФС не менее 30. Чистый капитал включает недвижимость; готовность жить на доход от капитала показывает вкладка FIRE."
 
     override val auditRealReturnTitle: String = "Реальная доходность капитала"
     override val auditRealReturnPositive: String = "✅ Реальная доходность капитала (+%1${'$'}s): Доходность активов опережает инфляцию (%2${'$'}s против %3${'$'}s). Капитал защищен от обесценивания и наращивает реальную покупательную способность."
@@ -657,7 +659,7 @@ val StringsRu: AppStrings = object : AppStrings {
     override val exportFinancialAssetsLine: String = "• Финансовые активы: %1${'$'}s"
     override val exportPropertyAssetsLine: String = "• Недвижимость / имущество: %1${'$'}s"
     override val exportLiabilitiesLine: String = "• Пассивы (долги): %1${'$'}s"
-    override val exportAgeHorizonLine: String = "• Возраст: %1${'$'}d лет (дожитие: %2${'$'}d лет, горизонт: %3${'$'}d г.)"
+    override val exportAgeHorizonLine: (age: Int, lifeExpectancy: Int, horizon: Int) -> String = { age, lifeExpectancy, horizon -> "• Возраст: $age ${plural(age, yearPluralForms)} (дожитие: $lifeExpectancy ${plural(lifeExpectancy, yearPluralForms)}, горизонт: $horizon ${plural(horizon, yearPluralForms)})" }
     override val exportReturnsInflationLine: String = "• Номинальная доходность: %1${'$'}s | Инфляция: %2${'$'}s"
     override val exportTaxLine: String = "• Налог на прирост капитала: %1${'$'}s"
 

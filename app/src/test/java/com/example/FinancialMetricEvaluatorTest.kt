@@ -144,16 +144,16 @@ class FinancialMetricEvaluatorTest {
         // Чистые активы = 1 200 000. Годовые расходы = 600 000. КФС = 1 200 000 / 600 000 = 2.0
         assertEquals(1_200_000.0, metrics.netWorth, 0.01)
         assertEquals(2.0, metrics.financialFreedomRatio, 0.01)
-        // При КФС = 2.0 попадает в полуинтервал [2, 5): балл 6, статус нейтральный, этап 2..5
+        // При КФС = 2.0 попадает в полуинтервал [2, 5): балл 6, статус нейтральный.
         assertEquals(6, metrics.scores.cfsScore)
         assertEquals(AuditIndicatorStatus.NEUTRAL, FinancialMetricEvaluator.getCfsStatus(metrics.financialFreedomRatio))
         assertEquals(AuditIndicatorStatus.NEUTRAL, FinancialMetricEvaluator.getComponentScoreStatus(metrics.scores.cfsScore))
         assertEquals(
-            "КФС 2..5 — Вы можете начать заниматься долгосрочными инвестициями",
+            "КФС >= 2 и < 5 — Вы можете начать заниматься долгосрочными инвестициями",
             FinanceCalculator.getCfsStageDescription(metrics.financialFreedomRatio, AppLanguage.RU)
         )
         assertEquals(
-            "CFS 2..5 — You can begin engaging in long-term investing",
+            "CFS >= 2 and < 5 — You can begin engaging in long-term investing",
             FinanceCalculator.getCfsStageDescription(metrics.financialFreedomRatio, AppLanguage.EN)
         )
 
@@ -190,20 +190,20 @@ class FinancialMetricEvaluatorTest {
 
         val cases = listOf(
             CfsTestCase(-1.0, 0, AuditIndicatorStatus.NEGATIVE, "КФС < 0 — Вы в долгах", "CFS < 0 — You are in debt"),
-            CfsTestCase(0.0, 2, AuditIndicatorStatus.NEGATIVE, "0..0,5", "0..0.5"),
-            CfsTestCase(0.49, 2, AuditIndicatorStatus.NEGATIVE, "0..0,5", "0..0.5"),
-            CfsTestCase(0.5, 4, AuditIndicatorStatus.NEGATIVE, "0,5..2", "0.5..2"),
-            CfsTestCase(1.0, 4, AuditIndicatorStatus.NEGATIVE, "0,5..2", "0.5..2"),
-            CfsTestCase(1.99, 4, AuditIndicatorStatus.NEGATIVE, "0,5..2", "0.5..2"),
-            CfsTestCase(2.0, 6, AuditIndicatorStatus.NEUTRAL, "2..5", "2..5"),
-            CfsTestCase(3.5, 6, AuditIndicatorStatus.NEUTRAL, "2..5", "2..5"),
-            CfsTestCase(4.99, 6, AuditIndicatorStatus.NEUTRAL, "2..5", "2..5"),
-            CfsTestCase(5.0, 8, AuditIndicatorStatus.POSITIVE, "5..15", "5..15"),
-            CfsTestCase(10.0, 8, AuditIndicatorStatus.POSITIVE, "5..15", "5..15"),
-            CfsTestCase(14.99, 8, AuditIndicatorStatus.POSITIVE, "5..15", "5..15"),
-            CfsTestCase(15.0, 9, AuditIndicatorStatus.POSITIVE, "КФС >= 15 и КФС < 30", "CFS >= 15 and < 30"),
-            CfsTestCase(25.0, 9, AuditIndicatorStatus.POSITIVE, "КФС >= 15 и КФС < 30", "CFS >= 15 and < 30"),
-            CfsTestCase(29.99, 9, AuditIndicatorStatus.POSITIVE, "КФС >= 15 и КФС < 30", "CFS >= 15 and < 30"),
+            CfsTestCase(0.0, 2, AuditIndicatorStatus.NEGATIVE, "КФС >= 0 и < 0,5", "CFS >= 0 and < 0.5"),
+            CfsTestCase(0.49, 2, AuditIndicatorStatus.NEGATIVE, "КФС >= 0 и < 0,5", "CFS >= 0 and < 0.5"),
+            CfsTestCase(0.5, 4, AuditIndicatorStatus.NEGATIVE, "КФС >= 0,5 и < 2", "CFS >= 0.5 and < 2"),
+            CfsTestCase(1.0, 4, AuditIndicatorStatus.NEGATIVE, "КФС >= 0,5 и < 2", "CFS >= 0.5 and < 2"),
+            CfsTestCase(1.99, 4, AuditIndicatorStatus.NEGATIVE, "КФС >= 0,5 и < 2", "CFS >= 0.5 and < 2"),
+            CfsTestCase(2.0, 6, AuditIndicatorStatus.NEUTRAL, "КФС >= 2 и < 5", "CFS >= 2 and < 5"),
+            CfsTestCase(3.5, 6, AuditIndicatorStatus.NEUTRAL, "КФС >= 2 и < 5", "CFS >= 2 and < 5"),
+            CfsTestCase(4.99, 6, AuditIndicatorStatus.NEUTRAL, "КФС >= 2 и < 5", "CFS >= 2 and < 5"),
+            CfsTestCase(5.0, 8, AuditIndicatorStatus.POSITIVE, "КФС >= 5 и < 15", "CFS >= 5 and < 15"),
+            CfsTestCase(10.0, 8, AuditIndicatorStatus.POSITIVE, "КФС >= 5 и < 15", "CFS >= 5 and < 15"),
+            CfsTestCase(14.99, 8, AuditIndicatorStatus.POSITIVE, "КФС >= 5 и < 15", "CFS >= 5 and < 15"),
+            CfsTestCase(15.0, 9, AuditIndicatorStatus.POSITIVE, "КФС >= 15 и < 30", "CFS >= 15 and < 30"),
+            CfsTestCase(25.0, 9, AuditIndicatorStatus.POSITIVE, "КФС >= 15 и < 30", "CFS >= 15 and < 30"),
+            CfsTestCase(29.99, 9, AuditIndicatorStatus.POSITIVE, "КФС >= 15 и < 30", "CFS >= 15 and < 30"),
             CfsTestCase(30.0, 10, AuditIndicatorStatus.POSITIVE, "КФС >= 30", "CFS >= 30"),
             CfsTestCase(50.0, 10, AuditIndicatorStatus.POSITIVE, "КФС >= 30", "CFS >= 30")
         )

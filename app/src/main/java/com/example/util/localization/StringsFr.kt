@@ -364,8 +364,8 @@ val StringsFr: AppStrings = object : AppStrings {
     override val metricNetWorthDesc: String = "Valeur totale des biens diminuée de toutes les dettes. Représente ce qui vous appartient réellement une fois tous les engagements soldés."
     override val metricNetWorthSubPrefix: String = "Patrimoine total : "
     override val metricNetWorthNegativeSub: String = "Valeur nette négative (déficit !)"
-    override val metricNetWorthAssetsFormat: (prefix: String, amount: String) -> String = { prefix, amount -> "$prefix : $amount" }
-    override val metricNetWorthNegativeAssetsFormat: (prefix: String, amount: String, negative: String) -> String = { prefix, amount, negative -> "$prefix : $amount ($negative)" }
+    override val metricNetWorthAssetsFormat: (prefix: String, amount: String) -> String = { prefix, amount -> "$prefix$amount" }
+    override val metricNetWorthNegativeAssetsFormat: (prefix: String, amount: String, negative: String) -> String = { prefix, amount, negative -> "$prefix$amount ($negative)" }
 
     override val metricFidelityTitle: String = "Repère : Jalons de capital Fidelity"
     override val metricFidelityFormula: String = "Revenu annuel * Multiplicateur"
@@ -377,7 +377,7 @@ val StringsFr: AppStrings = object : AppStrings {
 
     override val metricCfsTitle: String = "Taux de liberté financière (CFS)"
     override val metricCfsFormula: String = "(Patrimoine net, immobilier inclus / Dépenses annuelles)"
-    override val metricCfsDesc: (String, String, String, String, String, String) -> String = { debt, buffer, neutral, positive, stability, independence -> "Patrimoine net = ensemble des actifs, immobilier inclus, déduction faite des dettes. Cet indicateur n'implique pas que vous puissiez vivre des rentes du capital ; l'onglet FIRE évalue cette autonomie sans l'immobilier.\n\nMesure le nombre d'années de dépenses courantes couvertes par votre patrimoine net.\n\n• CFS < ${debt} — Situation de dette nette\n• CFS ${debt}..${buffer} — Épargne de sécurité minimale\n• CFS ${buffer}..${neutral} — Phase initiale d'accumulation de capital\n• CFS ${neutral}..${positive} — Phase d'investissement à long terme\n• CFS ${positive}..${stability} — Les rendements génèrent des revenus tangibles\n• CFS >= ${stability} et < ${independence} — Stabilité financière solide\n• CFS >= ${independence} — Indépendance financière totale atteinte" }
+    override val metricCfsDesc: (String, String, String, String, String, String) -> String = { debt, buffer, neutral, positive, stability, independence -> "Patrimoine net = ensemble des actifs, immobilier inclus, déduction faite des dettes. Cet indicateur n'implique pas que vous puissiez vivre des rentes du capital ; l'onglet FIRE évalue cette autonomie sans l'immobilier.\n\nMesure le nombre d'années de dépenses courantes couvertes par votre patrimoine net.\n\n• CFS < ${debt} — Situation de dette nette\n• CFS >= $debt et < $buffer — Épargne de sécurité minimale\n• CFS >= $buffer et < $neutral — Phase initiale d'accumulation de capital\n• CFS >= $neutral et < $positive — Phase d'investissement à long terme\n• CFS >= $positive et < $stability — Les rendements génèrent des revenus tangibles\n• CFS >= ${stability} et < ${independence} — Stabilité financière solide\n• CFS >= ${independence} — Indépendance financière totale atteinte" }
 
     override val metricRealReturnTitle: String = "Rendement réel du capital, %"
     override val metricRealReturnFormula: String = "(1 + Rendement nominal) / (1 + Inflation) - 1"
@@ -551,9 +551,9 @@ val StringsFr: AppStrings = object : AppStrings {
     override val disclaimerTitle: String = "Avertissement"
     override val disclaimerText: String = "Important : Ce projet est un développement personnel fourni à titre indicatif « en l'état ». L'auteur décline toute responsabilité quant à d'éventuels dysfonctionnements, pertes de données ou préjudices résultant de l'utilisation de ce logiciel. L'ensemble des calculs, formules, métriques et simulations a une vocation purement informative et ne saurait constituer un conseil financier, d'investissement ou fiscal personnalisé. Vous utilisez cet outil sous votre entière responsabilité."
     override val assumptionsDisclaimerTitle: String = "Avertissement"
-    override val assumptionsDisclaimerBody: (returnRate: String, inflation: String) -> String = { returnRate, inflation -> "Les calculs reposent sur un rendement constant de $returnRate et une inflation de $inflation, sans fiscalité ni effet d'ordre des rendements. Il s'agit d'un modèle et non d'une prévision.\n\nLe modèle ne prend pas en compte les impôts, l'ordre des rendements de marché ni l'inflation des salaires. C'est un guide, non une garantie." }
+    override val assumptionsDisclaimerBody: (returnRate: String, inflation: String) -> String = { returnRate, inflation -> fireAssumptionsBody(returnRate, inflation) }
     override val fireAssumptionsTitle: String = "Hypothèses du modèle"
-    override val fireAssumptionsBody: (returnRate: String, inflation: String) -> String = { returnRate, inflation -> "Les calculs supposent un rendement constant de $returnRate et une inflation de $inflation, sans tenir compte des impôts, de la séquence des rendements ni de l'inflation des revenus. Il s'agit d'un outil d'orientation stratégique, non d'une garantie." }
+    override val fireAssumptionsBody: (returnRate: String, inflation: String) -> String = { returnRate, inflation -> "Les calculs supposent un rendement constant de $returnRate et une inflation de $inflation. L'impôt sur les plus-values est estimé de manière simplifiée et uniquement pour la part des actifs financiers ; les autres impôts, l'ordre des événements de marché et l'inflation des revenus ne sont pas pris en compte. Il s'agit d'un repère, et non d'une prévision ou d'une garantie." }
 
     // Pluralization & Formats
     override val moneyFormat: String = "%3${'$'}s%1${'$'}s%2${'$'}s%4${'$'}s"
@@ -571,10 +571,10 @@ val StringsFr: AppStrings = object : AppStrings {
 
     // CFS Stage descriptions
     override val cfsStageDebt: (String) -> String = { debt -> "CFS < $debt — Vous êtes en dette nette" }
-    override val cfsStageBuffer: (String, String) -> String = { debt, buffer -> "CFS $debt..$buffer — Vous disposez d'un coussin d'urgence minimal" }
-    override val cfsStageCapital: (String, String) -> String = { buffer, neutral -> "CFS $buffer..$neutral — Début de constitution d'un capital financier" }
-    override val cfsStageInvesting: (String, String) -> String = { neutral, positive -> "CFS $neutral..$positive — Vous pouvez commencer à investir sur le long terme" }
-    override val cfsStageReturns: (String, String) -> String = { positive, stability -> "CFS $positive..$stability — Les rendements génèrent des revenus notables. L'inflation pèse davantage sur le capital" }
+    override val cfsStageBuffer: (String, String) -> String = { debt, buffer -> "CFS >= $debt et < $buffer — Vous disposez d'un coussin d'urgence minimal" }
+    override val cfsStageCapital: (String, String) -> String = { buffer, neutral -> "CFS >= $buffer et < $neutral — Début de constitution d'un capital financier" }
+    override val cfsStageInvesting: (String, String) -> String = { neutral, positive -> "CFS >= $neutral et < $positive — Vous pouvez commencer à investir sur le long terme" }
+    override val cfsStageReturns: (String, String) -> String = { positive, stability -> "CFS >= $positive et < $stability — Les rendements génèrent des revenus notables. L'inflation pèse davantage sur le capital" }
     override val cfsStageStability: (String, String) -> String = { stability, independence -> "CFS >= $stability et < $independence — Stabilité financière solide. Comment valorisez-vous votre temps irremplaçable ?" }
     override val cfsStageIndependence: (String) -> String = { independence -> "CFS >= $independence — Le patrimoine net, immobilier compris, dépasse $independence années de dépenses" }
 
@@ -622,7 +622,7 @@ val StringsFr: AppStrings = object : AppStrings {
 
     override val auditNetWorthTitle: String = "Valeur nette"
     override val auditNetWorthStrong: String = "✅ Valeur nette (Capitaux propres : %1${'$'}s) : Bilan très positif. Le patrimoine global excède nettement le passif, offrant des bases solides."
-    override val auditNetWorthBalanced: String = "ℹ️ Valeur nette (Capitaux propres : %1${'$'}s) : Actifs et passifs sont proches. La valeur reste positive, mais une part notable est grevée par l'endettement."
+    override val auditNetWorthBalanced: String = "ℹ️ Valeur nette (Capitaux propres : %1${'$'}s) : Les actifs et les passifs sont équilibrés."
     override val auditNetWorthNegative: String = "🚨 Valeur nette (Solde négatif : %1${'$'}s) : Valeur nette négative (situation de déficit). L'ensemble des dettes excède les biens possédés."
 
     override val auditFidelityTitle: String = "Repère Fidelity"
@@ -639,8 +639,8 @@ val StringsFr: AppStrings = object : AppStrings {
     override val auditCfsNegative: String = "🚨 Liberté financière (CFS : %1${'$'}s) : Ratio négatif (%2${'$'}s). Les dettes dépassent l'ensemble des actifs, y compris l'immobilier."
     override val auditCfsBuffer: (String, String) -> String = { cfs, buffer -> "📈 Liberté financière (CFS : $cfs) : Le patrimoine net couvre au maximum $buffer années de dépenses." }
     override val auditCfsPathToIndependence: String = "Vous êtes sur la voie de l'indépendance financière, mais encore à distance du but."
-    override val auditCfsCloseToIndependence: (percent: Int) -> String = { percent -> "Vous êtes tout près : votre capital couvre $percent% de l'objectif." }
-    override val auditCfsFinanciallyIndependent: String = "Vous avez atteint l'indépendance financière : le CFS est d'au moins 30."
+    override val auditCfsCloseToIndependence: (percent: Int) -> String = { percent -> "Vous êtes tout près : votre capital couvre $percent% de l'objectif. Le patrimoine net inclut l'immobilier ; l'onglet FIRE évalue la possibilité de vivre des revenus du capital." }
+    override val auditCfsFinanciallyIndependent: String = "Vous avez atteint l'indépendance financière : le CFS est d'au moins 30. Le patrimoine net inclut l'immobilier ; l'onglet FIRE évalue la possibilité de vivre des revenus du capital."
 
     override val auditRealReturnTitle: String = "Rendement réel du capital"
     override val auditRealReturnPositive: String = "✅ Rendement réel du capital (+%1${'$'}s) : Le rendement devance l'inflation (%2${'$'}s contre %3${'$'}s). Le capital est protégé de l'érosion et gagne en pouvoir d'achat."
@@ -656,7 +656,7 @@ val StringsFr: AppStrings = object : AppStrings {
     override val exportFinancialAssetsLine: String = "• Actifs financiers : %1${'$'}s"
     override val exportPropertyAssetsLine: String = "• Immobilier / Matériel : %1${'$'}s"
     override val exportLiabilitiesLine: String = "• Passif (dettes) : %1${'$'}s"
-    override val exportAgeHorizonLine: String = "• Âge : %1${'$'}d ans (espérance : %2${'$'}d ans, horizon : %3${'$'}d ans)"
+    override val exportAgeHorizonLine: (age: Int, lifeExpectancy: Int, horizon: Int) -> String = { age, lifeExpectancy, horizon -> "• Âge : $age ans (espérance : $lifeExpectancy ans, horizon : $horizon ans)" }
     override val exportReturnsInflationLine: String = "• Rendement nominal : %1${'$'}s | Inflation : %2${'$'}s"
     override val exportTaxLine: String = "• Impôt sur les plus-values : %1${'$'}s"
 
