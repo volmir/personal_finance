@@ -12,3 +12,5 @@ Le modèle applique un rendement réel constant et l'actualisation des dépenses
 L'interface est disponible en 6 langues (anglais, français, allemand, espagnol, italien, russe), déterminée par la langue du système. L'application fonctionne entièrement hors ligne sans autorisation Internet ; toutes vos données restent sur votre appareil.
 
 Tous les calculs ont une vocation informative et éducative et ne constituent pas un conseil financier, d'investissement ou fiscal personnalisé.
+
+La réserve en cas de perte d'emploi et les mensualités des prêts immobilier et automobile tiennent compte du scénario de hausse de salaire. L'héritage, la vente de biens et les dépenses ponctuelles importantes reposent sur le revenu initial. Le produit de la vente est plafonné à la valeur du bien.

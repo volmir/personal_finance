@@ -11,6 +11,7 @@ import com.example.domain.FinancialInputLimits
 import com.example.domain.SimulatorScaleCalculator
 import com.example.domain.ScenarioConstants
 import com.example.domain.calculateSimulationOngoingExpenses
+import com.example.domain.calculateScenarioAmounts
 import kotlinx.coroutines.flow.MutableStateFlow
 import com.example.util.localization.AppLanguage
 import com.example.util.localization.AppStrings
@@ -62,7 +63,7 @@ data class FireScenarioToggles(
     val jobLoss: Boolean = false,                   // 1. Потеря работы: потеря 12 месяцев дохода из накоплений
     val marketCrash30: Boolean = false,             // 2. Обвал рынка на 30%: ETF -30%
     val mortgage20Years35Income: Boolean = false,   // 3. Ипотека на квартиру: 35% от ежемесячного дохода на период 20 лет
-    val carLoan5Years: Boolean = false,             // 4. Автомобиль в кредит: ежемесячные расходы +20% на 5 лет
+    val carLoan5Years: Boolean = false,             // 4. Автомобиль в кредит: ежемесячный платёж 20% дохода на 5 лет
     val largeOneOffExpense500: Boolean = false,     // 5. Крупная разовая трата: расход 500% мес. дохода (покрытие из активов)
     val expensesPlus25: Boolean = false,           // 6. Рост расходов: +25% к расходам
     val childOrDependent18Years: Boolean = false    // 7. Рождение ребенка: +25% к расходам на период в 18 лет
@@ -320,9 +321,9 @@ class MainViewModel @JvmOverloads constructor(
 
         // 1. Доход:
         // Базовый доход с учетом "Повышение зарплаты" (+20% постоянно)
-        val incomeMultiplier = 1.0 + (if (sc.salaryIncrease20) ScenarioConstants.SALARY_INCREASE_PERCENT / 100.0 else 0.0)
+        val scenarioAmounts = calculateScenarioAmounts(baseInput.monthlyIncome, baseInput.propertyAssets, sc.salaryIncrease20)
         // Потеря работы моделируется разовым изъятием накоплений, доход сохраняется.
-        val baseIncome = baseInput.monthlyIncome * incomeMultiplier
+        val baseIncome = scenarioAmounts.monthlyIncome
 
         // 2. Рынок и финансовые активы:
         // Негативное: Обвал рынка на 30% (-30%)
@@ -334,9 +335,9 @@ class MainViewModel @JvmOverloads constructor(
 
         // 3. Разовые поступления капитала (Позитивные события):
         // 5. Наследство или крупный подарок: +1200% месячного дохода (12 мес.)
-        val inheritanceAmount = if (sc.inheritance1200) ScenarioConstants.INHERITANCE_PERCENT_OF_MONTHLY_INCOME / 100.0 * baseInput.monthlyIncome else 0.0
+        val inheritanceAmount = if (sc.inheritance1200) scenarioAmounts.inheritance else 0.0
         // 6. Продажа имущества: min(2000% месячного дохода, имеющееся имущество)
-        val propertySaleAmount = if (sc.propertySale2000) minOf(ScenarioConstants.PROPERTY_SALE_PERCENT_OF_MONTHLY_INCOME / 100.0 * baseInput.monthlyIncome, baseInput.propertyAssets) else 0.0
+        val propertySaleAmount = if (sc.propertySale2000) scenarioAmounts.propertySale else 0.0
         val effectivePropertyAssets = baseInput.propertyAssets - propertySaleAmount
         val totalPositiveLumpSum = inheritanceAmount + propertySaleAmount
 
@@ -355,10 +356,10 @@ class MainViewModel @JvmOverloads constructor(
 
         // 5. Временные ежемесячные расходы:
         // Негативное 3. Ипотека на квартиру: 35% от ежемесячного дохода на период 20 лет
-        val mortgageMonthlyExpense = if (sc.mortgage20Years35Income) ScenarioConstants.MORTGAGE_INCOME_PERCENT / 100.0 * baseIncome else 0.0
+        val mortgageMonthlyExpense = if (sc.mortgage20Years35Income) scenarioAmounts.mortgageMonthly else 0.0
 
         // Негативное 4. Автомобиль в кредит: 20% от ежемесячного дохода на 5 лет
-        val carLoanMonthlyExpense = if (sc.carLoan5Years) ScenarioConstants.CAR_LOAN_INCOME_PERCENT / 100.0 * baseIncome else 0.0
+        val carLoanMonthlyExpense = if (sc.carLoan5Years) scenarioAmounts.carLoanMonthly else 0.0
 
         // Негативное 7. Рождение ребенка: +25% к базовым расходам на 18 лет
         val childMonthlyExpense = if (sc.childOrDependent18Years) ScenarioConstants.CHILD_DEPENDENT_EXPENSE_PERCENT / 100.0 * baseInput.monthlyExpenses else 0.0
@@ -406,8 +407,8 @@ class MainViewModel @JvmOverloads constructor(
 
         if (sc.largeOneOffExpense500 || sc.jobLoss) {
             val expenseTarget =
-                (if (sc.largeOneOffExpense500) ScenarioConstants.LARGE_ONE_OFF_EXPENSE_PERCENT / 100.0 else 0.0) * baseInput.monthlyIncome +
-                    (if (sc.jobLoss) ScenarioConstants.JOB_LOSS_MONTHS else 0.0) * baseInput.monthlyIncome
+                (if (sc.largeOneOffExpense500) scenarioAmounts.largeOneOffExpense else 0.0) +
+                    (if (sc.jobLoss) scenarioAmounts.jobLoss else 0.0)
             var remainingToCover = expenseTarget
 
             val coveredFromLiquid = minOf(effLiquidAssets, remainingToCover)

@@ -16,3 +16,5 @@ Scenarios include: income +20%; financial assets +25%; expenses −15% or −30%
 The interface is available in 6 languages: English, Russian, German, French, Italian, and Spanish (automatically selected based on device system locale). The app does not request internet access; calculations and user data remain on-device. Choose from 13 currency symbols; values are not automatically converted and no exchange rates are provided.
 
 All calculations are informational and are not financial, investment or tax advice. Results depend on entered data and the model's simplified assumptions.
+
+Job-loss reserves and mortgage/car payments include the salary-increase scenario. Inheritance, property sales and large one-off expenses use the original income. Property-sale proceeds cannot exceed the property value.

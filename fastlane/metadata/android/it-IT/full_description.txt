@@ -12,3 +12,5 @@ Il modello adotta un rendimento reale costante e l'attualizzazione delle spese f
 L'interfaccia supporta 6 lingue (inglese, italiano, tedesco, francese, spagnolo, russo), selezionate automaticamente in base alla lingua del dispositivo. L'app funziona completamente offline senza permessi Internet; tutti i tuoi dati rimangono esclusivamente sul tuo dispositivo.
 
 Tutti i calcoli hanno scopo puramente informativo ed educativo e non costituiscono consulenza finanziaria, di investimento o fiscale.
+
+La riserva per la perdita del lavoro e le rate di mutuo e prestito auto tengono conto dello scenario di aumento dello stipendio. Eredità, vendita di immobili e grandi spese una tantum si basano sul reddito iniziale. Il ricavato della vendita non supera il valore dell'immobile.

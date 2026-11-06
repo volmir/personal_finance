@@ -513,7 +513,7 @@ val StringsFr: AppStrings = object : AppStrings {
     override val scenarioInheritanceDesc: (amt: String) -> String = { amt -> "Entrée de capital : +$amt (dans les liquidités)" }
 
     override val scenarioPropertySaleTitle: String = "Vente d'un bien matériel (véhicule, immobilier)"
-    override val scenarioPropertySaleParam: (String) -> String = { percent -> "cession ponctuelle de ${percent}% du revenu mensuel" }
+    override val scenarioPropertySaleParam: (String) -> String = { percent -> "cession ponctuelle jusqu'à ${percent}% du revenu mensuel" }
     override val scenarioPropertySaleDesc: (amt: String) -> String = { amt -> "Produit de cession : +$amt (dans les liquidités)" }
 
     override val scenarioChildrenSelfSufficientTitle: String = "Indépendance financière des enfants"
@@ -522,7 +522,7 @@ val StringsFr: AppStrings = object : AppStrings {
 
     override val scenarioJobLossTitle: String = "Perte d'emploi"
     override val scenarioJobLossParam: (String) -> String = { months -> "perte de $months mois de revenus" }
-    override val scenarioJobLossDesc: (String) -> String = { months -> "$months mois de revenus perdus, puisés sur l'épargne" }
+    override val scenarioJobLossDesc: (String) -> String = { months -> "$months mois de revenus actuels perdus, puisés sur l'épargne" }
 
     override val scenarioMarketCrashTitle: (String) -> String = { percent -> "Krach boursier −${percent}%" }
     override val scenarioMarketCrashParam: (String) -> String = { percent -> "ETF −${percent}%" }

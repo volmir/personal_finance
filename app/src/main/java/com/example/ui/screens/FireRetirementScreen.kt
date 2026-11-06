@@ -424,7 +424,7 @@ fun FireRetirementScreen(
                     ) {
                         Text(strings.fireRealReturnLabel, style = MaterialTheme.typography.bodySmall)
                         Text(
-                            Formatters.formatPercent(metrics.realReturnPercent, lang),
+                            Formatters.formatPercent(displayMetrics.realReturnPercent, lang),
                             style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold)
                         )
                     }

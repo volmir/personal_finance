@@ -12,3 +12,5 @@ El modelo aplica una rentabilidad real constante y el valor actual de los gastos
 La interfaz está disponible en 6 idiomas (inglés, español, alemán, francés, italiano, ruso), determinados automáticamente por el idioma del sistema operativo. La app funciona 100% sin conexión y no solicita permisos de internet; todos los datos y cálculos permanecen en tu dispositivo.
 
 Todos los cálculos tienen carácter meramente informativo y divulgativo, y no constituyen asesoramiento financiero, de inversión o tributario personalizado.
+
+La reserva por pérdida de empleo y las cuotas de hipoteca y préstamo de coche incluyen el escenario de aumento salarial. La herencia, la venta de bienes y los grandes gastos puntuales se calculan con los ingresos iniciales. La venta no supera el valor del bien.

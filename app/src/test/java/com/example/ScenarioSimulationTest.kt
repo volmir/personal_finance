@@ -6,6 +6,7 @@ import com.example.domain.FinanceCalculator
 import com.example.domain.SimulatorScaleCalculator
 import com.example.domain.TemporaryExpense
 import com.example.domain.calculateSimulationOngoingExpenses
+import com.example.domain.calculateScenarioAmounts
 import com.example.ui.FireScenarioToggles
 import com.example.ui.FireSimulationState
 import com.example.util.Formatters
@@ -18,6 +19,29 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class ScenarioSimulationTest {
+
+    @Test
+    fun `shared scenario amounts use the correct income and property sale bounds`() {
+        for (raise in listOf(false, true)) {
+            for ((property, expectedSale) in listOf(0.0 to 0.0, 1_000.0 to 1_000.0, 120_000.0 to 120_000.0, 120_001.0 to 120_000.0)) {
+                val amounts = calculateScenarioAmounts(6_000.0, property, raise)
+                assertEquals(if (raise) 7_200.0 else 6_000.0, amounts.monthlyIncome, 0.0)
+                assertEquals(1_200.0, amounts.salaryIncrease, 0.0)
+                assertEquals(if (raise) 86_400.0 else 72_000.0, amounts.jobLoss, 0.0)
+                assertEquals(if (raise) 2_520.0 else 2_100.0, amounts.mortgageMonthly, 0.0)
+                assertEquals(if (raise) 1_440.0 else 1_200.0, amounts.carLoanMonthly, 0.0)
+                assertEquals(expectedSale, amounts.propertySale, 0.0)
+                assertEquals(72_000.0, amounts.inheritance, 0.0)
+                assertEquals(30_000.0, amounts.largeOneOffExpense, 0.0)
+            }
+            val zero = calculateScenarioAmounts(0.0, 1_000.0, raise)
+            assertEquals(0.0, zero.monthlyIncome, 0.0)
+            assertEquals(0.0, zero.jobLoss, 0.0)
+            assertEquals(0.0, zero.mortgageMonthly, 0.0)
+            assertEquals(0.0, zero.carLoanMonthly, 0.0)
+            assertEquals(0.0, zero.propertySale, 0.0)
+        }
+    }
 
     @Test
     fun `shared ongoing expenses preserve scenario multipliers slider and ten percent floor`() {

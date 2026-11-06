@@ -22,6 +22,37 @@ object ScenarioConstants {
     const val CHILD_DEPENDENT_DURATION_YEARS = 18.0
 }
 
+data class ScenarioAmounts(
+    val monthlyIncome: Double,
+    val salaryIncrease: Double,
+    val inheritance: Double,
+    val propertySale: Double,
+    val jobLoss: Double,
+    val mortgageMonthly: Double,
+    val carLoanMonthly: Double,
+    val largeOneOffExpense: Double
+)
+
+/** Job loss and loan payments use current income; windfalls and one-off spending use base income. */
+fun calculateScenarioAmounts(
+    monthlyIncome: Double,
+    propertyAssets: Double,
+    salaryIncrease20: Boolean
+): ScenarioAmounts {
+    val currentIncome = monthlyIncome *
+        (1.0 + if (salaryIncrease20) ScenarioConstants.SALARY_INCREASE_PERCENT / 100.0 else 0.0)
+    return ScenarioAmounts(
+        monthlyIncome = currentIncome,
+        salaryIncrease = monthlyIncome * ScenarioConstants.SALARY_INCREASE_PERCENT / 100.0,
+        inheritance = ScenarioConstants.INHERITANCE_PERCENT_OF_MONTHLY_INCOME / 100.0 * monthlyIncome,
+        propertySale = minOf(ScenarioConstants.PROPERTY_SALE_PERCENT_OF_MONTHLY_INCOME / 100.0 * monthlyIncome, propertyAssets),
+        jobLoss = ScenarioConstants.JOB_LOSS_MONTHS * currentIncome,
+        mortgageMonthly = ScenarioConstants.MORTGAGE_INCOME_PERCENT / 100.0 * currentIncome,
+        carLoanMonthly = ScenarioConstants.CAR_LOAN_INCOME_PERCENT / 100.0 * currentIncome,
+        largeOneOffExpense = ScenarioConstants.LARGE_ONE_OFF_EXPENSE_PERCENT / 100.0 * monthlyIncome
+    )
+}
+
 data class SimulationOngoingExpenses(
     val beforeReduction: Double,
     val effective: Double

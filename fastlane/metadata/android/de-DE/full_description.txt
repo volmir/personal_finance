@@ -12,3 +12,5 @@ Das FIRE-Modell basiert auf konstanter Realrendite und abgezinsten künftigen Au
 Die App unterstützt 6 Sprachen (Englisch, Deutsch, Französisch, Italienisch, Spanisch, Russisch), ermittelt anhand der Systemsprache. Die Anwendung funktioniert komplett offline ohne Internetberechtigung; sämtliche Daten und Berechnungen verbleiben ausschließlich lokal auf Ihrem Gerät.
 
 Alle Berechnungen dienen reinen Informations- und Bildungszwecken und stellen keine individuelle Finanz-, Anlage- oder Steuerberatung dar.
+
+Die Rücklage bei Jobverlust und die Raten für Hypothek und Autokredit berücksichtigen das Szenario einer Gehaltserhöhung. Erbschaft, Immobilienverkauf und große Einmalausgaben basieren auf dem ursprünglichen Einkommen. Der Verkaufserlös ist auf den Immobilienwert begrenzt.

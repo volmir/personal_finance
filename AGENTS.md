@@ -144,7 +144,6 @@ Order for multi-step plans: numeric foundation (rounding, score) → status/text
 - FIRE "assumptions" text says calculations ignore taxes (contradicts the tax model), in all six languages and in the export.
 - CFS description intervals use `<=` upper bounds; code uses `[a, b)`. Audit CFS texts do not mention that property is included.
 - Russian age phrases use the wrong plural ("возраст 22 лет").
-- "Job loss" scenario uses base income while mortgage/car use income after the salary raise; scenario descriptions can differ from computed amounts.
 
 ## 10. Release and F-Droid
 

@@ -83,6 +83,33 @@ class MainViewModelRobolectricTest {
     }
 
     @Test
+    fun `job loss uses raised income while inheritance sale and large expense keep base income`() {
+        val viewModel = MainViewModel(app) { today }
+        for ((liquid, financial) in listOf(200_000.0 to 40_000.0, 10_000.0 to 100_000.0, 0.0 to 0.0)) {
+            viewModel.resetSimulation()
+            viewModel.updateInputData {
+                it.copy(monthlyIncome = 6_000.0, monthlyExpenses = 4_800.0, liquidAssets = liquid,
+                    financialAssets = financial, propertyAssets = 1_000.0, liabilities = 0.0)
+            }
+            val input = viewModel.inputData.value
+            val base = viewModel.metrics.value
+            viewModel.toggleScenario("pos_salary_increase")
+            viewModel.toggleScenario("job_loss")
+
+            assertEquals(7_200.0, viewModel.simulatedMetrics.value.annualIncome / 12.0, 0.0)
+            assertEquals(86_400.0, base.netWorth - viewModel.simulatedMetrics.value.netWorth, 0.0)
+
+            viewModel.toggleScenario("pos_inheritance")
+            viewModel.toggleScenario("pos_property_sale")
+            viewModel.toggleScenario("large_expense")
+            assertEquals(base.netWorth - 86_400.0 + 72_000.0 - 30_000.0, viewModel.simulatedMetrics.value.netWorth, 0.0)
+            assertEquals(base, viewModel.metrics.value)
+            assertEquals(input, viewModel.inputData.value)
+        }
+        viewModel.flushPendingSave()
+    }
+
+    @Test
     fun `relocation bounds expense reduction before calculating and saving simulation`() {
         val viewModel = MainViewModel(app) { today }
         viewModel.updateInputData { it.copy(monthlyIncome = 100_000.0, monthlyExpenses = 60_000.0) }

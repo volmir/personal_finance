@@ -75,7 +75,8 @@ The application is structured into 4 cohesive functional tabs:
 - **Three Sliders:** Adjust the monthly savings/income level, monthly expenses, and real investment return for the hypothetical projection.
 - **14 Built-in Scenarios:**
   - *Positive:* income +20%; financial assets +25%; expenses −15%; cost of living −30%; a one-off inheritance of 12 monthly incomes; property sale proceeds capped at 20 monthly incomes and property value; expenses −25% after 18 years.
-  - *Stress tests:* one-off reserve draw equal to 12 monthly incomes for job loss; financial assets −30%; mortgage payments of 35% of monthly income for 20 years; car payments of 20% of monthly income for 5 years; one-off expense of 5 monthly incomes; expenses +25% (scenario label says inflation); child/dependent costs +25% of expenses for 18 years.
+  - *Stress tests:* one-off reserve draw equal to 12 current monthly incomes for job loss; financial assets −30%; mortgage payments of 35% of monthly income for 20 years; car payments of 20% of monthly income for 5 years; one-off expense of 5 monthly incomes; expenses +25% (scenario label says inflation); child/dependent costs +25% of expenses for 18 years.
+- **Scenario Income Bases:** Job-loss reserves and mortgage/car payments include the salary-increase scenario. Inheritance, property sales and large one-off expenses use the original monthly income.
 - **Interactive Trajectory Chart:** Compare projected capital with required capital through the selected life-expectancy horizon.
 
 ---
