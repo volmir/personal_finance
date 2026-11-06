@@ -162,21 +162,13 @@ object SimulatorScaleCalculator {
         var maxAdjustment = ceil(targetMax / stepSize) * stepSize
 
         if (inflationPercent != null) {
-            val effInfl = FinancialInputLimits.clampRatePercent(inflationPercent) / 100.0
-            val maxAllowedReal = ((1.0 + FinancialInputLimits.MAX_RATE_PERCENT / 100.0) / (1.0 + effInfl) - 1.0) * 100.0
-            val minAllowedReal = ((1.0 + FinancialInputLimits.MIN_RATE_PERCENT / 100.0) / (1.0 + effInfl) - 1.0) * 100.0
-            val maxAllowedDelta = maxAllowedReal - realReturnPercent
-            val minAllowedDelta = minAllowedReal - realReturnPercent
-
-            val boundedMax = floor((maxAllowedDelta + 1e-9) / stepSize) * stepSize
-            val boundedMin = ceil((minAllowedDelta - 1e-9) / stepSize) * stepSize
-
-            maxAdjustment = minOf(maxAdjustment, boundedMax)
-            minAdjustment = maxOf(minAdjustment, boundedMin)
-
-            if (maxAdjustment < minAdjustment) {
-                maxAdjustment = minAdjustment
-            }
+            val inflationFactor = 1.0 + FinancialInputLimits.clampRatePercent(inflationPercent) / 100.0
+            val minRealReturn = ((1.0 + FinancialInputLimits.MIN_RATE_PERCENT / 100.0) / inflationFactor - 1.0) * 100.0
+            val maxRealReturn = ((1.0 + FinancialInputLimits.MAX_RATE_PERCENT / 100.0) / inflationFactor - 1.0) * 100.0
+            // Округляем внутрь диапазона, чтобы крайние шаги не упирались в ограничение номинальной ставки.
+            // Один ULP сохраняет допустимый крайний шаг при погрешности обратного преобразования.
+            minAdjustment = maxOf(minAdjustment, ceil(Math.nextDown((minRealReturn - realReturnPercent) / stepSize)) * stepSize)
+            maxAdjustment = minOf(maxAdjustment, floor(Math.nextUp((maxRealReturn - realReturnPercent) / stepSize)) * stepSize)
         }
 
         val span = maxAdjustment - minAdjustment

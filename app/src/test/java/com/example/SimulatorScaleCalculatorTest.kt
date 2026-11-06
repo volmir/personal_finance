@@ -1,5 +1,7 @@
 package com.example
 
+import com.example.domain.FinanceCalculator
+import com.example.domain.FinancialInputLimits
 import com.example.domain.SimulatorScaleCalculator
 import com.example.domain.calculateSimulationOngoingExpenses
 import org.junit.Assert.assertEquals
@@ -91,6 +93,49 @@ class SimulatorScaleCalculatorTest {
     }
 
     @Test
+    fun `return scale without inflation preserves original ranges`() {
+        for ((realReturn, minimum, maximum) in listOf(
+            Triple(-50.0, -75f, 75f),
+            Triple(0.0, -3f, 5f),
+            Triple(2.5, -4f, 5f),
+            Triple(7.0, -10.5f, 10.5f)
+        )) {
+            val config = SimulatorScaleCalculator.calculateReturnConfig(realReturn)
+            assertEquals(minimum, config.minValue, 0f)
+            assertEquals(maximum, config.maxValue, 0f)
+        }
+    }
+
+    @Test
+    fun `return scale rounds inward to steps within nominal limits`() {
+        for (nominal in listOf(-50.0, -49.99, 0.0, 7.5, 99.99, 100.0)) {
+            for (inflation in listOf(-50.0, 0.0, 2.5, 100.0)) {
+                val real = FinanceCalculator.calculateRealReturnPercent(nominal, inflation)
+                val config = SimulatorScaleCalculator.calculateReturnConfig(real, inflation)
+                val original = SimulatorScaleCalculator.calculateReturnConfig(real)
+                val factor = 1.0 + inflation / 100.0
+                fun nominalAt(delta: Double) = ((1.0 + (real + delta) / 100.0) * factor - 1.0) * 100.0
+
+                assertTrue(config.minValue <= 0f)
+                assertTrue(config.maxValue >= 0f)
+                assertTrue(config.minValue >= original.minValue)
+                assertTrue(config.maxValue <= original.maxValue)
+                assertEquals(config.steps + 1.0, (config.maxValue - config.minValue) / config.stepSize, 0.000001)
+                for (bound in listOf(config.minValue.toDouble(), config.maxValue.toDouble())) {
+                    assertEquals(kotlin.math.round(bound / config.stepSize), bound / config.stepSize, 0.000001)
+                    assertTrue(nominalAt(bound) >= FinancialInputLimits.MIN_RATE_PERCENT - 0.000001)
+                    assertTrue(nominalAt(bound) <= FinancialInputLimits.MAX_RATE_PERCENT + 0.000001)
+                }
+                if (config.minValue > original.minValue) {
+                    assertTrue(nominalAt(config.minValue - config.stepSize) < FinancialInputLimits.MIN_RATE_PERCENT)
+                }
+                if (config.maxValue < original.maxValue) {
+                    assertTrue(nominalAt(config.maxValue + config.stepSize) > FinancialInputLimits.MAX_RATE_PERCENT)
+                }
+            }
+        }
+    }
+    @Test
     fun `return config with inflation clamps effective nominal between minus fifty and one hundred`() {
         val nominal = 100.0
         val inflation = 2.5
@@ -107,4 +152,5 @@ class SimulatorScaleCalculatorTest {
             assertTrue(effectiveNominal <= 100.0 + 0.00001)
         }
     }
+
 }

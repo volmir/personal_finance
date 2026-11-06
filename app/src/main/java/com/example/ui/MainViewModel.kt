@@ -165,9 +165,8 @@ class MainViewModel @JvmOverloads constructor(
     val simulatedTrajectory: StateFlow<List<TrajectoryPoint>> = _simulatedTrajectory.asStateFlow()
 
     init {
-        val loadedSim = _fireSimulation.value
-        val bounded = boundedSimulation(_inputData.value, _metrics.value, loadedSim)
-        if (bounded != loadedSim) {
+        val bounded = boundedSimulation(_inputData.value, _metrics.value, _fireSimulation.value)
+        if (bounded != _fireSimulation.value) {
             _fireSimulation.value = bounded
             localPrefs.saveSimulationState(bounded)
         }
@@ -177,6 +176,25 @@ class MainViewModel @JvmOverloads constructor(
     fun selectTab(tab: AppTab) {
         _currentTab.value = tab
         localPrefs.saveCurrentTab(tab)
+    }
+
+    fun updateInputData(transform: (FinancialInputData) -> FinancialInputData) {
+        val updated = transform(_inputData.value)
+        _inputData.value = updated
+        val updatedMetrics = FinanceCalculator.calculate(updated, today = dateProvider())
+        val bounded = boundedSimulation(updated, updatedMetrics, _fireSimulation.value)
+        if (bounded != _fireSimulation.value) {
+            _fireSimulation.value = bounded
+            localPrefs.saveSimulationState(bounded)
+        }
+        // Debounce disk writes while keeping model and calculations immediately up to date.
+        inputDataSaveJob?.cancel()
+        inputDataSaveJob = viewModelScope.launch {
+            delay(400)
+            localPrefs.saveData(_inputData.value)
+        }
+        // Dynamically recalculate all metrics in real-time
+        recalculate()
     }
 
     private fun boundedSimulation(
@@ -203,10 +221,7 @@ class MainViewModel @JvmOverloads constructor(
             ongoingExpenses = ongoingExpenses.beforeReduction,
             currency = input.currencySymbol
         )
-        val returnConfig = SimulatorScaleCalculator.calculateReturnConfig(
-            realReturnPercent = metrics.realReturnPercent,
-            inflationPercent = input.inflationPercent
-        )
+        val returnConfig = SimulatorScaleCalculator.calculateReturnConfig(metrics.realReturnPercent, input.inflationPercent)
         return sim.copy(
             extraMonthlySavings = sim.extraMonthlySavings.coerceIn(
                 savingsConfig.minValue.toDouble(), savingsConfig.maxValue.toDouble()
@@ -218,26 +233,6 @@ class MainViewModel @JvmOverloads constructor(
                 returnConfig.minValue.toDouble(), returnConfig.maxValue.toDouble()
             )
         )
-    }
-
-    fun updateInputData(transform: (FinancialInputData) -> FinancialInputData) {
-        val updated = transform(_inputData.value)
-        _inputData.value = updated
-        val updatedMetrics = FinanceCalculator.calculate(updated, today = dateProvider())
-        val currentSimulation = _fireSimulation.value
-        val boundedSimulation = boundedSimulation(updated, updatedMetrics, currentSimulation)
-        if (boundedSimulation != currentSimulation) {
-            _fireSimulation.value = boundedSimulation
-            localPrefs.saveSimulationState(boundedSimulation)
-        }
-        // Debounce disk writes while keeping model and calculations immediately up to date.
-        inputDataSaveJob?.cancel()
-        inputDataSaveJob = viewModelScope.launch {
-            delay(400)
-            localPrefs.saveData(_inputData.value)
-        }
-        // Dynamically recalculate all metrics in real-time
-        recalculate()
     }
 
     fun flushPendingSave() {
@@ -252,14 +247,17 @@ class MainViewModel @JvmOverloads constructor(
     }
 
     fun updateSimulation(extraSavings: Double, realReturnDelta: Double, expReduction: Double) {
-        val target = _fireSimulation.value.copy(
-            extraMonthlySavings = extraSavings,
-            realReturnAdjustment = realReturnDelta,
-            expenseReduction = expReduction
+        val bounded = boundedSimulation(
+            _inputData.value, _metrics.value, _fireSimulation.value.copy(
+                extraMonthlySavings = extraSavings,
+                realReturnAdjustment = realReturnDelta,
+                expenseReduction = expReduction
+            )
         )
-        val bounded = boundedSimulation(_inputData.value, _metrics.value, target)
-        _fireSimulation.value = bounded
-        localPrefs.saveSimulationState(bounded)
+        if (bounded != _fireSimulation.value) {
+            _fireSimulation.value = bounded
+            localPrefs.saveSimulationState(bounded)
+        }
         recalculateSimulation()
     }
 
@@ -285,18 +283,22 @@ class MainViewModel @JvmOverloads constructor(
             "child_dependent" -> current.copy(childOrDependent18Years = !current.childOrDependent18Years)
             else -> current
         }
-        val target = _fireSimulation.value.copy(scenarios = updated)
-        val bounded = boundedSimulation(_inputData.value, _metrics.value, target)
-        _fireSimulation.value = bounded
-        localPrefs.saveSimulationState(bounded)
+        val bounded = boundedSimulation(
+            _inputData.value, _metrics.value, _fireSimulation.value.copy(scenarios = updated)
+        )
+        if (bounded != _fireSimulation.value) {
+            _fireSimulation.value = bounded
+            localPrefs.saveSimulationState(bounded)
+        }
         recalculateSimulation()
     }
 
     fun resetSimulation() {
-        val resetState = FireSimulationState()
-        val bounded = boundedSimulation(_inputData.value, _metrics.value, resetState)
-        _fireSimulation.value = bounded
-        localPrefs.saveSimulationState(bounded)
+        val resetState = boundedSimulation(_inputData.value, _metrics.value, FireSimulationState())
+        if (resetState != _fireSimulation.value) {
+            _fireSimulation.value = resetState
+            localPrefs.saveSimulationState(resetState)
+        }
         recalculateSimulation()
     }
 
