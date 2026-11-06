@@ -33,9 +33,14 @@ class LocalizationFormattersTest {
                 else -> "$number\u00A0¥"
             }
             val negative = if (lang == AppLanguage.RU) "-$number ¥" else "-¥$number"
+            val zeroYen = when (lang) {
+                AppLanguage.EN -> "¥0"
+                AppLanguage.RU -> "0 ¥"
+                else -> "0\u00A0¥"
+            }
             assertEquals(code, positive, Formatters.formatMoney(1234.5, "¥", lang))
             assertEquals(code, negative, Formatters.formatMoney(-1234.5, "¥", lang))
-            assertEquals(code, if (lang == AppLanguage.RU) "-0 ¥" else "-¥0", Formatters.formatMoney(-0.0, "¥", lang))
+            assertEquals(code, zeroYen, Formatters.formatMoney(-0.0, "¥", lang))
         }
     }
 
@@ -79,9 +84,41 @@ class LocalizationFormattersTest {
                 }
                 assertEquals("$lang $currency positive", positive, Formatters.formatMoney(1000.0, currency, lang))
                 val zero = if (lang == AppLanguage.EN) "0.00" else "0,00"
-                val negativeZero = if (lang == AppLanguage.RU) "-$zero $currency" else "-$currency$zero"
-                assertEquals("$lang $currency negative zero", negativeZero, Formatters.formatMoney(-0.0, currency, lang))
+                val zeroMoney = when (lang) {
+                    AppLanguage.RU -> "$zero $currency"
+                    AppLanguage.EN -> "$currency$zero"
+                    else -> "$zero\u00A0$currency"
+                }
+                assertEquals("$lang $currency negative zero without minus", zeroMoney, Formatters.formatMoney(-0.0, currency, lang))
             }
+        }
+    }
+
+    @Test
+    fun formatMoneyAndPercentWithoutMinusForValuesRoundingToZeroAcrossAllLanguages() {
+        for (lang in AppLanguage.values()) {
+            val zeroPercent = if (lang == AppLanguage.EN) "0.00%" else "0,00%"
+            assertEquals("$lang percent -0.001", zeroPercent, Formatters.formatPercent(-0.001, lang))
+            assertEquals("$lang percent -0.0", zeroPercent, Formatters.formatPercent(-0.0, lang))
+
+            for (currency in listOf("$", "€", "CHF", "₽")) {
+                val zero = if (lang == AppLanguage.EN) "0.00" else "0,00"
+                val expected = when (lang) {
+                    AppLanguage.RU -> "$zero $currency"
+                    AppLanguage.EN -> "$currency$zero"
+                    else -> "$zero\u00A0$currency"
+                }
+                assertEquals("$lang $currency money -0.001", expected, Formatters.formatMoney(-0.001, currency, lang))
+                assertEquals("$lang $currency money -0.0", expected, Formatters.formatMoney(-0.0, currency, lang))
+            }
+
+            val expectedYen = when (lang) {
+                AppLanguage.RU -> "0 ¥"
+                AppLanguage.EN -> "¥0"
+                else -> "0\u00A0¥"
+            }
+            assertEquals("$lang yen -0.001", expectedYen, Formatters.formatMoney(-0.001, "¥", lang))
+            assertEquals("$lang yen -0.0", expectedYen, Formatters.formatMoney(-0.0, "¥", lang))
         }
     }
 

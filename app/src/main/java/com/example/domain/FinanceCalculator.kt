@@ -4,12 +4,15 @@ import com.example.data.model.CalculatedMetrics
 import com.example.data.model.FinancialInputData
 import com.example.data.model.FinancialScores
 import com.example.data.model.TrajectoryPoint
+import java.math.BigDecimal
+import java.math.RoundingMode
 import java.time.LocalDate
 import java.time.Period
 import java.time.format.DateTimeFormatter
 import kotlin.math.abs
 import kotlin.math.pow
 import kotlin.math.roundToInt
+import com.example.util.Formatters
 
 data class TemporaryExpense(
     val annualAmount: Double,
@@ -66,17 +69,28 @@ object FinanceCalculator {
         extraMonthlyCashFlow: Double = 0.0,
         today: LocalDate = LocalDate.now()
     ): CalculatedMetrics {
-        val totalAssets = input.liquidAssets + input.financialAssets + input.propertyAssets
-        val cashFlow = input.monthlyIncome - input.monthlyExpenses + extraMonthlyCashFlow
+        val currencyDigits = Formatters.currencyFractionDigits(input.currencySymbol)
+        fun roundCurrency(value: Double): Double {
+            if (!value.isFinite()) return value
+            val rounded = BigDecimal.valueOf(value)
+                .setScale(currencyDigits, RoundingMode.HALF_UP)
+                .toDouble()
+            return if (rounded == 0.0) 0.0 else rounded
+        }
+
+        val totalAssets = roundCurrency(input.liquidAssets + input.financialAssets + input.propertyAssets)
+        val cashFlow = roundCurrency(input.monthlyIncome - input.monthlyExpenses + extraMonthlyCashFlow)
         val savingsRate = if (input.monthlyIncome > 0) {
             (cashFlow / input.monthlyIncome) * 100.0
         } else if (cashFlow < 0.0) -100.0 else 0.0
 
-        val emergencyFund = if (input.includeFinancialInEmergencyFund) {
-            input.liquidAssets + input.financialAssets
-        } else {
-            input.liquidAssets
-        }
+        val emergencyFund = roundCurrency(
+            if (input.includeFinancialInEmergencyFund) {
+                input.liquidAssets + input.financialAssets
+            } else {
+                input.liquidAssets
+            }
+        )
 
         val safetyMonths = when {
             input.monthlyExpenses > 0 -> emergencyFund / input.monthlyExpenses
@@ -89,9 +103,11 @@ object FinanceCalculator {
             input.liabilities / totalAssets
         } else if (input.liabilities > 0.0) Double.POSITIVE_INFINITY else 0.0
 
-        val netWorth = totalAssets - input.liabilities
-        val fidelityCapital = FinancialMetricEvaluator.fidelityCapital(
-            input.liquidAssets, input.financialAssets, input.propertyAssets, input.liabilities
+        val netWorth = roundCurrency(totalAssets - input.liabilities)
+        val fidelityCapital = roundCurrency(
+            FinancialMetricEvaluator.fidelityCapital(
+                input.liquidAssets, input.financialAssets, input.propertyAssets, input.liabilities
+            )
         )
         val annualIncome = input.monthlyIncome * 12.0
         val annualExpenses = input.monthlyExpenses * 12.0
@@ -232,10 +248,12 @@ object FinanceCalculator {
         debtScore: Int,
         cfsScore: Int
     ): Double {
-        val total = savingsScore * 0.25 + safetyScore * 0.15 + debtScore * 0.15 + cfsScore * 0.45
-        return if (cfsScore < FinancialMetricEvaluator.TOTAL_SCORE_CFS_CAP_TRIGGER) {
-            minOf(total, FinancialMetricEvaluator.TOTAL_SCORE_CAP_FOR_LOW_CFS)
-        } else total
+        var h = 25 * savingsScore + 15 * safetyScore + 15 * debtScore + 45 * cfsScore
+        if (cfsScore < FinancialMetricEvaluator.TOTAL_SCORE_CFS_CAP_TRIGGER && h > 600) {
+            h = 600
+        }
+        val tenths = (h + 5) / 10
+        return tenths / 10.0
     }
 
     /**

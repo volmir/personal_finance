@@ -371,4 +371,54 @@ class NumberInputFieldRobolectricTest {
         // Overflow clamp
         assertEquals(1e12, Formatters.parseDouble("1000000000000000000", AppLanguage.EN), 0.0)
     }
+
+    @Test
+    fun `typing 7_555 in percent field saves 7_56 and typing 100_555 in money saves 100_56 without changing field text during focus`() {
+        val percentValue = mutableStateOf(0.0)
+        val moneyValue = mutableStateOf(0.0)
+        composeRule.setContent {
+            CompositionLocalProvider(LocalAppLanguage provides AppLanguage.EN) {
+                Column {
+                    NumberInputField("Percent", percentValue.value, "%", { percentValue.value = it }, "percent_field", isMoney = false)
+                    NumberInputField("Money", moneyValue.value, "$", { moneyValue.value = it }, "money_field", isMoney = true)
+                }
+            }
+        }
+
+        composeRule.onNodeWithTag("percent_field").performTextInput("7.555")
+        composeRule.onNodeWithTag("percent_field").assertEditableTextEquals("7.555")
+        assertEquals(7.56, percentValue.value, 0.0)
+
+        composeRule.onNodeWithTag("money_field").performTextInput("100.555")
+        composeRule.onNodeWithTag("money_field").assertEditableTextEquals("100.555")
+        assertEquals(100.56, moneyValue.value, 0.0)
+    }
+
+    @Test
+    fun `yen input and value are whole integers`() {
+        val yenValue = mutableStateOf(0.0)
+        composeRule.setContent {
+            CompositionLocalProvider(LocalAppLanguage provides AppLanguage.EN) {
+                NumberInputField("Yen", yenValue.value, "¥", { yenValue.value = it }, "yen_field", isMoney = true)
+            }
+        }
+        composeRule.onNodeWithTag("yen_field").performTextInput("1234")
+        composeRule.onNodeWithTag("yen_field").assertEditableTextEquals("1234")
+        assertEquals(1234.0, yenValue.value, 0.0)
+
+        // Typing dot or comma is ignored
+        composeRule.onNodeWithTag("yen_field").performTextInput(".")
+        composeRule.onNodeWithTag("yen_field").assertEditableTextEquals("1234")
+        assertEquals(1234.0, yenValue.value, 0.0)
+
+        composeRule.onNodeWithTag("yen_field").performTextInput(",")
+        composeRule.onNodeWithTag("yen_field").assertEditableTextEquals("1234")
+        assertEquals(1234.0, yenValue.value, 0.0)
+
+        // Pasting decimal fraction rounds HALF_UP to whole integer
+        composeRule.onNodeWithTag("yen_field").performTextClearance()
+        composeRule.onNodeWithTag("yen_field").performTextInput("1234.6")
+        composeRule.onNodeWithTag("yen_field").assertEditableTextEquals("1235")
+        assertEquals(1235.0, yenValue.value, 0.0)
+    }
 }

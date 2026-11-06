@@ -253,6 +253,7 @@ object FinancialMetricEvaluator {
     // < 3.5: негативный
     // =========================================================================
 
+    const val TOTAL_SCORE_EXCELLENT_MIN = 8.5
     const val TOTAL_SCORE_GREEN_MIN = 7.0
     const val TOTAL_SCORE_YELLOW_MIN = 3.5
 

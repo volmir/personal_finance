@@ -14,6 +14,9 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Ignore
 import org.junit.Test
+import com.example.util.Formatters
+import com.example.util.localization.AppLanguage
+import com.example.domain.FinancialMetricEvaluator
 
 class FinanceCalculatorTest {
 
@@ -622,5 +625,121 @@ class FinanceCalculatorTest {
         assertFalse(metrics.yearsToRetirement.isInfinite())
         assertTrue(metrics.yearsToRetirement > 0.0)
         assertFalse(metrics.retirementTargetCapital.isNaN())
+    }
+
+    @Test
+    fun testRoundedNetWorthNeutralStatusOnFloatingPrecisionCancellation() {
+        val input = FinancialInputData(
+            liquidAssets = 15_000.1,
+            financialAssets = 40_000.2,
+            propertyAssets = 280_000.3,
+            liabilities = 335_000.6
+        )
+        val metrics = FinanceCalculator.calculate(input)
+        assertEquals(335_000.6, metrics.totalAssets, 0.0)
+        assertEquals(0.0, metrics.netWorth, 0.0)
+        assertEquals(
+            com.example.domain.model.AuditIndicatorStatus.NEUTRAL,
+            com.example.domain.FinancialMetricEvaluator.getNetWorthStatus(metrics.netWorth, metrics.totalAssets)
+        )
+    }
+
+    @Test
+    fun `total score combinatorial status matches formatted string with specific rounding edges`() {
+        val savingsList = listOf(0, 5, 6, 7, 8, 9, 10)
+        val safetyList = listOf(0, 2, 4, 7, 9, 10)
+        val debtList = listOf(0, 2, 4, 6, 7, 8, 9, 10)
+        val cfsList = listOf(0, 2, 4, 6, 8, 9, 10)
+
+        for (savings in savingsList) {
+            for (safety in safetyList) {
+                for (debt in debtList) {
+                    for (cfs in cfsList) {
+                        val totalScore = FinanceCalculator.calculateTotalScore(savings, safety, debt, cfs)
+                        val statusByScore = FinancialMetricEvaluator.getTotalScoreStatus(totalScore)
+                        val formattedRu = Formatters.formatScore(totalScore, AppLanguage.RU)
+                        val parsedScore = Formatters.parseDouble(formattedRu, AppLanguage.RU)
+                        val statusByString = FinancialMetricEvaluator.getTotalScoreStatus(parsedScore)
+                        assertEquals(
+                            "Mismatch for savings=$savings, safety=$safety, debt=$debt, cfs=$cfs, score=$totalScore, formatted=$formattedRu",
+                            statusByScore,
+                            statusByString
+                        )
+                    }
+                }
+            }
+        }
+
+        // 6.95 -> «7,0» ЗЕЛЁНЫЙ (savings=8, safety=9, debt=0, cfs=8 gives h = 695)
+        val score695 = FinanceCalculator.calculateTotalScore(8, 9, 0, 8)
+        assertEquals(7.0, score695, 0.0)
+        assertEquals("7,0", Formatters.formatScore(score695, AppLanguage.RU))
+        assertEquals(
+            com.example.domain.model.AuditIndicatorStatus.POSITIVE,
+            FinancialMetricEvaluator.getTotalScoreStatus(score695)
+        )
+        assertEquals(
+            com.example.ui.theme.SuccessGreen,
+            com.example.ui.theme.ScoreColorEvaluator.getTotalScoreColor(score695)
+        )
+
+        // 3.45 -> «3,5» ЖЁЛТЫЙ (savings=6, safety=7, debt=0, cfs=2 gives h = 345)
+        val score345 = FinanceCalculator.calculateTotalScore(6, 7, 0, 2)
+        assertEquals(3.5, score345, 0.0)
+        assertEquals("3,5", Formatters.formatScore(score345, AppLanguage.RU))
+        assertEquals(
+            com.example.domain.model.AuditIndicatorStatus.NEUTRAL,
+            FinancialMetricEvaluator.getTotalScoreStatus(score345)
+        )
+        assertEquals(
+            com.example.ui.theme.WarningYellow,
+            com.example.ui.theme.ScoreColorEvaluator.getTotalScoreColor(score345)
+        )
+
+        // сумма, ранее дававшая 3.4999999999999996 в Double, -> 3.5 (savings=5, safety=7, debt=8, cfs=0)
+        val previousFloatPrecisionEdge = 5 * 0.25 + 7 * 0.15 + 8 * 0.15 + 0 * 0.45
+        assertEquals(3.4999999999999996, previousFloatPrecisionEdge, 0.000000000000001)
+        val scoreFloatEdge = FinanceCalculator.calculateTotalScore(5, 7, 8, 0)
+        assertEquals(3.5, scoreFloatEdge, 0.0)
+        assertEquals(
+            com.example.domain.model.AuditIndicatorStatus.NEUTRAL,
+            FinancialMetricEvaluator.getTotalScoreStatus(scoreFloatEdge)
+        )
+        assertEquals(
+            com.example.ui.theme.WarningYellow,
+            com.example.ui.theme.ScoreColorEvaluator.getTotalScoreColor(scoreFloatEdge)
+        )
+    }
+
+    @Test
+    fun `green total score is allowed with neutral cfs score six`() {
+        // cfsScore 6 is neutral: [2, 5)
+        assertEquals(
+            com.example.domain.model.AuditIndicatorStatus.NEUTRAL,
+            FinancialMetricEvaluator.getComponentScoreStatus(6)
+        )
+        // savings=10, safety=10, debt=10, cfs=6 -> h = 250 + 150 + 150 + 270 = 820 -> total = 8.2
+        val totalScore = FinanceCalculator.calculateTotalScore(10, 10, 10, 6)
+        assertEquals(8.2, totalScore, 0.0)
+        assertEquals(
+            com.example.domain.model.AuditIndicatorStatus.POSITIVE,
+            FinancialMetricEvaluator.getTotalScoreStatus(totalScore)
+        )
+        assertEquals(
+            com.example.ui.theme.SuccessGreen,
+            com.example.ui.theme.ScoreColorEvaluator.getTotalScoreColor(totalScore)
+        )
+
+        // Also with moderate scores (8, 9, 8, 6) -> h = 725 -> 7.3
+        val moderateGreenScore = FinanceCalculator.calculateTotalScore(8, 9, 8, 6)
+        assertEquals(7.3, moderateGreenScore, 0.0)
+        assertEquals(
+            com.example.domain.model.AuditIndicatorStatus.POSITIVE,
+            FinancialMetricEvaluator.getTotalScoreStatus(moderateGreenScore)
+        )
+        assertEquals(
+            com.example.ui.theme.SuccessGreen,
+            com.example.ui.theme.ScoreColorEvaluator.getTotalScoreColor(moderateGreenScore)
+        )
     }
 }

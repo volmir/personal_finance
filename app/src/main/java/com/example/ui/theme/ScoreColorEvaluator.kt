@@ -3,6 +3,8 @@ package com.example.ui.theme
 import androidx.compose.ui.graphics.Color
 import com.example.util.localization.AppStrings
 
+import com.example.domain.FinancialMetricEvaluator
+
 /**
  * Единый источник истины для цветовой индикации и градации оценок.
  * Итоговый суммирующий показатель рассчитывается в одном месте и окрашивается единообразно:
@@ -11,11 +13,9 @@ import com.example.util.localization.AppStrings
  * - Красный (AlertRed) — при балле ниже 3,5.
  */
 object ScoreColorEvaluator {
-    const val TOTAL_SCORE_GREEN_MIN = 7.0
-    const val TOTAL_SCORE_YELLOW_MIN = 3.5
 
     fun getTotalScoreColor(score: Double): Color =
-        StatusColors.getColor(com.example.domain.FinancialMetricEvaluator.getTotalScoreStatus(score))
+        StatusColors.getColor(FinancialMetricEvaluator.getTotalScoreStatus(score))
 
     /**
      * Возвращает полупрозрачный цвет фона для плашки итогового суммирующего показателя.
@@ -27,9 +27,9 @@ object ScoreColorEvaluator {
      * Возвращает описание статуса для итогового суммирующего показателя.
      */
     fun getTotalScoreStatusDescription(score: Double, strings: AppStrings): String = when {
-        score >= 8.5 -> strings.scoresStatusExcellent
-        score >= TOTAL_SCORE_GREEN_MIN -> strings.scoresStatusGood
-        score >= TOTAL_SCORE_YELLOW_MIN -> strings.scoresStatusModerate
+        score >= FinancialMetricEvaluator.TOTAL_SCORE_EXCELLENT_MIN -> strings.scoresStatusExcellent
+        score >= FinancialMetricEvaluator.TOTAL_SCORE_GREEN_MIN -> strings.scoresStatusGood
+        score >= FinancialMetricEvaluator.TOTAL_SCORE_YELLOW_MIN -> strings.scoresStatusModerate
         else -> strings.scoresStatusAttention
     }
 }

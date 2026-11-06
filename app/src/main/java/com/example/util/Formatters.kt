@@ -4,6 +4,7 @@ import com.example.util.localization.AppLanguage
 import com.example.data.model.FireStatus
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
+import java.math.BigDecimal
 import java.math.RoundingMode
 
 object Formatters {
@@ -30,10 +31,19 @@ object Formatters {
     fun formatMoney(amount: Double, currency: String = "$", lang: AppLanguage): String {
         if (!amount.isFinite()) return com.example.util.localization.getAppStrings(lang).metricUnavailableValue
         val strings = com.example.util.localization.getAppStrings(lang)
-        val minusBeforeCurrency = lang != AppLanguage.RU && amount.toRawBits() < 0L
-        val formattedAmount = decimalFormat(lang, currencyFractionDigits(currency)).apply {
+        val digits = currencyFractionDigits(currency)
+        val bd = BigDecimal.valueOf(amount).setScale(digits, RoundingMode.HALF_UP)
+        val isNegative = bd.signum() < 0
+        val minusBeforeCurrency = lang != AppLanguage.RU && isNegative
+        val absAmount = bd.abs().toDouble()
+        val df = decimalFormat(lang, digits).apply {
             roundingMode = RoundingMode.HALF_UP
-        }.format(if (minusBeforeCurrency) kotlin.math.abs(amount) else amount)
+        }
+        val formattedAmount = if (lang == AppLanguage.RU && isNegative) {
+            "-${df.format(absAmount)}"
+        } else {
+            df.format(absAmount)
+        }
         // Preserve the existing suffix currency for positive DE/FR/IT/ES amounts.
         val currencyAtEnd = lang != AppLanguage.RU && lang != AppLanguage.EN && !minusBeforeCurrency
         return String.format(
@@ -54,7 +64,9 @@ object Formatters {
     ): String {
         if (!amount.isFinite()) return com.example.util.localization.getAppStrings(lang).metricUnavailableValue
         val clamped = amount.coerceIn(-MAX_INPUT_VALUE, MAX_INPUT_VALUE)
-        return decimalFormat(lang, fractionDigits).apply { this.roundingMode = roundingMode }.format(clamped)
+        val df = decimalFormat(lang, fractionDigits).apply { this.roundingMode = roundingMode }
+        val bd = BigDecimal.valueOf(clamped).setScale(fractionDigits, roundingMode)
+        return if (bd.signum() == 0) df.format(0.0) else df.format(clamped)
     }
 
     fun formatRawNumber(
@@ -81,16 +93,25 @@ object Formatters {
 
     fun formatPercent(value: Double, lang: AppLanguage): String {
         if (!value.isFinite()) return com.example.util.localization.getAppStrings(lang).metricUnavailableValue
-        return "${decimalFormat(lang, 2).format(value)}%"
+        val df = decimalFormat(lang, 2)
+        val bd = BigDecimal.valueOf(value).setScale(2, df.roundingMode)
+        val formatted = if (bd.signum() == 0) df.format(0.0) else df.format(value)
+        return "$formatted%"
     }
 
     fun formatRatio(value: Double, lang: AppLanguage): String {
         if (value.isInfinite()) return "—"
-        return decimalFormat(lang, 2).format(value)
+        if (!value.isFinite()) return com.example.util.localization.getAppStrings(lang).metricUnavailableValue
+        val df = decimalFormat(lang, 2)
+        val bd = BigDecimal.valueOf(value).setScale(2, df.roundingMode)
+        return if (bd.signum() == 0) df.format(0.0) else df.format(value)
     }
 
     fun formatScore(value: Double, lang: AppLanguage): String {
-        return decimalFormat(lang, 1).format(value)
+        if (!value.isFinite()) return com.example.util.localization.getAppStrings(lang).metricUnavailableValue
+        val df = decimalFormat(lang, 1)
+        val bd = BigDecimal.valueOf(value).setScale(1, df.roundingMode)
+        return if (bd.signum() == 0) df.format(0.0) else df.format(value)
     }
 
     fun parseDouble(input: String, lang: AppLanguage = AppLanguage.RU): Double {

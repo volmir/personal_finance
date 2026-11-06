@@ -734,13 +734,15 @@ fun NumberInputField(
             } else {
                 parsed.coerceIn(0.0, Formatters.MAX_INPUT_VALUE)
             }
+            val scale = if (isMoney) Formatters.currencyFractionDigits(currency) else 2
+            val rounded = BigDecimal.valueOf(clamped).setScale(scale, RoundingMode.HALF_UP).toDouble()
+            val finalValue = if (rounded == 0.0) 0.0 else rounded
             if (wholeMoney) {
-                val rounded = BigDecimal.valueOf(clamped).setScale(0, RoundingMode.HALF_UP)
-                textValue = if (filtered.contains(localDecimal) || filtered.contains('.')) rounded.toPlainString() else filtered
-                onValueChange(rounded.toDouble())
+                textValue = if (filtered.contains(localDecimal) || filtered.contains('.')) BigDecimal.valueOf(clamped).setScale(0, RoundingMode.HALF_UP).toPlainString() else filtered
+                onValueChange(finalValue)
             } else {
                 textValue = filtered
-                onValueChange(clamped)
+                onValueChange(finalValue)
             }
         },
         label = { Text(label, fontSize = 12.sp) },
