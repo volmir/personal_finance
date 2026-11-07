@@ -623,7 +623,7 @@ val StringsEn: AppStrings = object : AppStrings {
 
     override val auditNetWorthTitle: String = "Net Worth"
     override val auditNetWorthStrong: String = "✅ Net Worth (Own Capital: %1${'$'}s): Strong positive balance. Aggregate assets comfortably exceed financial liabilities, providing a solid foundation."
-    override val auditNetWorthBalanced: String = "ℹ️ Net Worth (Own Capital: %1${'$'}s): Assets and liabilities are balanced."
+    override val auditNetWorthBalanced: String = "ℹ️ Net Worth (Own Capital: %1${'$'}s): Net worth is not negative, but liabilities exceed half of total assets."
     override val auditNetWorthNegative: String = "🚨 Net Worth (Negative Balance: %1${'$'}s): Negative net worth (technical insolvency). Total liabilities exceed all possessed assets."
 
     override val auditFidelityTitle: String = "Fidelity Benchmark"

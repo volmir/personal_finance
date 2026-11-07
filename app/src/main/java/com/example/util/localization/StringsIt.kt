@@ -622,7 +622,7 @@ val StringsIt: AppStrings = object : AppStrings {
 
     override val auditNetWorthTitle: String = "Patrimonio netto"
     override val auditNetWorthStrong: String = "✅ Patrimonio netto (Capitale proprio: %1${'$'}s): Saldo fortemente positivo. Il totale delle attività supera ampiamente le passività, offrendo basi solide."
-    override val auditNetWorthBalanced: String = "ℹ️ Patrimonio netto (Capitale proprio: %1${'$'}s): Attività e passività sono in equilibrio."
+    override val auditNetWorthBalanced: String = "ℹ️ Patrimonio netto (Capitale proprio: %1${'$'}s): Il patrimonio netto non è negativo, ma le passività superano la metà delle attività totali."
     override val auditNetWorthNegative: String = "🚨 Patrimonio netto (Saldo negativo: %1${'$'}s): Patrimonio netto negativo (insolvenza tecnica). Le passività complessive superano tutte le attività possedute."
 
     override val auditFidelityTitle: String = "Benchmark Fidelity"

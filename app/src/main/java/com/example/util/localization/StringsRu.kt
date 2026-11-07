@@ -625,7 +625,7 @@ val StringsRu: AppStrings = object : AppStrings {
 
     override val auditNetWorthTitle: String = "Чистый капитал"
     override val auditNetWorthStrong: String = "✅ Чистый капитал (Собственные средства: %1${'$'}s): Положительный чистый баланс. Ваши совокупные активы уверенно превышают финансовые обязательства, формируя прочный финансовый фундамент."
-    override val auditNetWorthBalanced: String = "ℹ️ Чистый капитал (Собственные средства: %1${'$'}s): Активы и обязательства уравновешены."
+    override val auditNetWorthBalanced: String = "ℹ️ Чистый капитал (Собственные средства: %1${'$'}s): Чистый капитал неотрицателен, но обязательства составляют более половины активов."
     override val auditNetWorthNegative: String = "🚨 Чистый капитал (Отрицательный баланс: %1${'$'}s): Отрицательный чистый капитал (техническая неплатежеспособность). Обязательства превышают стоимость всего имеющегося имущества."
 
     override val auditFidelityTitle: String = "Бенчмарк Fidelity"

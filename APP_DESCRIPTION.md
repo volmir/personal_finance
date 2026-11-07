@@ -80,7 +80,7 @@ This uses the shared Fidelity-capital formula with a zero floor for FIRE. Proper
 
 Capital-gains tax is estimated in a simplified way for the financial-assets share and only when financial assets are present. The entered tax rate is distinct from the effective rate used by the projection, which is capped at 50%. Other taxes, market-event ordering, and income inflation are excluded.
 
-The retirement point is found by comparing projected capital (starting assets and accumulated net cash flow, accounting for real return) with target capital. A deficit reduces projected capital. Return and inflation come from the Input Data screen; the planning horizon is life-expectancy age minus current age.
+The retirement point is found by comparing projected capital (starting assets and accumulated net cash flow, accounting for real return) with target capital. A deficit reduces projected capital. Return and inflation come from the Input Data screen; the planning horizon is life-expectancy age minus current age. Age and planning horizon are calculated in full years as of the calculation date, so the projected retirement age and duration may differ from exact values by a fraction of a year.
 
 **Three simulator sliders** adjust monthly savings/income, expenses, and the real-return adjustment. Changes apply to a separate "What if?" calculation without overwriting the original financial inputs. Slider state is bounded after input changes, scenario changes, and restoration from local storage. Return adjustments respect the nominal-return limits at the selected inflation rate. Metrics, Audit, and exported reports use the base calculation; the FIRE tab shows the simulation while it is active.
 

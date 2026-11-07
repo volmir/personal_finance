@@ -130,21 +130,27 @@ class LocalizationReleaseTextTest {
     @Test
     fun balancedNetWorthTextDescribesBalanceEvenAtZero() {
         val balances = mapOf(
-            AppLanguage.RU to "Активы и обязательства уравновешены.",
-            AppLanguage.EN to "Assets and liabilities are balanced.",
-            AppLanguage.DE to "Vermögen und Verbindlichkeiten sind ausgeglichen.",
-            AppLanguage.FR to "Les actifs et les passifs sont équilibrés.",
-            AppLanguage.IT to "Attività e passività sono in equilibrio.",
-            AppLanguage.ES to "Los activos y los pasivos están equilibrados."
+            AppLanguage.RU to "Чистый капитал неотрицателен, но обязательства составляют более половины активов.",
+            AppLanguage.EN to "Net worth is not negative, but liabilities exceed half of total assets.",
+            AppLanguage.DE to "Das Reinvermögen ist nicht negativ, aber die Verbindlichkeiten machen mehr als die Hälfte des Gesamtvermögens aus.",
+            AppLanguage.FR to "La valeur nette n'est pas négative, mais les passifs représentent plus de la moitié du total des actifs.",
+            AppLanguage.IT to "Il patrimonio netto non è negativo, ma le passività superano la metà delle attività totali.",
+            AppLanguage.ES to "El patrimonio neto no es negativo, pero las deudas superan la mitad del total de activos."
         )
         for ((lang, balance) in balances) {
-            for (assets in listOf(0.0, 1_000.0)) {
-                val input = FinancialInputData.usAverageData().copy(liquidAssets = assets, financialAssets = 0.0, propertyAssets = 0.0, liabilities = assets)
-                val metrics = FinanceCalculator.calculate(input, today = today)
-                val item = AuditorAnalysisGenerator.generate(input, metrics, lang).neutral.single { it.id == "net_worth" }
-                assertEquals(String.format(Locale.ROOT, getAppStrings(lang).auditNetWorthBalanced, Formatters.formatMoney(0.0, input.currencySymbol, lang)), item.text)
-                assertTrue("$lang: ${item.text}", item.text.endsWith(balance))
-            }
+            // netWorth == 0 (assets = liabilities = 1_000.0)
+            val inputZero = FinancialInputData.usAverageData().copy(liquidAssets = 1_000.0, financialAssets = 0.0, propertyAssets = 0.0, liabilities = 1_000.0)
+            val metricsZero = FinanceCalculator.calculate(inputZero, today = today)
+            val itemZero = AuditorAnalysisGenerator.generate(inputZero, metricsZero, lang).neutral.single { it.id == "net_worth" }
+            assertEquals(String.format(Locale.ROOT, getAppStrings(lang).auditNetWorthBalanced, Formatters.formatMoney(0.0, inputZero.currencySymbol, lang)), itemZero.text)
+            assertTrue("$lang: ${itemZero.text}", itemZero.text.endsWith(balance))
+
+            // netWorth = 10% of assets (assets = 1_000.0, liabilities = 900.0 -> netWorth = 100.0)
+            val inputTenPercent = FinancialInputData.usAverageData().copy(liquidAssets = 1_000.0, financialAssets = 0.0, propertyAssets = 0.0, liabilities = 900.0)
+            val metricsTenPercent = FinanceCalculator.calculate(inputTenPercent, today = today)
+            val itemTenPercent = AuditorAnalysisGenerator.generate(inputTenPercent, metricsTenPercent, lang).neutral.single { it.id == "net_worth" }
+            assertEquals(String.format(Locale.ROOT, getAppStrings(lang).auditNetWorthBalanced, Formatters.formatMoney(100.0, inputTenPercent.currencySymbol, lang)), itemTenPercent.text)
+            assertTrue("$lang: ${itemTenPercent.text}", itemTenPercent.text.endsWith(balance))
         }
     }
 

@@ -622,7 +622,7 @@ val StringsDe: AppStrings = object : AppStrings {
 
     override val auditNetWorthTitle: String = "Reinvermögen"
     override val auditNetWorthStrong: String = "✅ Reinvermögen (Eigenkapital: %1${'$'}s): Starker positiver Saldo. Gesamtvermögen übersteigt Verbindlichkeiten deutlich und bietet ein solides Fundament."
-    override val auditNetWorthBalanced: String = "ℹ️ Reinvermögen (Eigenkapital: %1${'$'}s): Vermögen und Verbindlichkeiten sind ausgeglichen."
+    override val auditNetWorthBalanced: String = "ℹ️ Reinvermögen (Eigenkapital: %1${'$'}s): Das Reinvermögen ist nicht negativ, aber die Verbindlichkeiten machen mehr als die Hälfte des Gesamtvermögens aus."
     override val auditNetWorthNegative: String = "🚨 Reinvermögen (Negativer Saldo: %1${'$'}s): Negatives Reinvermögen. Gesamtverbindlichkeiten übersteigen alle vorhandenen Vermögenswerte."
 
     override val auditFidelityTitle: String = "Fidelity-Benchmark"
