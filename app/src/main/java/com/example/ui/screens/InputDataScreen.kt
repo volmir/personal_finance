@@ -500,7 +500,7 @@ fun InputDataScreen(
                     metricName = strings.fireHorizonBreakdownName,
                     hintCollapsed = strings.fireHorizonHintCollapsed,
                     hintExpanded = strings.fireHorizonHintExpanded,
-                    instruction = strings.breakdownInstruction,
+                    instruction = strings.fireHorizonInstruction,
                     categories = strings.fireHorizonCategories,
                     modifier = Modifier.padding(top = 6.dp)
                 )

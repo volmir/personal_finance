@@ -279,6 +279,7 @@ val StringsEn: AppStrings = object : AppStrings {
     override val fireHorizonBreakdownName: String = "Age & FIRE Horizon"
     override val fireHorizonHintCollapsed: String = "How to determine age and life expectancy? (hint)"
     override val fireHorizonHintExpanded: String = "Hide hint for age and horizon"
+    override val fireHorizonInstruction: String = "Enter your date of birth and expected life expectancy, using the benchmarks and recommendations below."
     override val fireHorizonCategories: List<BreakdownCategory> = listOf(
         BreakdownCategory(
             title = "Birth Date and Current Age",
@@ -540,7 +541,7 @@ val StringsEn: AppStrings = object : AppStrings {
     override val scenarioLargeExpenseParam: (String) -> String = { percent -> "expense ${percent}% monthly income" }
     override val scenarioLargeExpenseDesc: (amt: String) -> String = { amt -> "Outflow of $amt (covered from liquid and financial assets)" }
 
-    override val scenarioInflationTitle: String = "Expense Increase (Inflation)"
+    override val scenarioInflationTitle: String = "Expense Increase"
     override val scenarioInflationParam: (String) -> String = { percent -> "+${percent}% to monthly expenses" }
     override val scenarioInflationDesc: (amt: String) -> String = { amt -> "Expenses increase: +$amt/mo." }
 

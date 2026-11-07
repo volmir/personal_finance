@@ -183,4 +183,39 @@ class LocalizationReleaseTextTest {
             assertEquals("$lang rounded 1", localized.plural(1, localized.yearPluralForms), localized.fireYearsSuffix(1.004))
         }
     }
+
+    @Test
+    fun fireHorizonInstructionIsUniqueAndDefinedInAllLanguages() {
+        val expected = mapOf(
+            AppLanguage.RU to "Укажите дату рождения и ожидаемый возраст дожития, опираясь на ориентиры и рекомендации из списка ниже.",
+            AppLanguage.EN to "Enter your date of birth and expected life expectancy, using the benchmarks and recommendations below.",
+            AppLanguage.DE to "Geben Sie Ihr Geburtsdatum und die erwartete Lebenserwartung anhand der folgenden Richtwerte und Empfehlungen ein.",
+            AppLanguage.FR to "Indiquez votre date de naissance et votre espérance de vie estimée en vous appuyant sur les repères et recommandations ci-dessous.",
+            AppLanguage.IT to "Inserisci la data di nascita e l'aspettativa di vita prevista basandoti sui punti di riferimento e sui consigli sottostanti.",
+            AppLanguage.ES to "Introduce tu fecha de nacimiento y la esperanza de vida estimada basándote en las referencias y recomendaciones a continuación."
+        )
+        for (lang in AppLanguage.values()) {
+            val strings = getAppStrings(lang)
+            assertEquals("$lang instruction", expected[lang], strings.fireHorizonInstruction)
+            // Must be distinct from the standard breakdown instruction for other blocks
+            org.junit.Assert.assertNotEquals("$lang distinct from breakdownInstruction", strings.breakdownInstruction, strings.fireHorizonInstruction)
+        }
+    }
+
+    @Test
+    fun scenarioInflationTitleHasNoInflationSuffixInAllLanguages() {
+        val expected = mapOf(
+            AppLanguage.RU to "Рост расходов",
+            AppLanguage.EN to "Expense Increase",
+            AppLanguage.DE to "Kostensteigerung",
+            AppLanguage.FR to "Hausse des coûts",
+            AppLanguage.IT to "Aumento dei costi",
+            AppLanguage.ES to "Subida de costes"
+        )
+        for (lang in AppLanguage.values()) {
+            val strings = getAppStrings(lang)
+            assertEquals("$lang scenarioInflationTitle", expected[lang], strings.scenarioInflationTitle)
+            assertFalse("$lang title contains parenthesis", strings.scenarioInflationTitle.contains("("))
+        }
+    }
 }

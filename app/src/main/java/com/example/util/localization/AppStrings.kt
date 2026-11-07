@@ -120,6 +120,7 @@ interface AppStrings {
     val fireHorizonBreakdownName: String
     val fireHorizonHintCollapsed: String
     val fireHorizonHintExpanded: String
+    val fireHorizonInstruction: String
     val fireHorizonCategories: List<BreakdownCategory>
     val horizonTitle: String
     val horizonFormula: String

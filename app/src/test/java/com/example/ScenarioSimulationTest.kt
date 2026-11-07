@@ -447,8 +447,8 @@ class ScenarioSimulationTest {
         assertEquals(baseMetrics.realReturnPercent, stressMetrics.realReturnPercent, 0.01)
         assertTrue(stressMetrics.yearsToRetirement > baseMetrics.yearsToRetirement)
 
-        assertEquals("Рост расходов (инфляция)", ru.scenarioInflationTitle)
-        assertEquals("Expense Increase (Inflation)", en.scenarioInflationTitle)
+        assertEquals("Рост расходов", ru.scenarioInflationTitle)
+        assertEquals("Expense Increase", en.scenarioInflationTitle)
         val optimizedRelocationExpenses = 60_000.0 * 0.85 * 0.70
         assertEquals(35_700.0, optimizedRelocationExpenses, 0.01)
     }

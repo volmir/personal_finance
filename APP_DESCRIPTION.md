@@ -98,7 +98,7 @@ The retirement point is found by comparing projected capital (starting assets an
 - mortgage payments equal 35% of monthly income for 20 years;
 - car payments equal 20% of monthly income for 5 years;
 - a large one-off expense equals 5 monthly incomes;
-- expenses increase by 25% (the interface labels this scenario as rising inflation);
+- expenses increase by 25%;
 - child or dependent costs add 25% of original expenses for 18 years.
 
 Sliders and scenarios can be reset. Simulator state is saved locally between app launches.
