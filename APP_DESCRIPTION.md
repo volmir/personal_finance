@@ -2,7 +2,7 @@
 
 **Personal Finance & FIRE Audit** is an Android app for manually recording a monthly budget and balance sheet, calculating financial indicators, and modeling a FIRE (Financial Independence, Retire Early) scenario. It is a calculator and educational tool, with no connection to banks.
 
-This document describes the current working code. The published APK is `v1.0`; the next release is planned as `v1.0.1` (`versionCode = 2`). The app version currently remains `1.0 / 1`, and newer fixes described here may not be in the published APK. Release checks are recorded in [the dated verification report](docs/release-readiness-1.0.1.md).
+This document describes the working version `1.0.1 / 2`, prepared for release. The `v1.0.1` tag will be created and pushed only after explicit author confirmation. The published APK remains `v1.0` until publication completes, so newer fixes described here may not yet be in that APK. Release checks are recorded in [the dated verification report](docs/release-readiness-1.0.1.md).
 
 ## App Screens
 
@@ -24,7 +24,7 @@ Enter property at its full value and debts separately. Amounts range from 0 to 1
 
 Base monetary metrics are rounded to the selected currency precision before dependent ratios are calculated.
 
-The life-expectancy input must be greater than the current age and no more than 120. While an empty or invalid draft is shown, a hint identifies the saved value used in calculations. If a birth-date change exhausts the saved horizon, the app reports that condition rather than automatically extending the horizon. Age is recalculated when the app resumes.
+The life-expectancy input must be greater than the current age and no more than 120. While an empty or invalid draft is shown, a hint identifies the saved value used in calculations. If a birth-date change exhausts the saved horizon, the app reports that condition rather than automatically extending the horizon. Current age and the remaining planning horizon are calculated in whole years. Age is recalculated when the app resumes.
 
 ### 2. Financial Metrics
 

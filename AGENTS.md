@@ -5,7 +5,7 @@ Personal Finance & FIRE Audit — offline Android app (Kotlin, Jetpack Compose, 
 ## 0. Working rules
 
 - Reply to the user in **Russian**, briefly. Code identifiers and commit messages stay in English.
-- Current phase: **release hardening after v1.0; next planned release v1.0.1**. Fix defects and logical inconsistencies only. **No new features, no behavior changes beyond the fix, no refactors that are not needed for the fix.** If a fix would change a user-visible number, say so before applying it.
+- Current phase: **release preparation for v1.0.1 (version 1.0.1 / 2); tag awaits explicit author confirmation**. Fix defects and logical inconsistencies only. **No new features, no behavior changes beyond the fix, no refactors that are not needed for the fix.** If a fix would change a user-visible number, say so before applying it.
 - Minimal diffs: do not reformat, rename, or reorder untouched code. One logical change per commit.
 - Never silently edit a test expectation to make a test pass. If an expectation must change, state which value changed, by how much, and why.
 - Every bug fix ships with a regression test (boundary values for formulas).
@@ -18,8 +18,8 @@ Personal Finance & FIRE Audit — offline Android app (Kotlin, Jetpack Compose, 
 |---|---|
 | applicationId | `io.github.volmir.personalfinance` (**never change**: it is the app identity for updates and F-Droid) |
 | namespace / package | `com.example` (keep until after 1.0; renaming is a repo-wide refactor with no user benefit) |
-| Version | `versionName 1.0`, `versionCode 1` (`app/build.gradle.kts`) |
-| Next release | Planned `v1.0.1`, `versionName 1.0.1`, `versionCode 2`; do not bump the version or create the tag until requested |
+| Version | `versionName 1.0.1`, `versionCode 2` (`app/build.gradle.kts`) |
+| Release tag | Version raised to `1.0.1 / 2`; create and push `v1.0.1` only after explicit author confirmation |
 | SDK | minSdk 24, targetSdk 36, compileSdk 36.1 (`release(36) { minorApiLevel = 1 }`) |
 | Toolchain | JDK 17 in CI; JDK 21 verified locally. AGP 9.1.1, Kotlin 2.2.10, Compose BOM 2024.09.00, core library desugaring 2.1.5 |
 | Dependencies | all in `gradle/libs.versions.toml`; FLOSS only |
@@ -145,8 +145,8 @@ Current verification results and their limits are recorded in `docs/release-read
 
 ## 10. Release and F-Droid
 
-- Before tagging the planned `v1.0.1`: tests green, `lintRelease` clean, two release builds byte-identical, signed APK checked, run on emulators API 24 and 36, store screenshots refreshed after text changes, GitHub Actions secrets set (`KEYSTORE_BASE64`, `STORE_PASSWORD`, `KEY_PASSWORD`, `KEY_ALIAS`).
-- `metadata/io.github.volmir.personalfinance.yml` currently pins the published `v1.0`. Add the next build only when its release commit is known; its hash must match the new tag. Verify that the F-Droid build server supports compileSdk 36.1 (fallback: compileSdk 36).
+- Before tagging `v1.0.1`: tests green, `lintRelease` without errors, two unsigned release builds byte-identical, store screenshots refreshed after text changes, release commit pushed and its Run Unit Tests job green, explicit author confirmation received. Signing uses GitHub Actions secrets (`KEYSTORE_BASE64`, `STORE_PASSWORD`, `KEY_PASSWORD`, `KEY_ALIAS`); verify the published signed APK and run available API 24 and 36 emulators after publication.
+- `metadata/io.github.volmir.personalfinance.yml` currently pins the published `v1.0`. Add the next build in a separate commit after tag publication and artifact verification; its full commit hash must match the new tag. Verify that the F-Droid build server supports compileSdk 36.1 (fallback: compileSdk 36).
 - F-Droid requires about 3 months of active development: submit the request no earlier than ~2027-01-10.
 - Pushing a `v*` tag triggers the signed release workflow (`.github/workflows/build-and-release.yml`). Never push tags unless the user asks. Never delete or move a published tag.
 - Release signing uses `KEYSTORE_PATH`, `STORE_PASSWORD`, `KEY_PASSWORD`, `KEY_ALIAS`. Keep keystores, passwords, tokens and `local.properties` out of Git. Preserve the signing key.
