@@ -147,7 +147,7 @@ Current verification results and their limits are recorded in `docs/release-read
 
 - Before tagging a future release: tests green, `lintRelease` without errors, two unsigned release builds byte-identical, store screenshots refreshed after text changes, release commit pushed and its Run Unit Tests job green, explicit author confirmation received. Signing uses GitHub Actions secrets (`KEYSTORE_BASE64`, `STORE_PASSWORD`, `KEY_PASSWORD`, `KEY_ALIAS`); verify the published signed APK and run available API 24 and 36 emulators after publication.
 - `metadata/io.github.volmir.personalfinance.yml` preserves published `v1.0` and adds `v1.0.1` with its full tag commit hash. Future builds are added separately after publication and artifact verification. compileSdk 36.1 is verified in the local official F-Droid container; production F-Droid verification remains pending.
-- F-Droid requires about 3 months of active development: submit the request no earlier than ~2027-01-10.
+- F-Droid normally requires 3 months of active development (threshold ~2027-01-10). At the author's explicit request, early MR [!56526](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/56526) was opened on 2026-11-09 with the unmet criterion disclosed; no policy exception has been approved. Continue that MR rather than opening a duplicate.
 - Pushing a `v*` tag triggers the signed release workflow (`.github/workflows/build-and-release.yml`). Never push tags unless the user asks. Never delete or move a published tag.
 - Release signing uses `KEYSTORE_PATH`, `STORE_PASSWORD`, `KEY_PASSWORD`, `KEY_ALIAS`. Keep keystores, passwords, tokens and `local.properties` out of Git. Preserve the signing key.
 - `FDROID_SETUP.md` has the reproducibility procedure.
