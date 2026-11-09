@@ -2,13 +2,13 @@
 
 Актуализировано 9 ноября 2026 года. Команды рассчитаны на Bash в Ubuntu. Приложение уже распространяется через [GitHub Releases](https://github.com/volmir/personal_finance/releases).
 
-Версия приложения поднята до **1.0.1 / 2**: `versionName = "1.0.1"`, `versionCode = 2`. Тег **v1.0.1** создаётся и отправляется только после явного подтверждения автора. Рецепт опубликованной версии `v1.0` не заменяется черновым SHA. Результаты текущих проверок: [подготовка 1.0.1](docs/release-readiness-1.0.1.md).
+Опубликован [v1.0.1](https://github.com/volmir/personal_finance/releases/tag/v1.0.1): `versionName = "1.0.1"`, `versionCode = 2`, релизный коммит `b94949e09844450a126a16a8f73f50edd87cd64a`. Сумма, сертификат, версия и флаги APK проверены; опубликованные теги не перемещаются. Результаты: [проверки 1.0.1](docs/release-readiness-1.0.1.md).
 
 Для текущего `versionCode = 2` заметки выпуска называются `fastlane/metadata/android/<locale>/changelogs/2.txt`, **не** `1.0.1.txt`. По правилам F-Droid changelog необязателен для сборки; если нужен один общий текст, достаточно `en-US/changelogs/2.txt` — английский служит запасной локалью. Для этого приложения предпочтительны все шесть локалей (`en-US`, `ru-RU`, `de-DE`, `fr-FR`, `it-IT`, `es-ES`), чтобы пользователи видели перевод. Каждый файл — не более **500 символов**. `1.txt` относится к `versionCode = 1` и не заменяет заметки версии 2. Метаданные и новые скриншоты должны войти в релизный коммит до создания тега. [Официальный формат и правила F-Droid](https://f-droid.org/en/docs/All_About_Descriptions_Graphics_and_Screenshots/).
 
-Заметки `2.txt` подготовлены во всех шести локалях; версия приложения поднята до `1.0.1 / 2`. Запись F-Droid для `v1.0` сохранена; новую сборку добавляем отдельным коммитом только после публикации тега `v1.0.1`, с его полным SHA.
+Заметки `2.txt` опубликованы во всех шести локалях. Рецепт F-Droid сохраняет сборку `v1.0` и добавляет `v1.0.1` с полным SHA релизного коммита; CurrentVersion / CurrentVersionCode — `1.0.1 / 2`. Локальные lint, сборка и проверка воспроизводимости версии 2 успешны. Это не публикация в каталоге F-Droid; MR сейчас не открывается.
 
-## Подготовка на 06.11.2026
+## Архив: подготовка на 06.11.2026
 
 - Рабочий снимок с исправлениями успешно прошёл локальную сборку F-Droid с compileSdk **36.1**: сканирование исходников, `assembleRelease` и R8. Это проверка официального контейнерного образа, не запуск на производственных серверах каталога.
 - `lintRelease` для проверенного снимка: **0 ошибок, 38 предупреждений**. Это не подтверждение отсутствия всех замечаний Lint.
@@ -18,7 +18,7 @@
 
 Точный снимок исходников, окружение, SHA-256 APK и пределы проверок приведены в [отчёте](docs/release-readiness-1.0.1.md). Последующие редакции документации и строк не превращают этот снимок в релизный коммит; перед публикацией проверяется окончательное содержимое тега.
 
-## Состояние, зафиксированное 04.11.2026
+## Архив: состояние, зафиксированное 04.11.2026
 
 | Пункт | Результат |
 | --- | --- |
@@ -54,7 +54,7 @@ MIT, публичные исходники, Fastlane на шести языка�
 
 ### Оставшиеся действия перед публикацией
 
-Выпустить подготовленную версию `1.0.1` / `2` с прежним ключом подписи и проверить опубликованный APK на доступных устройствах. Включить актуальные метаданные и changelog, сохранить прежний ключ подписи. Происхождение иконки уже описано; по возможности дополнить конкретный сервис и сведения о референсах. Перед подачей подтвердить три месяца активной разработки либо обоснованное исключение по политике F-Droid.
+Проверить опубликованный APK `1.0.1` / `2` на доступных устройствах; релиз и его подпись уже проверены. Включить актуальные метаданные и changelog, сохранить прежний ключ подписи. Происхождение иконки уже описано; по возможности дополнить конкретный сервис и сведения о референсах. Перед подачей подтвердить три месяца активной разработки либо обоснованное исключение по политике F-Droid.
 
 | Этап | Что осталось |
 | --- | --- |
@@ -151,7 +151,7 @@ cp /var/www/personal_finance/metadata/io.github.volmir.personalfinance.yml \
 git diff -- metadata/io.github.volmir.personalfinance.yml
 ```
 
-В текущем рецепте закреплены версия `1.0` / `1`, коммит тега `v1.0` и сертификат разработчика. Категория `Finance Manager` проверена по актуальному [списку fdroiddata](https://gitlab.com/fdroid/fdroiddata/-/blob/master/config/categories.yml); прежняя `Money` не проходила линтер.
+В текущем рецепте сохранена версия `1.0` / `1` и добавлена `1.0.1` / `2` с полным SHA коммита тега `v1.0.1`; сертификат разработчика сохранён. Категория `Finance Manager` проверена по актуальному [списку fdroiddata](https://gitlab.com/fdroid/fdroiddata/-/blob/master/config/categories.yml); прежняя `Money` не проходила линтер.
 
 Описания, иконки, скриншоты и changelog берутся из `fastlane/metadata/android` репозитория приложения. Они уже включены в релизный коммит. Полное описание функций: [APP_DESCRIPTION.md](./APP_DESCRIPTION.md). Поля рецепта объяснены в [Build Metadata Reference](https://f-droid.org/docs/Build_Metadata_Reference/).
 
@@ -194,6 +194,15 @@ java_paths:
 LOCAL_CONFIG
 ```
 
+При проверке в отдельном каталоге нужен полный официальный каталог `config` из fdroiddata, включая `categories.yml` и указанные в нём иконки. Пустой список категорий вызывает ложную ошибку `Finance Manager is not valid`; копирование только YAML затем приводит к ошибке отсутствующей иконки. Категорию приложения ради такого окружения менять не нужно. Если `PF_FDROID_CHECK` указывает на изолированный каталог проверки:
+
+```bash
+mkdir -p "$PF_FDROID_CHECK"
+cp -a "$PF_FDROID_DATA/config" "$PF_FDROID_CHECK/"
+```
+
+В проверке 09.11.2026 использован официальный каталог из ревизии fdroiddata `5938c5fbc6800dc13c0253190b9a14c8343d668c`; с ним `fdroid lint` прошёл.
+
 Запустить форматирование, линтер и сборку в контейнере. Пользователь `vagrant` внутри контейнера должен иметь право записи в смонтированные рабочую копию и кеш:
 
 ```bash
@@ -210,10 +219,10 @@ docker run --rm --user vagrant \
        cd /build
        fdroid rewritemeta io.github.volmir.personalfinance &&
        fdroid lint io.github.volmir.personalfinance &&
-       fdroid build --verbose io.github.volmir.personalfinance:1'
+       fdroid build --verbose io.github.volmir.personalfinance:2'
 ```
 
-Ожидается `unsigned/io.github.volmir.personalfinance_1.apk`. При первом запуске могут загружаться Gradle, SDK и зависимости. Если такой APK уже есть, F-Droid может пропустить повторную сборку; для проверки изменённой версии использовать новый `versionCode` и соответствующий рецепт. Локальный успех не заменяет CI каталога.
+Ожидается `unsigned/io.github.volmir.personalfinance_2.apk`. При первом запуске могут загружаться Gradle, SDK и зависимости. Если такой APK уже есть, F-Droid может пропустить повторную сборку; для проверки изменённой версии использовать новый `versionCode` и соответствующий рецепт. Локальный успех не заменяет CI каталога.
 
 Официальные справочники: [серверные инструменты](https://f-droid.org/en/docs/Installing_the_Server_and_Repo_Tools/), [fdroid build](https://f-droid.org/docs/Building_Applications/).
 
@@ -223,10 +232,10 @@ docker run --rm --user vagrant \
 
 ```bash
 export PF_APK_DOWNLOAD=$(mktemp -d)
-gh release download v1.0 --repo volmir/personal_finance \
+gh release download v1.0.1 --repo volmir/personal_finance \
   --dir "$PF_APK_DOWNLOAD"
 (cd "$PF_APK_DOWNLOAD" && sha256sum -c SHA256SUMS.txt)
-apksigner verify --verbose --print-certs "$PF_APK_DOWNLOAD/PersonalFinance-v1.0.apk"
+apksigner verify --verbose --print-certs "$PF_APK_DOWNLOAD/PersonalFinance-v1.0.1.apk"
 ```
 
 Отпечаток должен совпасть с указанным выше. Проверить пакет, версию и поведение приложения на тестовом Android-устройстве. По сообщению автора, испытание выявило баги; после исправлений этот шаг следует выполнять с новым релизом. Зафиксировать модель устройства, версию Android, версию приложения, проверенные сценарии и результат повторной проверки.
@@ -241,8 +250,8 @@ PYTHONPATH="$PF_APKSIGCOPIER" python3 - <<'PY'
 import os
 from pathlib import Path
 import apksigcopier
-signed = Path(os.environ['PF_APK_DOWNLOAD']) / 'PersonalFinance-v1.0.apk'
-unsigned = Path(os.environ['PF_FDROID_DATA']) / 'unsigned/io.github.volmir.personalfinance_1.apk'
+signed = Path(os.environ['PF_APK_DOWNLOAD']) / 'PersonalFinance-v1.0.1.apk'
+unsigned = Path(os.environ['PF_FDROID_DATA']) / 'unsigned/io.github.volmir.personalfinance_2.apk'
 apksigcopier.do_compare(str(signed), str(unsigned), unsigned=True)
 print('Reproducible APK comparison passed')
 PY
@@ -269,7 +278,7 @@ PY
 
 В заявку включить:
 
-- исходники, лицензию MIT и ссылку на [релиз v1.0](https://github.com/volmir/personal_finance/releases/tag/v1.0);
+- исходники, лицензию MIT и ссылку на [релиз v1.0.1](https://github.com/volmir/personal_finance/releases/tag/v1.0.1);
 - описание пользы и отличий приложения;
 - результаты проверки на устройстве, сборки и воспроизводимости;
 - сведения о сохранении подписи разработчика;
@@ -312,7 +321,7 @@ git -C /tmp/personal-finance-fdroiddata push -u myfork add-personal-finance
 
 ## Дальнейшие обновления
 
-Версия приложения поднята до `versionName = "1.0.1"`, `versionCode = 2`. `changelogs/2.txt` подготовлены на шести языках. Релизный коммит включает документы, метаданные и актуальные скриншоты. Тег `v1.0.1` создаётся и отправляется только после явного подтверждения автора; GitHub Actions подписывает `PersonalFinance-v1.0.1.apk` прежним ключом. После публикации и проверки артефактов рецепт F-Droid обновляется отдельным коммитом на полный SHA тега. До этого рецепт сохраняет опубликованный `v1.0`. Не заменять APK старого релиза и не перемещать тег `v1.0`.
+Опубликован `v1.0.1`: `versionName = "1.0.1"`, `versionCode = 2`. GitHub Actions подписал `PersonalFinance-v1.0.1.apk` прежним ключом; артефакты проверены. Рецепты сохраняют сборку `v1.0` и добавляют версию 2; основной рецепт закреплён на полный SHA тега `v1.0.1`. Результаты локальной проверки F-Droid приведены в отчёте. Следующие релизы требуют отдельного запроса автора. Опубликованные APK и теги не заменять.
 
 Перед будущей заявкой или обновлением использовать актуальный проверенный релиз: увеличить `versionCode`, изменить `versionName`, добавить changelog с новым кодом, опубликовать соответствующий тег и подписанный APK. В рецепте проверить `Builds`, полный SHA коммита, `CurrentVersion` и `CurrentVersionCode`, затем повторить сборку и сравнение APK. Общий ключ подписи сохраняется.
 

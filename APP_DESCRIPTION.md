@@ -2,7 +2,7 @@
 
 **Personal Finance & FIRE Audit** is an Android app for manually recording a monthly budget and balance sheet, calculating financial indicators, and modeling a FIRE (Financial Independence, Retire Early) scenario. It is a calculator and educational tool, with no connection to banks.
 
-This document describes the working version `1.0.1 / 2`, prepared for release. The `v1.0.1` tag will be created and pushed only after explicit author confirmation. The published APK remains `v1.0` until publication completes, so newer fixes described here may not yet be in that APK. Release checks are recorded in [the dated verification report](docs/release-readiness-1.0.1.md).
+This document describes the published version [v1.0.1 / versionCode 2](https://github.com/volmir/personal_finance/releases/tag/v1.0.1), built from commit `b94949e09844450a126a16a8f73f50edd87cd64a`. Its checksum, signing certificate, version and release flags have been verified. Release checks are recorded in [the dated verification report](docs/release-readiness-1.0.1.md).
 
 ## App Screens
 

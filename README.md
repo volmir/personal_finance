@@ -16,7 +16,7 @@
 - Signing certificate SHA-256: `D6:7A:62:A2:33:C2:66:62:26:99:25:95:5C:65:34:64:82:0B:F1:21:E1:55:CA:82:73:59:C3:B9:9D:9B:66:09`. See [SIGNING_CERTIFICATE.txt](https://github.com/volmir/personal_finance/releases/latest/download/SIGNING_CERTIFICATE.txt) for certificate details. Each release also includes `SHA256SUMS.txt` for checking the downloaded APK.
 - The app works offline and does not request the internet permission.
 
-The working version has been raised to **1.0.1 / versionCode 2** for release. The **v1.0.1** tag will be created and pushed only after explicit author confirmation. The published release remains **[v1.0](https://github.com/volmir/personal_finance/releases/tag/v1.0)** until publication completes. See the dated [release verification report](./docs/release-readiness-1.0.1.md).
+The published release is **[v1.0.1 / versionCode 2](https://github.com/volmir/personal_finance/releases/tag/v1.0.1)**, built from commit `b94949e09844450a126a16a8f73f50edd87cd64a`. Its checksum, signing certificate, version and release flags have been verified. See the dated [release verification report](./docs/release-readiness-1.0.1.md).
 
 ---
 
@@ -200,10 +200,10 @@ Distribution uses signed GitHub Releases:
 - 📦 **[GitHub Releases](https://github.com/volmir/personal_finance/releases):** Signed APKs, APK checksums, and public signing certificate information.
 - 🤖 **[F-Droid Inclusion Guide](./FDROID_SETUP.md):** Prepare and test the build recipe in advance. Submit to the official repository no earlier than **January 10, 2027**, after three months of active development since October 10, 2026, unless a documented policy exception applies. Inclusion remains subject to review.
 - 🚀 **[GitHub Actions CI/CD Workflow](./.github/workflows/build-and-release.yml):** Builds the release APK on version tags, verifies its signature, and publishes it with APK checksums and public certificate information.
-- 📁 **Fastlane Metadata:** The single source of store titles and descriptions is [fastlane/metadata/android](./fastlane/metadata/android): `title.txt`, `short_description.txt`, and `full_description.txt` for `ru-RU`, `en-US`, `de-DE`, `es-ES`, `fr-FR`, and `it-IT`. Historical `v1.0` release notes remain in `changelogs/1.txt`; release notes for `v1.0.1` (`versionCode = 2`) are in `changelogs/2.txt`. Screenshots are in `images/phoneScreenshots/` for each locale. The working app version is `1.0.1 / 2`; creating and pushing the tag requires explicit author confirmation.
+- 📁 **Fastlane Metadata:** The single source of store titles and descriptions is [fastlane/metadata/android](./fastlane/metadata/android): `title.txt`, `short_description.txt`, and `full_description.txt` for `ru-RU`, `en-US`, `de-DE`, `es-ES`, `fr-FR`, and `it-IT`. Historical `v1.0` release notes remain in `changelogs/1.txt`; release notes for `v1.0.1` (`versionCode = 2`) are in `changelogs/2.txt`. Screenshots are in `images/phoneScreenshots/` for each locale. The published app version is `1.0.1 / 2`. Future release tags require an explicit author request; published tags are never moved.
 - 📄 **OSI-Approved License:** [MIT License](./LICENSE) in the project root.
 
-For `v1.0`, a local rebuild in the official F-Droid buildserver container passed comparison with the published APK using `apksigcopier`. The [F-Droid guide](./FDROID_SETUP.md) records the verification and recipe for retaining the developer's signature. Official repository verification and inclusion are still pending.
+For `v1.0.1`, `fdroid lint` and a local build in the official F-Droid buildserver container passed; the Binaries check verified reproducibility against the published signed APK. For `v1.0`, a local rebuild in the official F-Droid buildserver container passed comparison with the published APK using `apksigcopier`. The [F-Droid guide](./FDROID_SETUP.md) records the verification and recipe for retaining the developer's signature. Official repository verification and inclusion are still pending.
 
 The development snapshot recorded on 2026-11-06 built with SDK 36.1 in the official F-Droid container. This is a local compatibility check, not a build on F-Droid's production infrastructure or proof that the next signed release is reproducible. `lintRelease` completed with 0 errors and 38 warnings; see the [verification report](./docs/release-readiness-1.0.1.md).
 
