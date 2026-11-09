@@ -597,12 +597,12 @@ val StringsEn: AppStrings = object : AppStrings {
     override val auditCashFlowTitle: String = "Cash Flow"
     override val auditCashFlowPositive: String = "✅ Cash Flow (+%1${'$'}s/mo.): Budget surplus. Your income exceeds expenses, generating a regular investment resource for wealth accumulation."
     override val auditCashFlowNeutral: String = "⚠️ Cash Flow (0 %1${'$'}s/mo.): Balanced budget (income equals expenses). You do not accumulate debt. There is no surplus available for savings, so this indicator is negative."
-    override val auditCashFlowNegative: String = "🚨 Cash Flow (%1${'$'}s/mo.): Budget deficit! Current expenses exceed income, depleting reserves or raising debt."
+    override val auditCashFlowNegative: String = "🚨 Cash Flow (%1${'$'}s/mo.): Budget deficit! Expenses exceed income, so the gap is covered from savings or debt. Unless investment returns offset it, reserves shrink."
 
     override val auditSavingsRateTitle: String = "Savings Rate"
     override val auditSavingsRatePositive: (String, String) -> String = { value, threshold -> "✅ Savings Capacity (Savings Rate: $value): High savings rate (above ${threshold}%). Provides steady asset accumulation and exponential wealth compounding." }
     override val auditSavingsRateNeutral: (String, String, String) -> String = { value, neutral, positive -> "ℹ️ Savings Capacity (Savings Rate: $value): Neutral range (above $neutral and up to ${positive}%). Capital accumulation proceeds steadily; expense optimization can help reach the >${positive}% target." }
-    override val auditSavingsRateNegative: String = "🚨 Savings Capacity (Savings Rate: %1${'$'}s): Zero or negative cash flow: expenses equal or exceed income, so capital does not grow."
+    override val auditSavingsRateNegative: String = "🚨 Savings Capacity (Savings Rate: %1${'$'}s): Zero or negative cash flow: your current income does not add to your capital."
 
     override val auditEmergencyFundTitle: String = "Emergency Fund"
     override val auditEmergencyFundPositive: String = "✅ Emergency Fund (Reserve Volume: %1${'$'}s): Liquid reserve is fully sufficient to cover unexpected emergencies and crises without borrowing."

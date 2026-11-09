@@ -596,12 +596,12 @@ val StringsIt: AppStrings = object : AppStrings {
     override val auditCashFlowTitle: String = "Flusso di cassa (Cash Flow)"
     override val auditCashFlowPositive: String = "✅ Cash Flow (+%1${'$'}s/mese): Avanzo di bilancio. Le entrate superano le uscite, creando una capacità costante di investimento per far crescere il patrimonio."
     override val auditCashFlowNeutral: String = "⚠️ Cash Flow (0 %1${'$'}s/mese): Bilancio in pareggio (entrate pari alle uscite). Non crei debiti. Non ci sono risorse disponibili per il risparmio, quindi questo indicatore è negativo."
-    override val auditCashFlowNegative: String = "🚨 Cash Flow (%1${'$'}s/mese): Disavanzo di bilancio! Le spese superano le entrate, erodendo le riserve o aumentando l'indebitamento."
+    override val auditCashFlowNegative: String = "🚨 Cash Flow (%1${'$'}s/mese): Disavanzo di bilancio! Le spese superano le entrate: la differenza va coperta con i risparmi o ricorrendo al debito. Se i rendimenti degli investimenti non compensano il disavanzo, le riserve diminuiscono."
 
     override val auditSavingsRateTitle: String = "Tasso di risparmio"
     override val auditSavingsRatePositive: (String, String) -> String = { value, threshold -> "✅ Capacità di risparmio (Tasso: $value): Tasso di risparmio elevato (superiore a ${threshold}%). Garantisce un accumulo costante di attivi e l'effetto dell'interesse composto." }
     override val auditSavingsRateNeutral: (String, String, String) -> String = { value, neutral, positive -> "ℹ️ Capacità di risparmio (Tasso: $value): Intervallo neutro (oltre $neutral e fino a ${positive}%). L'accumulo prosegue costantemente; l'ottimizzazione delle uscite può aiutare a superare il target di >${positive}%." }
-    override val auditSavingsRateNegative: String = "🚨 Capacità di risparmio (Tasso: %1${'$'}s): Cash flow nullo o negativo: le uscite eguagliano o superano le entrate, il capitale non cresce."
+    override val auditSavingsRateNegative: String = "🚨 Capacità di risparmio (Tasso: %1${'$'}s): Flusso di cassa nullo o negativo: il tuo reddito corrente non alimenta il capitale."
 
     override val auditEmergencyFundTitle: String = "Fondo di emergenza"
     override val auditEmergencyFundPositive: String = "✅ Fondo di emergenza (Volume riserva: %1${'$'}s): La riserva liquida è del tutto sufficiente per coprire emergenze impreviste senza ricorrere a prestiti."

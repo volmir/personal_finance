@@ -2,5 +2,5 @@
 • Allineati intervalli del simulatore, calcoli e descrizioni degli scenari.
 • Corretti il caricamento di dati non validi e l’aggiornamento dell’età al ritorno nell’app.
 • Chiarite le indicazioni su età e orizzonte FIRE.
-• Corretti i testi su imposte, CFS e flusso di cassa nullo in tutte le sei lingue.
+• Corretti i testi su imposte, CFS e flusso di cassa in tutte le sei lingue.
 • Aggiornate le schermate.

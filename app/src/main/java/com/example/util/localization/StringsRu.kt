@@ -599,12 +599,12 @@ val StringsRu: AppStrings = object : AppStrings {
     override val auditCashFlowTitle: String = "Денежный поток"
     override val auditCashFlowPositive: String = "✅ Денежный поток (Cash Flow: +%1${'$'}s/мес.): Профицит бюджета. Ваши доходы превышают расходы, формируя регулярный инвестиционный ресурс для приумножения капитала."
     override val auditCashFlowNeutral: String = "⚠️ Денежный поток (Cash Flow: 0 %1${'$'}s/мес.): Нулевой баланс бюджета (доходы равны расходам). Вы не накапливаете долги. Свободного ресурса для накоплений нет, поэтому показатель негативный."
-    override val auditCashFlowNegative: String = "🚨 Денежный поток (Cash Flow: %1${'$'}s/мес.): Дефицит бюджета! Текущие расходы превышают доходы, что ведет к быстрому истощению резервов или росту долговых обязательств."
+    override val auditCashFlowNegative: String = "🚨 Денежный поток (Cash Flow: %1${'$'}s/мес.): Дефицит бюджета! Расходы превышают доходы: разницу приходится покрывать из накоплений или долга. Если доходность капитала не перекрывает дефицит, резервы сокращаются."
 
     override val auditSavingsRateTitle: String = "Норма сбережений"
     override val auditSavingsRatePositive: (String, String) -> String = { value, threshold -> "✅ Способность к накоплению (Норма сбережений: $value): Высокий уровень сбережений (более ${threshold}%). Обеспечивает стабильное пополнение активов и долгосрочное благосостояние." }
     override val auditSavingsRateNeutral: (String, String, String) -> String = { value, neutral, positive -> "ℹ️ Способность к накоплению (Норма сбережений: $value): Нейтральная зона (более $neutral и до ${positive}%). Формирование капитала идет умеренными темпами; рекомендуется оптимизировать расходы для выхода в зону >${positive}%." }
-    override val auditSavingsRateNegative: String = "🚨 Способность к накоплению (Норма сбережений: %1${'$'}s): Нулевой или отрицательный денежный поток: расходы равны доходам или превышают их, капитал не растёт."
+    override val auditSavingsRateNegative: String = "🚨 Способность к накоплению (Норма сбережений: %1${'$'}s): Нулевой или отрицательный денежный поток: из текущих доходов капитал не пополняется."
 
     override val auditEmergencyFundTitle: String = "Подушка безопасности"
     override val auditEmergencyFundPositive: String = "✅ Подушка безопасности (Объем резерва: %1${'$'}s): Ликвидный резерв полностью достаточен для покрытия непредвиденных кризисов и экстренных ситуаций без обращения к кредитам."

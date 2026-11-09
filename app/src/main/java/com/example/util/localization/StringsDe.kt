@@ -596,12 +596,12 @@ val StringsDe: AppStrings = object : AppStrings {
     override val auditCashFlowTitle: String = "Cashflow"
     override val auditCashFlowPositive: String = "✅ Cashflow (+%1${'$'}s/Mon.): Haushaltsüberschuss. Ihre Einnahmen übersteigen die Ausgaben und schaffen regelmäßigen Raum für Vermögensaufbau."
     override val auditCashFlowNeutral: String = "⚠️ Cashflow (0 %1${'$'}s/Mon.): Ausgeglichenes Budget (Einnahmen decken Ausgaben). Keine Neuverschuldung. Es bleibt kein Überschuss zum Sparen, daher wird dieser Indikator negativ bewertet."
-    override val auditCashFlowNegative: String = "🚨 Cashflow (%1${'$'}s/Mon.): Budgetdefizit! Laufende Ausgaben übersteigen die Einnahmen, was Rücklagen aufzehrt oder Schulden erhöht."
+    override val auditCashFlowNegative: String = "🚨 Cashflow (%1${'$'}s/Mon.): Budgetdefizit! Die Ausgaben übersteigen die Einnahmen: Die Differenz muss aus Ersparnissen oder durch Schulden gedeckt werden. Wenn die Kapitalerträge das Defizit nicht ausgleichen, schrumpfen die Rücklagen."
 
     override val auditSavingsRateTitle: String = "Sparquote"
     override val auditSavingsRatePositive: (String, String) -> String = { value, threshold -> "✅ Sparvermögen (Sparquote: $value): Hohe Sparquote (über ${threshold}%). Ermöglicht kontinuierlichen Vermögensaufbau und Zinseszinseffekte." }
     override val auditSavingsRateNeutral: (String, String, String) -> String = { value, neutral, positive -> "ℹ️ Sparvermögen (Sparquote: $value): Neutraler Bereich (über $neutral bis ${positive}%). Vermögensaufbau schreitet voran; Kostenoptimierung kann helfen, die Marke von >${positive}% zu erreichen." }
-    override val auditSavingsRateNegative: String = "🚨 Sparvermögen (Sparquote: %1${'$'}s): Kein oder negativer Cashflow: Ausgaben entsprechen Einnahmen oder übersteigen diese."
+    override val auditSavingsRateNegative: String = "🚨 Sparvermögen (Sparquote: %1${'$'}s): Cashflow gleich null oder negativ: Ihr laufendes Einkommen trägt nicht zum Kapitalaufbau bei."
 
     override val auditEmergencyFundTitle: String = "Notgroschen"
     override val auditEmergencyFundPositive: String = "✅ Notgroschen (Rücklagenvolumen: %1${'$'}s): Liquide Reserve reicht vollständig aus, um unvorhergesehene Krisen ohne Schulden zu überstehen."

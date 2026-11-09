@@ -24,6 +24,32 @@ class LocalizationReleaseTextTest {
     private val today = LocalDate.of(2026, 11, 6)
 
     @Test
+    fun cashFlowAuditTextsAvoidGrowthAndSpeedClaimsInEveryLanguage() {
+        val forbiddenPhrases = mapOf(
+            AppLanguage.RU to listOf("быстр", "капитал не растёт", "капитал не растет"),
+            AppLanguage.EN to listOf("quick", "rapid", "capital does not grow", "capital doesn't grow"),
+            AppLanguage.DE to listOf("schnell", "rasch", "kapital wächst nicht", "kapital nimmt nicht zu"),
+            AppLanguage.FR to listOf("rapid", "vite", "le capital ne s'accroît pas", "le capital ne croît pas", "le capital n'augmente pas"),
+            AppLanguage.IT to listOf("rapid", "veloc", "il capitale non cresce", "il capitale non aumenta"),
+            AppLanguage.ES to listOf("rápid", "veloz", "el capital no crece", "el capital no aumenta")
+        )
+        for (lang in AppLanguage.values()) {
+            val strings = getAppStrings(lang)
+            val texts = mapOf(
+                "auditSavingsRateNegative" to strings.auditSavingsRateNegative,
+                "auditCashFlowNegative" to strings.auditCashFlowNegative,
+                "auditCashFlowNeutral" to strings.auditCashFlowNeutral
+            )
+            for ((name, template) in texts) {
+                val text = String.format(Locale.ROOT, template, "0").replace('’', '\'')
+                for (phrase in listOf("быстрому", "fast") + forbiddenPhrases.getValue(lang)) {
+                    assertFalse("$lang $name contains '$phrase': $text", text.contains(phrase, ignoreCase = true))
+                }
+            }
+        }
+    }
+
+    @Test
     fun netWorthCaptionsUseExactlyOneColonInEveryLanguage() {
         for (lang in AppLanguage.values()) {
             val strings = getAppStrings(lang)

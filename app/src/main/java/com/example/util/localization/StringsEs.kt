@@ -596,12 +596,12 @@ val StringsEs: AppStrings = object : AppStrings {
     override val auditCashFlowTitle: String = "Flujo de caja (Cash Flow)"
     override val auditCashFlowPositive: String = "✅ Cash Flow (+%1${'$'}s/mes): Superávit presupuestario. Tus ingresos superan a tus gastos, creando una capacidad periódica de inversión para hacer crecer el patrimonio."
     override val auditCashFlowNeutral: String = "⚠️ Cash Flow (0 %1${'$'}s/mes): Presupuesto equilibrado (ingresos iguales a gastos). No generas deudas. No hay recursos disponibles para ahorrar, por lo que este indicador es negativo."
-    override val auditCashFlowNegative: String = "🚨 Cash Flow (%1${'$'}s/mes): ¡Déficit presupuestario! Los gastos superan los ingresos, consumiendo las reservas o aumentando el endeudamiento."
+    override val auditCashFlowNegative: String = "🚨 Cash Flow (%1${'$'}s/mes): ¡Déficit presupuestario! Los gastos superan los ingresos: la diferencia se cubre con ahorros o deuda. Si los rendimientos de las inversiones no compensan el déficit, las reservas disminuyen."
 
     override val auditSavingsRateTitle: String = "Tasa de ahorro"
     override val auditSavingsRatePositive: (String, String) -> String = { value, threshold -> "✅ Capacidad de ahorro (Tasa: $value): Tasa de ahorro elevada (superior al ${threshold}%). Asegura una acumulación continua de activos y el efecto del interés compuesto." }
     override val auditSavingsRateNeutral: (String, String, String) -> String = { value, neutral, positive -> "ℹ️ Capacidad de ahorro (Tasa: $value): Rango neutro (entre $neutral y ${positive}%). El capital avanza de forma constante; optimizar gastos puede ayudar a superar el target de >${positive}%." }
-    override val auditSavingsRateNegative: String = "🚨 Capacidad de ahorro (Tasa: %1${'$'}s): Cash flow nulo o negativo: los gastos igualan o superan los ingresos, el capital no crece."
+    override val auditSavingsRateNegative: String = "🚨 Capacidad de ahorro (Tasa: %1${'$'}s): Flujo de caja nulo o negativo: tus ingresos actuales no aportan fondos a tu capital."
 
     override val auditEmergencyFundTitle: String = "Fondo de emergencia"
     override val auditEmergencyFundPositive: String = "✅ Fondo de emergencia (Volumen: %1${'$'}s): La reserva líquida es plenamente suficiente para solventar contingencias sin endeudarse."
