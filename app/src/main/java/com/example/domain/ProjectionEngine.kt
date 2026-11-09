@@ -19,7 +19,6 @@ data class ProjectionParams(
     val temporaryExpenses: List<TemporaryExpense> = emptyList(),
     val deferredAnnualExpenseReduction: Double = 0.0,
     val deferredStartYears: Double = 18.0,
-    val deferredAssets: List<DeferredAsset> = emptyList(),
     val financialAssets: Double = 0.0,
     val liquidAssets: Double = 0.0,
     val capitalGainsTaxPercent: Double = 0.0,
@@ -38,7 +37,6 @@ data class ProjectionParams(
             temporaryExpenses: List<TemporaryExpense> = emptyList(),
             deferredAnnualExpenseReduction: Double = 0.0,
             deferredStartYears: Double = 18.0,
-            deferredAssets: List<DeferredAsset> = emptyList(),
             extraMonthlyCashFlow: Double = 0.0,
             today: LocalDate = LocalDate.now()
         ): ProjectionParams {
@@ -62,7 +60,6 @@ data class ProjectionParams(
                 temporaryExpenses = temporaryExpenses,
                 deferredAnnualExpenseReduction = deferredAnnualExpenseReduction,
                 deferredStartYears = deferredStartYears,
-                deferredAssets = deferredAssets,
                 financialAssets = input.financialAssets,
                 liquidAssets = input.liquidAssets,
                 capitalGainsTaxPercent = FinancialInputLimits.clampTaxPercent(input.capitalGainsTaxPercent),
@@ -177,18 +174,7 @@ class ProjectionEngine(val params: ProjectionParams) {
 
         val taxFactor = fixedTaxFactor ?: getTaxFactorAt(t, yearsInRetirement, baseReq)
 
-        var deferredAssetDiscounted = 0.0
-        for (asset in params.deferredAssets) {
-            if (t < asset.afterYears && asset.afterYears < maxYears) {
-                val dt = asset.afterYears - t
-                deferredAssetDiscounted += if (abs(r) > 0.0001) {
-                    asset.amount * (1.0 + r).pow(-dt)
-                } else {
-                    asset.amount
-                }
-            }
-        }
-        return ((baseReq + tempReq) * taxFactor - deferredAssetDiscounted).coerceAtLeast(0.0)
+        return ((baseReq + tempReq) * taxFactor).coerceAtLeast(0.0)
     }
 
     fun accumulatedCapitalAt(t: Double): Double {
@@ -224,18 +210,7 @@ class ProjectionEngine(val params: ProjectionParams) {
             }
         }
 
-        var deferredAssetsValue = 0.0
-        for (asset in params.deferredAssets) {
-            if (t >= asset.afterYears) {
-                val dt = t - asset.afterYears
-                deferredAssetsValue += if (abs(r) > 0.0001) {
-                    asset.amount * (1.0 + r).pow(dt)
-                } else {
-                    asset.amount
-                }
-            }
-        }
-        return baseAcc + extraAccFromR - tempCost + deferredAssetsValue
+        return baseAcc + extraAccFromR - tempCost
     }
 
     /**
@@ -366,19 +341,7 @@ class ProjectionEngine(val params: ProjectionParams) {
                     capAtRetirement
                 }
 
-                var deferredAssetsInRetirement = 0.0
-                for (asset in params.deferredAssets) {
-                    if (yearsToRetire < asset.afterYears && currentYearOffset >= asset.afterYears) {
-                        val dt = currentYearOffset - asset.afterYears
-                        deferredAssetsInRetirement += if (abs(r) > 0.0001) {
-                            asset.amount * (1.0 + r).pow(dt)
-                        } else {
-                            asset.amount
-                        }
-                    }
-                }
-
-                capCompounded - (baseDraw - savingsDraw + tempDraw) * taxFactorAtRetirement + deferredAssetsInRetirement
+                capCompounded - (baseDraw - savingsDraw + tempDraw) * taxFactorAtRetirement
             }
 
             list.add(

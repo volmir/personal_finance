@@ -19,11 +19,6 @@ data class TemporaryExpense(
     val durationYears: Double
 )
 
-data class DeferredAsset(
-    val amount: Double,
-    val afterYears: Double
-)
-
 object FinancialInputLimits {
     const val MIN_RATE_PERCENT = -50.0
     const val MAX_RATE_PERCENT = 100.0
@@ -65,7 +60,6 @@ object FinanceCalculator {
         temporaryExpenses: List<TemporaryExpense> = emptyList(),
         deferredAnnualExpenseReduction: Double = 0.0,
         deferredStartYears: Double = 18.0,
-        deferredAssets: List<DeferredAsset> = emptyList(),
         extraMonthlyCashFlow: Double = 0.0,
         today: LocalDate = LocalDate.now()
     ): CalculatedMetrics {
@@ -136,7 +130,6 @@ object FinanceCalculator {
                 temporaryExpenses = temporaryExpenses,
                 deferredAnnualExpenseReduction = deferredAnnualExpenseReduction,
                 deferredStartYears = deferredStartYears,
-                deferredAssets = deferredAssets,
                 extraMonthlyCashFlow = extraMonthlyCashFlow,
                 today = today
             )
@@ -265,7 +258,6 @@ object FinanceCalculator {
         temporaryExpenses: List<TemporaryExpense> = emptyList(),
         deferredAnnualExpenseReduction: Double = 0.0,
         deferredStartYears: Double = 18.0,
-        deferredAssets: List<DeferredAsset> = emptyList(),
         extraMonthlyCashFlow: Double = 0.0,
         today: LocalDate = LocalDate.now()
     ): List<TrajectoryPoint> {
@@ -274,7 +266,6 @@ object FinanceCalculator {
             temporaryExpenses = temporaryExpenses,
             deferredAnnualExpenseReduction = deferredAnnualExpenseReduction,
             deferredStartYears = deferredStartYears,
-            deferredAssets = deferredAssets,
             extraMonthlyCashFlow = extraMonthlyCashFlow,
             today = today
         )
