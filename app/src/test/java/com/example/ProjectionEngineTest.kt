@@ -5,6 +5,9 @@ import com.example.domain.FinancialInputLimits
 import com.example.domain.ProjectionParams
 import com.example.domain.TemporaryExpense
 import com.example.data.model.FireStatus
+import com.example.ui.components.interpolateAccumulatedCapital
+import kotlin.math.abs
+import kotlin.random.Random
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -350,5 +353,244 @@ class ProjectionEngineTest {
         val reachedNow = ProjectionEngine(common.copy(startCapital = 200_000_000.0)).findYearsToRetirement()
         assertEquals(FireStatus.REACHED_NOW, reachedNow.status)
         assertEquals(0.0, reachedNow.years, 0.001)
+    }
+
+    @Test
+    fun testDeficitBudgetMatchesBruteForce() {
+        val currentAge = 35
+        val lifeExpectancy = 75
+        val annualExpenses = 1_000_000.0
+        val annualCashFlow = -150_000.0
+        val r = 0.06
+        val proto = ProjectionEngine(ProjectionParams(
+            currentAge = currentAge,
+            lifeExpectancy = lifeExpectancy,
+            startCapital = 0.0,
+            annualCashFlow = annualCashFlow,
+            annualExpenses = annualExpenses,
+            realReturnRate = r,
+            financialAssets = 0.0,
+            liquidAssets = 0.0
+        ))
+        val req0 = proto.requiredCapitalAt(0.0)
+        val startCapital = req0 * 0.92
+        val params = ProjectionParams(
+            currentAge = currentAge,
+            lifeExpectancy = lifeExpectancy,
+            startCapital = startCapital,
+            annualCashFlow = annualCashFlow,
+            annualExpenses = annualExpenses,
+            realReturnRate = r,
+            financialAssets = startCapital,
+            liquidAssets = 0.0
+        )
+        val engine = ProjectionEngine(params)
+        val res = engine.findYearsToRetirement()
+
+        assertEquals(FireStatus.REACHABLE, res.status)
+        assertTrue("years must be positive", res.years > 0.0)
+
+        val lastCheckYear = (engine.maxYears - 0.01).coerceAtLeast(0.0)
+        val stepCount = (lastCheckYear * 100.0 + 1e-6).toInt()
+        var bruteForceT: Double? = null
+        for (i in 0..stepCount) {
+            val t = i / 100.0
+            if (engine.accumulatedCapitalAt(t) >= engine.requiredCapitalAt(t)) {
+                bruteForceT = t
+                break
+            }
+        }
+        assertTrue("Brute force must find crossing", bruteForceT != null)
+        assertEquals(bruteForceT!!, res.years, 0.02)
+    }
+
+    @Test
+    fun testRandomProfilesAgainstBruteForce() {
+        val rng = Random(42)
+        val annualExpenses = 1_200_000.0
+
+        for (iteration in 1..300) {
+            val currentAge = rng.nextInt(22, 71)
+            val horizon = rng.nextInt(3, 61)
+            val lifeExpectancy = currentAge + horizon
+            val r = rng.nextDouble(-0.03, 0.09)
+            val income = annualExpenses * rng.nextDouble(0.0, 1.6)
+            val annualCashFlow = income - annualExpenses
+            val taxPercent = listOf(0.0, 20.0, 50.0).random(rng)
+
+            val tempCount = rng.nextInt(3)
+            val temporaryExpenses = (0 until tempCount).map {
+                TemporaryExpense(
+                    annualAmount = rng.nextDouble(10_000.0, 150_000.0),
+                    durationYears = rng.nextInt(1, 10).toDouble()
+                )
+            }
+
+            val hasDeferred = rng.nextBoolean()
+            val deferredReduction = if (hasDeferred) rng.nextDouble(10_000.0, annualExpenses * 0.3) else 0.0
+            val deferredStartYears = rng.nextDouble(1.0, horizon.toDouble())
+
+            val proto = ProjectionEngine(ProjectionParams(
+                currentAge = currentAge,
+                lifeExpectancy = lifeExpectancy,
+                startCapital = 0.0,
+                annualCashFlow = annualCashFlow,
+                annualExpenses = annualExpenses,
+                realReturnRate = r,
+                temporaryExpenses = temporaryExpenses,
+                deferredAnnualExpenseReduction = deferredReduction,
+                deferredStartYears = deferredStartYears,
+                financialAssets = 100_000.0,
+                capitalGainsTaxPercent = taxPercent
+            ))
+            val req0 = proto.requiredCapitalAt(0.0)
+            val startCapital = req0 * rng.nextDouble(0.10, 0.99)
+            val finShare = rng.nextDouble(0.0, 1.0)
+            val financialAssets = startCapital * finShare
+            val liquidAssets = startCapital - financialAssets
+
+            val params = ProjectionParams(
+                currentAge = currentAge,
+                lifeExpectancy = lifeExpectancy,
+                startCapital = startCapital,
+                annualCashFlow = annualCashFlow,
+                annualExpenses = annualExpenses,
+                realReturnRate = r,
+                temporaryExpenses = temporaryExpenses,
+                deferredAnnualExpenseReduction = deferredReduction,
+                deferredStartYears = deferredStartYears,
+                financialAssets = financialAssets,
+                liquidAssets = liquidAssets,
+                capitalGainsTaxPercent = taxPercent
+            )
+            val engine = ProjectionEngine(params)
+            val result = engine.findYearsToRetirement()
+
+            val lastCheckYear = (engine.maxYears - 0.01).coerceAtLeast(0.0)
+            val stepCount = (lastCheckYear * 100.0 + 1e-6).toInt()
+            var bruteForceT: Double? = null
+            for (step in 0..stepCount) {
+                val t = step / 100.0
+                if (engine.accumulatedCapitalAt(t) >= engine.requiredCapitalAt(t)) {
+                    bruteForceT = t
+                    break
+                }
+            }
+
+            if (bruteForceT != null) {
+                assertTrue(
+                    "Profile $iteration: Expected REACHABLE or REACHED_NOW when brute force found $bruteForceT, got ${result.status}",
+                    result.status == FireStatus.REACHABLE || result.status == FireStatus.REACHED_NOW
+                )
+                val diff = abs(result.years - bruteForceT)
+                assertTrue(
+                    "Profile $iteration: Engine years ${result.years} vs brute force $bruteForceT, diff $diff",
+                    diff <= 0.02
+                )
+            } else {
+                assertEquals(
+                    "Profile $iteration: UNREACHABLE only if brute force found no crossing",
+                    FireStatus.UNREACHABLE,
+                    result.status
+                )
+            }
+        }
+    }
+
+    @Test
+    fun testEdgeReturnRatesHaveNoNaNAndStatusDefined() {
+        val rates = listOf(-0.5, 0.0001, 0.0)
+        for (r in rates) {
+            val params = ProjectionParams(
+                currentAge = 35,
+                lifeExpectancy = 75,
+                startCapital = 500_000.0,
+                annualCashFlow = 100_000.0,
+                annualExpenses = 600_000.0,
+                realReturnRate = r,
+                financialAssets = 300_000.0,
+                liquidAssets = 200_000.0,
+                capitalGainsTaxPercent = 13.0
+            )
+            val engine = ProjectionEngine(params)
+            val res = engine.findYearsToRetirement()
+            assertTrue("years should not be NaN for r=$r", !res.years.isNaN())
+            assertTrue("years should not be infinite for r=$r", !res.years.isInfinite())
+            assertTrue(
+                "Status should be valid for r=$r",
+                res.status in setOf(
+                    FireStatus.REACHABLE,
+                    FireStatus.REACHED_NOW,
+                    FireStatus.UNREACHABLE,
+                    FireStatus.HORIZON_EXHAUSTED,
+                    FireStatus.INVALID_AGE
+                )
+            )
+        }
+    }
+
+    @Test
+    fun testTrajectoryForDeficitAndBaseProfiles() {
+        val baseParams = ProjectionParams(
+            currentAge = 35,
+            lifeExpectancy = 80,
+            startCapital = 500_000.0,
+            annualCashFlow = 600_000.0,
+            annualExpenses = 600_000.0,
+            realReturnRate = 0.05,
+            financialAssets = 300_000.0,
+            liquidAssets = 200_000.0,
+            capitalGainsTaxPercent = 0.0
+        )
+
+        val protoDeficit = ProjectionEngine(ProjectionParams(
+            currentAge = 35,
+            lifeExpectancy = 75,
+            startCapital = 0.0,
+            annualCashFlow = -150_000.0,
+            annualExpenses = 1_000_000.0,
+            realReturnRate = 0.06,
+            financialAssets = 0.0,
+            liquidAssets = 0.0
+        ))
+        val req0 = protoDeficit.requiredCapitalAt(0.0)
+        val deficitStartCapital = req0 * 0.92
+        val deficitParams = ProjectionParams(
+            currentAge = 35,
+            lifeExpectancy = 75,
+            startCapital = deficitStartCapital,
+            annualCashFlow = -150_000.0,
+            annualExpenses = 1_000_000.0,
+            realReturnRate = 0.06,
+            financialAssets = deficitStartCapital,
+            liquidAssets = 0.0,
+            capitalGainsTaxPercent = 0.0
+        )
+
+        val profiles = listOf(baseParams, deficitParams)
+        for (params in profiles) {
+            val engine = ProjectionEngine(params)
+            val res = engine.findYearsToRetirement()
+            val remYears = (engine.maxYears - res.years).coerceAtLeast(0.0)
+            val baseReq = engine.computeBaseRequirement(res.years, remYears)
+            val taxInfo = engine.taxInfo(res.years, remYears, baseReq)
+            val retirementTargetCapital = engine.requiredCapitalAt(res.years, fixedTaxFactor = taxInfo.factor)
+
+            val trajectory = engine.buildTrajectory(
+                precomputedYearsToRetire = res.years,
+                effectiveTaxRate = taxInfo.effectiveRate
+            )
+
+            assertTrue(trajectory.isNotEmpty())
+            assertTrue("Trajectory should have no NaN", trajectory.none { it.accumulatedCapital.isNaN() || it.requiredCapital.isNaN() })
+            assertTrue("Last accumulated capital should be non-negative", trajectory.last().accumulatedCapital >= 0.0)
+
+            val retirementAge = params.currentAge + res.years
+            val interpolatedAcc = interpolateAccumulatedCapital(trajectory, retirementAge)
+            assertTrue("Interpolated capital at retirement age should not be null", interpolatedAcc != null)
+
+            val relDiff = abs(interpolatedAcc!! - retirementTargetCapital) / retirementTargetCapital
+            assertTrue("Interpolated accumulated capital vs target difference should be <= 6%, was $relDiff", relDiff <= 0.06)
+        }
     }
 }

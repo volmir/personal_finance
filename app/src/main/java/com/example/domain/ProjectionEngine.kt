@@ -238,6 +238,15 @@ class ProjectionEngine(val params: ProjectionParams) {
         return baseAcc + extraAccFromR - tempCost + deferredAssetsValue
     }
 
+    /**
+     * Разность D(t) = accumulatedCapitalAt(t) - requiredCapitalAt(t) удовлетворяет
+     * соотношению D'(t) = r * D(t) + доход, поэтому монотонна и имеет не более одного нуля.
+     * Значит, проверка в lastCheckYear эквивалентна условию «FIRE достижим»,
+     * а бисекция находит единственный корень.
+     * Условия: постоянные r и доход, налоговый коэффициент меняется медленно.
+     * Если появятся переменная доходность или доход, заменить на сеточный поиск
+     * первого пересечения.
+     */
     fun findYearsToRetirement(): RetirementResult {
         if (!params.isAgeValid) return RetirementResult(0.0, FireStatus.INVALID_AGE)
         if (params.lifeExpectancy <= params.currentAge) {

@@ -39,6 +39,7 @@ Personal Finance & FIRE Audit — offline Android app (Kotlin, Jetpack Compose, 
 - Yen (¥) amounts are shown and entered as whole numbers.
 - Simulation badge in the FIRE hero card sits to the right of "До пенсии осталось", only while simulating.
 - The simulator never changes the saved base input; the Audit and export always use base metrics.
+- findYearsToRetirement использует бисекцию, обоснование в KDoc; не заменять сеточным поиском без нового контрпримера.
 
 ## 3. Architecture map
 
