@@ -22,3 +22,4 @@ debug.keystore.base64
 *.p12
 keystore.properties
 my-upload-key.jks
+.claude/
