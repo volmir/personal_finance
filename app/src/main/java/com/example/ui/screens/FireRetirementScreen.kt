@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,10 +21,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.RestartAlt
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.filled.WorkspacePremium
 import androidx.compose.material.icons.outlined.Analytics
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
@@ -76,17 +77,27 @@ fun FireRetirementScreen(
     onUpdateSimulation: (extraSavings: Double, realReturnDelta: Double, expReduction: Double) -> Unit,
     onToggleScenario: (scenarioId: String) -> Unit,
     onResetSimulation: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    selectedSubtab: FireSubtab? = null,
+    onSelectSubtab: ((FireSubtab) -> Unit)? = null
 ) {
     val lang = LocalAppLanguage.current
     val strings = LocalAppStrings.current
     val isSimulating = simulationState.isSimulating
 
-    // Внутренние подвкладки экрана (UX-F02): состояние композиции, по умолчанию FIRE.
-    // При уходе с основной вкладки экран покидает композицию (Crossfade), поэтому новый
-    // вход открывает FIRE; FireSimulationState этот выбор не затрагивает.
-    var selectedSubtab by rememberSaveable { mutableStateOf(FireSubtab.BASE) }
-    val isSimulationSubtab = selectedSubtab == FireSubtab.SIMULATION
+    // Состояние внутренней подвкладки поднимается в FinanceApp для сохранения
+    // при переключении основных вкладок и пересоздании Activity; при автономном вызове
+    // используется локальный rememberSaveable.
+    var localSubtab by rememberSaveable { mutableStateOf(FireSubtab.BASE) }
+    val activeSubtab = selectedSubtab ?: localSubtab
+    val handleSelectSubtab: (FireSubtab) -> Unit = { tab ->
+        if (onSelectSubtab != null) {
+            onSelectSubtab(tab)
+        } else {
+            localSubtab = tab
+        }
+    }
+    val isSimulationSubtab = activeSubtab == FireSubtab.SIMULATION
     // FIRE всегда показывает базовые метрики; «Симуляция» — смоделированный результат
     // при активных изменениях, иначе базовые метрики.
     val displayMetrics = if (isSimulationSubtab && isSimulating) simulatedMetrics else metrics
@@ -146,7 +157,7 @@ fun FireRetirementScreen(
     val currentEffectiveReturn = if (isSimulating) simulatedMetrics.realReturnPercent else metrics.realReturnPercent
 
     // Тег выбранного содержимого стоит на первом элементе списка (селекторе).
-    val contentTestTag = if (selectedSubtab == FireSubtab.BASE) {
+    val contentTestTag = if (activeSubtab == FireSubtab.BASE) {
         "fire_subtab_content_base"
     } else {
         "fire_subtab_content_simulation"
@@ -164,8 +175,8 @@ fun FireRetirementScreen(
                 modifier = Modifier.testTag(contentTestTag)
             ) {
                 FireSubtabSelector(
-                    selectedSubtab = selectedSubtab,
-                    onSelectSubtab = { selectedSubtab = it }
+                    selectedSubtab = activeSubtab,
+                    onSelectSubtab = handleSelectSubtab
                 )
             }
         }
@@ -304,11 +315,13 @@ fun FireRetirementScreen(
                                 }
                             }
                         }
-                        if (isSimulating) {
+                        if (isSimulationSubtab && isSimulating) {
                             Surface(
                                 shape = RoundedCornerShape(8.dp),
                                 color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
-                                modifier = Modifier.widthIn(max = 112.dp)
+                                modifier = Modifier
+                                    .widthIn(max = 112.dp)
+                                    .testTag("fire_hero_simulation_badge")
                             ) {
                                 Text(
                                     text = simulationBadge.replace('\u00A0', ' '),
@@ -650,7 +663,10 @@ fun FireRetirementScreen(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.weight(1f)
+                            ) {
                                 Icon(
                                     imageVector = Icons.Default.Tune,
                                     contentDescription = null,
@@ -665,12 +681,19 @@ fun FireRetirementScreen(
                             }
 
                             if (isSimulating) {
+                                Spacer(modifier = Modifier.width(8.dp))
                                 OutlinedButton(
                                     onClick = onResetSimulation,
-                                    contentPadding = ButtonDefaults.ContentPadding,
-                                    modifier = Modifier.height(30.dp)
+                                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                                    modifier = Modifier.testTag("fire_sim_reset_button")
                                 ) {
-                                    Text(strings.fireSimReset, fontSize = 11.sp)
+                                    Icon(
+                                        imageVector = Icons.Default.RestartAlt,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(strings.fireSimReset, fontSize = 11.sp, maxLines = 1)
                                 }
                             }
                         }
@@ -1094,7 +1117,7 @@ fun FireRetirementScreen(
 }
 
 /** Внутренние подвкладки экрана FIRE; к нижней навигации AppTab не относятся. */
-private enum class FireSubtab {
+enum class FireSubtab {
     BASE,
     SIMULATION
 }

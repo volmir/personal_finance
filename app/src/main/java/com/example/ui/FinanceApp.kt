@@ -44,7 +44,10 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -60,6 +63,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import com.example.ui.screens.AuditScoreScreen
 import com.example.ui.screens.FireRetirementScreen
+import com.example.ui.screens.FireSubtab
 import com.example.ui.screens.InputDataScreen
 import com.example.ui.screens.MetricsScreen
 import com.example.ui.theme.AlertRed
@@ -93,6 +97,7 @@ fun FinanceApp(viewModel: MainViewModel) {
     val feedbackMessage by viewModel.userFeedbackMessage.collectAsStateWithLifecycle()
     val showSampleDataNotice by viewModel.showSampleDataNotice.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
+    var selectedFireSubtab by rememberSaveable { mutableStateOf(FireSubtab.BASE) }
 
     LaunchedEffect(feedbackMessage) {
         feedbackMessage?.let { msg ->
@@ -237,6 +242,8 @@ fun FinanceApp(viewModel: MainViewModel) {
                         simulatedMetrics = simulatedMetrics,
                         simulationState = simulationState,
                         trajectory = trajectory,
+                        selectedSubtab = selectedFireSubtab,
+                        onSelectSubtab = { selectedFireSubtab = it },
                         onUpdateSimulation = { extraSavings, returnDelta, expReduction ->
                             viewModel.updateSimulation(extraSavings, returnDelta, expReduction)
                         },

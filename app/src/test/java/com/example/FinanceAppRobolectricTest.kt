@@ -220,8 +220,15 @@ class FinanceAppRobolectricTest {
 
         composeRule.onNodeWithTag("nav_item_fire").performClick()
 
-        // FIRE: только базовые значения и базовый график, без резюме и управления.
+        // FIRE: только базовые значения и базовый график, без бейджа, резюме и управления.
         composeRule.onNodeWithTag("fire_hero_card").assertIsDisplayed()
+        composeRule.onAllNodes(hasTestTag("fire_hero_simulation_badge"), useUnmergedTree = true)
+            .assertCountEquals(0)
+        val badgeText = Formatters.formatSimulationBadge(1, hasSliders = false, lang).replace('\u00A0', ' ')
+        composeRule.onAllNodes(
+            hasText(badgeText) and hasAnyAncestor(hasTestTag("fire_hero_card")),
+            useUnmergedTree = true
+        ).assertCountEquals(0)
         composeRule.onAllNodes(
             hasText(baseYears) and hasAnyAncestor(hasTestTag("fire_hero_card")),
             useUnmergedTree = true
@@ -266,8 +273,13 @@ class FinanceAppRobolectricTest {
         composeRule.onNodeWithTag("fire_slider_return").assertExists()
         composeRule.onNodeWithTag("switch_pos_expense_optimization").assertIsOn()
 
-        // Герой-карточка в «Симуляции» показывает смоделированный результат.
+        // Герой-карточка в «Симуляции» показывает смоделированный результат и бейдж симуляции.
         list.performScrollToNode(hasTestTag("fire_hero_card"))
+        composeRule.onNodeWithTag("fire_hero_simulation_badge").assertIsDisplayed()
+        composeRule.onAllNodes(
+            hasText(badgeText) and hasAnyAncestor(hasTestTag("fire_hero_simulation_badge")),
+            useUnmergedTree = true
+        ).assertCountEquals(1)
         composeRule.onAllNodes(
             hasText(simulatedYears) and hasAnyAncestor(hasTestTag("fire_hero_card")),
             useUnmergedTree = true
@@ -327,17 +339,134 @@ class FinanceAppRobolectricTest {
         list.performScrollToNode(hasTestTag("switch_pos_expense_optimization"))
         composeRule.onNodeWithTag("switch_pos_expense_optimization").assertIsOn()
 
-        // Повторный вход в №4 после другой вкладки снова открывает FIRE.
+        // Повторный вход в №4 после другой вкладки сохраняет выбранную подвкладку «Симуляция».
         composeRule.onNodeWithTag("nav_item_metrics").performClick()
         composeRule.onNodeWithTag("metrics_header_card").assertIsDisplayed()
         composeRule.onNodeWithTag("nav_item_fire").performClick()
-        composeRule.onNodeWithTag("fire_subtab_base").assertIsSelected()
-        composeRule.onNodeWithTag("fire_subtab_content_base").assertIsDisplayed()
-        composeRule.onNodeWithTag("fire_subtab_content_simulation").assertDoesNotExist()
+        composeRule.onNodeWithTag("fire_subtab_simulation").assertIsSelected()
+        composeRule.onNodeWithTag("fire_subtab_content_simulation").assertIsDisplayed()
+        composeRule.onNodeWithTag("fire_subtab_content_base").assertDoesNotExist()
         composeRule.onNodeWithTag("fire_hero_card").assertIsDisplayed()
         composeRule.runOnIdle {
             assertEquals(simulationBefore, viewModel.fireSimulation.value)
             assertEquals(inputBefore, viewModel.inputData.value)
         }
+    }
+
+    @Test
+    fun `selecting Simulation survives switching to Input and back to FIRE`() {
+        val viewModel = createViewModel()
+        composeRule.setContent { FinanceApp(viewModel) }
+
+        composeRule.onNodeWithTag("nav_item_fire").performClick()
+        composeRule.onNodeWithTag("fire_subtab_base").assertIsSelected()
+        composeRule.onNodeWithTag("fire_subtab_simulation").performClick()
+        composeRule.onNodeWithTag("fire_subtab_simulation").assertIsSelected()
+        composeRule.onNodeWithTag("fire_subtab_content_simulation").assertIsDisplayed()
+
+        composeRule.onNodeWithTag("nav_item_input").performClick()
+        composeRule.onNodeWithTag("nav_item_input").assertIsSelected()
+
+        composeRule.onNodeWithTag("nav_item_fire").performClick()
+        composeRule.onNodeWithTag("fire_subtab_simulation").assertIsSelected()
+        composeRule.onNodeWithTag("fire_subtab_content_simulation").assertIsDisplayed()
+        composeRule.onNodeWithTag("fire_subtab_content_base").assertDoesNotExist()
+    }
+
+    @Test
+    fun `selecting Simulation survives multiple main tab switches`() {
+        val viewModel = createViewModel()
+        composeRule.setContent { FinanceApp(viewModel) }
+
+        // Данные -> FIRE -> Симуляция -> Показатели -> Итоги и Баллы -> FIRE
+        composeRule.onNodeWithTag("nav_item_input").assertIsSelected()
+        composeRule.onNodeWithTag("nav_item_fire").performClick()
+        composeRule.onNodeWithTag("fire_subtab_simulation").performClick()
+        composeRule.onNodeWithTag("fire_subtab_simulation").assertIsSelected()
+
+        composeRule.onNodeWithTag("nav_item_metrics").performClick()
+        composeRule.onNodeWithTag("metrics_header_card").assertIsDisplayed()
+        composeRule.onNodeWithTag("nav_item_scores").performClick()
+        composeRule.onNodeWithTag("nav_item_scores").assertIsSelected()
+        composeRule.onNodeWithTag("nav_item_input").performClick()
+        composeRule.onNodeWithTag("nav_item_input").assertIsSelected()
+
+        composeRule.onNodeWithTag("nav_item_fire").performClick()
+        composeRule.onNodeWithTag("fire_subtab_simulation").assertIsSelected()
+        composeRule.onNodeWithTag("fire_subtab_content_simulation").assertIsDisplayed()
+        composeRule.onAllNodes(hasTestTag("fire_trajectory_card"), useUnmergedTree = true)
+            .assertCountEquals(0)
+    }
+
+    @Test
+    fun `selecting FIRE subtab stays selected after visiting other main tabs`() {
+        val viewModel = createViewModel()
+        composeRule.setContent { FinanceApp(viewModel) }
+
+        composeRule.onNodeWithTag("nav_item_fire").performClick()
+        composeRule.onNodeWithTag("fire_subtab_simulation").performClick()
+        composeRule.onNodeWithTag("fire_subtab_simulation").assertIsSelected()
+        composeRule.onNodeWithTag("fire_subtab_base").performClick()
+        composeRule.onNodeWithTag("fire_subtab_base").assertIsSelected()
+
+        composeRule.onNodeWithTag("nav_item_metrics").performClick()
+        composeRule.onNodeWithTag("metrics_header_card").assertIsDisplayed()
+        composeRule.onNodeWithTag("nav_item_fire").performClick()
+
+        composeRule.onNodeWithTag("fire_subtab_base").assertIsSelected()
+        composeRule.onNodeWithTag("fire_subtab_content_base").assertIsDisplayed()
+        composeRule.onNodeWithTag("fire_subtab_content_simulation").assertDoesNotExist()
+        val list = composeRule.onNode(hasScrollAction())
+        list.performScrollToNode(hasTestTag("fire_trajectory_card"))
+        composeRule.onNodeWithTag("fire_trajectory_card").assertIsDisplayed()
+    }
+
+    @Test
+    fun `simulator sliders and scenario state survive main tab switches with Simulation active`() {
+        val viewModel = createViewModel()
+        composeRule.setContent { FinanceApp(viewModel) }
+
+        val baseMetricsBefore = viewModel.metrics.value
+        composeRule.onNodeWithTag("nav_item_fire").performClick()
+        composeRule.onNodeWithTag("fire_subtab_simulation").performClick()
+
+        val list = composeRule.onNode(hasScrollAction())
+        list.performScrollToNode(hasTestTag("fire_slider_savings"))
+        val savingsRangeBefore = composeRule.onNodeWithTag("fire_slider_savings")
+            .fetchSemanticsNode().config[androidx.compose.ui.semantics.SemanticsProperties.ProgressBarRangeInfo]
+        val targetSavings = (savingsRangeBefore.current + savingsRangeBefore.range.endInclusive) / 2f
+        composeRule.onNodeWithTag("fire_slider_savings")
+            .performSemanticsAction(SemanticsActions.SetProgress) { it(targetSavings) }
+
+        list.performScrollToNode(hasTestTag("switch_pos_salary_increase"))
+        composeRule.onNodeWithTag("switch_pos_salary_increase").performScrollTo()
+        composeRule.onNodeWithTag("switch_pos_salary_increase").performClick()
+        composeRule.onNodeWithTag("switch_pos_salary_increase").assertIsOn()
+
+        val simulationBefore = viewModel.fireSimulation.value
+        val simulatedBefore = viewModel.simulatedMetrics.value
+        assertTrue(simulationBefore.isSimulating)
+        assertTrue(simulationBefore.extraMonthlySavings > 0.0)
+        assertTrue(simulationBefore.scenarios.salaryIncrease20)
+
+        composeRule.onNodeWithTag("nav_item_scores").performClick()
+        composeRule.onNodeWithTag("nav_item_metrics").performClick()
+        composeRule.onNodeWithTag("nav_item_fire").performClick()
+
+        composeRule.onNodeWithTag("fire_subtab_simulation").assertIsSelected()
+        composeRule.onNodeWithTag("fire_subtab_content_simulation").assertIsDisplayed()
+        composeRule.runOnIdle {
+            assertEquals(simulationBefore, viewModel.fireSimulation.value)
+            assertEquals(simulatedBefore, viewModel.simulatedMetrics.value)
+            assertEquals(baseMetricsBefore, viewModel.metrics.value)
+        }
+
+        val listAfter = composeRule.onNode(hasScrollAction())
+        listAfter.performScrollToNode(hasTestTag("fire_slider_savings"))
+        val savingsRangeAfter = composeRule.onNodeWithTag("fire_slider_savings")
+            .fetchSemanticsNode().config[androidx.compose.ui.semantics.SemanticsProperties.ProgressBarRangeInfo]
+        assertEquals(simulationBefore.extraMonthlySavings.toFloat(), savingsRangeAfter.current, 1f)
+        listAfter.performScrollToNode(hasTestTag("switch_pos_salary_increase"))
+        composeRule.onNodeWithTag("switch_pos_salary_increase").assertIsOn()
     }
 }

@@ -7,11 +7,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.assertHeightIsAtLeast
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotSelected
 import androidx.compose.ui.test.assertIsOn
 import androidx.compose.ui.test.assertIsSelected
+import androidx.compose.ui.test.assertWidthIsAtLeast
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
@@ -22,6 +24,7 @@ import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeUp
+import androidx.compose.ui.unit.dp
 import com.example.data.model.FinancialInputData
 import com.example.domain.FinanceCalculator
 import com.example.ui.FireScenarioToggles
@@ -256,6 +259,10 @@ class FireRetirementScreenRobolectricTest {
         val list = composeRule.onNodeWithTag("fire_test_list")
 
         fun assertNoSimulatorUi() {
+            composeRule.onAllNodes(hasTestTag("fire_hero_simulation_badge"), useUnmergedTree = true)
+                .assertCountEquals(0)
+            composeRule.onAllNodes(hasText(strings.simulationBadgeOnlySliders), useUnmergedTree = true)
+                .assertCountEquals(0)
             composeRule.onAllNodes(hasTestTag("fire_simulator_card"), useUnmergedTree = true)
                 .assertCountEquals(0)
             composeRule.onAllNodes(hasTestTag("fire_slider_savings"), useUnmergedTree = true)
@@ -284,6 +291,7 @@ class FireRetirementScreenRobolectricTest {
         // «Симуляция»: три ползунка, сценарии и сброс на месте, значения из состояния сохранены
         list.performScrollToNode(hasTestTag("fire_subtab_selector"))
         composeRule.onNodeWithTag("fire_subtab_simulation").performClick()
+        composeRule.onNodeWithTag("fire_hero_simulation_badge").assertIsDisplayed()
         list.performScrollToNode(hasTestTag("fire_simulator_card"))
         composeRule.onNodeWithTag("fire_simulator_card").assertIsDisplayed()
         composeRule.onNodeWithTag("fire_slider_savings").assertExists()
@@ -376,5 +384,140 @@ class FireRetirementScreenRobolectricTest {
             .assertCountEquals(0)
         composeRule.onAllNodes(hasTestTag("fire_simulation_summary"), useUnmergedTree = true)
             .assertCountEquals(0)
+    }
+
+    @Test
+    fun `active simulation badge and scenario info appear only in Simulation subtab across all languages`() {
+        val input = FinancialInputData.usAverageData()
+        val metrics = FinanceCalculator.calculate(input, today = LocalDate.of(2026, 11, 6))
+        val simulated = metrics.copy(yearsToRetirement = (metrics.yearsToRetirement - 2.0).coerceAtLeast(0.0))
+        val activeSim = FireSimulationState(
+            extraMonthlySavings = 200.0,
+            scenarios = FireScenarioToggles(salaryIncrease20 = true, expenseOptimization15 = true)
+        )
+        val language = mutableStateOf(AppLanguage.RU)
+
+        composeRule.setContent {
+            MaterialTheme {
+                CompositionLocalProvider(
+                    LocalAppLanguage provides language.value,
+                    LocalAppStrings provides getAppStrings(language.value)
+                ) {
+                    FireRetirementScreen(
+                        inputData = input,
+                        metrics = metrics,
+                        simulatedMetrics = simulated,
+                        simulationState = activeSim,
+                        trajectory = emptyList(),
+                        onUpdateSimulation = { _, _, _ -> },
+                        onToggleScenario = {},
+                        onResetSimulation = {},
+                        modifier = Modifier.testTag("fire_test_list")
+                    )
+                }
+            }
+        }
+
+        for (lang in AppLanguage.values()) {
+            composeRule.runOnIdle { language.value = lang }
+            val strings = getAppStrings(lang)
+            val heroBadgeText = Formatters.formatSimulationBadge(
+                activeCount = activeSim.scenarios.activeCount,
+                hasSliders = true,
+                lang = lang
+            ).replace('\u00A0', ' ')
+
+            // Подвкладка FIRE: нет бейджа чекбоксов/ползунков и нет текста управления симуляцией
+            composeRule.onNodeWithTag("fire_subtab_base").performClick()
+            composeRule.onNodeWithTag("fire_subtab_content_base").assertIsDisplayed()
+            composeRule.onAllNodes(hasTestTag("fire_hero_simulation_badge"), useUnmergedTree = true)
+                .assertCountEquals(0)
+            composeRule.onAllNodes(hasText(heroBadgeText), useUnmergedTree = true)
+                .assertCountEquals(0)
+            composeRule.onAllNodes(hasText(strings.fireSimSliderTitle), useUnmergedTree = true)
+                .assertCountEquals(0)
+            composeRule.onAllNodes(hasText(strings.fireSimFineTuning), useUnmergedTree = true)
+                .assertCountEquals(0)
+            composeRule.onAllNodes(hasText(strings.scenarioHeaderTitle), useUnmergedTree = true)
+                .assertCountEquals(0)
+            composeRule.onAllNodes(hasText(strings.scenarioHeaderSubtitle), useUnmergedTree = true)
+                .assertCountEquals(0)
+
+            // Подвкладка «Симуляция»: бейдж виден в hero-карточке, графика нет, элементы управления на месте
+            composeRule.onNodeWithTag("fire_subtab_simulation").performClick()
+            composeRule.onNodeWithTag("fire_subtab_content_simulation").assertIsDisplayed()
+            composeRule.onNodeWithTag("fire_hero_simulation_badge").assertIsDisplayed()
+            composeRule.onAllNodes(
+                hasText(heroBadgeText) and hasAnyAncestor(hasTestTag("fire_hero_simulation_badge")),
+                useUnmergedTree = true
+            ).assertCountEquals(1)
+            composeRule.onAllNodes(hasTestTag("fire_trajectory_card"), useUnmergedTree = true)
+                .assertCountEquals(0)
+            composeRule.onNodeWithTag("fire_test_list").performScrollToNode(hasTestTag("fire_simulator_card"))
+            composeRule.onNodeWithTag("fire_simulator_card").assertIsDisplayed()
+            composeRule.onNodeWithTag("fire_test_list").performScrollToNode(hasTestTag("fire_subtab_selector"))
+        }
+    }
+
+    @Test
+    fun `reset button has accessible touch target, decorative icon, and triggers reset across languages`() {
+        val input = FinancialInputData.usAverageData()
+        val metrics = FinanceCalculator.calculate(input, today = LocalDate.of(2026, 11, 6))
+        val simulated = metrics.copy(yearsToRetirement = (metrics.yearsToRetirement - 1.0).coerceAtLeast(0.0))
+        val simulation = mutableStateOf(FireSimulationState(extraMonthlySavings = 200.0))
+        val language = mutableStateOf(AppLanguage.RU)
+        var resetCalls = 0
+
+        composeRule.setContent {
+            MaterialTheme {
+                CompositionLocalProvider(
+                    LocalAppLanguage provides language.value,
+                    LocalAppStrings provides getAppStrings(language.value)
+                ) {
+                    FireRetirementScreen(
+                        inputData = input,
+                        metrics = metrics,
+                        simulatedMetrics = simulated,
+                        simulationState = simulation.value,
+                        trajectory = emptyList(),
+                        onUpdateSimulation = { _, _, _ -> },
+                        onToggleScenario = {},
+                        onResetSimulation = {
+                            resetCalls++
+                            simulation.value = FireSimulationState()
+                        },
+                        modifier = Modifier.testTag("fire_test_list")
+                    )
+                }
+            }
+        }
+
+        composeRule.onNodeWithTag("fire_subtab_simulation").performClick()
+
+        for (lang in AppLanguage.values()) {
+            composeRule.runOnIdle {
+                language.value = lang
+                simulation.value = FireSimulationState(extraMonthlySavings = 200.0)
+            }
+            val strings = getAppStrings(lang)
+            composeRule.onNodeWithTag("fire_test_list").performScrollToNode(hasTestTag("fire_sim_reset_button"))
+            val resetButton = composeRule.onNodeWithTag("fire_sim_reset_button")
+            resetButton.assertIsDisplayed()
+            resetButton.assert(hasText(strings.fireSimReset))
+            resetButton.assertWidthIsAtLeast(48.dp)
+            resetButton.assertHeightIsAtLeast(48.dp)
+            // Декоративная иконка не добавляет отдельный ContentDescription в TalkBack
+            val semanticsNode = resetButton.fetchSemanticsNode()
+            val contentDesc = semanticsNode.config.getOrElse(SemanticsProperties.ContentDescription) { emptyList() }
+            check(contentDesc.isEmpty()) {
+                "Reset button decorative icon must not add ContentDescription, found $contentDesc"
+            }
+        }
+
+        composeRule.onNodeWithTag("fire_sim_reset_button").performClick()
+        composeRule.runOnIdle {
+            check(resetCalls == 1) { "Expected 1 reset call, got $resetCalls" }
+        }
+        composeRule.onNodeWithTag("fire_sim_reset_button").assertDoesNotExist()
     }
 }

@@ -27,8 +27,13 @@ import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.SemanticsNodeInteraction
+import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.height
 import androidx.test.core.app.ApplicationProvider
 import com.example.data.model.FinancialInputData
 import com.example.domain.AuditorAnalysisGenerator
@@ -46,6 +51,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
+import org.robolectric.annotation.GraphicsMode
 import java.time.LocalDate
 
 @RunWith(RobolectricTestRunner::class)
@@ -273,5 +279,168 @@ class MetricsScreenRobolectricTest {
             AuditorAnalysisGenerator.generateExportSummary(input, metrics, AppLanguage.RU),
             sendIntent.getStringExtra(Intent.EXTRA_TEXT)
         )
+    }
+
+    @Test
+    @Config(qualifiers = "w360dp-h800dp-xxhdpi")
+    @GraphicsMode(GraphicsMode.Mode.NATIVE)
+    fun `metric card formulas are single-line when collapsed and wrap completely when expanded`() {
+        val input = FinancialInputData.defaultData()
+        val metrics = FinanceCalculator.calculate(input, today = LocalDate.of(2025, 1, 1))
+        val language = mutableStateOf(AppLanguage.RU)
+
+        composeRule.setContent {
+            MaterialTheme {
+                CompositionLocalProvider(
+                    LocalAppLanguage provides language.value,
+                    LocalAppStrings provides getAppStrings(language.value)
+                ) {
+                    MetricsScreen(
+                        inputData = input,
+                        metrics = metrics,
+                        modifier = Modifier.testTag("metrics_formula_list")
+                    )
+                }
+            }
+        }
+
+        fun SemanticsNodeInteraction.readTextLayout(): TextLayoutResult {
+            val results = mutableListOf<TextLayoutResult>()
+            val action = fetchSemanticsNode().config[SemanticsActions.GetTextLayoutResult].action
+            assertTrue("GetTextLayoutResult action must exist on formula node", action?.invoke(results) == true)
+            assertTrue("TextLayoutResult must be populated", results.isNotEmpty())
+            return results.first()
+        }
+
+        for (lang in listOf(AppLanguage.RU, AppLanguage.EN)) {
+            composeRule.runOnIdle { language.value = lang }
+            composeRule.waitForIdle()
+            val strings = getAppStrings(lang)
+
+            val allMetricTitles = listOf(
+                strings.metricCashFlowTitle,
+                strings.metricSavingsRateTitle,
+                strings.metricEmergencyFundTitle,
+                strings.metricSafetyMonthsTitle,
+                strings.metricDebtRatioTitle,
+                strings.metricNetWorthTitle,
+                strings.metricFidelityTitle,
+                strings.metricCfsTitle,
+                strings.metricRealReturnTitle
+            )
+            var wrappedCount = 0
+
+            allMetricTitles.forEach { title ->
+                val cardTag = metricCardTag(title)
+                composeRule.onNodeWithTag("metrics_formula_list")
+                    .performScrollToNode(hasTestTag(cardTag))
+                composeRule.waitForIdle()
+
+                val formulaNode = composeRule.onNode(
+                    hasTestTag("metric_card_formula") and hasAnyAncestor(hasTestTag(cardTag)),
+                    useUnmergedTree = true
+                )
+
+                // Collapsed: strictly 1 line
+                val collapsedLayout = formulaNode.readTextLayout()
+                assertEquals(
+                    "[$lang] Collapsed formula for '$title' must be 1 line",
+                    1,
+                    collapsedLayout.lineCount
+                )
+                assertEquals(
+                    "[$lang] Collapsed formula for '$title' must allow ellipsis",
+                    TextOverflow.Ellipsis,
+                    collapsedLayout.layoutInput.overflow
+                )
+                val collapsedHeight = composeRule.onNodeWithTag(cardTag)
+                    .getUnclippedBoundsInRoot().height
+
+                fun assertExpandedLayoutFits(layout: TextLayoutResult, phase: String) {
+                    val maxLineWidth = (0 until layout.lineCount)
+                        .maxOfOrNull { layout.getLineRight(it) - layout.getLineLeft(it) } ?: 0f
+                    val anyEllipsized = (0 until layout.lineCount).any { layout.isLineEllipsized(it) }
+                    assertEquals(
+                        "[$lang] $phase formula for '$title' must allow unlimited lines",
+                        Int.MAX_VALUE,
+                        layout.layoutInput.maxLines
+                    )
+                    assertEquals(
+                        "[$lang] $phase formula for '$title' must not use ellipsis",
+                        TextOverflow.Clip,
+                        layout.layoutInput.overflow
+                    )
+                    assertTrue(
+                        "[$lang] $phase formula for '$title' must fit without clipping " +
+                            "(lines=${layout.lineCount}, size=${layout.size}, " +
+                            "mpWidth=${layout.multiParagraph.width}, maxLineWidth=$maxLineWidth, " +
+                            "ellipsized=$anyEllipsized, didOverflowH=${layout.didOverflowHeight}, " +
+                            "constraints=${layout.layoutInput.constraints})",
+                        !anyEllipsized &&
+                            !layout.didOverflowHeight &&
+                            maxLineWidth <= layout.size.width + 0.5f &&
+                            layout.size.width <= layout.layoutInput.constraints.maxWidth
+                    )
+                }
+
+                // Expand
+                composeRule.onNodeWithTag(cardTag).performClick()
+                composeRule.waitForIdle()
+
+                val expandedLayout = formulaNode.readTextLayout()
+                assertExpandedLayoutFits(expandedLayout, "Expanded")
+                if (collapsedLayout.isLineEllipsized(0)) {
+                    wrappedCount++
+                    assertTrue(
+                        "[$lang] Expanded formula for '$title' was ellipsized when collapsed so it must wrap across multiple lines (lines=${expandedLayout.lineCount})",
+                        expandedLayout.lineCount > 1
+                    )
+                }
+                val expandedHeight = composeRule.onNodeWithTag(cardTag)
+                    .getUnclippedBoundsInRoot().height
+                assertTrue(
+                    "[$lang] Expanded card '$title' must grow vertically (was $collapsedHeight, now $expandedHeight)",
+                    expandedHeight > collapsedHeight
+                )
+
+                // Repeated collapse/expand cycle
+                composeRule.onNodeWithTag(cardTag).performClick()
+                composeRule.waitForIdle()
+
+                val recollapsedLayout = formulaNode.readTextLayout()
+                assertEquals(
+                    "[$lang] Re-collapsed formula for '$title' must return to 1 line",
+                    1,
+                    recollapsedLayout.lineCount
+                )
+                val recollapsedHeight = composeRule.onNodeWithTag(cardTag)
+                    .getUnclippedBoundsInRoot().height
+                assertEquals(
+                    "[$lang] Re-collapsed card '$title' height must match initial collapsed height",
+                    collapsedHeight.value,
+                    recollapsedHeight.value,
+                    0.5f
+                )
+
+                composeRule.onNodeWithTag(cardTag).performClick()
+                composeRule.waitForIdle()
+                val reexpandedLayout = formulaNode.readTextLayout()
+                assertExpandedLayoutFits(reexpandedLayout, "Re-expanded")
+                assertEquals(
+                    "[$lang] Re-expanded formula lineCount for '$title' must match initial expanded lineCount",
+                    expandedLayout.lineCount,
+                    reexpandedLayout.lineCount
+                )
+
+                // Leave collapsed before scrolling to next card
+                composeRule.onNodeWithTag(cardTag).performClick()
+                composeRule.waitForIdle()
+            }
+
+            assertTrue(
+                "[$lang] Expected at least 3 formulas to wrap at 360dp phone width, but saw $wrappedCount",
+                wrappedCount >= 3
+            )
+        }
     }
 }
