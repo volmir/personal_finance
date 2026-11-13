@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarMonth
@@ -34,11 +35,17 @@ import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -130,12 +137,36 @@ fun FireRetirementScreen(
     } else inputData.monthlyExpenses
     val currentEffectiveReturn = if (isSimulating) simulatedMetrics.realReturnPercent else metrics.realReturnPercent
 
+    // Внутренние подвкладки экрана (UX-F02): состояние композиции, по умолчанию FIRE.
+    // При уходе с основной вкладки экран покидает композицию (Crossfade), поэтому новый
+    // вход открывает FIRE; FireSimulationState этот выбор не затрагивает.
+    var selectedSubtab by rememberSaveable { mutableStateOf(FireSubtab.BASE) }
+    // До UX-F03..F06 список карточек общий для обеих подвкладок, поэтому тег выбранного
+    // содержимого стоит на первом элементе списка (селекторе).
+    val contentTestTag = if (selectedSubtab == FireSubtab.BASE) {
+        "fire_subtab_content_base"
+    } else {
+        "fire_subtab_content_simulation"
+    }
+
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
             .padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
+        item {
+            Spacer(modifier = Modifier.height(4.dp))
+            Box(
+                modifier = Modifier.testTag(contentTestTag)
+            ) {
+                FireSubtabSelector(
+                    selectedSubtab = selectedSubtab,
+                    onSelectSubtab = { selectedSubtab = it }
+                )
+            }
+        }
+
         if (isInvalidAge) {
             item {
                 Spacer(modifier = Modifier.height(4.dp))
@@ -1042,5 +1073,90 @@ fun FireRetirementScreen(
             }
             Spacer(modifier = Modifier.height(16.dp))
         }
+    }
+}
+
+/** Внутренние подвкладки экрана FIRE; к нижней навигации AppTab не относятся. */
+private enum class FireSubtab {
+    BASE,
+    SIMULATION
+}
+
+@Composable
+private fun FireSubtabSelector(
+    selectedSubtab: FireSubtab,
+    onSelectSubtab: (FireSubtab) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val strings = LocalAppStrings.current
+    Surface(
+        shape = RoundedCornerShape(12.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant,
+        modifier = modifier
+            .fillMaxWidth()
+            .testTag("fire_subtab_selector")
+    ) {
+        Row(
+            modifier = Modifier.padding(4.dp),
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            FireSubtabOption(
+                label = strings.fireSubtabBase,
+                isSelected = selectedSubtab == FireSubtab.BASE,
+                testTag = "fire_subtab_base",
+                onClick = { onSelectSubtab(FireSubtab.BASE) },
+                modifier = Modifier.weight(1f)
+            )
+            FireSubtabOption(
+                label = strings.fireSubtabSimulation,
+                isSelected = selectedSubtab == FireSubtab.SIMULATION,
+                testTag = "fire_subtab_simulation",
+                onClick = { onSelectSubtab(FireSubtab.SIMULATION) },
+                modifier = Modifier.weight(1f)
+            )
+        }
+    }
+}
+
+@Composable
+private fun FireSubtabOption(
+    label: String,
+    isSelected: Boolean,
+    testTag: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val shape = RoundedCornerShape(9.dp)
+    Surface(
+        shape = shape,
+        color = if (isSelected) {
+            MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+        } else {
+            Color.Transparent
+        },
+        modifier = modifier
+            .testTag(testTag)
+            .clip(shape)
+            .selectable(
+                selected = isSelected,
+                role = Role.Tab,
+                onClick = onClick
+            )
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelMedium.copy(
+                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                color = if (isSelected) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                }
+            ),
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 10.dp)
+        )
     }
 }
