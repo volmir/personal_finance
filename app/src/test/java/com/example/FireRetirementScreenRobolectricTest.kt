@@ -145,4 +145,40 @@ class FireRetirementScreenRobolectricTest {
         composeRule.onAllNodes(hasText(rate) and hasAnyAncestor(hasTestTag("fire_parameters_card")), useUnmergedTree = true)
             .assertCountEquals(1)
     }
+
+    @Test
+    fun `simulation summary exists once outside the trajectory card only while simulating`() {
+        val input = FinancialInputData.usAverageData()
+        val metrics = FinanceCalculator.calculate(input, today = LocalDate.of(2026, 11, 6))
+        val simulated = metrics.copy(realReturnPercent = metrics.realReturnPercent + 1.0)
+        val simulation = mutableStateOf(FireSimulationState())
+        val language = mutableStateOf(AppLanguage.RU)
+        composeRule.setContent {
+            MaterialTheme {
+                CompositionLocalProvider(
+                    LocalAppLanguage provides language.value,
+                    LocalAppStrings provides getAppStrings(language.value)
+                ) {
+                    FireRetirementScreen(input, metrics, simulated, simulation.value, emptyList(),
+                        onUpdateSimulation = { _, _, _ -> }, onToggleScenario = {}, onResetSimulation = {},
+                        modifier = Modifier.testTag("fire_test_list"))
+                }
+            }
+        }
+
+        // Без активной симуляции резюме отсутствует
+        composeRule.onNodeWithTag("fire_simulation_summary").assertDoesNotExist()
+
+        // При активной симуляции резюме ровно в одном экземпляре и вне карточки графика (UX-F03)
+        composeRule.runOnIdle { simulation.value = FireSimulationState(extraMonthlySavings = 100.0) }
+        composeRule.onNodeWithTag("fire_test_list").performScrollToNode(hasTestTag("fire_simulation_summary"))
+        composeRule.onAllNodes(hasTestTag("fire_simulation_summary"), useUnmergedTree = true)
+            .assertCountEquals(1)
+        composeRule.onAllNodes(
+            hasTestTag("fire_simulation_summary") and hasAnyAncestor(hasTestTag("fire_trajectory_card")),
+            useUnmergedTree = true
+        ).assertCountEquals(0)
+        composeRule.onNodeWithTag("fire_trajectory_card").assertIsDisplayed()
+        composeRule.onNodeWithTag("fire_simulation_summary").assertIsDisplayed()
+    }
 }

@@ -468,7 +468,9 @@ fun FireRetirementScreen(
             Card(
                 shape = RoundedCornerShape(14.dp),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("fire_trajectory_card")
             ) {
                 Column(modifier = Modifier.padding(14.dp)) {
                     Text(
@@ -492,127 +494,129 @@ fun FireRetirementScreen(
                         currencySymbol = inputData.currencySymbol,
                         isUnreachable = isUnreachable
                     )
+                }
+            }
+        }
 
-                    // Блок "Итог симуляции (совместное влияние)" непосредственно под сам график
-                    if (isSimulating) {
-                        val isSimUnreachable = simulatedMetrics.fireStatus == FireStatus.UNREACHABLE ||
-                                simulatedMetrics.fireStatus == FireStatus.HORIZON_EXHAUSTED
-                        val isBaseUnreachable = metrics.fireStatus == FireStatus.UNREACHABLE ||
-                                metrics.fireStatus == FireStatus.HORIZON_EXHAUSTED
-                        val yearsDiff = metrics.yearsToRetirement - simulatedMetrics.yearsToRetirement
-                        val isPositive = !isSimUnreachable && (isBaseUnreachable || yearsDiff > 0)
-                        val isNegative = !isBaseUnreachable && (isSimUnreachable || yearsDiff < 0)
-                        val alertColor = if (isSimUnreachable) {
-                            AlertRed
-                        } else if (isPositive) {
-                            SuccessGreen
-                        } else if (isNegative) {
-                            AlertRed
-                        } else {
-                            MaterialTheme.colorScheme.primary
+        // Итог симуляции (совместное влияние): отдельный элемент списка, а не часть
+        // карточки графика; ограничение по подвкладкам появится в UX-F04.
+        if (isSimulating) {
+            item {
+                val isSimUnreachable = simulatedMetrics.fireStatus == FireStatus.UNREACHABLE ||
+                        simulatedMetrics.fireStatus == FireStatus.HORIZON_EXHAUSTED
+                val isBaseUnreachable = metrics.fireStatus == FireStatus.UNREACHABLE ||
+                        metrics.fireStatus == FireStatus.HORIZON_EXHAUSTED
+                val yearsDiff = metrics.yearsToRetirement - simulatedMetrics.yearsToRetirement
+                val isPositive = !isSimUnreachable && (isBaseUnreachable || yearsDiff > 0)
+                val isNegative = !isBaseUnreachable && (isSimUnreachable || yearsDiff < 0)
+                val alertColor = if (isSimUnreachable) {
+                    AlertRed
+                } else if (isPositive) {
+                    SuccessGreen
+                } else if (isNegative) {
+                    AlertRed
+                } else {
+                    MaterialTheme.colorScheme.primary
+                }
+
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = alertColor.copy(alpha = 0.12f),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("fire_simulation_summary")
+                ) {
+                    Column(modifier = Modifier.padding(14.dp)) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = strings.fireSimSummaryTitle,
+                                style = MaterialTheme.typography.titleSmall.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    color = alertColor
+                                ),
+                                modifier = Modifier.weight(1f, fill = false)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Surface(
+                                shape = RoundedCornerShape(8.dp),
+                                color = alertColor.copy(alpha = 0.20f)
+                            ) {
+                                Text(
+                                    text = simulationBadge,
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = alertColor,
+                                        fontSize = 10.sp
+                                    ),
+                                    maxLines = 1,
+                                    softWrap = false,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                                )
+                            }
                         }
 
-                        Spacer(modifier = Modifier.height(14.dp))
-                        Surface(
-                            shape = RoundedCornerShape(12.dp),
-                            color = alertColor.copy(alpha = 0.12f),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .testTag("fire_simulation_summary")
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        val summaryDiffText = Formatters.formatFireSimulationSummary(
+                            baseMetrics = metrics,
+                            simulatedMetrics = simulatedMetrics,
+                            lang = lang
+                        )
+
+                        Text(
+                            text = summaryDiffText,
+                            style = MaterialTheme.typography.bodyMedium.copy(
+                                fontWeight = FontWeight.Bold,
+                                color = alertColor
+                            )
+                        )
+
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        // Сводные строки кумулятивного пересчета
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Column(modifier = Modifier.padding(14.dp)) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    Text(
-                                        text = strings.fireSimSummaryTitle,
-                                        style = MaterialTheme.typography.titleSmall.copy(
-                                            fontWeight = FontWeight.Bold,
-                                            color = alertColor
-                                        ),
-                                        modifier = Modifier.weight(1f, fill = false)
-                                    )
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Surface(
-                                        shape = RoundedCornerShape(8.dp),
-                                        color = alertColor.copy(alpha = 0.20f)
-                                    ) {
-                                        Text(
-                                            text = simulationBadge,
-                                            style = MaterialTheme.typography.labelSmall.copy(
-                                                fontWeight = FontWeight.Bold,
-                                                color = alertColor,
-                                                fontSize = 10.sp
-                                            ),
-                                            maxLines = 1,
-                                            softWrap = false,
-                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
-                                        )
-                                    }
-                                }
-
-                                Spacer(modifier = Modifier.height(8.dp))
-
-                                val summaryDiffText = Formatters.formatFireSimulationSummary(
-                                    baseMetrics = metrics,
-                                    simulatedMetrics = simulatedMetrics,
-                                    lang = lang
+                            Text(strings.fireSimCashFlowRow, style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp))
+                            Text(
+                                "${Formatters.formatMoney(metrics.cashFlow, inputData.currencySymbol, lang)} ➔ ${Formatters.formatMoney(simulatedMetrics.cashFlow, inputData.currencySymbol, lang)}",
+                                style = MaterialTheme.typography.bodySmall.copy(
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 11.sp,
+                                    color = if (simulatedMetrics.cashFlow >= 0) MaterialTheme.colorScheme.onSurface else AlertRed
                                 )
-
-                                Text(
-                                    text = summaryDiffText,
-                                    style = MaterialTheme.typography.bodyMedium.copy(
-                                        fontWeight = FontWeight.Bold,
-                                        color = alertColor
-                                    )
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(3.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(strings.fireSimExpensesRow, style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp))
+                            Text(
+                                "${Formatters.formatMoney(inputData.monthlyExpenses, inputData.currencySymbol, lang)} ➔ ${Formatters.formatMoney(currentEffectiveExpenses, inputData.currencySymbol, lang)}",
+                                style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold, fontSize = 11.sp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(3.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(strings.fireSimNetWorthRow, style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp))
+                            Text(
+                                "${Formatters.formatMoney(metrics.netWorth, inputData.currencySymbol, lang)} ➔ ${Formatters.formatMoney(simulatedMetrics.netWorth, inputData.currencySymbol, lang)}",
+                                style = MaterialTheme.typography.bodySmall.copy(
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 11.sp,
+                                    color = if (simulatedMetrics.netWorth >= metrics.netWorth) SuccessGreen else AlertRed
                                 )
-
-                                Spacer(modifier = Modifier.height(10.dp))
-
-                                // Сводные строки кумулятивного пересчета
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween
-                                ) {
-                                    Text(strings.fireSimCashFlowRow, style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp))
-                                    Text(
-                                        "${Formatters.formatMoney(metrics.cashFlow, inputData.currencySymbol, lang)} ➔ ${Formatters.formatMoney(simulatedMetrics.cashFlow, inputData.currencySymbol, lang)}",
-                                        style = MaterialTheme.typography.bodySmall.copy(
-                                            fontWeight = FontWeight.SemiBold,
-                                            fontSize = 11.sp,
-                                            color = if (simulatedMetrics.cashFlow >= 0) MaterialTheme.colorScheme.onSurface else AlertRed
-                                        )
-                                    )
-                                }
-                                Spacer(modifier = Modifier.height(3.dp))
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween
-                                ) {
-                                    Text(strings.fireSimExpensesRow, style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp))
-                                    Text(
-                                        "${Formatters.formatMoney(inputData.monthlyExpenses, inputData.currencySymbol, lang)} ➔ ${Formatters.formatMoney(currentEffectiveExpenses, inputData.currencySymbol, lang)}",
-                                        style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold, fontSize = 11.sp)
-                                    )
-                                }
-                                Spacer(modifier = Modifier.height(3.dp))
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween
-                                ) {
-                                    Text(strings.fireSimNetWorthRow, style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp))
-                                    Text(
-                                        "${Formatters.formatMoney(metrics.netWorth, inputData.currencySymbol, lang)} ➔ ${Formatters.formatMoney(simulatedMetrics.netWorth, inputData.currencySymbol, lang)}",
-                                        style = MaterialTheme.typography.bodySmall.copy(
-                                            fontWeight = FontWeight.SemiBold,
-                                            fontSize = 11.sp,
-                                            color = if (simulatedMetrics.netWorth >= metrics.netWorth) SuccessGreen else AlertRed
-                                        )
-                                    )
-                                }
-                            }
+                            )
                         }
                     }
                 }
