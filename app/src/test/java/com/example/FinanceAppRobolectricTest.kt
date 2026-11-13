@@ -59,8 +59,12 @@ class FinanceAppRobolectricTest {
     @Test
     @Config(qualifiers = "ru-rRU")
     fun `new install shows the sample data notice once over input`() {
+        val app = ApplicationProvider.getApplicationContext<Application>()
         val viewModel = createNewInstallViewModel()
         val initialInput = viewModel.inputData.value
+        val rawPrefs = app.getSharedPreferences("user_finance_data", Context.MODE_PRIVATE)
+        assertEquals(FinancialInputData.usAverageData(), initialInput)
+        assertFalse(rawPrefs.getBoolean("sample_data_notice_shown", false))
         composeRule.setContent { FinanceApp(viewModel) }
 
         composeRule.onNodeWithTag("sample_data_notice_dialog").assertIsDisplayed()
@@ -70,9 +74,8 @@ class FinanceAppRobolectricTest {
         composeRule.onNodeWithTag("nav_item_input").assertIsSelected()
         composeRule.runOnIdle {
             assertEquals(initialInput, viewModel.inputData.value)
-            assertFalse(
-                LocalPreferencesManager(ApplicationProvider.getApplicationContext()).shouldShowSampleDataNotice()
-            )
+            assertTrue(rawPrefs.getBoolean("sample_data_notice_shown", false))
+            assertFalse(LocalPreferencesManager(app).shouldShowSampleDataNotice())
         }
 
         composeRule.onNodeWithTag("sample_data_notice_confirm").performClick()
@@ -84,21 +87,34 @@ class FinanceAppRobolectricTest {
 
         composeRule.activityRule.scenario.recreate()
         composeRule.onNodeWithTag("sample_data_notice_dialog").assertDoesNotExist()
+        composeRule.activityRule.scenario.recreate()
+        composeRule.onNodeWithTag("sample_data_notice_dialog").assertDoesNotExist()
         composeRule.runOnIdle { assertEquals(initialInput, viewModel.inputData.value) }
     }
 
     @Test
     fun `existing install has no sample data notice`() {
         val app = ApplicationProvider.getApplicationContext<Application>()
-        app.getSharedPreferences("user_finance_data", Context.MODE_PRIVATE).edit().clear().commit()
+        val rawPrefs = app.getSharedPreferences("user_finance_data", Context.MODE_PRIVATE)
+        rawPrefs.edit().clear().commit()
         val input = FinancialInputData.usAverageData().copy(monthlyIncome = 12_345.0)
         LocalPreferencesManager(app).saveData(input)
+        // Update from a version that saved data but had no one-time notice marker.
+        assertTrue(rawPrefs.getBoolean("initialized", false))
+        assertFalse(rawPrefs.getBoolean("sample_data_notice_shown", false))
         val viewModel = MainViewModel(app) { LocalDate.of(2026, 11, 6) }
 
         composeRule.setContent { FinanceApp(viewModel) }
 
         composeRule.onNodeWithTag("sample_data_notice_dialog").assertDoesNotExist()
         composeRule.runOnIdle { assertEquals(input, viewModel.inputData.value) }
+
+        composeRule.activityRule.scenario.recreate()
+        composeRule.onNodeWithTag("sample_data_notice_dialog").assertDoesNotExist()
+        composeRule.runOnIdle {
+            assertEquals(input, viewModel.inputData.value)
+            assertEquals(input, LocalPreferencesManager(app).loadData())
+        }
     }
 
     @Test

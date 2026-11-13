@@ -50,16 +50,24 @@ class MainViewModelRobolectricTest {
 
     @Test
     fun `sample data notice is initiated once and survives restart after being shown`() {
+        val prefs = app.getSharedPreferences("user_finance_data", Context.MODE_PRIVATE)
+        assertFalse(prefs.getBoolean("sample_data_notice_shown", false))
+
         val viewModel = MainViewModel(app) { today }
         assertTrue(viewModel.showSampleDataNotice.value)
         val input = viewModel.inputData.value
+        assertEquals(FinancialInputData.usAverageData(), input)
 
         // The first actual display persists the marker while the dialog remains open.
         viewModel.markSampleDataNoticeShown()
         assertTrue(viewModel.showSampleDataNotice.value)
+        assertTrue(prefs.getBoolean("sample_data_notice_shown", false))
         assertEquals(input, viewModel.inputData.value)
 
-        assertFalse(MainViewModel(app) { today }.showSampleDataNotice.value)
+        // A second Activity or a process restart gets a new ViewModel; the notice is one-shot.
+        val restarted = MainViewModel(app) { today }
+        assertFalse(restarted.showSampleDataNotice.value)
+        assertEquals(input, restarted.inputData.value)
 
         viewModel.dismissSampleDataNotice()
         assertFalse(viewModel.showSampleDataNotice.value)
@@ -85,14 +93,44 @@ class MainViewModelRobolectricTest {
         val prefs = LocalPreferencesManager(app)
         val input = FinancialInputData.usAverageData().copy(monthlyIncome = 12_345.0)
         prefs.saveData(input)
+        val rawPrefs = app.getSharedPreferences("user_finance_data", Context.MODE_PRIVATE)
+        assertTrue(rawPrefs.getBoolean("initialized", false))
+        assertFalse(rawPrefs.getBoolean("sample_data_notice_shown", false))
 
         val viewModel = MainViewModel(app) { today }
         assertFalse(viewModel.showSampleDataNotice.value)
+        assertEquals(input, viewModel.inputData.value)
+
+        // Repeated launches, including an app update, keep saved data and stay silent.
+        repeat(2) {
+            val restarted = MainViewModel(app) { today }
+            assertFalse(restarted.showSampleDataNotice.value)
+            assertEquals(input, restarted.inputData.value)
+            restarted.flushPendingSave()
+        }
 
         viewModel.dismissSampleDataNotice()
         assertFalse(viewModel.showSampleDataNotice.value)
         assertEquals(input, LocalPreferencesManager(app).loadData())
         viewModel.flushPendingSave()
+    }
+
+    @Test
+    fun `cleared preferences create a new first launch and offer sample notice again`() {
+        val firstLaunch = MainViewModel(app) { today }
+        assertTrue(firstLaunch.showSampleDataNotice.value)
+        firstLaunch.dismissSampleDataNotice()
+        firstLaunch.flushPendingSave()
+        assertFalse(MainViewModel(app) { today }.showSampleDataNotice.value)
+
+        app.getSharedPreferences("user_finance_data", Context.MODE_PRIVATE).edit().clear().commit()
+
+        val freshInstall = MainViewModel(app) { today }
+        assertTrue(freshInstall.showSampleDataNotice.value)
+        assertEquals(FinancialInputData.usAverageData(), freshInstall.inputData.value)
+        freshInstall.dismissSampleDataNotice()
+        assertFalse(MainViewModel(app) { today }.showSampleDataNotice.value)
+        freshInstall.flushPendingSave()
     }
 
     @Test
