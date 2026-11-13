@@ -158,3 +158,7 @@ Current verification results and their limits are recorded in `docs/release-read
 - Keep calculations in `domain/`, persistence in `data/`, presentation in `ui/`. Screens do not contain formulas.
 - Comments and KDoc in `domain/` are mostly Russian: follow the language of the surrounding file. Keep comments about why, not what.
 - Commit messages: `fix: handle yen amounts`, `refactor(ui): simplify metric cards`. PRs state the problem, resulting behavior, validation; add screenshots for visual changes.
+
+## 12. Orchestrator
+
+The `orchestrator/` directory is a self-contained task-queue module (Codex CLI / OpenCode → gate → auto-commit → journal). Its own rules, checks and docs live inside it: read `orchestrator/AGENTS.md` for rules and `orchestrator/README.md` for usage. Queue runs go to branch `auto/tasks` and are managed only by `bash orchestrator/run.sh` — do not commit to that branch by hand, and do not edit `orchestrator/` during a regular app task: its files are checksum-protected and any agent edits inside it stop the queue.

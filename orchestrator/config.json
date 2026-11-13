@@ -9,6 +9,15 @@
   "opencode_bin": "opencode",
   "sandbox": "workspace-write",
   "gate_base": [],
+  "checks": {
+    "full": [
+      "python3 -m unittest discover -s orchestrator/tests",
+      "bash ./gradlew testDebugUnitTest lintDebug --console=plain"
+    ],
+    "android": [
+      "bash ./gradlew :app:compileDebugKotlin :app:lintDebug --console=plain"
+    ]
+  },
   "task_timeout": 3600,
   "gate_timeout": 3600,
   "git_timeout": 120,
