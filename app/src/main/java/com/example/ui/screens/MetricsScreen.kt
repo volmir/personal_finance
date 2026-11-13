@@ -427,10 +427,6 @@ fun MetricsScreen(
             }
         }
 
-        item {
-            Spacer(modifier = Modifier.height(14.dp))
-        }
-
         // Единая кнопка экспорта краткого финансового отчёта (перенесена с вкладки «Итоги»)
         item {
             Column {

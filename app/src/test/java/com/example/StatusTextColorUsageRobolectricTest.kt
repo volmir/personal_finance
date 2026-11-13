@@ -202,14 +202,22 @@ class StatusTextColorUsageRobolectricTest {
         val negativeParam = "${strings.scenarioParamsPrefix} " +
             strings.scenarioJobLossParam(strings.formatThreshold(ScenarioConstants.JOB_LOSS_MONTHS))
 
-        assertEquals(SuccessGreenTextLight, textColor(strings.scenarioPositiveSectionNumber))
-        assertEquals(AlertRedTextLight, textColor(strings.scenarioNegativeSectionNumber))
         assertEquals(SuccessGreenTextLight, textColor(positiveParam))
         // Выключенный негативный сценарий показывает параметры золотым — текст берёт тёмный оттенок.
         assertEquals(WarningYellowTextLight, textColor(negativeParam))
 
-        composeRule.runOnIdle { scenarios.value = FireScenarioToggles(jobLoss = true) }
+        composeRule.runOnIdle {
+            scenarios.value = FireScenarioToggles(
+                salaryIncrease20 = true,
+                marketGrowth25 = true,
+                jobLoss = true
+            )
+        }
         assertEquals(AlertRedTextLight, textColor(negativeParam))
+        assertEquals(
+            SuccessGreenTextLight,
+            textColor(strings.scenarioPositiveActive(2))
+        )
         assertEquals(
             AlertRedTextLight,
             textColor(strings.scenarioNegativeActive(1))

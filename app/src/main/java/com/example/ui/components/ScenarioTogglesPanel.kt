@@ -312,36 +312,20 @@ fun ScenarioTogglesPanel(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // 2.1. Позитивные события
+        // Позитивные события
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Surface(
-                    shape = RoundedCornerShape(6.dp),
-                    color = SuccessGreen.copy(alpha = 0.15f),
-                    modifier = Modifier.padding(end = 6.dp)
-                ) {
-                    Text(
-                        text = strings.scenarioPositiveSectionNumber,
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            fontWeight = FontWeight.Bold,
-                            color = StatusColors.getReadableTextColor(SuccessGreen),
-                            fontSize = 10.sp
-                        ),
-                        modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp)
-                    )
-                }
-                Text(
-                    text = strings.scenarioPositiveTitle,
-                    style = MaterialTheme.typography.titleSmall.copy(
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                )
-            }
+            Text(
+                text = strings.scenarioPositiveTitle,
+                style = MaterialTheme.typography.titleSmall.copy(
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                ),
+                modifier = Modifier.weight(1f, fill = false)
+            )
 
             if (scenarios.positiveActiveCount > 0) {
                 Surface(
@@ -382,36 +366,20 @@ fun ScenarioTogglesPanel(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // 2.2. Негативные события
+        // Негативные события
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Surface(
-                    shape = RoundedCornerShape(6.dp),
-                    color = AlertRed.copy(alpha = 0.15f),
-                    modifier = Modifier.padding(end = 6.dp)
-                ) {
-                    Text(
-                        text = strings.scenarioNegativeSectionNumber,
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            fontWeight = FontWeight.Bold,
-                            color = StatusColors.getReadableTextColor(AlertRed),
-                            fontSize = 10.sp
-                        ),
-                        modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp)
-                    )
-                }
-                Text(
-                    text = strings.scenarioNegativeTitle,
-                    style = MaterialTheme.typography.titleSmall.copy(
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                )
-            }
+            Text(
+                text = strings.scenarioNegativeTitle,
+                style = MaterialTheme.typography.titleSmall.copy(
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                ),
+                modifier = Modifier.weight(1f, fill = false)
+            )
 
             if (scenarios.negativeActiveCount > 0) {
                 Surface(

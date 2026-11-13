@@ -10,8 +10,15 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.test.core.app.ApplicationProvider
 import com.example.ui.MainViewModel
 import com.example.ui.components.ScenarioTogglesPanel
@@ -77,5 +84,76 @@ class ScenarioTogglesPanelRobolectricTest {
             composeRule.onNodeWithText(strings.scenarioPropertySaleDesc(money(propertySale))).assertExists()
             composeRule.runOnIdle { viewModel.toggleScenario("pos_salary_increase") }
         }
+    }
+
+    @Test
+    fun `scenario section headers omit 2_1 and 2_2 badges and align cleanly across all languages`() {
+        val app = ApplicationProvider.getApplicationContext<Application>()
+        app.getSharedPreferences("user_finance_data", Context.MODE_PRIVATE).edit().clear().commit()
+        val viewModel = MainViewModel(app) { LocalDate.of(2026, 11, 6) }
+        val language = mutableStateOf(AppLanguage.RU)
+
+        composeRule.setContent {
+            val scenarios by viewModel.fireSimulation.collectAsState()
+            MaterialTheme {
+                CompositionLocalProvider(
+                    LocalAppLanguage provides language.value,
+                    LocalAppStrings provides getAppStrings(language.value)
+                ) {
+                    ScenarioTogglesPanel(
+                        scenarios = scenarios.scenarios,
+                        inputData = viewModel.inputData.value,
+                        onToggleScenario = viewModel::toggleScenario,
+                        modifier = Modifier.verticalScroll(rememberScrollState())
+                    )
+                }
+            }
+        }
+
+        for (lang in AppLanguage.values()) {
+            composeRule.runOnIdle { language.value = lang }
+            composeRule.waitForIdle()
+            val strings = getAppStrings(lang)
+
+            composeRule.onAllNodesWithText("2.1").assertCountEquals(0)
+            composeRule.onAllNodesWithText("2.2").assertCountEquals(0)
+
+            val posTitle = composeRule.onNodeWithText(strings.scenarioPositiveTitle)
+                .performScrollTo()
+                .assertIsDisplayed()
+            val posSub = composeRule.onNodeWithText(strings.scenarioPositiveSubtitle)
+                .performScrollTo()
+                .assertIsDisplayed()
+            assertEquals(
+                "[$lang] Positive section title must align with subtitle left edge",
+                posSub.getUnclippedBoundsInRoot().left.value,
+                posTitle.getUnclippedBoundsInRoot().left.value,
+                0.5f
+            )
+
+            val negTitle = composeRule.onNodeWithText(strings.scenarioNegativeTitle)
+                .performScrollTo()
+                .assertIsDisplayed()
+            val negSub = composeRule.onNodeWithText(strings.scenarioNegativeSubtitle)
+                .performScrollTo()
+                .assertIsDisplayed()
+            assertEquals(
+                "[$lang] Negative section title must align with subtitle left edge",
+                negSub.getUnclippedBoundsInRoot().left.value,
+                negTitle.getUnclippedBoundsInRoot().left.value,
+                0.5f
+            )
+        }
+
+        composeRule.runOnIdle { language.value = AppLanguage.RU }
+        composeRule.waitForIdle()
+        val ruStrings = getAppStrings(AppLanguage.RU)
+        composeRule.onNodeWithTag("switch_pos_salary_increase").performScrollTo().performClick()
+        composeRule.onNodeWithTag("switch_pos_market_growth").performScrollTo().performClick()
+        composeRule.onNodeWithTag("switch_job_loss").performScrollTo().performClick()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithText(ruStrings.scenarioTotalBadge(3)).assertExists()
+        composeRule.onNodeWithText(ruStrings.scenarioPositiveActive(2)).assertExists()
+        composeRule.onNodeWithText(ruStrings.scenarioNegativeActive(1)).assertExists()
     }
 }

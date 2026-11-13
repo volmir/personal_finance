@@ -262,9 +262,10 @@ class MetricsScreenRobolectricTest {
         val lastMetricBounds = composeRule.onNodeWithTag(metricCardTag(StringsRu.metricRealReturnTitle))
             .assertExists()
             .getUnclippedBoundsInRoot()
+        val exportGap = exportBounds.top - lastMetricBounds.bottom
         assertTrue(
-            "Export button must be below the last metric card",
-            exportBounds.top >= lastMetricBounds.bottom
+            "Export button must be below the last metric card with compact spacing (actual=$exportGap)",
+            exportGap >= 4.dp && exportGap <= 10.dp
         )
 
         composeRule.onNodeWithTag("export_button").performClick()

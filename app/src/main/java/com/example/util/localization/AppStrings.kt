@@ -302,11 +302,9 @@ interface AppStrings {
     val scenarioHeaderSubtitle: String
     val scenarioTotalBadge: (count: Int) -> String
     val scenarioPositiveTitle: String
-    val scenarioPositiveSectionNumber: String
     val scenarioPositiveActive: (count: Int) -> String
     val scenarioPositiveSubtitle: String
     val scenarioNegativeTitle: String
-    val scenarioNegativeSectionNumber: String
     val scenarioNegativeActive: (count: Int) -> String
     val scenarioNegativeSubtitle: String
     val scenarioParamsPrefix: String
