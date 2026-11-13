@@ -134,6 +134,24 @@ class FixtureTests(unittest.TestCase):
                     with self.assertRaises(module.Error):
                         module.load_config(config)
 
+    def test_load_config_validates_checks(self):
+        with tempfile.TemporaryDirectory() as directory:
+            config = Path(directory) / 'config.json'
+            for body in ({'checks': {'probe': []}},
+                         {'checks': {'probe': 'true'}},
+                         {'checks': {'probe': [42]}},
+                         {'checks': {'probe': ['   ']}},
+                         {'checks': {'': ['true']}},
+                         {'checks': {'orchestrator': ['true']}}):
+                with self.subTest(body=body):
+                    config.write_text(json.dumps(body))
+                    with self.assertRaises(module.Error):
+                        module.load_config(config)
+            config.write_text(json.dumps({'checks': {'probe': ['true', 'false']}}))
+            loaded = module.load_config(config)
+            self.assertEqual(loaded['checks'], {'probe': ['true', 'false']})
+            self.assertEqual(module.load_config(Path(directory) / 'missing.json')['checks'], {})
+
     def test_load_config_selects_backend_section_of_nested_models(self):
         with tempfile.TemporaryDirectory() as directory:
             config = Path(directory) / 'config.json'
@@ -418,17 +436,16 @@ class OrchestratorTests(QueueHelpers, unittest.TestCase):
         self.assertEqual(self.progress()['A-1']['gate'], 'passed')
         self.assertEqual(self.g('status', '--porcelain'), '')
 
-    def test_check_mode_ignores_queue_config_dirty_tree_and_queue_lock(self):
+    def test_check_mode_ignores_dirty_tree_and_queue_lock(self):
         (self.repo / 'gradlew').write_text('#!/usr/bin/env bash\nexit 0\n')
-        self.commit()
-        (self.repo / 'orchestrator/config.json').write_text('invalid JSON')
+        self.set_config(checks={'probe': ['exit 0']})
         self.save_tasks('invalid queue')
         head = self.g('rev-parse', 'HEAD')
         status = self.g('status', '--porcelain')
         common = self.repo / self.g('rev-parse', '--git-common-dir')
         with (common / 'universal-orchestrator.lock').open('a') as lock:
             fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
-            self.run_cli('--check', 'android')
+            self.run_cli('--check', 'probe')
         self.assertEqual(self.g('rev-parse', 'HEAD'), head)
         self.assertEqual(self.g('branch', '--show-current'), 'main')
         self.assertEqual(self.g('status', '--porcelain'), status)

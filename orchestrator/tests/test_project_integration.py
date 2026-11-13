@@ -1,8 +1,9 @@
-"""Проверки команд проекта без SDK, сети и запуска настоящего Codex."""
+"""Проверки команд проекта без SDK, сети и запуска настоящего агента."""
 import os
 from pathlib import Path
 import shutil
 import subprocess
+import sys
 import tempfile
 import unittest
 
@@ -16,17 +17,26 @@ class ProjectGateTests(unittest.TestCase):
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
         (self.root / "orchestrator").mkdir()
-        shutil.copy2(PACKAGE / "run.sh", self.root / "orchestrator/run.sh")
+        for name in ("run.sh", "checks.py", "config.json"):
+            shutil.copy2(PACKAGE / name, self.root / f"orchestrator/{name}")
         binaries = self.root / "bin"
         binaries.mkdir()
         self.log = self.root / "commands.log"
         self.env = dict(os.environ, PATH=f"{binaries}:{os.environ['PATH']}",
                         GATE_TEST_LOG=str(self.log))
         for path, name in ((binaries / "python3", "python3"), (self.root / "gradlew", "gradle")):
-            path.write_text(
-                '#!/usr/bin/env bash\n'
-                f'printf \'%s|%s\\n\' "$PWD" "{name} $*" >> "$GATE_TEST_LOG"\n'
-                'exit "${GATE_TEST_EXIT:-0}"\n', encoding="utf-8")
+            if name == "python3":
+                # Вызовы checks.py делегируются настоящему интерпретатору: они
+                # резолвят профили из конфига, а сами проверками не являются.
+                script = ('#!/usr/bin/env bash\n'
+                          f'if [[ "$*" == *checks.py* ]]; then exec {sys.executable} "$@"; fi\n'
+                          'printf \'%s|%s\\n\' "$PWD" "python3 $*" >> "$GATE_TEST_LOG"\n'
+                          'exit "${GATE_TEST_EXIT:-0}"\n')
+            else:
+                script = ('#!/usr/bin/env bash\n'
+                          f'printf \'%s|%s\\n\' "$PWD" "{name} $*" >> "$GATE_TEST_LOG"\n'
+                          'exit "${GATE_TEST_EXIT:-0}"\n')
+            path.write_text(script, encoding="utf-8")
             path.chmod(0o755)
 
     def run_gate(self, *args, exit_code=0):

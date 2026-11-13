@@ -121,7 +121,7 @@ DEFAULTS = {
     "tasks_file": "orchestrator/TASKS.md", "progress_file": "orchestrator/PROGRESS.md",
     "branch": "auto/tasks", "remote": "origin", "push": True,
     "backend": "codex", "codex_bin": "codex", "opencode_bin": "opencode",
-    "sandbox": "workspace-write", "gate_base": [],
+    "sandbox": "workspace-write", "gate_base": [], "checks": {},
     "task_timeout": 3600, "gate_timeout": 1800, "git_timeout": 120,
     "restart_retries": 3, "retry_delay": 30,
     "models": {"codex": dict(CODEX_MODEL_DEFAULTS), "opencode": dict(OPENCODE_MODEL_DEFAULTS)},
@@ -183,6 +183,13 @@ def load_config(path):
         raise Error("неверный sandbox")
     if not isinstance(config["gate_base"], list) or not all(isinstance(v, str) and v for v in config["gate_base"]):
         raise Error("gate_base: нужен массив аргументов, например [\"docker\", \"compose\", \"run\", \"--rm\", \"app\"]")
+    if not isinstance(config["checks"], dict) or any(
+            not isinstance(name, str) or not name or not isinstance(commands, list) or not commands
+            or not all(isinstance(command, str) and command.strip() for command in commands)
+            for name, commands in config["checks"].items()):
+        raise Error("checks: нужен словарь «профиль → массив непустых shell-команд»")
+    if "orchestrator" in config["checks"]:
+        raise Error("checks: профиль orchestrator встроен в модуль и не переопределяется")
     tiers = config["models"][config["backend"]]
     # Дальше по коду models — плоский словарь tier→модель активного бэкенда.
     config["models"] = dict(tiers)
@@ -550,7 +557,8 @@ def run_queue(args, config, root, script_dir, config_path, tasks_path, progress_
         raise Error("настройте git user.name и user.email")
     if config["push"]:
         git("remote", "get-url", config["remote"])
-    for path in (tasks_path, config_path, script_dir / "orchestrator.py", script_dir / "run.sh"):
+    for path in (tasks_path, config_path, script_dir / "orchestrator.py",
+                 script_dir / "run.sh", script_dir / "checks.py"):
         if path.exists() and not git("ls-files", "--", str(path.relative_to(root))):
             raise Error(f"добавьте в Git: {path.relative_to(root)}")
     if not args.mark_done and current_branch != config["branch"]:
