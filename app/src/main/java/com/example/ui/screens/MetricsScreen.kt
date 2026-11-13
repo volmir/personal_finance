@@ -1,5 +1,6 @@
 package com.example.ui.screens
 
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -10,6 +11,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBalance
@@ -120,9 +122,12 @@ fun MetricsScreen(
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    // Фильтры по категориям: первая строка (Все, Денежный поток, Капитал & Риски)
+                    // Фильтры по категориям: одна горизонтально прокручиваемая строка
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState())
+                            .testTag("metrics_filter_row"),
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         FilterChip(
@@ -152,15 +157,6 @@ fun MetricsScreen(
                                 selectedLabelColor = MaterialTheme.colorScheme.onPrimary
                             )
                         )
-                    }
-
-                    Spacer(modifier = Modifier.height(4.dp))
-
-                    // Вторая строка: Бенчмарки
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
                         FilterChip(
                             selected = selectedCategory == MetricFilterCategory.BENCHMARKS,
                             onClick = { selectedCategory = MetricFilterCategory.BENCHMARKS },

@@ -3,14 +3,19 @@ package com.example
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.hasScrollAction
+import androidx.compose.ui.test.hasTestTag
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performScrollToNode
-import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.SemanticsProperties
@@ -27,12 +32,74 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 import java.time.LocalDate
 
 @RunWith(RobolectricTestRunner::class)
 class MetricsScreenRobolectricTest {
     @get:Rule
     val composeRule = createComposeRule()
+
+    @Test
+    @Config(qualifiers = "w411dp-h891dp")
+    fun `all category filters sit in one horizontally scrollable row and filter cards`() {
+        val input = FinancialInputData.defaultData()
+        val metrics = FinanceCalculator.calculate(input, today = LocalDate.of(2025, 1, 1))
+
+        composeRule.setContent {
+            MaterialTheme {
+                CompositionLocalProvider(
+                    LocalAppLanguage provides AppLanguage.RU,
+                    LocalAppStrings provides StringsRu
+                ) {
+                    MetricsScreen(inputData = input, metrics = metrics)
+                }
+            }
+        }
+
+        val filterRow = composeRule.onNodeWithTag("metrics_filter_row")
+        filterRow.assertExists()
+        filterRow.assert(hasScrollAction())
+
+        val chipTexts = listOf(
+            StringsRu.categoryAll,
+            StringsRu.categoryCashFlow,
+            StringsRu.categoryCapitalRisks,
+            StringsRu.categoryBenchmarks
+        )
+        chipTexts.forEach { text ->
+            composeRule.onNode(hasText(text) and hasAnyAncestor(hasTestTag("metrics_filter_row")))
+                .assertExists()
+        }
+
+        val cashFlowCard = metricCardTag(StringsRu.metricCashFlowTitle)
+        val emergencyFundCard = metricCardTag(StringsRu.metricEmergencyFundTitle)
+        val fidelityCard = metricCardTag(StringsRu.metricFidelityTitle)
+
+        fun selectCategory(text: String) {
+            composeRule.onNode(hasText(text) and hasAnyAncestor(hasTestTag("metrics_filter_row")))
+                .performScrollTo()
+                .performClick()
+        }
+
+        selectCategory(StringsRu.categoryCashFlow)
+        composeRule.onNodeWithTag(cashFlowCard).assertExists()
+        composeRule.onNodeWithTag(emergencyFundCard).assertDoesNotExist()
+
+        selectCategory(StringsRu.categoryCapitalRisks)
+        composeRule.onNodeWithTag(emergencyFundCard).assertExists()
+        composeRule.onNodeWithTag(cashFlowCard).assertDoesNotExist()
+
+        selectCategory(StringsRu.categoryBenchmarks)
+        composeRule.onNodeWithTag(fidelityCard).assertExists()
+        composeRule.onNodeWithTag(cashFlowCard).assertDoesNotExist()
+
+        selectCategory(StringsRu.categoryAll)
+        composeRule.onNodeWithTag(cashFlowCard).assertExists()
+        composeRule.onNodeWithTag(emergencyFundCard).assertExists()
+    }
+
+    private fun metricCardTag(title: String): String = "metric_card_${title.replace(" ", "_")}"
 
     @Test
     fun `invalid birth date shows unavailable Fidelity subtitle in every language`() {
@@ -49,7 +116,9 @@ class MetricsScreenRobolectricTest {
                 }
             }
         }
-        composeRule.onNodeWithText(getAppStrings(AppLanguage.RU).categoryBenchmarks).performClick()
+        composeRule.onNodeWithText(getAppStrings(AppLanguage.RU).categoryBenchmarks)
+            .performScrollTo()
+            .performClick()
         for (lang in AppLanguage.values()) {
             composeRule.runOnIdle { language.value = lang }
             val strings = getAppStrings(lang)
