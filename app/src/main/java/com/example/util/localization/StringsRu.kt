@@ -11,9 +11,9 @@ val StringsRu: AppStrings = object : AppStrings {
     override val tabMetricsTitle: String = "Расчет показателей"
     override val tabMetricsShort: String = "Показатели"
     override val tabScoresTitle: String = "Набранные баллы (итоги, суммирование результатов)"
-    override val tabScoresShort: String = "Итоги & Баллы"
+    override val tabScoresShort: String = "Итоги и Баллы"
     override val tabFireTitle: String = "Финансовая свобода, пенсия, FIRE"
-    override val tabFireShort: String = "FIRE & Пенсия"
+    override val tabFireShort: String = "FIRE и Пенсия"
     override val quickScorePrefix: String = "Итог"
 
     override val sampleDataNoticeMessage: String = "При первом запуске указаны примерные значения — проверьте и замените их своими"
