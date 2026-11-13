@@ -3,7 +3,7 @@ package com.example.util.localization
 val StringsDe: AppStrings = object : AppStrings {
     override val language: AppLanguage = AppLanguage.DE
 
-    override val appName: String = "Persönliche Finanzen & FIRE-Audit"
+    override val appName: String = "Finanzen & FIRE"
     override val tabInputTitle: String = "Eingabedaten & Parameter"
     override val tabInputShort: String = "Eingaben"
     override val tabMetricsTitle: String = "Berechnete Kennzahlen"

@@ -5,7 +5,7 @@ import com.example.util.Formatters
 val StringsRu: AppStrings = object : AppStrings {
     override val language: AppLanguage = AppLanguage.RU
 
-    override val appName: String = "Личные финансы & FIRE аудит"
+    override val appName: String = "Финансы и FIRE"
     override val tabInputTitle: String = "Данные для расчетов"
     override val tabInputShort: String = "Данные"
     override val tabMetricsTitle: String = "Расчет показателей"
