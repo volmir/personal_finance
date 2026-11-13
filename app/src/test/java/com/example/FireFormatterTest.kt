@@ -96,4 +96,66 @@ class FireFormatterTest {
         assertTrue(invalid.contains("корректную дату рождения"))
         assertFalse(invalid.contains("раньше"))
     }
+
+    @Test
+    fun `hero display shows status-specific messages and prevents 0,00 display across all languages`() {
+        for (lang in AppLanguage.values()) {
+            val strings = com.example.util.localization.getAppStrings(lang)
+
+            val baseReached = Formatters.formatFireHeroDisplay(0.0, FireStatus.REACHED_NOW, isSimulationSubtab = false, lang = lang)
+            assertEquals(
+                com.example.util.FireHeroDisplay.Message(strings.fireReachedBaseText, isPositive = true, testTag = "fire_reached_title"),
+                baseReached
+            )
+            assertTrue("$lang base reached must keep FIRE", strings.fireReachedBaseText.contains("FIRE"))
+
+            val simReached = Formatters.formatFireHeroDisplay(0.0, FireStatus.REACHED_NOW, isSimulationSubtab = true, lang = lang)
+            assertEquals(
+                com.example.util.FireHeroDisplay.Message(strings.fireReachedSimulationText, isPositive = true, testTag = "fire_reached_title"),
+                simReached
+            )
+            assertTrue("$lang sim reached must keep FIRE", strings.fireReachedSimulationText.contains("FIRE"))
+
+            val baseUnreachable = Formatters.formatFireHeroDisplay(0.0, FireStatus.UNREACHABLE, isSimulationSubtab = false, lang = lang)
+            assertEquals(
+                com.example.util.FireHeroDisplay.Message(strings.fireUnreachableText, isPositive = false, testTag = "fire_unreachable_title"),
+                baseUnreachable
+            )
+
+            val simUnreachable = Formatters.formatFireHeroDisplay(0.0, FireStatus.UNREACHABLE, isSimulationSubtab = true, lang = lang)
+            assertEquals(
+                com.example.util.FireHeroDisplay.Message(strings.fireUnreachableSimulationText, isPositive = false, testTag = "fire_unreachable_title"),
+                simUnreachable
+            )
+
+            val exhausted = Formatters.formatFireHeroDisplay(0.0, FireStatus.HORIZON_EXHAUSTED, isSimulationSubtab = true, lang = lang)
+            assertEquals(
+                com.example.util.FireHeroDisplay.Message(strings.fireHorizonExhaustedText, isPositive = false, testTag = "fire_unreachable_title"),
+                exhausted
+            )
+
+            val invalidAge = Formatters.formatFireHeroDisplay(0.0, FireStatus.INVALID_AGE, isSimulationSubtab = false, lang = lang)
+            assertEquals(
+                com.example.util.FireHeroDisplay.Message(strings.invalidBirthDateError, isPositive = false, testTag = "fire_unreachable_title"),
+                invalidAge
+            )
+
+            // Положительные значения < 0.005 (HALF_EVEN -> 0.00) не должны показываться как "0,00" или "Цель достигнута"
+            for (tiny in listOf(0.0001, 0.004, 0.005)) {
+                val subHundredth = Formatters.formatFireHeroDisplay(tiny, FireStatus.REACHABLE, isSimulationSubtab = false, lang = lang)
+                assertEquals(
+                    com.example.util.FireHeroDisplay.Message(strings.fireLessThanHundredthYearText, isPositive = true, testTag = "fire_sub_hundredth_title"),
+                    subHundredth
+                )
+            }
+
+            // Граница округления вверх (>= 0.0051) -> числовой формат >= 0.01
+            for (positive in listOf(0.0051, 0.01)) {
+                val numeric = Formatters.formatFireHeroDisplay(positive, FireStatus.REACHABLE, isSimulationSubtab = false, lang = lang)
+                assertTrue("$lang $positive should be Numeric", numeric is com.example.util.FireHeroDisplay.Numeric)
+                val formatted = (numeric as com.example.util.FireHeroDisplay.Numeric).formattedYears
+                assertEquals(Formatters.formatRatio(0.01, lang), formatted)
+            }
+        }
+    }
 }

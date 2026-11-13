@@ -55,6 +55,7 @@ import com.example.data.model.CalculatedMetrics
 import com.example.data.model.FireStatus
 import com.example.data.model.FinancialInputData
 import com.example.data.model.TrajectoryPoint
+import com.example.domain.FinancialMetricEvaluator
 import com.example.domain.SimulatorScaleCalculator
 import com.example.domain.calculateSimulationOngoingExpenses
 import com.example.ui.FireSimulationState
@@ -63,9 +64,12 @@ import com.example.ui.components.ScenarioTogglesPanel
 import com.example.ui.theme.AlertRed
 import com.example.ui.theme.StatusColors
 import com.example.ui.theme.SuccessGreen
+import com.example.util.FireHeroDisplay
 import com.example.util.Formatters
 import com.example.util.localization.LocalAppLanguage
 import com.example.util.localization.LocalAppStrings
+import java.math.BigDecimal
+import java.math.RoundingMode
 
 @Composable
 fun FireRetirementScreen(
@@ -102,12 +106,12 @@ fun FireRetirementScreen(
     // при активных изменениях, иначе базовые метрики.
     val displayMetrics = if (isSimulationSubtab && isSimulating) simulatedMetrics else metrics
     val isInvalidAge = displayMetrics.fireStatus == FireStatus.INVALID_AGE
-    val fireStatusMessage = when (displayMetrics.fireStatus) {
-        FireStatus.UNREACHABLE -> strings.fireUnreachableText
-        FireStatus.HORIZON_EXHAUSTED -> strings.fireHorizonExhaustedText
-        FireStatus.INVALID_AGE -> strings.invalidBirthDateError
-        FireStatus.REACHED_NOW, FireStatus.REACHABLE -> null
-    }
+    val heroDisplay = Formatters.formatFireHeroDisplay(
+        yearsToRetirement = displayMetrics.yearsToRetirement,
+        status = displayMetrics.fireStatus,
+        isSimulationSubtab = isSimulationSubtab,
+        lang = lang
+    )
     val isUnreachable = displayMetrics.fireStatus == FireStatus.UNREACHABLE ||
             displayMetrics.fireStatus == FireStatus.HORIZON_EXHAUSTED
     val activeScenariosCount = simulationState.scenarios.activeCount
@@ -284,38 +288,47 @@ fun FireRetirementScreen(
                                 )
                             )
 
-                            if (fireStatusMessage != null) {
-                                Text(
-                                    text = fireStatusMessage,
-                                    style = MaterialTheme.typography.titleMedium.copy(
-                                        fontWeight = FontWeight.Bold,
-                                        color = StatusColors.getReadableTextColor(AlertRed)
-                                    ),
-                                    modifier = Modifier
-                                        .padding(vertical = 8.dp)
-                                        .testTag("fire_unreachable_title")
-                                )
-                            } else {
-                                Row(verticalAlignment = Alignment.Bottom) {
+                            when (heroDisplay) {
+                                is FireHeroDisplay.Message -> {
+                                    val statusColor = if (heroDisplay.isPositive) {
+                                        StatusColors.getReadableTextColor(SuccessGreen)
+                                    } else {
+                                        StatusColors.getReadableTextColor(AlertRed)
+                                    }
                                     Text(
-                                        text = Formatters.formatFireYearsToRetirement(displayMetrics.yearsToRetirement, displayMetrics.fireStatus, lang),
-                                        style = MaterialTheme.typography.displayMedium.copy(
-                                            fontWeight = FontWeight.Bold,
-                                            color = StatusColors.getReadableTextColor(SuccessGreen)
-                                        )
-                                    )
-                                    Text(
-                                        text = strings.fireYearsSuffix(displayMetrics.yearsToRetirement),
+                                        text = heroDisplay.text,
                                         style = MaterialTheme.typography.titleMedium.copy(
-                                            fontWeight = FontWeight.SemiBold,
-                                            color = MaterialTheme.colorScheme.onSurface
+                                            fontWeight = FontWeight.Bold,
+                                            color = statusColor
                                         ),
-                                        modifier = Modifier.padding(bottom = 8.dp, start = 6.dp)
+                                        modifier = Modifier
+                                            .padding(vertical = 8.dp)
+                                            .testTag(heroDisplay.testTag)
                                     )
+                                }
+                                is FireHeroDisplay.Numeric -> {
+                                    Row(verticalAlignment = Alignment.Bottom) {
+                                        Text(
+                                            text = heroDisplay.formattedYears,
+                                            style = MaterialTheme.typography.displayMedium.copy(
+                                                fontWeight = FontWeight.Bold,
+                                                color = StatusColors.getReadableTextColor(SuccessGreen)
+                                            )
+                                        )
+                                        Text(
+                                            text = heroDisplay.suffix,
+                                            style = MaterialTheme.typography.titleMedium.copy(
+                                                fontWeight = FontWeight.SemiBold,
+                                                color = MaterialTheme.colorScheme.onSurface
+                                            ),
+                                            modifier = Modifier.padding(bottom = 8.dp, start = 6.dp)
+                                        )
+                                    }
                                 }
                             }
                         }
                         if (isSimulationSubtab && isSimulating) {
+                            Spacer(modifier = Modifier.width(8.dp))
                             Surface(
                                 shape = RoundedCornerShape(8.dp),
                                 color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
@@ -949,12 +962,21 @@ fun FireRetirementScreen(
                                         )
                                     }
                                 }
+                                val roundedReturnForStatus = if (currentEffectiveReturn.isFinite()) {
+                                    BigDecimal.valueOf(currentEffectiveReturn)
+                                        .setScale(2, RoundingMode.HALF_EVEN)
+                                        .toDouble()
+                                } else {
+                                    0.0
+                                }
+                                val returnValueStatus = FinancialMetricEvaluator.getRealReturnStatus(roundedReturnForStatus)
                                 Text(
                                     text = Formatters.formatPercent(currentEffectiveReturn, lang),
                                     style = MaterialTheme.typography.bodyMedium.copy(
                                         fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.primary
-                                    )
+                                        color = StatusColors.getTextColor(returnValueStatus)
+                                    ),
+                                    modifier = Modifier.testTag("fire_slider_return_value")
                                 )
                             }
                             Slider(

@@ -175,6 +175,143 @@ class StatusTextColorUsageRobolectricTest {
         assertEquals(AlertRedTextDark, textColorByTag("fire_unreachable_title"))
         composeRule.runOnIdle { darkTheme.value = false }
         assertEquals(AlertRedTextLight, textColorByTag("fire_unreachable_title"))
+
+        composeRule.runOnIdle {
+            metrics.value = baseMetrics.copy(fireStatus = FireStatus.REACHED_NOW, yearsToRetirement = 0.0)
+        }
+        assertEquals(SuccessGreenTextLight, textColorByTag("fire_reached_title"))
+        composeRule.runOnIdle { darkTheme.value = true }
+        assertEquals(SuccessGreenTextDark, textColorByTag("fire_reached_title"))
+
+        composeRule.runOnIdle {
+            metrics.value = baseMetrics.copy(fireStatus = FireStatus.REACHABLE, yearsToRetirement = 0.004)
+        }
+        assertEquals(SuccessGreenTextDark, textColorByTag("fire_sub_hundredth_title"))
+        composeRule.runOnIdle { darkTheme.value = false }
+        assertEquals(SuccessGreenTextLight, textColorByTag("fire_sub_hundredth_title"))
+
+        composeRule.onNodeWithTag("fire_subtab_simulation").performClick()
+        composeRule.runOnIdle {
+            metrics.value = baseMetrics.copy(fireStatus = FireStatus.REACHED_NOW, yearsToRetirement = 0.0)
+        }
+        assertEquals(SuccessGreenTextLight, textColorByTag("fire_reached_title"))
+        composeRule.runOnIdle { darkTheme.value = true }
+        assertEquals(SuccessGreenTextDark, textColorByTag("fire_reached_title"))
+
+        composeRule.runOnIdle {
+            metrics.value = baseMetrics.copy(fireStatus = FireStatus.UNREACHABLE)
+        }
+        assertEquals(AlertRedTextDark, textColorByTag("fire_unreachable_title"))
+        composeRule.runOnIdle { darkTheme.value = false }
+        assertEquals(AlertRedTextLight, textColorByTag("fire_unreachable_title"))
+    }
+
+    @Test
+    fun `real return slider value uses status color by sign in both themes`() {
+        val baseInput = FinancialInputData.usAverageData().copy(
+            nominalReturnPercent = 4.0,
+            inflationPercent = 4.0
+        )
+        val inputState = mutableStateOf(baseInput)
+        val baseMetricsState = mutableStateOf(FinanceCalculator.calculate(baseInput, today = today))
+        val simulatedState = mutableStateOf(baseMetricsState.value)
+        val simulationState = mutableStateOf(FireSimulationState())
+        val darkTheme = mutableStateOf(false)
+
+        composeRule.setContent {
+            TestTheme(darkTheme.value) {
+                CompositionLocalProvider(
+                    LocalAppLanguage provides AppLanguage.RU,
+                    LocalAppStrings provides strings
+                ) {
+                    FireRetirementScreen(
+                        inputData = inputState.value,
+                        metrics = baseMetricsState.value,
+                        simulatedMetrics = simulatedState.value,
+                        simulationState = simulationState.value,
+                        trajectory = emptyList(),
+                        onUpdateSimulation = { _, _, _ -> },
+                        onToggleScenario = {},
+                        onResetSimulation = { simulationState.value = FireSimulationState() },
+                        modifier = Modifier.testTag("fire_test_list")
+                    )
+                }
+            }
+        }
+
+        composeRule.onNodeWithTag("fire_subtab_simulation").performClick()
+        composeRule.onNodeWithTag("fire_test_list").performScrollToNode(hasTestTag("fire_slider_return_value"))
+
+        fun setEffectiveReturn(
+            effectiveReturn: Double,
+            scenarios: FireScenarioToggles = FireScenarioToggles(),
+            baseReturn: Double = 0.0
+        ) {
+            composeRule.runOnIdle {
+                val updatedBase = baseInput.copy(nominalReturnPercent = baseReturn, inflationPercent = 0.0)
+                inputState.value = updatedBase
+                val baseCalc = FinanceCalculator.calculate(updatedBase, today = today)
+                baseMetricsState.value = baseCalc
+                val delta = effectiveReturn - baseCalc.realReturnPercent
+                simulationState.value = FireSimulationState(
+                    realReturnAdjustment = delta,
+                    scenarios = scenarios
+                )
+                simulatedState.value = baseCalc.copy(realReturnPercent = effectiveReturn)
+            }
+            composeRule.waitForIdle()
+            composeRule.onNodeWithTag("fire_test_list").performScrollToNode(hasTestTag("fire_slider_return_value"))
+        }
+
+        // Значения из таблицы проверки + пограничные значения округления (0,00%)
+        val cases = listOf(
+            10.0 to (SuccessGreenTextLight to SuccessGreenTextDark),
+            5.0 to (SuccessGreenTextLight to SuccessGreenTextDark),
+            0.5 to (SuccessGreenTextLight to SuccessGreenTextDark),
+            0.004 to (WarningYellowTextLight to WarningYellowTextDark),
+            0.0 to (WarningYellowTextLight to WarningYellowTextDark),
+            -0.004 to (WarningYellowTextLight to WarningYellowTextDark),
+            -0.5 to (AlertRedTextLight to AlertRedTextDark),
+            -3.0 to (AlertRedTextLight to AlertRedTextDark),
+            -3.5 to (AlertRedTextLight to AlertRedTextDark),
+            -10.0 to (AlertRedTextLight to AlertRedTextDark)
+        )
+
+        for ((value, expectedPair) in cases) {
+            setEffectiveReturn(value)
+            composeRule.runOnIdle { darkTheme.value = false }
+            assertEquals("Light theme color mismatch for $value%", expectedPair.first, textColorByTag("fire_slider_return_value"))
+            composeRule.runOnIdle { darkTheme.value = true }
+            assertEquals("Dark theme color mismatch for $value%", expectedPair.second, textColorByTag("fire_slider_return_value"))
+        }
+
+        // Рост от -5% до -2%: изменение (+3%) зелёное, но сама доходность (-2%) остаётся красной
+        setEffectiveReturn(effectiveReturn = -2.0, baseReturn = -5.0)
+        composeRule.runOnIdle { darkTheme.value = false }
+        assertEquals(AlertRedTextLight, textColorByTag("fire_slider_return_value"))
+        composeRule.runOnIdle { darkTheme.value = true }
+        assertEquals(AlertRedTextDark, textColorByTag("fire_slider_return_value"))
+
+        // Активные сценарии не ломают индикацию при переходе через ноль в обе стороны
+        val activeScenarios = FireScenarioToggles(salaryIncrease20 = true, expensesPlus25 = true)
+        setEffectiveReturn(effectiveReturn = -1.5, scenarios = activeScenarios, baseReturn = 2.0)
+        composeRule.runOnIdle { darkTheme.value = false }
+        assertEquals(AlertRedTextLight, textColorByTag("fire_slider_return_value"))
+
+        setEffectiveReturn(effectiveReturn = 0.0, scenarios = activeScenarios, baseReturn = 2.0)
+        assertEquals(WarningYellowTextLight, textColorByTag("fire_slider_return_value"))
+
+        setEffectiveReturn(effectiveReturn = 3.5, scenarios = activeScenarios, baseReturn = 2.0)
+        assertEquals(SuccessGreenTextLight, textColorByTag("fire_slider_return_value"))
+
+        // Сброс симуляции возвращает базовое значение и соответствующий ему цвет (для базы -5% — красный)
+        setEffectiveReturn(effectiveReturn = 3.0, baseReturn = -5.0)
+        assertEquals(SuccessGreenTextLight, textColorByTag("fire_slider_return_value"))
+        composeRule.onNodeWithTag("fire_test_list").performScrollToNode(hasTestTag("fire_sim_reset_button"))
+        composeRule.onNodeWithTag("fire_sim_reset_button").performClick()
+        composeRule.waitForIdle()
+        composeRule.onNodeWithTag("fire_test_list").performScrollToNode(hasTestTag("fire_slider_return_value"))
+        assertEquals(AlertRedTextLight, textColorByTag("fire_slider_return_value"))
     }
 
     @Test

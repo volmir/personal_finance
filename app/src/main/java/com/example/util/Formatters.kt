@@ -7,6 +7,19 @@ import java.text.DecimalFormatSymbols
 import java.math.BigDecimal
 import java.math.RoundingMode
 
+sealed interface FireHeroDisplay {
+    data class Numeric(
+        val formattedYears: String,
+        val suffix: String
+    ) : FireHeroDisplay
+
+    data class Message(
+        val text: String,
+        val isPositive: Boolean,
+        val testTag: String
+    ) : FireHeroDisplay
+}
+
 object Formatters {
     const val MAX_INPUT_VALUE: Double = 1e12
 
@@ -203,6 +216,64 @@ object Formatters {
             FireStatus.INVALID_AGE -> strings.invalidBirthDateError
             FireStatus.UNREACHABLE, FireStatus.HORIZON_EXHAUSTED -> strings.fireUnreachableText
             FireStatus.REACHED_NOW, FireStatus.REACHABLE -> formatRatio(yearsToRetirement, lang)
+        }
+    }
+
+    /**
+     * Проверяет, что положительный срок до FIRE округляется к 0,00 при точности 2 знаков (HALF_EVEN).
+     * Такие значения нельзя показывать как «0,00 лет» или как достигнутую цель.
+     */
+    fun isSubHundredthPositiveYears(yearsToRetirement: Double): Boolean {
+        if (!yearsToRetirement.isFinite() || yearsToRetirement <= 0.0) return false
+        val roundingMode = decimalFormat(AppLanguage.EN, 2).roundingMode
+        return BigDecimal.valueOf(yearsToRetirement).setScale(2, roundingMode).signum() == 0
+    }
+
+    /**
+     * Форматирует отображение срока до FIRE в hero-карточке для подвкладок «FIRE» и «Симуляция».
+     */
+    fun formatFireHeroDisplay(
+        yearsToRetirement: Double,
+        status: FireStatus,
+        isSimulationSubtab: Boolean,
+        lang: AppLanguage
+    ): FireHeroDisplay {
+        val strings = com.example.util.localization.getAppStrings(lang)
+        return when (status) {
+            FireStatus.REACHED_NOW -> FireHeroDisplay.Message(
+                text = if (isSimulationSubtab) strings.fireReachedSimulationText else strings.fireReachedBaseText,
+                isPositive = true,
+                testTag = "fire_reached_title"
+            )
+            FireStatus.UNREACHABLE -> FireHeroDisplay.Message(
+                text = if (isSimulationSubtab) strings.fireUnreachableSimulationText else strings.fireUnreachableText,
+                isPositive = false,
+                testTag = "fire_unreachable_title"
+            )
+            FireStatus.HORIZON_EXHAUSTED -> FireHeroDisplay.Message(
+                text = strings.fireHorizonExhaustedText,
+                isPositive = false,
+                testTag = "fire_unreachable_title"
+            )
+            FireStatus.INVALID_AGE -> FireHeroDisplay.Message(
+                text = strings.invalidBirthDateError,
+                isPositive = false,
+                testTag = "fire_unreachable_title"
+            )
+            FireStatus.REACHABLE -> {
+                if (isSubHundredthPositiveYears(yearsToRetirement)) {
+                    FireHeroDisplay.Message(
+                        text = strings.fireLessThanHundredthYearText,
+                        isPositive = true,
+                        testTag = "fire_sub_hundredth_title"
+                    )
+                } else {
+                    FireHeroDisplay.Numeric(
+                        formattedYears = formatFireYearsToRetirement(yearsToRetirement, status, lang),
+                        suffix = strings.fireYearsSuffix(yearsToRetirement)
+                    )
+                }
+            }
         }
     }
 

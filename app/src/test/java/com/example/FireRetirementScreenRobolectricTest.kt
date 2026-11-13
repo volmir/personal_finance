@@ -5,6 +5,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertHeightIsAtLeast
@@ -24,7 +25,9 @@ import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeUp
+import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.unit.dp
+import com.example.data.model.FireStatus
 import com.example.data.model.FinancialInputData
 import com.example.domain.FinanceCalculator
 import com.example.ui.FireScenarioToggles
@@ -41,6 +44,8 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
+import org.robolectric.annotation.GraphicsMode
 
 @RunWith(RobolectricTestRunner::class)
 class FireRetirementScreenRobolectricTest {
@@ -519,5 +524,270 @@ class FireRetirementScreenRobolectricTest {
             check(resetCalls == 1) { "Expected 1 reset call, got $resetCalls" }
         }
         composeRule.onNodeWithTag("fire_sim_reset_button").assertDoesNotExist()
+    }
+
+    @Test
+    fun `hero status matrix across base and simulation subtabs never renders 0,00 for reached or sub-hundredth`() {
+        val input = FinancialInputData.usAverageData()
+        val sampleMetrics = FinanceCalculator.calculate(input, today = LocalDate.of(2026, 11, 6))
+        val baseMetrics = mutableStateOf(sampleMetrics)
+        val simMetrics = mutableStateOf(sampleMetrics)
+        val simState = mutableStateOf(FireSimulationState())
+        val strings = getAppStrings(AppLanguage.RU)
+
+        composeRule.setContent {
+            MaterialTheme {
+                CompositionLocalProvider(
+                    LocalAppLanguage provides AppLanguage.RU,
+                    LocalAppStrings provides strings
+                ) {
+                    FireRetirementScreen(
+                        inputData = input,
+                        metrics = baseMetrics.value,
+                        simulatedMetrics = simMetrics.value,
+                        simulationState = simState.value,
+                        trajectory = emptyList(),
+                        onUpdateSimulation = { _, _, _ -> },
+                        onToggleScenario = {},
+                        onResetSimulation = {
+                            simState.value = FireSimulationState()
+                            simMetrics.value = baseMetrics.value
+                        },
+                        modifier = Modifier.testTag("fire_test_list")
+                    )
+                }
+            }
+        }
+
+        fun metricsFor(status: FireStatus, years: Double = 12.5) = when (status) {
+            FireStatus.REACHED_NOW -> sampleMetrics.copy(
+                fireStatus = FireStatus.REACHED_NOW,
+                yearsToRetirement = 0.0,
+                retirementAge = sampleMetrics.currentAge.toDouble()
+            )
+            FireStatus.UNREACHABLE -> sampleMetrics.copy(fireStatus = FireStatus.UNREACHABLE)
+            FireStatus.HORIZON_EXHAUSTED -> sampleMetrics.copy(fireStatus = FireStatus.HORIZON_EXHAUSTED)
+            FireStatus.INVALID_AGE -> sampleMetrics.copy(fireStatus = FireStatus.INVALID_AGE)
+            FireStatus.REACHABLE -> sampleMetrics.copy(
+                fireStatus = FireStatus.REACHABLE,
+                yearsToRetirement = years,
+                retirementAge = sampleMetrics.currentAge + years
+            )
+        }
+
+        fun assertBaseHeroMatches(status: FireStatus, years: Double = 12.5) {
+            composeRule.onNodeWithTag("fire_subtab_base").performClick()
+            when (status) {
+                FireStatus.REACHED_NOW -> {
+                    composeRule.onNodeWithTag("fire_reached_title").assertIsDisplayed()
+                        .assert(hasText(strings.fireReachedBaseText))
+                    composeRule.onAllNodes(hasText("0,00", substring = true) and hasAnyAncestor(hasTestTag("fire_hero_card")), useUnmergedTree = true)
+                        .assertCountEquals(0)
+                }
+                FireStatus.UNREACHABLE -> {
+                    composeRule.onNodeWithTag("fire_unreachable_title").assertIsDisplayed()
+                        .assert(hasText(strings.fireUnreachableText))
+                }
+                FireStatus.HORIZON_EXHAUSTED -> {
+                    composeRule.onNodeWithTag("fire_unreachable_title").assertIsDisplayed()
+                        .assert(hasText(strings.fireHorizonExhaustedText))
+                }
+                FireStatus.INVALID_AGE -> {
+                    composeRule.onNodeWithTag("fire_unreachable_title").assertIsDisplayed()
+                        .assert(hasText(strings.invalidBirthDateError))
+                }
+                FireStatus.REACHABLE -> {
+                    if (Formatters.isSubHundredthPositiveYears(years)) {
+                        composeRule.onNodeWithTag("fire_sub_hundredth_title").assertIsDisplayed()
+                            .assert(hasText(strings.fireLessThanHundredthYearText))
+                        composeRule.onAllNodes(hasText("0,00", substring = true) and hasAnyAncestor(hasTestTag("fire_hero_card")), useUnmergedTree = true)
+                            .assertCountEquals(0)
+                    } else {
+                        val expected = Formatters.formatRatio(years, AppLanguage.RU)
+                        composeRule.onAllNodes(hasText(expected) and hasAnyAncestor(hasTestTag("fire_hero_card")), useUnmergedTree = true)
+                            .assertCountEquals(1)
+                    }
+                }
+            }
+        }
+
+        fun assertSimulationHeroMatches(status: FireStatus, years: Double = 9.25) {
+            composeRule.onNodeWithTag("fire_subtab_simulation").performClick()
+            when (status) {
+                FireStatus.REACHED_NOW -> {
+                    composeRule.onNodeWithTag("fire_reached_title").assertIsDisplayed()
+                        .assert(hasText(strings.fireReachedSimulationText))
+                    composeRule.onAllNodes(hasText("0,00", substring = true) and hasAnyAncestor(hasTestTag("fire_hero_card")), useUnmergedTree = true)
+                        .assertCountEquals(0)
+                }
+                FireStatus.UNREACHABLE -> {
+                    composeRule.onNodeWithTag("fire_unreachable_title").assertIsDisplayed()
+                        .assert(hasText(strings.fireUnreachableSimulationText))
+                }
+                FireStatus.HORIZON_EXHAUSTED -> {
+                    composeRule.onNodeWithTag("fire_unreachable_title").assertIsDisplayed()
+                        .assert(hasText(strings.fireHorizonExhaustedText))
+                }
+                FireStatus.INVALID_AGE -> {
+                    composeRule.onNodeWithTag("fire_unreachable_title").assertIsDisplayed()
+                        .assert(hasText(strings.invalidBirthDateError))
+                }
+                FireStatus.REACHABLE -> {
+                    if (Formatters.isSubHundredthPositiveYears(years)) {
+                        composeRule.onNodeWithTag("fire_sub_hundredth_title").assertIsDisplayed()
+                            .assert(hasText(strings.fireLessThanHundredthYearText))
+                        composeRule.onAllNodes(hasText("0,00", substring = true) and hasAnyAncestor(hasTestTag("fire_hero_card")), useUnmergedTree = true)
+                            .assertCountEquals(0)
+                    } else {
+                        val expected = Formatters.formatRatio(years, AppLanguage.RU)
+                        composeRule.onAllNodes(hasText(expected) and hasAnyAncestor(hasTestTag("fire_hero_card")), useUnmergedTree = true)
+                            .assertCountEquals(1)
+                    }
+                }
+            }
+        }
+
+        val matrix = listOf(
+            FireStatus.REACHED_NOW to FireStatus.REACHED_NOW,
+            FireStatus.REACHED_NOW to FireStatus.UNREACHABLE,
+            FireStatus.UNREACHABLE to FireStatus.REACHED_NOW,
+            FireStatus.REACHABLE to FireStatus.REACHED_NOW,
+            FireStatus.REACHED_NOW to FireStatus.REACHABLE,
+            FireStatus.UNREACHABLE to FireStatus.UNREACHABLE,
+            FireStatus.REACHABLE to FireStatus.REACHABLE
+        )
+
+        for ((baseStatus, simulatedStatus) in matrix) {
+            composeRule.runOnIdle {
+                baseMetrics.value = metricsFor(baseStatus, years = 14.25)
+                simMetrics.value = metricsFor(simulatedStatus, years = 8.75)
+                simState.value = FireSimulationState(extraMonthlySavings = 250.0)
+            }
+            assertBaseHeroMatches(baseStatus, years = 14.25)
+            assertSimulationHeroMatches(simulatedStatus, years = 8.75)
+        }
+
+        // Граница < 0.01 года (0.004) и 0.01 года, а также HORIZON_EXHAUSTED и INVALID_AGE
+        composeRule.runOnIdle {
+            baseMetrics.value = metricsFor(FireStatus.REACHABLE, years = 0.004)
+            simMetrics.value = metricsFor(FireStatus.REACHABLE, years = 0.01)
+            simState.value = FireSimulationState(extraMonthlySavings = 100.0)
+        }
+        assertBaseHeroMatches(FireStatus.REACHABLE, years = 0.004)
+        assertSimulationHeroMatches(FireStatus.REACHABLE, years = 0.01)
+
+        composeRule.runOnIdle {
+            baseMetrics.value = metricsFor(FireStatus.HORIZON_EXHAUSTED)
+            simMetrics.value = metricsFor(FireStatus.INVALID_AGE)
+        }
+        assertBaseHeroMatches(FireStatus.HORIZON_EXHAUSTED)
+        assertSimulationHeroMatches(FireStatus.INVALID_AGE)
+
+        // Сброс симуляции возвращает результат к базовому прогнозу (здесь — REACHED_NOW)
+        composeRule.runOnIdle {
+            baseMetrics.value = metricsFor(FireStatus.REACHED_NOW)
+            simMetrics.value = metricsFor(FireStatus.UNREACHABLE)
+            simState.value = FireSimulationState(extraMonthlySavings = 250.0)
+        }
+        composeRule.onNodeWithTag("fire_subtab_simulation").performClick()
+        composeRule.onNodeWithTag("fire_unreachable_title").assertIsDisplayed()
+            .assert(hasText(strings.fireUnreachableSimulationText))
+
+        composeRule.onNodeWithTag("fire_test_list").performScrollToNode(hasTestTag("fire_sim_reset_button"))
+        composeRule.onNodeWithTag("fire_sim_reset_button").performClick()
+        composeRule.onNodeWithTag("fire_test_list").performScrollToNode(hasTestTag("fire_hero_card"))
+        composeRule.onNodeWithTag("fire_reached_title").assertIsDisplayed()
+            .assert(hasText(strings.fireReachedSimulationText))
+    }
+
+    @Test
+    @Config(qualifiers = "w360dp-h800dp-xxhdpi")
+    @GraphicsMode(GraphicsMode.Mode.NATIVE)
+    fun `hero status texts wrap without overflow or badge collision across all six languages`() {
+        val input = FinancialInputData.usAverageData()
+        val sampleMetrics = FinanceCalculator.calculate(input, today = LocalDate.of(2026, 11, 6))
+        val baseMetrics = mutableStateOf(sampleMetrics)
+        val simMetrics = mutableStateOf(sampleMetrics)
+        val simState = mutableStateOf(
+            FireSimulationState(
+                extraMonthlySavings = 200.0,
+                scenarios = FireScenarioToggles(salaryIncrease20 = true, expenseOptimization15 = true)
+            )
+        )
+        val language = mutableStateOf(AppLanguage.RU)
+
+        composeRule.setContent {
+            MaterialTheme {
+                CompositionLocalProvider(
+                    LocalAppLanguage provides language.value,
+                    LocalAppStrings provides getAppStrings(language.value)
+                ) {
+                    FireRetirementScreen(
+                        inputData = input,
+                        metrics = baseMetrics.value,
+                        simulatedMetrics = simMetrics.value,
+                        simulationState = simState.value,
+                        trajectory = emptyList(),
+                        onUpdateSimulation = { _, _, _ -> },
+                        onToggleScenario = {},
+                        onResetSimulation = {},
+                        modifier = Modifier.testTag("fire_test_list")
+                    )
+                }
+            }
+        }
+
+        fun assertTextFits(tag: String, label: String, hasBadge: Boolean) {
+            val node = composeRule.onNodeWithTag(tag)
+            node.assertIsDisplayed()
+            val layouts = mutableListOf<TextLayoutResult>()
+            val semantics = node.fetchSemanticsNode()
+            semantics.config[SemanticsActions.GetTextLayoutResult].action?.invoke(layouts)
+            val layout = layouts.single()
+            val maxLineWidth = (0 until layout.lineCount)
+                .maxOfOrNull { layout.getLineRight(it) - layout.getLineLeft(it) } ?: 0f
+            val anyEllipsized = (0 until layout.lineCount).any { layout.isLineEllipsized(it) }
+            check(!anyEllipsized && !layout.didOverflowHeight && maxLineWidth <= layout.size.width + 0.5f) {
+                "$label ($tag) overflowed: ellipsized=$anyEllipsized, overflowH=${layout.didOverflowHeight}, " +
+                    "maxW=$maxLineWidth, boxW=${layout.size.width}"
+            }
+            if (hasBadge) {
+                val badgeBounds = composeRule.onNodeWithTag("fire_hero_simulation_badge").fetchSemanticsNode().boundsInRoot
+                val textBounds = semantics.boundsInRoot
+                check(textBounds.right <= badgeBounds.left + 0.5f) {
+                    "$label ($tag) overlaps badge: textRight=${textBounds.right}, badgeLeft=${badgeBounds.left}"
+                }
+            }
+        }
+
+        for (lang in AppLanguage.values()) {
+            composeRule.runOnIdle { language.value = lang }
+
+            // 1) REACHED_NOW in both subtabs
+            composeRule.runOnIdle {
+                baseMetrics.value = sampleMetrics.copy(fireStatus = FireStatus.REACHED_NOW, yearsToRetirement = 0.0)
+                simMetrics.value = sampleMetrics.copy(fireStatus = FireStatus.REACHED_NOW, yearsToRetirement = 0.0)
+            }
+            composeRule.onNodeWithTag("fire_subtab_base").performClick()
+            assertTextFits("fire_reached_title", "$lang BASE REACHED", hasBadge = false)
+            composeRule.onNodeWithTag("fire_subtab_simulation").performClick()
+            assertTextFits("fire_reached_title", "$lang SIM REACHED", hasBadge = true)
+
+            // 2) UNREACHABLE in both subtabs
+            composeRule.runOnIdle {
+                baseMetrics.value = sampleMetrics.copy(fireStatus = FireStatus.UNREACHABLE)
+                simMetrics.value = sampleMetrics.copy(fireStatus = FireStatus.UNREACHABLE)
+            }
+            composeRule.onNodeWithTag("fire_subtab_base").performClick()
+            assertTextFits("fire_unreachable_title", "$lang BASE UNREACHABLE", hasBadge = false)
+            composeRule.onNodeWithTag("fire_subtab_simulation").performClick()
+            assertTextFits("fire_unreachable_title", "$lang SIM UNREACHABLE", hasBadge = true)
+
+            // 3) REACHABLE < 0.01 in Simulation subtab with badge
+            composeRule.runOnIdle {
+                simMetrics.value = sampleMetrics.copy(fireStatus = FireStatus.REACHABLE, yearsToRetirement = 0.004)
+            }
+            assertTextFits("fire_sub_hundredth_title", "$lang SIM SUB-HUNDREDTH", hasBadge = true)
+        }
     }
 }

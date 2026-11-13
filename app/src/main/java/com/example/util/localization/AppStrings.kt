@@ -278,6 +278,10 @@ interface AppStrings {
     val fireSimSame: (target: String) -> String
     val fireSimWithoutBase: (target: String, age: String) -> String
     val fireUnreachableText: String
+    val fireUnreachableSimulationText: String
+    val fireReachedBaseText: String
+    val fireReachedSimulationText: String
+    val fireLessThanHundredthYearText: String
     val fireHorizonExhaustedText: String
     val fireSimCashFlowRow: String
     val fireSimExpensesRow: String
