@@ -115,7 +115,7 @@ fun MetricsScreen(
                                 text = strings.metricsHeaderSubtitle,
                                 style = MaterialTheme.typography.bodySmall.copy(
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    fontSize = 11.sp
+                                    fontSize = 12.sp
                                 )
                             )
                         }

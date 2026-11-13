@@ -290,7 +290,10 @@ fun InputDataScreen(
                         )
                         Text(
                             text = if (inputData.includeFinancialInEmergencyFund) strings.toggleEmergencyFundSubOn else strings.toggleEmergencyFundSubOff,
-                            style = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontSize = 12.sp
+                            )
                         )
                     }
                     Switch(
@@ -560,7 +563,8 @@ fun MetricIndicatorRow(
                 Text(
                     text = title,
                     style = MaterialTheme.typography.labelSmall.copy(
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontSize = 12.sp
                     )
                 )
                 Text(
@@ -852,7 +856,7 @@ fun CategoryBreakdownHint(
                             style = MaterialTheme.typography.bodySmall.copy(
                                 fontWeight = FontWeight.SemiBold,
                                 color = MaterialTheme.colorScheme.onSurface,
-                                fontSize = 11.sp,
+                                fontSize = 12.sp,
                                 lineHeight = 15.sp
                             )
                         )
