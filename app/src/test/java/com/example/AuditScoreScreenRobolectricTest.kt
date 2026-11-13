@@ -1,11 +1,29 @@
 package com.example
 
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.assertTextEquals
+import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.hasScrollAction
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.performScrollToNode
+import com.example.data.model.FinancialInputData
+import com.example.domain.FinanceCalculator
 import com.example.domain.model.AuditIndicatorStatus
 import com.example.ui.screens.AuditOpinionIndicatorItem
+import com.example.ui.screens.AuditScoreScreen
+import com.example.util.localization.AppLanguage
+import com.example.util.localization.LocalAppLanguage
+import com.example.util.localization.LocalAppStrings
+import com.example.util.localization.StringsRu
+import java.time.LocalDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -164,5 +182,42 @@ class AuditScoreScreenRobolectricTest {
             "Cash flow indicator text should mention income equals expenses",
             displayedText.contains("доходы равны расходам")
         )
+    }
+
+    @Test
+    fun `auditor opinion export is a text button at the bottom of the opinion card`() {
+        val input = FinancialInputData.defaultData()
+        val metrics = FinanceCalculator.calculate(input, today = LocalDate.of(2025, 1, 1))
+
+        composeRule.setContent {
+            MaterialTheme {
+                CompositionLocalProvider(
+                    LocalAppLanguage provides AppLanguage.RU,
+                    LocalAppStrings provides StringsRu
+                ) {
+                    AuditScoreScreen(inputData = input, metrics = metrics)
+                }
+            }
+        }
+
+        // Карточка финансовой оценки не меняется: её иконка экспорта на месте.
+        composeRule.onNodeWithTag("audit_score_header_card").assertExists()
+        composeRule.onNodeWithTag("share_audit_button").assertExists()
+
+        composeRule.onNode(hasScrollAction())
+            .performScrollToNode(hasTestTag("auditor_opinion_card"))
+
+        // Иконка экспорта в заголовке заключения удалена.
+        composeRule.onAllNodes(hasTestTag("share_auditor_opinion_button"), useUnmergedTree = true)
+            .assertCountEquals(0)
+
+        // Внизу карточки заключения ровно одна текстовая кнопка экспорта.
+        composeRule.onAllNodes(hasTestTag("export_auditor_opinion_button"), useUnmergedTree = true)
+            .assertCountEquals(1)
+        composeRule.onNodeWithTag("export_auditor_opinion_button")
+            .assertExists()
+            .assert(hasClickAction())
+            .assert(hasAnyAncestor(hasTestTag("auditor_opinion_card")))
+            .assertTextEquals("Экспорт заключения")
     }
 }

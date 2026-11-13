@@ -230,6 +230,7 @@ interface AppStrings {
     val auditorOpinionTitle: String
     val auditorOpinionSubtitle: (count: Int) -> String
     val shareAuditorOpinionChooser: String
+    val exportAuditorOpinionButtonText: String
     val positiveBadgeText: (count: Int) -> String
     val neutralBadgeText: (count: Int) -> String
     val negativeBadgeText: (count: Int) -> String

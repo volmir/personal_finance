@@ -425,6 +425,7 @@ val StringsEn: AppStrings = object : AppStrings {
     override val auditorOpinionTitle: String = "Auditor Opinion"
     override val auditorOpinionSubtitle: (count: Int) -> String = { count -> "Analysis across all $count indicators from the Metrics screen" }
     override val shareAuditorOpinionChooser: String = "Share Auditor Opinion"
+    override val exportAuditorOpinionButtonText: String = "Export Opinion"
     override val positiveBadgeText: (count: Int) -> String = { count -> "🟢 $count positive" }
     override val neutralBadgeText: (count: Int) -> String = { count -> "🟡 $count neutral" }
     override val negativeBadgeText: (count: Int) -> String = { count -> "🔴 $count negative" }
