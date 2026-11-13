@@ -434,6 +434,8 @@ val StringsEs: AppStrings = object : AppStrings {
 
     override val fireHeroTitle: String = "Independencia Financiera, FIRE"
     override val fireHeroSubtitle: String = "Horizonte de jubilación y proyección de capital"
+    override val fireSubtabBase: String = "FIRE"
+    override val fireSubtabSimulation: String = "Simulación"
     override val fireTimeToRetire: String = "Tiempo hasta la jubilación:"
     override val fireYearsSuffix: String = " años"
     override val fireHeroAssumption: String = "El cálculo FIRE considera activos líquidos y financieros; los inmuebles no se incluyen y las deudas solo se restan en la parte que supere el valor de los bienes físicos"

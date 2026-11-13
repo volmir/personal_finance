@@ -436,6 +436,8 @@ val StringsRu: AppStrings = object : AppStrings {
 
     override val fireHeroTitle: String = "Финансовая свобода, пенсия, FIRE"
     override val fireHeroSubtitle: String = "Расчет срока до выхода на пенсию"
+    override val fireSubtabBase: String = "FIRE"
+    override val fireSubtabSimulation: String = "Симуляция"
     override val fireTimeToRetire: String = "До пенсии осталось:"
     override val fireYearsSuffix: String = " года"
     override val fireHeroAssumption: String = "Расчёт FIRE учитывает ликвидные и финансовые активы; имущество не учитывается, а долги вычитаются только в части, превышающей стоимость имущества"

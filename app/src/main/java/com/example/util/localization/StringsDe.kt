@@ -434,6 +434,8 @@ val StringsDe: AppStrings = object : AppStrings {
 
     override val fireHeroTitle: String = "Finanzielle Freiheit, FIRE"
     override val fireHeroSubtitle: String = "Ruhestandszeitplan und Vermögensprognose"
+    override val fireSubtabBase: String = "FIRE"
+    override val fireSubtabSimulation: String = "Simulation"
     override val fireTimeToRetire: String = "Zeit bis zum Ruhestand:"
     override val fireYearsSuffix: String = " Jahre"
     override val fireHeroAssumption: String = "FIRE-Berechnung berücksichtigt liquide und finanzielle Mittel; Sachwerte sind ausgeschlossen, Schulden werden nur verrechnet, soweit sie den Sachwert übersteigen"

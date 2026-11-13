@@ -239,6 +239,9 @@ interface AppStrings {
     // FIRE Screen
     val fireHeroTitle: String
     val fireHeroSubtitle: String
+    // Заголовки внутренних табов FIRE-экрана (базовый расчет и симуляция).
+    val fireSubtabBase: String
+    val fireSubtabSimulation: String
     val fireTimeToRetire: String
     val fireYearsSuffix: String
     fun fireYearsSuffix(years: Double): String = plural(
