@@ -81,7 +81,14 @@ fun FireRetirementScreen(
     val strings = LocalAppStrings.current
     val isSimulating = simulationState.isSimulating
 
-    val displayMetrics = if (isSimulating) simulatedMetrics else metrics
+    // Внутренние подвкладки экрана (UX-F02): состояние композиции, по умолчанию FIRE.
+    // При уходе с основной вкладки экран покидает композицию (Crossfade), поэтому новый
+    // вход открывает FIRE; FireSimulationState этот выбор не затрагивает.
+    var selectedSubtab by rememberSaveable { mutableStateOf(FireSubtab.BASE) }
+    val isSimulationSubtab = selectedSubtab == FireSubtab.SIMULATION
+    // FIRE всегда показывает базовые метрики; «Симуляция» — смоделированный результат
+    // при активных изменениях, иначе базовые метрики.
+    val displayMetrics = if (isSimulationSubtab && isSimulating) simulatedMetrics else metrics
     val isInvalidAge = displayMetrics.fireStatus == FireStatus.INVALID_AGE
     val fireStatusMessage = when (displayMetrics.fireStatus) {
         FireStatus.UNREACHABLE -> strings.fireUnreachableText
@@ -137,12 +144,7 @@ fun FireRetirementScreen(
     } else inputData.monthlyExpenses
     val currentEffectiveReturn = if (isSimulating) simulatedMetrics.realReturnPercent else metrics.realReturnPercent
 
-    // Внутренние подвкладки экрана (UX-F02): состояние композиции, по умолчанию FIRE.
-    // При уходе с основной вкладки экран покидает композицию (Crossfade), поэтому новый
-    // вход открывает FIRE; FireSimulationState этот выбор не затрагивает.
-    var selectedSubtab by rememberSaveable { mutableStateOf(FireSubtab.BASE) }
-    // До UX-F03..F06 список карточек общий для обеих подвкладок, поэтому тег выбранного
-    // содержимого стоит на первом элементе списка (селекторе).
+    // Тег выбранного содержимого стоит на первом элементе списка (селекторе).
     val contentTestTag = if (selectedSubtab == FireSubtab.BASE) {
         "fire_subtab_content_base"
     } else {
@@ -463,44 +465,46 @@ fun FireRetirementScreen(
             }
         }
 
-        // График траектории капитала
-        item {
-            Card(
-                shape = RoundedCornerShape(14.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("fire_trajectory_card")
-            ) {
-                Column(modifier = Modifier.padding(14.dp)) {
-                    Text(
-                        text = strings.fireTrajectoryTitle,
-                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
-                    )
-                    Text(
-                        text = strings.fireTrajectorySubtitle,
-                        style = MaterialTheme.typography.bodySmall.copy(
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontSize = 11.sp
+        // График траектории капитала: только базовый FIRE, без заглушек в «Симуляции»
+        if (!isSimulationSubtab) {
+            item {
+                Card(
+                    shape = RoundedCornerShape(14.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("fire_trajectory_card")
+                ) {
+                    Column(modifier = Modifier.padding(14.dp)) {
+                        Text(
+                            text = strings.fireTrajectoryTitle,
+                            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
                         )
-                    )
+                        Text(
+                            text = strings.fireTrajectorySubtitle,
+                            style = MaterialTheme.typography.bodySmall.copy(
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontSize = 11.sp
+                            )
+                        )
 
-                    Spacer(modifier = Modifier.height(10.dp))
+                        Spacer(modifier = Modifier.height(10.dp))
 
-                    FireTrajectoryChart(
-                        trajectory = trajectory,
-                        yearsToRetire = displayMetrics.yearsToRetirement,
-                        currentAge = metrics.currentAge,
-                        currencySymbol = inputData.currencySymbol,
-                        isUnreachable = isUnreachable
-                    )
+                        FireTrajectoryChart(
+                            trajectory = trajectory,
+                            yearsToRetire = metrics.yearsToRetirement,
+                            currentAge = metrics.currentAge,
+                            currencySymbol = inputData.currencySymbol,
+                            isUnreachable = isUnreachable
+                        )
+                    }
                 }
             }
         }
 
-        // Итог симуляции (совместное влияние): отдельный элемент списка, а не часть
-        // карточки графика; ограничение по подвкладкам появится в UX-F04.
-        if (isSimulating) {
+        // Итог симуляции (совместное влияние): только во внутреннем табе «Симуляция»
+        // при активных изменениях.
+        if (isSimulationSubtab && isSimulating) {
             item {
                 val isSimUnreachable = simulatedMetrics.fireStatus == FireStatus.UNREACHABLE ||
                         simulatedMetrics.fireStatus == FireStatus.HORIZON_EXHAUSTED

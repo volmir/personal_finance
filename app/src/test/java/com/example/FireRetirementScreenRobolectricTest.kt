@@ -56,6 +56,9 @@ class FireRetirementScreenRobolectricTest {
                 }
             }
         }
+        // Смоделированная доходность показывается в карточке параметров
+        // внутреннего таба «Симуляция»; FIRE всегда показывает базовую.
+        composeRule.onNodeWithTag("fire_subtab_simulation").performClick()
         for (lang in AppLanguage.values()) {
             composeRule.runOnIdle { language.value = lang }
             for (delta in listOf(1.0, 0.0)) {
@@ -139,7 +142,16 @@ class FireRetirementScreenRobolectricTest {
         composeRule.onNodeWithTag("fire_subtab_content_base").assertIsDisplayed()
         composeRule.onNodeWithTag("fire_subtab_content_simulation").assertDoesNotExist()
 
-        // Активная симуляция при этом сохранена: в карточке параметров смоделированная доходность
+        // FIRE после повторного входа показывает базовую доходность, а не смоделированную
+        composeRule.onNodeWithTag("fire_test_list").performScrollToNode(hasTestTag("fire_parameters_card"))
+        val baseRate = Formatters.formatPercent(metrics.realReturnPercent, AppLanguage.RU)
+        composeRule.onAllNodes(hasText(baseRate) and hasAnyAncestor(hasTestTag("fire_parameters_card")), useUnmergedTree = true)
+            .assertCountEquals(1)
+
+        // Активная симуляция при этом сохранена: в «Симуляции» карточка параметров
+        // показывает смоделированную доходность
+        composeRule.onNodeWithTag("fire_test_list").performScrollToNode(hasTestTag("fire_subtab_selector"))
+        composeRule.onNodeWithTag("fire_subtab_simulation").performClick()
         composeRule.onNodeWithTag("fire_test_list").performScrollToNode(hasTestTag("fire_parameters_card"))
         val rate = Formatters.formatPercent(metrics.realReturnPercent + 1.0, AppLanguage.RU)
         composeRule.onAllNodes(hasText(rate) and hasAnyAncestor(hasTestTag("fire_parameters_card")), useUnmergedTree = true)
@@ -147,7 +159,7 @@ class FireRetirementScreenRobolectricTest {
     }
 
     @Test
-    fun `simulation summary exists once outside the trajectory card only while simulating`() {
+    fun `simulation summary exists once in the simulation subtab only while simulating`() {
         val input = FinancialInputData.usAverageData()
         val metrics = FinanceCalculator.calculate(input, today = LocalDate.of(2026, 11, 6))
         val simulated = metrics.copy(realReturnPercent = metrics.realReturnPercent + 1.0)
@@ -169,8 +181,15 @@ class FireRetirementScreenRobolectricTest {
         // Без активной симуляции резюме отсутствует
         composeRule.onNodeWithTag("fire_simulation_summary").assertDoesNotExist()
 
-        // При активной симуляции резюме ровно в одном экземпляре и вне карточки графика (UX-F03)
+        // При активной симуляции базовый FIRE по-прежнему показывает график, но не резюме
         composeRule.runOnIdle { simulation.value = FireSimulationState(extraMonthlySavings = 100.0) }
+        composeRule.onNodeWithTag("fire_test_list").performScrollToNode(hasTestTag("fire_trajectory_card"))
+        composeRule.onNodeWithTag("fire_trajectory_card").assertIsDisplayed()
+        composeRule.onNodeWithTag("fire_simulation_summary").assertDoesNotExist()
+
+        // Резюме ровно в одном экземпляре и вне карточки графика — только в «Симуляции» (UX-F03/F04)
+        composeRule.onNodeWithTag("fire_test_list").performScrollToNode(hasTestTag("fire_subtab_selector"))
+        composeRule.onNodeWithTag("fire_subtab_simulation").performClick()
         composeRule.onNodeWithTag("fire_test_list").performScrollToNode(hasTestTag("fire_simulation_summary"))
         composeRule.onAllNodes(hasTestTag("fire_simulation_summary"), useUnmergedTree = true)
             .assertCountEquals(1)
@@ -178,7 +197,14 @@ class FireRetirementScreenRobolectricTest {
             hasTestTag("fire_simulation_summary") and hasAnyAncestor(hasTestTag("fire_trajectory_card")),
             useUnmergedTree = true
         ).assertCountEquals(0)
-        composeRule.onNodeWithTag("fire_trajectory_card").assertIsDisplayed()
+        composeRule.onNodeWithTag("fire_trajectory_card").assertDoesNotExist()
         composeRule.onNodeWithTag("fire_simulation_summary").assertIsDisplayed()
+
+        // Возврат в FIRE: резюме скрыто, базовый график снова на месте
+        composeRule.onNodeWithTag("fire_test_list").performScrollToNode(hasTestTag("fire_subtab_selector"))
+        composeRule.onNodeWithTag("fire_subtab_base").performClick()
+        composeRule.onNodeWithTag("fire_simulation_summary").assertDoesNotExist()
+        composeRule.onNodeWithTag("fire_test_list").performScrollToNode(hasTestTag("fire_trajectory_card"))
+        composeRule.onNodeWithTag("fire_trajectory_card").assertIsDisplayed()
     }
 }

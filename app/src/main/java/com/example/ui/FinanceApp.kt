@@ -88,7 +88,6 @@ fun FinanceApp(viewModel: MainViewModel) {
     val simulatedMetrics by viewModel.simulatedMetrics.collectAsStateWithLifecycle()
     val simulationState by viewModel.fireSimulation.collectAsStateWithLifecycle()
     val trajectory by viewModel.trajectory.collectAsStateWithLifecycle()
-    val simulatedTrajectory by viewModel.simulatedTrajectory.collectAsStateWithLifecycle()
     val feedbackMessage by viewModel.userFeedbackMessage.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -234,7 +233,7 @@ fun FinanceApp(viewModel: MainViewModel) {
                         metrics = metrics,
                         simulatedMetrics = simulatedMetrics,
                         simulationState = simulationState,
-                        trajectory = if (simulationState.isSimulating) simulatedTrajectory else trajectory,
+                        trajectory = trajectory,
                         onUpdateSimulation = { extraSavings, returnDelta, expReduction ->
                             viewModel.updateSimulation(extraSavings, returnDelta, expReduction)
                         },
