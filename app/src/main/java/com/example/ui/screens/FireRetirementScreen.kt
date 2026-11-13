@@ -379,8 +379,8 @@ fun FireRetirementScreen(
             }
         }
 
-        // Параметры возраста и горизонта
-        item {
+        // Параметры возраста и горизонта: только базовый FIRE (UX-F06)
+        if (!isSimulationSubtab) item {
             Card(
                 shape = RoundedCornerShape(14.dp),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
@@ -990,11 +990,12 @@ fun FireRetirementScreen(
             }
         }
 
-        item {
+        // Предпосылки и дисклеймер относятся к базовому FIRE, в «Симуляции» их нет (UX-F06)
+        if (!isSimulationSubtab) item {
             Spacer(modifier = Modifier.height(14.dp))
         }
 
-        item {
+        if (!isSimulationSubtab) item {
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Card(
                     shape = RoundedCornerShape(14.dp),

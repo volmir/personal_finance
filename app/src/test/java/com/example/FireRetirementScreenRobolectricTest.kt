@@ -43,7 +43,7 @@ class FireRetirementScreenRobolectricTest {
     val composeRule = createComposeRule()
 
     @Test
-    fun `parameters show the displayed real return during simulation and after reset in every language`() {
+    fun `base parameters live only in the FIRE subtab and show the base real return in every language`() {
         val input = FinancialInputData.usAverageData()
         val metrics = FinanceCalculator.calculate(input, today = LocalDate.of(2026, 11, 6))
         val simulated = metrics.copy(realReturnPercent = metrics.realReturnPercent + 1.0)
@@ -61,19 +61,27 @@ class FireRetirementScreenRobolectricTest {
                 }
             }
         }
-        // Смоделированная доходность показывается в карточке параметров
-        // внутреннего таба «Симуляция»; FIRE всегда показывает базовую.
-        composeRule.onNodeWithTag("fire_subtab_simulation").performClick()
+        // Карточка базовых параметров принадлежит только внутреннему FIRE и всегда
+        // показывает базовую доходность, даже при активной симуляции.
         for (lang in AppLanguage.values()) {
             composeRule.runOnIdle { language.value = lang }
             for (delta in listOf(1.0, 0.0)) {
                 composeRule.runOnIdle { simulation.value = FireSimulationState(realReturnAdjustment = delta) }
                 composeRule.onNodeWithTag("fire_test_list").performScrollToNode(hasTestTag("fire_parameters_card"))
-                val rate = Formatters.formatPercent(metrics.realReturnPercent + delta, lang)
-                composeRule.onAllNodes(hasText(rate) and hasAnyAncestor(hasTestTag("fire_parameters_card")), useUnmergedTree = true)
+                val baseRate = Formatters.formatPercent(metrics.realReturnPercent, lang)
+                composeRule.onAllNodes(hasText(baseRate) and hasAnyAncestor(hasTestTag("fire_parameters_card")), useUnmergedTree = true)
                     .assertCountEquals(1)
             }
         }
+
+        // В «Симуляции» карточки базовых параметров нет ни при активной, ни при нулевой настройке.
+        composeRule.onNodeWithTag("fire_test_list").performScrollToNode(hasTestTag("fire_subtab_selector"))
+        composeRule.onNodeWithTag("fire_subtab_simulation").performClick()
+        composeRule.onAllNodes(hasTestTag("fire_parameters_card"), useUnmergedTree = true)
+            .assertCountEquals(0)
+        composeRule.runOnIdle { simulation.value = FireSimulationState(realReturnAdjustment = 1.0) }
+        composeRule.onAllNodes(hasTestTag("fire_parameters_card"), useUnmergedTree = true)
+            .assertCountEquals(0)
     }
 
     @Test
@@ -153,14 +161,14 @@ class FireRetirementScreenRobolectricTest {
         composeRule.onAllNodes(hasText(baseRate) and hasAnyAncestor(hasTestTag("fire_parameters_card")), useUnmergedTree = true)
             .assertCountEquals(1)
 
-        // Активная симуляция при этом сохранена: в «Симуляции» карточка параметров
-        // показывает смоделированную доходность
+        // Активная симуляция при этом сохранена: в «Симуляции» есть резюме сравнения,
+        // но карточка базовых параметров туда не дублируется (UX-F06).
         composeRule.onNodeWithTag("fire_test_list").performScrollToNode(hasTestTag("fire_subtab_selector"))
         composeRule.onNodeWithTag("fire_subtab_simulation").performClick()
-        composeRule.onNodeWithTag("fire_test_list").performScrollToNode(hasTestTag("fire_parameters_card"))
-        val rate = Formatters.formatPercent(metrics.realReturnPercent + 1.0, AppLanguage.RU)
-        composeRule.onAllNodes(hasText(rate) and hasAnyAncestor(hasTestTag("fire_parameters_card")), useUnmergedTree = true)
-            .assertCountEquals(1)
+        composeRule.onNodeWithTag("fire_test_list").performScrollToNode(hasTestTag("fire_simulation_summary"))
+        composeRule.onNodeWithTag("fire_simulation_summary").assertIsDisplayed()
+        composeRule.onAllNodes(hasTestTag("fire_parameters_card"), useUnmergedTree = true)
+            .assertCountEquals(0)
     }
 
     @Test
@@ -296,5 +304,66 @@ class FireRetirementScreenRobolectricTest {
         check(abs(savingsRangeAfterSwitch.current - 200f) < 1f) {
             "subtab switching must not reset sliders, was ${savingsRangeAfterSwitch.current}"
         }
+    }
+
+    @Test
+    fun `each internal subtab keeps only its own cards and FIRE explanations`() {
+        val input = FinancialInputData.usAverageData()
+        val metrics = FinanceCalculator.calculate(input, today = LocalDate.of(2026, 11, 6))
+        val simulated = metrics.copy(realReturnPercent = metrics.realReturnPercent + 1.0)
+        val strings = getAppStrings(AppLanguage.RU)
+        composeRule.setContent {
+            MaterialTheme {
+                CompositionLocalProvider(
+                    LocalAppLanguage provides AppLanguage.RU,
+                    LocalAppStrings provides strings
+                ) {
+                    FireRetirementScreen(input, metrics, simulated, FireSimulationState(), emptyList(),
+                        onUpdateSimulation = { _, _, _ -> }, onToggleScenario = {}, onResetSimulation = {},
+                        modifier = Modifier.testTag("fire_test_list"))
+                }
+            }
+        }
+        val list = composeRule.onNodeWithTag("fire_test_list")
+
+        // FIRE: базовый результат, параметры, базовый график, предпосылки и дисклеймер.
+        list.performScrollToNode(hasTestTag("fire_hero_card"))
+        composeRule.onNodeWithTag("fire_hero_card").assertIsDisplayed()
+        list.performScrollToNode(hasTestTag("fire_parameters_card"))
+        composeRule.onNodeWithTag("fire_parameters_card").assertIsDisplayed()
+        list.performScrollToNode(hasTestTag("fire_trajectory_card"))
+        composeRule.onNodeWithTag("fire_trajectory_card").assertIsDisplayed()
+        list.performScrollToNode(hasText(strings.fireAssumptionsTitle))
+        composeRule.onAllNodes(hasText(strings.fireAssumptionsTitle), useUnmergedTree = true)
+            .assertCountEquals(1)
+        list.performScrollToNode(hasText(strings.disclaimerTitle))
+        composeRule.onAllNodes(hasText(strings.disclaimerTitle), useUnmergedTree = true)
+            .assertCountEquals(1)
+
+        // В FIRE нет резюме и управляющих элементов «Симуляции».
+        composeRule.onAllNodes(hasTestTag("fire_simulation_summary"), useUnmergedTree = true)
+            .assertCountEquals(0)
+        composeRule.onAllNodes(hasTestTag("fire_simulator_card"), useUnmergedTree = true)
+            .assertCountEquals(0)
+
+        // «Симуляция» без активных изменений: базовый результат и настройка сценариев,
+        // без карточки параметров, графика и пояснений FIRE (UX-F06).
+        list.performScrollToNode(hasTestTag("fire_subtab_selector"))
+        composeRule.onNodeWithTag("fire_subtab_simulation").performClick()
+        list.performScrollToNode(hasTestTag("fire_hero_card"))
+        composeRule.onNodeWithTag("fire_hero_card").assertIsDisplayed()
+        list.performScrollToNode(hasTestTag("fire_simulator_card"))
+        composeRule.onNodeWithTag("fire_simulator_card").assertIsDisplayed()
+        composeRule.onNodeWithTag("fire_slider_savings").assertExists()
+        composeRule.onAllNodes(hasTestTag("fire_parameters_card"), useUnmergedTree = true)
+            .assertCountEquals(0)
+        composeRule.onAllNodes(hasTestTag("fire_trajectory_card"), useUnmergedTree = true)
+            .assertCountEquals(0)
+        composeRule.onAllNodes(hasText(strings.fireAssumptionsTitle), useUnmergedTree = true)
+            .assertCountEquals(0)
+        composeRule.onAllNodes(hasText(strings.disclaimerTitle), useUnmergedTree = true)
+            .assertCountEquals(0)
+        composeRule.onAllNodes(hasTestTag("fire_simulation_summary"), useUnmergedTree = true)
+            .assertCountEquals(0)
     }
 }
