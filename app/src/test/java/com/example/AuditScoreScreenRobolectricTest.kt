@@ -6,6 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.assertHeightIsAtLeast
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasClickAction
@@ -14,6 +15,7 @@ import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performScrollToNode
+import androidx.compose.ui.unit.dp
 import com.example.data.model.FinancialInputData
 import com.example.domain.FinanceCalculator
 import com.example.domain.model.AuditIndicatorStatus
@@ -185,7 +187,7 @@ class AuditScoreScreenRobolectricTest {
     }
 
     @Test
-    fun `auditor opinion export is a text button at the bottom of the opinion card`() {
+    fun `auditor opinion export is a single secondary action at the bottom of the opinion card`() {
         val input = FinancialInputData.defaultData()
         val metrics = FinanceCalculator.calculate(input, today = LocalDate.of(2025, 1, 1))
 
@@ -217,6 +219,7 @@ class AuditScoreScreenRobolectricTest {
         composeRule.onNodeWithTag("export_auditor_opinion_button")
             .assertExists()
             .assert(hasClickAction())
+            .assertHeightIsAtLeast(48.dp)
             .assert(hasAnyAncestor(hasTestTag("auditor_opinion_card")))
             .assertTextEquals("Экспорт заключения")
     }

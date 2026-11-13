@@ -6,13 +6,19 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.assertHeightIsAtLeast
+import androidx.compose.ui.test.assertTextEquals
+import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.unit.dp
 import com.example.data.model.FinancialInputData
 import com.example.data.model.FireStatus
 import com.example.domain.FinanceCalculator
@@ -20,10 +26,12 @@ import com.example.ui.screens.InputDataScreen
 import com.example.util.localization.AppLanguage
 import com.example.util.localization.LocalAppLanguage
 import com.example.util.localization.LocalAppStrings
+import com.example.util.localization.StringsRu
 import com.example.util.localization.getAppStrings
 import java.time.LocalDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -112,5 +120,37 @@ class InputDataScreenRobolectricTest {
             composeRule.onNodeWithText(strings.metricUnavailableValue).assertExists()
             composeRule.onNodeWithText(strings.horizonValueFormat(0, 0)).assertDoesNotExist()
         }
+    }
+
+    @Test
+    fun `view metrics button keeps its action and a 48 dp secondary action target`() {
+        var navigatedToMetrics = false
+        composeRule.setContent {
+            MaterialTheme {
+                CompositionLocalProvider(
+                    LocalAppLanguage provides AppLanguage.RU,
+                    LocalAppStrings provides StringsRu
+                ) {
+                    InputDataScreen(
+                        inputData = FinancialInputData.defaultData(),
+                        metrics = FinanceCalculator.calculate(FinancialInputData.defaultData(), today = today),
+                        onUpdate = {},
+                        onNavigateToMetrics = { navigatedToMetrics = true },
+                        modifier = Modifier.testTag("input_test_list")
+                    )
+                }
+            }
+        }
+
+        composeRule.onNodeWithTag("input_test_list")
+            .performScrollToNode(hasTestTag("go_to_metrics_button"))
+        composeRule.onNodeWithTag("go_to_metrics_button")
+            .assertExists()
+            .assert(hasClickAction())
+            .assertHeightIsAtLeast(48.dp)
+            .assertTextEquals(StringsRu.calculateButtonText)
+            .performClick()
+
+        assertTrue(navigatedToMetrics)
     }
 }

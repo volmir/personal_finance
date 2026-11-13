@@ -6,7 +6,6 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -30,8 +29,6 @@ import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Percent
 import androidx.compose.material.icons.filled.TrendingUp
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.FilterChip
@@ -72,6 +69,7 @@ import com.example.data.model.FinancialInputData
 import com.example.domain.AuditorAnalysisGenerator
 import com.example.domain.FinancialMetricEvaluator
 import com.example.domain.FinancialInputLimits
+import com.example.ui.components.SecondaryActionButton
 import com.example.ui.theme.AlertRed
 import com.example.ui.theme.StatusColors
 import com.example.ui.theme.SuccessGreen
@@ -521,31 +519,15 @@ fun InputDataScreen(
 
         // Кнопка перехода к расчету показателей
         item {
-            Button(
+            SecondaryActionButton(
+                text = strings.calculateButtonText,
                 onClick = onNavigateToMetrics,
-                shape = RoundedCornerShape(14.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary
-                ),
-                contentPadding = PaddingValues(horizontal = 16.dp),
+                icon = Icons.Default.ArrowForward,
+                iconOnTrailing = true,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(52.dp)
                     .testTag("go_to_metrics_button")
-            ) {
-                Text(
-                    text = strings.calculateButtonText,
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.Bold
-                    )
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                Icon(
-                    imageVector = Icons.Default.ArrowForward,
-                    contentDescription = null,
-                    modifier = Modifier.size(20.dp)
-                )
-            }
+            )
             Spacer(modifier = Modifier.height(20.dp))
         }
     }

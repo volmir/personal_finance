@@ -34,7 +34,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -52,6 +51,7 @@ import com.example.domain.AuditorAnalysisGenerator
 import com.example.domain.FinancialMetricEvaluator
 import com.example.domain.model.AuditIndicatorStatus
 import com.example.ui.components.ScoreGauge
+import com.example.ui.components.SecondaryActionButton
 import com.example.ui.theme.AccentGold
 import com.example.ui.theme.AlertRed
 import com.example.ui.theme.ScoreColorEvaluator
@@ -517,19 +517,14 @@ fun AuditScoreScreen(
 
                     Spacer(modifier = Modifier.height(10.dp))
 
-                    TextButton(
+                    SecondaryActionButton(
+                        text = strings.exportAuditorOpinionButtonText,
                         onClick = shareFullOpinion,
+                        icon = Icons.Default.Share,
                         modifier = Modifier
                             .fillMaxWidth()
                             .testTag("export_auditor_opinion_button")
-                    ) {
-                        Text(
-                            text = strings.exportAuditorOpinionButtonText,
-                            style = MaterialTheme.typography.labelLarge.copy(
-                                fontWeight = FontWeight.Bold
-                            )
-                        )
-                    }
+                    )
                 }
             }
         }
