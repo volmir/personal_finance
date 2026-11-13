@@ -1,0 +1,28 @@
+{
+  "tasks_file": "orchestrator/TASKS.md",
+  "progress_file": "orchestrator/PROGRESS.md",
+  "branch": "auto/tasks",
+  "remote": "origin",
+  "push": true,
+  "backend": "opencode",
+  "codex_bin": "codex",
+  "opencode_bin": "opencode",
+  "gate_base": [],
+  "task_timeout": 3600,
+  "gate_timeout": 3600,
+  "git_timeout": 120,
+  "restart_retries": 3,
+  "retry_delay": 30,
+  "models": {
+    "codex": {
+      "light": "gpt-5.6-luna",
+      "standard": "gpt-6.1-sol",
+      "heavy": "gpt-6.1-sol"
+    },
+    "opencode": {
+      "light": "opencode/glm-5.3-flash-free",
+      "standard": "opencode/glm-5.3-flash-free#max",
+      "heavy": "opencode/beam-free#max"
+    }
+  }
+}
