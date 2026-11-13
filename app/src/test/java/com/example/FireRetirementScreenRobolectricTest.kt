@@ -10,6 +10,7 @@ import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotSelected
+import androidx.compose.ui.test.assertIsOn
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasTestTag
@@ -23,6 +24,7 @@ import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeUp
 import com.example.data.model.FinancialInputData
 import com.example.domain.FinanceCalculator
+import com.example.ui.FireScenarioToggles
 import com.example.ui.FireSimulationState
 import com.example.ui.screens.FireRetirementScreen
 import com.example.util.Formatters
@@ -90,7 +92,11 @@ class FireRetirementScreenRobolectricTest {
         val metrics = FinanceCalculator.calculate(input, today = LocalDate.of(2026, 11, 6))
         val simulated = metrics.copy(realReturnPercent = metrics.realReturnPercent + 1.0)
         val simulation = mutableStateOf(
-            FireSimulationState(extraMonthlySavings = 100.0, realReturnAdjustment = 1.0)
+            FireSimulationState(
+                extraMonthlySavings = 100.0,
+                realReturnAdjustment = 1.0,
+                scenarios = FireScenarioToggles(salaryIncrease20 = true)
+            )
         )
         val language = mutableStateOf(AppLanguage.RU)
         val screenVisible = mutableStateOf(true)
@@ -169,6 +175,11 @@ class FireRetirementScreenRobolectricTest {
         composeRule.onNodeWithTag("fire_simulation_summary").assertIsDisplayed()
         composeRule.onAllNodes(hasTestTag("fire_parameters_card"), useUnmergedTree = true)
             .assertCountEquals(0)
+
+        // Значения сценариев пережили переключение подвкладок: переключатель показывает
+        // сохраненное включенное состояние.
+        composeRule.onNodeWithTag("fire_test_list").performScrollToNode(hasTestTag("switch_pos_salary_increase"))
+        composeRule.onNodeWithTag("switch_pos_salary_increase").assertIsOn()
     }
 
     @Test

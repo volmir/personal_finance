@@ -11,6 +11,7 @@ import com.example.domain.FinanceCalculator
 import com.example.domain.SimulatorScaleCalculator
 import com.example.domain.calculateSimulationOngoingExpenses
 import com.example.domain.calculateScenarioAmounts
+import com.example.ui.AppTab
 import com.example.ui.MainViewModel
 import com.example.util.Formatters
 import com.example.util.localization.AppLanguage
@@ -363,6 +364,33 @@ class ScenarioSimulationTest {
         assertEquals(baseMetrics.currentAge.toDouble(), viewModel.simulatedTrajectory.value.first().age, 0.01)
         assertEquals(baseInput, viewModel.inputData.value)
         assertEquals(baseMetrics, viewModel.metrics.value)
+    }
+
+    @Test
+    fun `tab selection keeps scenario state input and base metrics unchanged`() {
+        val viewModel = createViewModel()
+        viewModel.toggleScenario("pos_salary_increase")
+        viewModel.toggleScenario("job_loss")
+        viewModel.updateSimulation(extraSavings = 500.0, realReturnDelta = 0.5, expReduction = 0.0)
+
+        val input = viewModel.inputData.value
+        val baseMetrics = viewModel.metrics.value
+        val simulation = viewModel.fireSimulation.value
+        val simulated = viewModel.simulatedMetrics.value
+        assertTrue(simulation.isSimulating)
+        assertTrue(simulation.scenarios.salaryIncrease20)
+        assertTrue(simulation.scenarios.jobLoss)
+
+        // Нижняя навигация (включая повторный вход в №4) не трогает сценарии,
+        // симуляцию и базовый ввод.
+        for (tab in AppTab.values() + listOf(AppTab.FIRE, AppTab.INPUT, AppTab.FIRE)) {
+            viewModel.selectTab(tab)
+            assertEquals(tab, viewModel.currentTab.value)
+            assertEquals(input, viewModel.inputData.value)
+            assertEquals(baseMetrics, viewModel.metrics.value)
+            assertEquals(simulation, viewModel.fireSimulation.value)
+            assertEquals(simulated, viewModel.simulatedMetrics.value)
+        }
     }
 
     @Test
