@@ -14,6 +14,9 @@ val StringsDe: AppStrings = object : AppStrings {
     override val tabFireShort: String = "FIRE & Plan"
     override val quickScorePrefix: String = "Punktzahl"
 
+    override val sampleDataNoticeMessage: String = "Beim ersten Start sind Beispielwerte eingetragen — prüfen und ersetzen Sie sie durch Ihre eigenen"
+    override val sampleDataNoticeConfirm: String = "Verstanden"
+
     override val block1Title: String = "1. Einnahmen & Ausgaben"
     override val block1Subtitle: String = "Monatliche Geldzuflüsse und Ausgaben"
     override val monthlyIncomeLabel: String = "Einkommen (monatlich)"

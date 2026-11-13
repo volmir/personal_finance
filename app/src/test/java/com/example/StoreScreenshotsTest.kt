@@ -47,6 +47,7 @@ class StoreScreenshotsTest {
         val app = ApplicationProvider.getApplicationContext<Application>()
         app.getSharedPreferences("user_finance_data", Context.MODE_PRIVATE).edit().clear().commit()
         val viewModel = MainViewModel(app) { LocalDate.of(2026, 11, 2) }
+        viewModel.dismissSampleDataNotice()
         var selectedLocale by mutableStateOf("ru-RU")
         var contentVersion by mutableStateOf(0)
         composeRule.setContent {

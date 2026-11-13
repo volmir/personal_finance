@@ -20,6 +20,7 @@ import androidx.compose.material.icons.outlined.Calculate
 import androidx.compose.material.icons.outlined.Equalizer
 import androidx.compose.material.icons.outlined.Grade
 import androidx.compose.material.icons.outlined.Whatshot
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -37,6 +38,7 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -89,6 +91,7 @@ fun FinanceApp(viewModel: MainViewModel) {
     val simulationState by viewModel.fireSimulation.collectAsStateWithLifecycle()
     val trajectory by viewModel.trajectory.collectAsStateWithLifecycle()
     val feedbackMessage by viewModel.userFeedbackMessage.collectAsStateWithLifecycle()
+    val showSampleDataNotice by viewModel.showSampleDataNotice.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(feedbackMessage) {
@@ -245,5 +248,39 @@ fun FinanceApp(viewModel: MainViewModel) {
                 }
             }
         }
+
+        if (showSampleDataNotice) {
+            SampleDataNoticeDialog(
+                message = strings.sampleDataNoticeMessage,
+                confirmLabel = strings.sampleDataNoticeConfirm,
+                onShown = viewModel::markSampleDataNoticeShown,
+                onConfirm = viewModel::dismissSampleDataNotice
+            )
+        }
     }
+}
+
+@Composable
+private fun SampleDataNoticeDialog(
+    message: String,
+    confirmLabel: String,
+    onShown: () -> Unit,
+    onConfirm: () -> Unit
+) {
+    LaunchedEffect(Unit) {
+        onShown()
+    }
+    AlertDialog(
+        onDismissRequest = onConfirm,
+        text = { Text(text = message) },
+        confirmButton = {
+            TextButton(
+                onClick = onConfirm,
+                modifier = Modifier.testTag("sample_data_notice_confirm")
+            ) {
+                Text(text = confirmLabel)
+            }
+        },
+        modifier = Modifier.testTag("sample_data_notice_dialog")
+    )
 }

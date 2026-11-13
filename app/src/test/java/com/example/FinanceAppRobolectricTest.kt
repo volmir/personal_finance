@@ -16,11 +16,14 @@ import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performScrollToNode
 import androidx.lifecycle.Lifecycle
 import androidx.test.core.app.ApplicationProvider
+import com.example.data.model.FinancialInputData
+import com.example.data.repository.LocalPreferencesManager
 import com.example.ui.AppTab
 import com.example.ui.FinanceApp
 import com.example.ui.MainViewModel
@@ -28,22 +31,74 @@ import com.example.util.Formatters
 import com.example.util.localization.getAppStrings
 import java.time.LocalDate
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
 class FinanceAppRobolectricTest {
     @get:Rule
     val composeRule = createAndroidComposeRule<ComponentActivity>()
 
-    private fun createViewModel(today: LocalDate = LocalDate.of(2026, 11, 6)): MainViewModel {
+    private fun createNewInstallViewModel(today: LocalDate = LocalDate.of(2026, 11, 6)): MainViewModel {
         val app = ApplicationProvider.getApplicationContext<Application>()
         app.getSharedPreferences("user_finance_data", Context.MODE_PRIVATE).edit().clear().commit()
         return MainViewModel(app) { today }
+    }
+
+    private fun createViewModel(today: LocalDate = LocalDate.of(2026, 11, 6)): MainViewModel =
+        createNewInstallViewModel(today).also {
+            it.dismissSampleDataNotice()
+        }
+
+    @Test
+    @Config(qualifiers = "ru-rRU")
+    fun `new install shows the sample data notice once over input`() {
+        val viewModel = createNewInstallViewModel()
+        val initialInput = viewModel.inputData.value
+        composeRule.setContent { FinanceApp(viewModel) }
+
+        composeRule.onNodeWithTag("sample_data_notice_dialog").assertIsDisplayed()
+        composeRule.onNodeWithText("При первом запуске указаны примерные значения — проверьте и замените их своими")
+            .assertIsDisplayed()
+        composeRule.onNodeWithText("Понятно").assertIsDisplayed()
+        composeRule.onNodeWithTag("nav_item_input").assertIsSelected()
+        composeRule.runOnIdle {
+            assertEquals(initialInput, viewModel.inputData.value)
+            assertFalse(
+                LocalPreferencesManager(ApplicationProvider.getApplicationContext()).shouldShowSampleDataNotice()
+            )
+        }
+
+        composeRule.onNodeWithTag("sample_data_notice_confirm").performClick()
+        composeRule.onNodeWithTag("sample_data_notice_dialog").assertDoesNotExist()
+
+        composeRule.onNodeWithTag("nav_item_metrics").performClick()
+        composeRule.onNodeWithTag("nav_item_input").performClick()
+        composeRule.onNodeWithTag("sample_data_notice_dialog").assertDoesNotExist()
+
+        composeRule.activityRule.scenario.recreate()
+        composeRule.onNodeWithTag("sample_data_notice_dialog").assertDoesNotExist()
+        composeRule.runOnIdle { assertEquals(initialInput, viewModel.inputData.value) }
+    }
+
+    @Test
+    fun `existing install has no sample data notice`() {
+        val app = ApplicationProvider.getApplicationContext<Application>()
+        app.getSharedPreferences("user_finance_data", Context.MODE_PRIVATE).edit().clear().commit()
+        val input = FinancialInputData.usAverageData().copy(monthlyIncome = 12_345.0)
+        LocalPreferencesManager(app).saveData(input)
+        val viewModel = MainViewModel(app) { LocalDate.of(2026, 11, 6) }
+
+        composeRule.setContent { FinanceApp(viewModel) }
+
+        composeRule.onNodeWithTag("sample_data_notice_dialog").assertDoesNotExist()
+        composeRule.runOnIdle { assertEquals(input, viewModel.inputData.value) }
     }
 
     @Test
@@ -52,6 +107,7 @@ class FinanceAppRobolectricTest {
         app.getSharedPreferences("user_finance_data", Context.MODE_PRIVATE).edit().clear().commit()
         var currentDate = LocalDate.of(2026, 10, 31)
         val viewModel = MainViewModel(app) { currentDate }
+        viewModel.dismissSampleDataNotice()
         viewModel.updateInputData { it.copy(birthDate = "1988-11-01") }
         viewModel.flushPendingSave()
         val input = viewModel.inputData.value

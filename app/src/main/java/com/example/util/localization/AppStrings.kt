@@ -45,6 +45,10 @@ interface AppStrings {
     val tabFireShort: String
     val quickScorePrefix: String
 
+    // One-time sample data notice
+    val sampleDataNoticeMessage: String
+    val sampleDataNoticeConfirm: String
+
     // Input Screen
     val block1Title: String
     val block1Subtitle: String
