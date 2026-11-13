@@ -319,7 +319,7 @@ val StringsRu: AppStrings = object : AppStrings {
     override val includePropertyInFireSubOn: String = "Используется чистый капитал (net worth), включая недвижимость за вычетом долгов"
     override val includePropertyInFireSubOff: String = "Используются только инвестируемые активы (ликвидные + финансовые)"
 
-    override val calculateButtonText: String = "Рассчитать показатели"
+    override val calculateButtonText: String = "Посмотреть показатели"
     override val exportButtonText: String = "Экспорт результатов"
     override val exportChooserTitle: String = "Экспорт результатов"
 

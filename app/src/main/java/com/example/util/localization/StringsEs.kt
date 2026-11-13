@@ -317,7 +317,7 @@ val StringsEs: AppStrings = object : AppStrings {
     override val includePropertyInFireSubOn: String = "Se utiliza el patrimonio neto, incluidos los inmuebles descontadas las deudas"
     override val includePropertyInFireSubOff: String = "Solo se utilizan los activos invertibles (líquido + financiero)"
 
-    override val calculateButtonText: String = "Calcular métricas"
+    override val calculateButtonText: String = "Ver métricas"
     override val exportButtonText: String = "Exportar resultados"
     override val exportChooserTitle: String = "Exportar resultados"
 
