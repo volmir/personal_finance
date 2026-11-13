@@ -129,7 +129,8 @@ DEFAULTS = {
 }
 
 
-def load_config(path):
+def load_config(path, backend=None):
+    """backend — необязательное перекрытие от CLI (--backend); валидируется как ключ конфига."""
     config = dict(DEFAULTS)
     config["models"] = {name: dict(tiers) for name, tiers in DEFAULTS["models"].items()}
     config["efforts"] = dict(DEFAULTS["efforts"])
@@ -140,6 +141,10 @@ def load_config(path):
         models = data.pop("models", None)
         efforts = data.pop("efforts", None)
         config.update(data)
+        # Перекрытие применяется до разбора models: от него зависят и запрет
+        # плоского формата, и выбор секции моделей активного бэкенда.
+        if backend is not None:
+            config["backend"] = backend
         if models is not None:
             if not isinstance(models, dict):
                 raise Error("config.json: неверная секция models")
@@ -443,7 +448,7 @@ def wait_for_retry(delay):
 def execute(args):
     script_dir = Path(__file__).resolve().parent
     config_path = (Path.cwd() / args.config).absolute() if args.config else script_dir / "config.json"
-    config = load_config(config_path)
+    config = load_config(config_path, backend=args.backend)
     if args.push is not None:
         config["push"] = args.push
     # Список/план работают даже до git init и не создают каталогов или логов.
@@ -758,6 +763,8 @@ def main():
     signal.signal(signal.SIGTERM, interrupted)
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config", help="JSON-конфигурация; по умолчанию orchestrator/config.json")
+    parser.add_argument("--backend", choices=BACKENDS,
+                        help="бэкенд агента (codex или opencode); перекрывает config.json")
     view = parser.add_mutually_exclusive_group()
     view.add_argument("--list", action="store_true", help="список без запусков и изменений")
     view.add_argument("--dry-run", action="store_true", help="план с gate, без запусков и изменений")

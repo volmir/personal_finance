@@ -183,6 +183,22 @@ class FixtureTests(unittest.TestCase):
                     with self.assertRaises(module.Error):
                         module.load_config(config)
 
+    def test_load_config_backend_override_selects_models_section(self):
+        with tempfile.TemporaryDirectory() as directory:
+            config = Path(directory) / 'config.json'
+            config.write_text(json.dumps({
+                'backend': 'codex',
+                'models': {'codex': {'light': 'c-only'}, 'opencode': {'light': 'o-only'}},
+            }))
+            self.assertEqual(module.load_config(config, backend='opencode')['models']['light'], 'o-only')
+            self.assertEqual(module.load_config(config, backend='codex')['models']['light'], 'c-only')
+            config.write_text(json.dumps({'models': {'light': 'flat-codex'}}))
+            with self.assertRaises(module.Error):
+                module.load_config(config, backend='opencode')
+            self.assertEqual(module.load_config(config, backend='codex')['models']['light'], 'flat-codex')
+            with self.assertRaises(module.Error):
+                module.load_config(config, backend='claude')
+
     def test_load_config_ignores_environment_variables(self):
         with tempfile.TemporaryDirectory() as directory, \
                 patch.dict(os.environ, {'MODEL_LIGHT': 'from-env', 'CODEX_BIN': '/env/codex',
@@ -967,6 +983,16 @@ class OpenCodeTests(QueueHelpers, unittest.TestCase):
         self.set_config(commit=False, models={'light': 'x'})
         self.assertIn('плоский формат', self.run_cli(ok=False))
         self.assertFalse(self.calls())
+
+    def test_backend_flag_overrides_config(self):
+        self.set_config(backend='codex', models={'codex': {'light': 'codex-only'},
+                                                 'opencode': {'light': 'opencode/flag-m',
+                                                              'standard': 'opencode/flag-s',
+                                                              'heavy': 'opencode/flag-h'}})
+        self.run_cli('--backend', 'opencode')
+        self.assertEqual(self.calls()[0]['args'],
+                         ['run', '--agent', 'build', '--format', 'json', '--model', 'opencode/flag-m'])
+        self.assertEqual(self.progress()['A-1']['model'], 'opencode/flag-m')
 
 
 if __name__ == '__main__':
