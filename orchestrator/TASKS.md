@@ -17,10 +17,10 @@ tier: light
 gate: bash orchestrator/run.sh --check full
 retries: 1
 ```prompt
-Добавь в конец orchestrator/README.md короткий раздел «Бэкенды» (5–10 строк, по-русски):
-в orchestrator/config.json ключ backend выбирает бэкенд агента ("codex", по умолчанию,
-или "opencode"); models — вложенный формат с секциями codex и opencode; для opencode
-вариант reasoning задаётся суффиксом #variant в строке модели, ключ efforts игнорируется,
-права агента ограничивает permissions в opencode.json целевого проекта (оркестратор
-не передаёт --auto). Не меняй код и другие файлы, только orchestrator/README.md.
+Создай файл docs/orchestrator-backends.md с кратким описанием бэкендов оркестратора
+(5–10 строк, по-русски): в orchestrator/config.json ключ backend выбирает бэкенд агента
+("codex", по умолчанию, или "opencode"); models — вложенный формат с секциями codex
+и opencode; для opencode вариант reasoning задаётся суффиксом #variant в строке модели,
+ключ efforts игнорируется, права агента ограничивает permissions в opencode.json
+целевого проекта (оркестратор не передаёт --auto). Не меняй код и другие файлы.
 ```
