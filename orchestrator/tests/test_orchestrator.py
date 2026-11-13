@@ -73,7 +73,7 @@ if mode == 'blocked-error': sys.exit(7)
 '''
 
 MOCK_OPENCODE = r'''#!/usr/bin/env python3
-import json, os, re, sys
+import json, os, re, signal, sys, time
 from pathlib import Path
 args = sys.argv[1:]
 assert args[:5] == ['run', '--agent', 'build', '--format', 'json'], args
@@ -86,6 +86,11 @@ work = Path('orchestrator/.runtime'); work.mkdir(exist_ok=True)
 with (work / 'calls.jsonl').open('a') as stream:
     stream.write(json.dumps({'id': task, 'args': args, 'prompt': prompt}) + '\n')
 mode = os.environ.get('MOCK_MODE', 'normal')
+marker = work / ('interrupted-' + task)
+if mode == 'interrupt-once' and os.environ.get('MOCK_INTERRUPT_TASK') == task and not marker.exists():
+    marker.write_text('1')
+    os.kill(os.getppid(), signal.SIGTERM)
+    time.sleep(30)
 if mode not in ('blocked', 'empty', 'fail'):
     Path('result-' + task + '.txt').write_text('good')
 def event(kind, part):
@@ -198,6 +203,54 @@ class FixtureTests(unittest.TestCase):
             self.assertEqual(module.load_config(config, backend='codex')['models']['light'], 'flat-codex')
             with self.assertRaises(module.Error):
                 module.load_config(config, backend='claude')
+
+    def test_load_config_selects_named_model_set(self):
+        with tempfile.TemporaryDirectory() as directory:
+            config = Path(directory) / 'config.json'
+            config.write_text(json.dumps({
+                'backend': 'opencode',
+                'models': {'opencode': {'light': 'free-l', 'standard': 'free-s', 'heavy': 'free-h'}},
+                'model_sets': {'opencode': {'paid': {
+                    'light': 'paid-l', 'standard': 'paid-s', 'heavy': 'paid-h'}}},
+            }))
+            self.assertEqual(module.load_config(config)['models'],
+                             {'light': 'free-l', 'standard': 'free-s', 'heavy': 'free-h'})
+            self.assertEqual(module.load_config(config, models_set='paid')['models'],
+                             {'light': 'paid-l', 'standard': 'paid-s', 'heavy': 'paid-h'})
+            self.assertEqual(module.load_config(Path(directory) / 'missing.json')['model_sets'], {})
+
+    def test_load_config_rejects_invalid_model_sets(self):
+        with tempfile.TemporaryDirectory() as directory:
+            config = Path(directory) / 'config.json'
+            for body in ({'model_sets': []},
+                         {'model_sets': {'codex': {'paid': {'light': 'a', 'standard': 'b', 'heavy': 'c'}}}},
+                         {'model_sets': {'opencode': {'paid': {'light': 'a', 'standard': 'b'}}}},
+                         {'model_sets': {'opencode': {'paid': {'light': 'a', 'standard': 'b', 'heavy': ''}}}},
+                         {'model_sets': {'opencode': {'paid': {'light': 'a', 'standard': 5, 'heavy': 'c'}}}},
+                         {'model_sets': {'opencode': {'': {'light': 'a', 'standard': 'b', 'heavy': 'c'}}}},
+                         {'model_sets': {'opencode': {'paid': {'light': 'a', 'standard': 'b', 'heavy': 'c',
+                                                               'tiny': 'x'}}}},
+                         {'model_sets': {'opencode': {'paid': 'x'}}}):
+                with self.subTest(body=body):
+                    config.write_text(json.dumps(body))
+                    with self.assertRaises(module.Error):
+                        module.load_config(config)
+
+    def test_models_option_requires_opencode_and_known_set(self):
+        with tempfile.TemporaryDirectory() as directory:
+            config = Path(directory) / 'config.json'
+            config.write_text(json.dumps({'model_sets': {'opencode': {'paid': {
+                'light': 'paid-l', 'standard': 'paid-s', 'heavy': 'paid-h'}}}}))
+            with self.assertRaises(module.Error):
+                module.load_config(config, models_set='paid')  # backend по умолчанию codex
+            self.assertEqual(module.load_config(config, backend='opencode', models_set='paid')['models']['heavy'],
+                             'paid-h')
+            with self.assertRaises(module.Error) as caught:
+                module.load_config(config, backend='opencode', models_set='free')
+            self.assertIn('paid', str(caught.exception))
+            config.write_text('{}')
+            with self.assertRaises(module.Error):
+                module.load_config(config, backend='opencode', models_set='paid')
 
     def test_load_config_ignores_environment_variables(self):
         with tempfile.TemporaryDirectory() as directory, \
@@ -993,6 +1046,39 @@ class OpenCodeTests(QueueHelpers, unittest.TestCase):
         self.assertEqual(self.calls()[0]['args'],
                          ['run', '--agent', 'build', '--format', 'json', '--model', 'opencode/flag-m'])
         self.assertEqual(self.progress()['A-1']['model'], 'opencode/flag-m')
+
+    def paid_set(self):
+        return {'opencode': {'paid': {'light': 'opencode/paid-l',
+                                      'standard': 'opencode/paid-s',
+                                      'heavy': 'opencode/paid-h'}}}
+
+    def test_models_flag_selects_named_set(self):
+        self.set_config(models={'opencode': {'light': 'free-l', 'standard': 'free-s', 'heavy': 'free-h'}},
+                        model_sets=self.paid_set())
+        self.assertIn('opencode/paid-l', self.run_cli('--models', 'paid', '--dry-run'))
+        self.assertFalse(self.calls())
+        self.run_cli('--models', 'paid')
+        self.assertEqual(self.calls()[0]['args'],
+                         ['run', '--agent', 'build', '--format', 'json', '--model', 'opencode/paid-l'])
+        self.assertEqual(self.progress()['A-1']['model'], 'opencode/paid-l')
+        self.assertEqual(self.g('status', '--porcelain'), '')
+
+    def test_models_flag_is_rejected_for_codex(self):
+        self.set_config(backend='codex', codex_bin=str(self.mock), model_sets=self.paid_set())
+        output = self.run_cli('--backend', 'codex', '--models', 'paid', ok=False)
+        self.assertIn('opencode', output)
+        self.assertFalse(self.calls())
+
+    def test_resume_with_models_flag_keeps_saved_models_and_warns(self):
+        self.set_config(models={'opencode': {'light': 'free-l', 'standard': 'free-s', 'heavy': 'free-h'}},
+                        model_sets=self.paid_set(), restart_retries=2)
+        self.save_tasks(task(tier='light') + '\n' + task('B', 'test -f result-B.txt', tier='light'))
+        self.commit()
+        self.run_cli(ok=False, MOCK_MODE='interrupt-once', MOCK_INTERRUPT_TASK='B')
+        output = self.run_cli('--models', 'paid')
+        self.assertIn('продолжается с сохранённой моделью', output)
+        self.assertEqual(self.calls()[2]['args'][-1], 'free-l')
+        self.assertEqual(self.progress()['B']['model'], 'free-l')
 
 
 if __name__ == '__main__':

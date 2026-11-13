@@ -26,6 +26,15 @@
       "heavy": "opencode/beam-free#max"
     }
   },
+  "model_sets": {
+    "opencode": {
+      "paid": {
+        "light": "provider/light-model",
+        "standard": "provider/standard-model",
+        "heavy": "provider/heavy-model"
+      }
+    }
+  },
   "efforts": {
     "light": "low",
     "standard": "medium",

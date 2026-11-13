@@ -125,20 +125,27 @@ DEFAULTS = {
     "task_timeout": 3600, "gate_timeout": 1800, "git_timeout": 120,
     "restart_retries": 3, "retry_delay": 30,
     "models": {"codex": dict(CODEX_MODEL_DEFAULTS), "opencode": dict(OPENCODE_MODEL_DEFAULTS)},
+    "model_sets": {},
     "efforts": {"light": "low", "standard": "medium", "heavy": "high"},
 }
 
 
-def load_config(path, backend=None):
-    """backend — необязательное перекрытие от CLI (--backend); валидируется как ключ конфига."""
+def load_config(path, backend=None, models_set=None):
+    """backend и models_set — необязательные перекрытия от CLI (--backend, --models).
+
+    backend валидируется как ключ конфига; models_set выбирает именованный набор
+    из model_sets.opencode и заменяет им модели активного бэкенда на один запуск.
+    """
     config = dict(DEFAULTS)
     config["models"] = {name: dict(tiers) for name, tiers in DEFAULTS["models"].items()}
+    config["model_sets"] = {}
     config["efforts"] = dict(DEFAULTS["efforts"])
     if path.exists():
         data = json.loads(path.read_text(encoding="utf-8"))
         if not isinstance(data, dict) or set(data) - set(DEFAULTS):
             raise Error("config.json: неизвестные ключи или неверный JSON-объект")
         models = data.pop("models", None)
+        model_sets = data.pop("model_sets", None)
         efforts = data.pop("efforts", None)
         config.update(data)
         # Перекрытие применяется до разбора models: от него зависят и запрет
@@ -161,6 +168,16 @@ def load_config(path, backend=None):
                         or not all(isinstance(value, str) for value in tiers.values()):
                     raise Error(f"config.json: неверная секция models.{name}")
                 config["models"][name].update(tiers)
+        if model_sets is not None:
+            if not isinstance(model_sets, dict) or set(model_sets) - {"opencode"}:
+                raise Error("config.json: неверная секция model_sets; допустима только секция opencode")
+            for name, tiers in model_sets.get("opencode", {}).items():
+                if not isinstance(name, str) or not name or not isinstance(tiers, dict) \
+                        or set(tiers) != set(TIERS) \
+                        or not all(isinstance(value, str) and value for value in tiers.values()):
+                    raise Error("config.json: неверная секция model_sets.opencode: нужны наборы "
+                                "с непустыми моделями light, standard и heavy")
+            config["model_sets"] = model_sets
         if efforts is not None:
             if not isinstance(efforts, dict) or set(efforts) - set(TIERS) \
                     or not all(isinstance(value, str) for value in efforts.values()):
@@ -195,6 +212,15 @@ def load_config(path, backend=None):
         raise Error("checks: нужен словарь «профиль → массив непустых shell-команд»")
     if "orchestrator" in config["checks"]:
         raise Error("checks: профиль orchestrator встроен в модуль и не переопределяется")
+    if models_set is not None:
+        if config["backend"] != "opencode":
+            raise Error('--models доступен только при backend="opencode"')
+        sets = config["model_sets"].get("opencode", {})
+        if models_set not in sets:
+            if not sets:
+                raise Error("--models: в config.json не заданы наборы model_sets.opencode")
+            raise Error(f"--models: нет набора {models_set}; доступны: {', '.join(sorted(sets))}")
+        config["models"]["opencode"].update(sets[models_set])
     tiers = config["models"][config["backend"]]
     # Дальше по коду models — плоский словарь tier→модель активного бэкенда.
     config["models"] = dict(tiers)
@@ -448,7 +474,7 @@ def wait_for_retry(delay):
 def execute(args):
     script_dir = Path(__file__).resolve().parent
     config_path = (Path.cwd() / args.config).absolute() if args.config else script_dir / "config.json"
-    config = load_config(config_path, backend=args.backend)
+    config = load_config(config_path, backend=args.backend, models_set=args.models)
     if args.push is not None:
         config["push"] = args.push
     # Список/план работают даже до git init и не создают каталогов или логов.
@@ -629,6 +655,10 @@ def run_queue(args, config, root, script_dir, config_path, tasks_path, progress_
             state.update(phase="gate", manual=True, blocked=None)
         save()
         model, effort = state["model"], state["effort"]
+        if resumed and args.models and not args.mark_done and model != config["models"][task.tier]:
+            print(f"ПРЕДУПРЕЖДЕНИЕ: {task.id} продолжается с сохранённой моделью "
+                  f"{model or 'из настроек CLI'}; --models {args.models} применится к следующим задачам",
+                  file=sys.stderr, flush=True)
         context = "\n".join(f"{r['id']}: {r.get('summary', '')}" for r in list(records.values())[-15:])
         base_prompt = prompt_for(task, context, display_paths)
         last = logs / f"{task.id}.last.md"
@@ -765,6 +795,9 @@ def main():
     parser.add_argument("--config", help="JSON-конфигурация; по умолчанию orchestrator/config.json")
     parser.add_argument("--backend", choices=BACKENDS,
                         help="бэкенд агента (codex или opencode); перекрывает config.json")
+    parser.add_argument("--models", metavar="SET",
+                        help="набор моделей OpenCode из config.json (например, paid); "
+                             'только при backend="opencode"')
     view = parser.add_mutually_exclusive_group()
     view.add_argument("--list", action="store_true", help="список без запусков и изменений")
     view.add_argument("--dry-run", action="store_true", help="план с gate, без запусков и изменений")

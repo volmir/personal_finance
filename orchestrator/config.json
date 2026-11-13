@@ -35,6 +35,15 @@
       "heavy": "opencode/beam-free#max"
     }
   },
+  "model_sets": {
+    "opencode": {
+      "paid": {
+        "light": "opencode/muse-ember-1.0#low",
+        "standard": "opencode/deepseek-v4.1-flash#max",
+        "heavy": "opencode/deepseek-v4-pro#max"
+      }
+    }
+  },
   "efforts": {
     "light": "low",
     "standard": "medium",

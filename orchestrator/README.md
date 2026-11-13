@@ -68,7 +68,7 @@ bash orchestrator/run.sh
 | Команда | `codex exec [--model …] -c model_reasoning_effort=… --sandbox … -` | `opencode run --agent build --format json [--model …]` |
 | Финальный ответ | `--output-last-message` | Поле `part.text` последнего text-event потока `--format json` |
 | Права на файлы | `sandbox` из конфига (`read-only`/`workspace-write`/`danger-full-access`) | `permissions` в `opencode.json` целевого проекта; оркестратор не передаёт ни песочницу, ни `--auto` |
-| Модели | секция `models.codex` | секция `models.opencode` |
+| Модели | секция `models.codex` | секция `models.opencode`; наборы `model_sets.opencode` выбираются флагом `--models` |
 | Настройка reasoning | ключи `efforts` | суффикс `#variant` в строке модели; ключ `efforts` игнорируется с предупреждением |
 
 Имя/путь CLI переопределяются ключами `codex_bin` / `opencode_bin`.
@@ -113,6 +113,40 @@ opencode --version   # для OpenCode
 ```bash
 bash orchestrator/run.sh --config orchestrator/opencode.config.json
 ```
+
+### Платные модели OpenCode (`--models`)
+
+Для OpenCode в конфиге можно описать именованные наборы моделей (секция
+`model_sets.opencode`) и выбирать их флагом `--models` на один запуск:
+
+```json
+"model_sets": {
+  "opencode": {
+    "paid": {
+      "light": "provider/light-model",
+      "standard": "provider/standard-model",
+      "heavy": "provider/heavy-model"
+    }
+  }
+}
+```
+
+```bash
+bash orchestrator/run.sh --backend opencode --models paid
+bash orchestrator/run.sh --backend opencode --models paid --dry-run
+```
+
+Набор обязан содержать все три tier — `light`, `standard` и `heavy` — с
+непустыми моделями и полностью заменяет `models.opencode` на текущий запуск;
+без флага используются модели по умолчанию. Секция `model_sets` поддерживает
+только `opencode`: с бэкендом Codex флаг `--models` отклоняется ошибкой,
+секция `codex` в конфиге — тоже. Неизвестное имя набора — ошибка со списком
+доступных наборов.
+
+Незавершённая задача продолжается с моделями, сохранёнными в контрольной
+точке: `--models` применяется к следующим задачам, а о расхождении
+печатается предупреждение. Чтобы сменить набор и для неё, завершите задачу
+или удалите контрольную точку.
 
 ### Подготовить права агента
 
@@ -174,6 +208,7 @@ bash orchestrator/run.sh --push             # явно включить push п�
 bash orchestrator/run.sh --no-push          # явно отключить push на этот запуск
 bash orchestrator/run.sh --check full       # только проверки проекта
 bash orchestrator/run.sh --help             # справка по очереди и проверкам
+bash orchestrator/run.sh --backend opencode --models paid   # платный набор моделей OpenCode
 ```
 
 `--only`, `--from` и `--mark-done` взаимоисключающие; неизвестный ID — ошибка.
@@ -327,6 +362,7 @@ gate: bash orchestrator/run.sh --check full && bash orchestrator/run.sh --check 
 | `restart_retries` | `3` | Дополнительные запуски после сбоя агента, пустого ответа, таймаута или сбоя push; 0–20 |
 | `retry_delay` | `30` | Пауза между перезапусками, секунд |
 | `models` | см. ниже | Модели по tier, вложенно: секции `codex` и `opencode` |
+| `model_sets` | `{}` | Именованные наборы моделей `opencode` для флага `--models` |
 | `efforts` | `low` / `medium` / `high` | Усилие Codex для light / standard / heavy |
 
 В `models` используйте ключи `light`, `standard`, `heavy` внутри секции
