@@ -60,6 +60,7 @@ import com.example.ui.FireSimulationState
 import com.example.ui.components.FireTrajectoryChart
 import com.example.ui.components.ScenarioTogglesPanel
 import com.example.ui.theme.AlertRed
+import com.example.ui.theme.StatusColors
 import com.example.ui.theme.SuccessGreen
 import com.example.util.Formatters
 import com.example.util.localization.LocalAppLanguage
@@ -277,7 +278,7 @@ fun FireRetirementScreen(
                                     text = fireStatusMessage,
                                     style = MaterialTheme.typography.titleMedium.copy(
                                         fontWeight = FontWeight.Bold,
-                                        color = AlertRed
+                                        color = StatusColors.getReadableTextColor(AlertRed)
                                     ),
                                     modifier = Modifier
                                         .padding(vertical = 8.dp)
@@ -289,7 +290,7 @@ fun FireRetirementScreen(
                                         text = Formatters.formatFireYearsToRetirement(displayMetrics.yearsToRetirement, displayMetrics.fireStatus, lang),
                                         style = MaterialTheme.typography.displayMedium.copy(
                                             fontWeight = FontWeight.Bold,
-                                            color = SuccessGreen
+                                            color = StatusColors.getReadableTextColor(SuccessGreen)
                                         )
                                     )
                                     Text(
@@ -350,7 +351,7 @@ fun FireRetirementScreen(
                                     text = Formatters.formatFireRetirementAge(displayMetrics.retirementAge, displayMetrics.fireStatus, lang),
                                     style = MaterialTheme.typography.bodySmall.copy(
                                         fontWeight = FontWeight.Bold,
-                                        color = if (isUnreachable) AlertRed else MaterialTheme.colorScheme.onSurface
+                                        color = if (isUnreachable) StatusColors.getReadableTextColor(AlertRed) else MaterialTheme.colorScheme.onSurface
                                     )
                                 )
                             }
@@ -522,6 +523,8 @@ fun FireRetirementScreen(
                 } else {
                     MaterialTheme.colorScheme.primary
                 }
+                // Фон плашки остаётся статусным, а текст — контрастным оттенком той же гаммы.
+                val alertTextColor = StatusColors.getReadableTextColor(alertColor)
 
                 Surface(
                     shape = RoundedCornerShape(12.dp),
@@ -540,7 +543,7 @@ fun FireRetirementScreen(
                                 text = strings.fireSimSummaryTitle,
                                 style = MaterialTheme.typography.titleSmall.copy(
                                     fontWeight = FontWeight.Bold,
-                                    color = alertColor
+                                    color = alertTextColor
                                 ),
                                 modifier = Modifier.weight(1f, fill = false)
                             )
@@ -553,7 +556,7 @@ fun FireRetirementScreen(
                                     text = simulationBadge,
                                     style = MaterialTheme.typography.labelSmall.copy(
                                         fontWeight = FontWeight.Bold,
-                                        color = alertColor,
+                                        color = MaterialTheme.colorScheme.onSurface,
                                         fontSize = 10.sp
                                     ),
                                     maxLines = 1,
@@ -575,7 +578,7 @@ fun FireRetirementScreen(
                             text = summaryDiffText,
                             style = MaterialTheme.typography.bodyMedium.copy(
                                 fontWeight = FontWeight.Bold,
-                                color = alertColor
+                                color = alertTextColor
                             )
                         )
 
@@ -592,7 +595,7 @@ fun FireRetirementScreen(
                                 style = MaterialTheme.typography.bodySmall.copy(
                                     fontWeight = FontWeight.SemiBold,
                                     fontSize = 11.sp,
-                                    color = if (simulatedMetrics.cashFlow >= 0) MaterialTheme.colorScheme.onSurface else AlertRed
+                                    color = if (simulatedMetrics.cashFlow >= 0) MaterialTheme.colorScheme.onSurface else StatusColors.getReadableTextColor(AlertRed)
                                 )
                             )
                         }
@@ -618,7 +621,8 @@ fun FireRetirementScreen(
                                 style = MaterialTheme.typography.bodySmall.copy(
                                     fontWeight = FontWeight.SemiBold,
                                     fontSize = 11.sp,
-                                    color = if (simulatedMetrics.netWorth >= metrics.netWorth) SuccessGreen else AlertRed
+                                    color = if (simulatedMetrics.netWorth >= metrics.netWorth) StatusColors.getReadableTextColor(SuccessGreen)
+                                    else StatusColors.getReadableTextColor(AlertRed)
                                 )
                             )
                         }
@@ -722,7 +726,7 @@ fun FireRetirementScreen(
                                                     }
                                                 },
                                                 style = MaterialTheme.typography.labelSmall.copy(
-                                                    color = if (isSavingsPositive) SuccessGreen else AlertRed,
+                                                    color = StatusColors.getReadableTextColor(if (isSavingsPositive) SuccessGreen else AlertRed),
                                                     fontSize = 10.sp
                                                 )
                                             )
@@ -733,7 +737,7 @@ fun FireRetirementScreen(
                                     text = Formatters.formatMoney(currentEffectiveSavings, inputData.currencySymbol, lang),
                                     style = MaterialTheme.typography.bodyMedium.copy(
                                         fontWeight = FontWeight.Bold,
-                                        color = if (currentEffectiveSavings >= 0) MaterialTheme.colorScheme.primary else AlertRed
+                                        color = if (currentEffectiveSavings >= 0) MaterialTheme.colorScheme.primary else StatusColors.getReadableTextColor(AlertRed)
                                     )
                                 )
                             }
@@ -824,7 +828,7 @@ fun FireRetirementScreen(
                                                     }
                                                 },
                                                 style = MaterialTheme.typography.labelSmall.copy(
-                                                    color = if (isReduced) SuccessGreen else AlertRed,
+                                                    color = StatusColors.getReadableTextColor(if (isReduced) SuccessGreen else AlertRed),
                                                     fontSize = 10.sp
                                                 )
                                             )
@@ -835,8 +839,8 @@ fun FireRetirementScreen(
                                     text = Formatters.formatMoney(currentEffectiveExpenses, inputData.currencySymbol, lang),
                                     style = MaterialTheme.typography.bodyMedium.copy(
                                         fontWeight = FontWeight.Bold,
-                                        color = if (currentEffectiveExpenses < inputData.monthlyExpenses) SuccessGreen
-                                        else if (currentEffectiveExpenses > inputData.monthlyExpenses) AlertRed
+                                        color = if (currentEffectiveExpenses < inputData.monthlyExpenses) StatusColors.getReadableTextColor(SuccessGreen)
+                                        else if (currentEffectiveExpenses > inputData.monthlyExpenses) StatusColors.getReadableTextColor(AlertRed)
                                         else MaterialTheme.colorScheme.onSurface
                                     )
                                 )
@@ -916,7 +920,7 @@ fun FireRetirementScreen(
                                                 }
                                             },
                                             style = MaterialTheme.typography.labelSmall.copy(
-                                                color = if (isGain) SuccessGreen else AlertRed,
+                                                color = StatusColors.getReadableTextColor(if (isGain) SuccessGreen else AlertRed),
                                                 fontSize = 10.sp
                                             )
                                         )

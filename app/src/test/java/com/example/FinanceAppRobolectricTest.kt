@@ -3,6 +3,7 @@ package com.example
 import android.app.Application
 import android.content.Context
 import androidx.activity.ComponentActivity
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
@@ -15,11 +16,14 @@ import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performScrollToNode
+import androidx.compose.ui.test.performSemanticsAction
+import androidx.compose.ui.text.TextLayoutResult
 import androidx.lifecycle.Lifecycle
 import androidx.test.core.app.ApplicationProvider
 import com.example.data.model.FinancialInputData
@@ -27,6 +31,7 @@ import com.example.data.repository.LocalPreferencesManager
 import com.example.ui.AppTab
 import com.example.ui.FinanceApp
 import com.example.ui.MainViewModel
+import com.example.ui.theme.ScoreColorEvaluator
 import com.example.util.Formatters
 import com.example.util.localization.getAppStrings
 import java.time.LocalDate
@@ -114,6 +119,31 @@ class FinanceAppRobolectricTest {
         composeRule.runOnIdle {
             assertEquals(input, viewModel.inputData.value)
             assertEquals(input, LocalPreferencesManager(app).loadData())
+        }
+    }
+
+    @Test
+    fun `topbar score badge uses readable status text color`() {
+        val viewModel = createViewModel()
+        composeRule.setContent { FinanceApp(viewModel) }
+
+        composeRule.runOnIdle {
+            val score = viewModel.metrics.value.scores.totalScore
+            val lang = viewModel.appLanguage.value
+            val badgeText = getAppStrings(lang).scoreSlashOutOfTen(
+                Formatters.formatScore(score, lang = lang)
+            )
+            val layouts = mutableListOf<TextLayoutResult>()
+            composeRule.onAllNodes(
+                hasText(badgeText) and hasAnyAncestor(hasTestTag("topbar_score_badge")),
+                useUnmergedTree = true
+            ).onFirst().performSemanticsAction(SemanticsActions.GetTextLayoutResult) { it(layouts) }
+
+            assertEquals(1, layouts.size)
+            assertEquals(
+                ScoreColorEvaluator.getTotalScoreTextColor(score, darkTheme = false),
+                layouts.single().layoutInput.style.color
+            )
         }
     }
 

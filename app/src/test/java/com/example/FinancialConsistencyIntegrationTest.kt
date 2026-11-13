@@ -241,8 +241,7 @@ class FinancialConsistencyIntegrationTest {
                         .performSemanticsAction(SemanticsActions.GetTextLayoutResult) { it(layouts) }
                     assertEquals("${profile.name} $inputScreen ${value.id}", 1, layouts.size)
                     val expectedColor = statuses[value.id]?.let {
-                        if (inputScreen) StatusColors.getColor(it)
-                        else StatusColors.getTextColor(it, darkTheme = false)
+                        StatusColors.getTextColor(it, darkTheme = false)
                     } ?: unavailableColor
                     assertEquals("${profile.name} $inputScreen ${value.id}", expectedColor, layouts.single().layoutInput.style.color)
                 }

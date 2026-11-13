@@ -50,6 +50,7 @@ import com.example.data.model.FinancialInputData
 import com.example.ui.FireScenarioToggles
 import com.example.ui.theme.AccentGold
 import com.example.ui.theme.AlertRed
+import com.example.ui.theme.StatusColors
 import com.example.ui.theme.SuccessGreen
 import com.example.ui.theme.WarningYellowBg
 import com.example.util.Formatters
@@ -327,7 +328,7 @@ fun ScenarioTogglesPanel(
                         text = strings.scenarioPositiveSectionNumber,
                         style = MaterialTheme.typography.labelSmall.copy(
                             fontWeight = FontWeight.Bold,
-                            color = SuccessGreen,
+                            color = StatusColors.getReadableTextColor(SuccessGreen),
                             fontSize = 10.sp
                         ),
                         modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp)
@@ -351,7 +352,7 @@ fun ScenarioTogglesPanel(
                         text = strings.scenarioPositiveActive(scenarios.positiveActiveCount),
                         style = MaterialTheme.typography.labelSmall.copy(
                             fontWeight = FontWeight.Bold,
-                            color = SuccessGreen,
+                            color = StatusColors.getReadableTextColor(SuccessGreen),
                             fontSize = 10.sp
                         ),
                         modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp)
@@ -397,7 +398,7 @@ fun ScenarioTogglesPanel(
                         text = strings.scenarioNegativeSectionNumber,
                         style = MaterialTheme.typography.labelSmall.copy(
                             fontWeight = FontWeight.Bold,
-                            color = AlertRed,
+                            color = StatusColors.getReadableTextColor(AlertRed),
                             fontSize = 10.sp
                         ),
                         modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp)
@@ -421,7 +422,7 @@ fun ScenarioTogglesPanel(
                         text = strings.scenarioNegativeActive(scenarios.negativeActiveCount),
                         style = MaterialTheme.typography.labelSmall.copy(
                             fontWeight = FontWeight.Bold,
-                            color = AlertRed,
+                            color = StatusColors.getReadableTextColor(AlertRed),
                             fontSize = 10.sp
                         ),
                         modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp)
@@ -525,11 +526,11 @@ private fun ScenarioToggleCard(
                 }
 
                 val badgeTextColor = if (item.isChecked) {
-                    accentColor
+                    StatusColors.getReadableTextColor(accentColor)
                 } else if (item.isPositive) {
-                    SuccessGreen
+                    StatusColors.getReadableTextColor(SuccessGreen)
                 } else {
-                    AccentGold
+                    StatusColors.getReadableTextColor(AccentGold)
                 }
 
                 Surface(

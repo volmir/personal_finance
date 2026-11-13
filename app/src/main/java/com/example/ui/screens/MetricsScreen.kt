@@ -346,7 +346,7 @@ fun MetricsScreen(
                                     },
                                     style = MaterialTheme.typography.labelSmall.copy(
                                         fontWeight = FontWeight.Bold,
-                                        color = fidelityColor,
+                                        color = StatusColors.getReadableTextColor(fidelityColor),
                                         fontSize = 12.sp
                                     )
                                 )

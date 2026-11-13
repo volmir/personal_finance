@@ -577,7 +577,7 @@ fun MetricIndicatorRow(
                 text = value,
                 style = MaterialTheme.typography.titleMedium.copy(
                     fontWeight = FontWeight.Bold,
-                    color = valueColor
+                    color = StatusColors.getReadableTextColor(valueColor)
                 )
             )
         }

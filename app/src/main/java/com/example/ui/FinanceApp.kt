@@ -141,7 +141,7 @@ fun FinanceApp(viewModel: MainViewModel) {
                     actions = {
                         // Quick Score Pill
                         val totalScore = metrics.scores.totalScore
-                        val totalScoreColor = ScoreColorEvaluator.getTotalScoreColor(totalScore)
+                        val totalScoreTextColor = ScoreColorEvaluator.getTotalScoreTextColor(totalScore)
                         val totalScoreBg = ScoreColorEvaluator.getTotalScoreContainerColor(totalScore)
                         Surface(
                             shape = RoundedCornerShape(12.dp),
@@ -154,7 +154,7 @@ fun FinanceApp(viewModel: MainViewModel) {
                                 text = strings.scoreSlashOutOfTen(Formatters.formatScore(totalScore, lang = appLanguage)),
                                 style = MaterialTheme.typography.labelMedium.copy(
                                     fontWeight = FontWeight.Bold,
-                                    color = totalScoreColor
+                                    color = totalScoreTextColor
                                 ),
                                 modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
                             )
