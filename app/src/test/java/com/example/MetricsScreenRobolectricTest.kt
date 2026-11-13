@@ -9,7 +9,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertHeightIsAtLeast
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertTextEquals
+import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasScrollAction
@@ -210,6 +212,7 @@ class MetricsScreenRobolectricTest {
     }
 
     @Test
+    @Config(qualifiers = "w411dp-h891dp")
     fun `results export button is the only one at the bottom and keeps the original summary and share action`() {
         val input = FinancialInputData.defaultData()
         val metrics = FinanceCalculator.calculate(input, today = LocalDate.of(2025, 1, 1))
@@ -243,10 +246,22 @@ class MetricsScreenRobolectricTest {
             .assertCountEquals(1)
         composeRule.onNodeWithTag("export_button")
             .assertExists()
+            .assertIsDisplayed()
             .assert(hasClickAction())
             .assertHeightIsAtLeast(48.dp)
             .assertTextEquals(StringsRu.exportButtonText)
-            .performClick()
+
+        // Кнопка экспорта — последний элемент списка, после последней карточки показателя.
+        val exportBounds = composeRule.onNodeWithTag("export_button").getUnclippedBoundsInRoot()
+        val lastMetricBounds = composeRule.onNodeWithTag(metricCardTag(StringsRu.metricRealReturnTitle))
+            .assertExists()
+            .getUnclippedBoundsInRoot()
+        assertTrue(
+            "Export button must be below the last metric card",
+            exportBounds.top >= lastMetricBounds.bottom
+        )
+
+        composeRule.onNodeWithTag("export_button").performClick()
 
         val chooser = startedIntents.single()
         assertEquals(Intent.ACTION_CHOOSER, chooser.action)

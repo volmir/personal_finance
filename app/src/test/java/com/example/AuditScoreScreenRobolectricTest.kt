@@ -1,31 +1,43 @@
 package com.example
 
+import android.content.Context
+import android.content.ContextWrapper
+import android.content.Intent
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.assertContentDescriptionEquals
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertHeightIsAtLeast
 import androidx.compose.ui.test.assertTextEquals
+import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.hasTestTag
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.unit.dp
+import androidx.test.core.app.ApplicationProvider
 import com.example.data.model.FinancialInputData
+import com.example.domain.AuditorAnalysisGenerator
 import com.example.domain.FinanceCalculator
 import com.example.domain.model.AuditIndicatorStatus
 import com.example.ui.screens.AuditOpinionIndicatorItem
 import com.example.ui.screens.AuditScoreScreen
+import com.example.util.Formatters
 import com.example.util.localization.AppLanguage
 import com.example.util.localization.LocalAppLanguage
 import com.example.util.localization.LocalAppStrings
 import com.example.util.localization.StringsRu
 import java.time.LocalDate
+import java.util.Locale
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -190,6 +202,7 @@ class AuditScoreScreenRobolectricTest {
     fun `auditor opinion export is a single secondary action at the bottom of the opinion card`() {
         val input = FinancialInputData.defaultData()
         val metrics = FinanceCalculator.calculate(input, today = LocalDate.of(2025, 1, 1))
+        val opinion = AuditorAnalysisGenerator.generate(input, metrics, AppLanguage.RU)
 
         composeRule.setContent {
             MaterialTheme {
@@ -216,12 +229,103 @@ class AuditScoreScreenRobolectricTest {
         // Внизу карточки заключения ровно одна текстовая кнопка экспорта.
         composeRule.onAllNodes(hasTestTag("export_auditor_opinion_button"), useUnmergedTree = true)
             .assertCountEquals(1)
-        composeRule.onNodeWithTag("export_auditor_opinion_button")
+        val exportButton = composeRule.onNodeWithTag("export_auditor_opinion_button")
+        exportButton
             .assertExists()
             .assert(hasClickAction())
             .assertHeightIsAtLeast(48.dp)
             .assert(hasAnyAncestor(hasTestTag("auditor_opinion_card")))
-            .assertTextEquals("Экспорт заключения")
+            .assertTextEquals(StringsRu.exportAuditorOpinionButtonText)
+
+        // Кнопка находится после всего текста заключения и закрывает карточку.
+        val buttonBounds = exportButton.getUnclippedBoundsInRoot()
+        val cardBounds = composeRule.onNodeWithTag("auditor_opinion_card").getUnclippedBoundsInRoot()
+        (opinion.positive + opinion.neutral + opinion.negative).forEach { item ->
+            val textBounds = composeRule.onNodeWithTag("audit_indicator_${item.id}").getUnclippedBoundsInRoot()
+            assertTrue(
+                "Audit item '${item.id}' must be above the export button",
+                textBounds.bottom <= buttonBounds.top
+            )
+        }
+        assertTrue(
+            "The export button must be the last element inside the opinion card",
+            cardBounds.bottom >= buttonBounds.bottom && cardBounds.bottom - buttonBounds.bottom <= 17.dp
+        )
+    }
+
+    @Test
+    fun `financial score header keeps its share icon and gains no score export`() {
+        val input = FinancialInputData.defaultData()
+        val metrics = FinanceCalculator.calculate(input, today = LocalDate.of(2025, 1, 1))
+        val scores = metrics.scores
+        val startedIntents = mutableListOf<Intent>()
+        val recordingContext = object : ContextWrapper(ApplicationProvider.getApplicationContext<Context>()) {
+            override fun startActivity(intent: Intent) {
+                startedIntents += intent
+            }
+        }
+
+        composeRule.setContent {
+            MaterialTheme {
+                CompositionLocalProvider(
+                    LocalAppLanguage provides AppLanguage.RU,
+                    LocalAppStrings provides StringsRu,
+                    LocalContext provides recordingContext
+                ) {
+                    AuditScoreScreen(inputData = input, metrics = metrics)
+                }
+            }
+        }
+
+        // В карточке финансовой оценки осталась только прежняя иконка «Поделиться отчётом».
+        composeRule.onNodeWithTag("audit_score_header_card").assertExists()
+        composeRule.onAllNodes(
+            hasClickAction() and hasAnyAncestor(hasTestTag("audit_score_header_card")),
+            useUnmergedTree = true
+        ).assertCountEquals(1)
+        composeRule.onNodeWithTag("share_audit_button")
+            .assertExists()
+            .assert(hasClickAction())
+            .assertContentDescriptionEquals(StringsRu.scoresShareReportChooser)
+
+        // «Экспорт оценки» и общая кнопка экспорта в карточке оценки не появились.
+        composeRule.onAllNodes(
+            hasText("Экспорт оценки", substring = true),
+            useUnmergedTree = true
+        ).assertCountEquals(0)
+        composeRule.onAllNodes(
+            hasTestTag("export_button") and hasAnyAncestor(hasTestTag("audit_score_header_card")),
+            useUnmergedTree = true
+        ).assertCountEquals(0)
+        composeRule.onAllNodes(
+            hasTestTag("export_auditor_opinion_button") and hasAnyAncestor(hasTestTag("audit_score_header_card")),
+            useUnmergedTree = true
+        ).assertCountEquals(0)
+
+        // Действие иконки прежнее: текстовый отчёт об оценке через системный chooser.
+        composeRule.onNodeWithTag("share_audit_button").performClick()
+        val chooser = startedIntents.single()
+        assertEquals(Intent.ACTION_CHOOSER, chooser.action)
+        assertEquals(StringsRu.scoresShareReportChooser, chooser.getStringExtra(Intent.EXTRA_TITLE))
+        val sendIntent = requireNotNull(chooser.getParcelableExtra<Intent>(Intent.EXTRA_INTENT))
+        assertEquals(Intent.ACTION_SEND, sendIntent.action)
+        assertEquals("text/plain", sendIntent.type)
+        val expectedReport = String.format(
+            Locale.ROOT,
+            StringsRu.shareScoreReportTemplate,
+            Formatters.formatScore(scores.totalScore, lang = AppLanguage.RU),
+            scores.savingsRateScore,
+            Formatters.formatPercent(metrics.savingsRate, AppLanguage.RU),
+            scores.safetyMonthsScore,
+            Formatters.formatRatio(metrics.safetyMonths, AppLanguage.RU),
+            scores.debtRatioScore,
+            Formatters.formatRatio(metrics.debtRatio, AppLanguage.RU),
+            scores.cfsScore,
+            Formatters.formatRatio(metrics.financialFreedomRatio, AppLanguage.RU),
+            Formatters.formatFireYearsToRetirement(metrics.yearsToRetirement, metrics.fireStatus, AppLanguage.RU),
+            Formatters.formatFireRetirementAge(metrics.retirementAge, metrics.fireStatus, AppLanguage.RU)
+        )
+        assertEquals(expectedReport, sendIntent.getStringExtra(Intent.EXTRA_TEXT))
     }
 
     @Test
