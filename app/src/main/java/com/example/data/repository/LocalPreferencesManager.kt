@@ -33,6 +33,9 @@ class LocalPreferencesManager(context: Context) {
         private const val KEY_LANGUAGE = "app_language"
         private const val KEY_CURRENT_TAB = "current_tab"
 
+        // One-time sample data notice
+        private const val KEY_SAMPLE_DATA_NOTICE_SHOWN = "sample_data_notice_shown"
+
         // Simulator sliders
         private const val KEY_SIM_EXTRA_SAVINGS = "sim_extra_savings"
         private const val KEY_SIM_RETURN_ADJUSTMENT = "sim_return_adjustment"
@@ -58,6 +61,17 @@ class LocalPreferencesManager(context: Context) {
     }
 
     fun isFirstLaunch(): Boolean = !prefs.getBoolean(KEY_INITIALIZED, false)
+
+    /**
+     * Must be checked before [loadData], because the first load sets [KEY_INITIALIZED].
+     * Existing installs, including app updates, never qualify.
+     */
+    fun shouldShowSampleDataNotice(): Boolean =
+        isFirstLaunch() && !prefs.getBoolean(KEY_SAMPLE_DATA_NOTICE_SHOWN, false)
+
+    fun markSampleDataNoticeShown() {
+        prefs.edit().putBoolean(KEY_SAMPLE_DATA_NOTICE_SHOWN, true).apply()
+    }
 
     private fun loadDouble(key: String, defaultValue: Double): Double =
         prefs.getString(key, null)?.toDoubleOrNull()?.takeUnless { it.isNaN() } ?: defaultValue

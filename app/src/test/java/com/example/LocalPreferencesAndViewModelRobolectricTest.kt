@@ -174,6 +174,43 @@ class LocalPreferencesAndViewModelRobolectricTest {
     }
 
     @Test
+    fun `sample data notice is offered only before the first data initialization`() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        context.getSharedPreferences("user_finance_data", Context.MODE_PRIVATE).edit().clear().commit()
+
+        val manager = LocalPreferencesManager(context)
+        assertTrue(manager.shouldShowSampleDataNotice())
+
+        // Existing install from a previous version: initialized, but no notice marker.
+        manager.loadData()
+        assertFalse(manager.isFirstLaunch())
+        assertFalse(manager.shouldShowSampleDataNotice())
+        assertFalse(LocalPreferencesManager(context).shouldShowSampleDataNotice())
+    }
+
+    @Test
+    fun `sample data notice marker is one-shot and does not initialize financial data`() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val prefs = context.getSharedPreferences("user_finance_data", Context.MODE_PRIVATE)
+        prefs.edit().clear().commit()
+
+        val manager = LocalPreferencesManager(context)
+        assertTrue(manager.shouldShowSampleDataNotice())
+        manager.markSampleDataNoticeShown()
+
+        // The marker alone must not turn the install into an initialized one.
+        assertTrue(manager.isFirstLaunch())
+        assertFalse(LocalPreferencesManager(context).shouldShowSampleDataNotice())
+
+        assertEquals(FinancialInputData.usAverageData(), manager.loadData())
+        assertFalse(LocalPreferencesManager(context).shouldShowSampleDataNotice())
+
+        // Clearing all app data creates a new install again.
+        prefs.edit().clear().commit()
+        assertTrue(LocalPreferencesManager(context).shouldShowSampleDataNotice())
+    }
+
+    @Test
     fun `disclaimer text matches user specification in both languages`() {
         val ruStrings = com.example.util.localization.getAppStrings(AppLanguage.RU)
         assertEquals("Отказ от отвествености", ruStrings.disclaimerTitle)

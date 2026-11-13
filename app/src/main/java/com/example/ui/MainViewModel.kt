@@ -120,6 +120,21 @@ class MainViewModel @JvmOverloads constructor(
     private val localPrefs: LocalPreferencesManager = LocalPreferencesManager(application)
     private var inputDataSaveJob: Job? = null
 
+    // Новую установку определяем до loadData(), иначе KEY_INITIALIZED уже будет выставлен.
+    private val _showSampleDataNotice = MutableStateFlow(localPrefs.shouldShowSampleDataNotice())
+    val showSampleDataNotice: StateFlow<Boolean> = _showSampleDataNotice.asStateFlow()
+
+    fun markSampleDataNoticeShown() {
+        if (_showSampleDataNotice.value) {
+            localPrefs.markSampleDataNoticeShown()
+        }
+    }
+
+    fun dismissSampleDataNotice() {
+        markSampleDataNoticeShown()
+        _showSampleDataNotice.value = false
+    }
+
     private val _currentTab = MutableStateFlow(localPrefs.loadCurrentTab() ?: AppTab.INPUT)
     val currentTab: StateFlow<AppTab> = _currentTab.asStateFlow()
 

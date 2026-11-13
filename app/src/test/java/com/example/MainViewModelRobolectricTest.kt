@@ -22,6 +22,7 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -45,6 +46,53 @@ class MainViewModelRobolectricTest {
     @After
     fun tearDown() {
         Dispatchers.resetMain()
+    }
+
+    @Test
+    fun `sample data notice is initiated once and survives restart after being shown`() {
+        val viewModel = MainViewModel(app) { today }
+        assertTrue(viewModel.showSampleDataNotice.value)
+        val input = viewModel.inputData.value
+
+        // The first actual display persists the marker while the dialog remains open.
+        viewModel.markSampleDataNoticeShown()
+        assertTrue(viewModel.showSampleDataNotice.value)
+        assertEquals(input, viewModel.inputData.value)
+
+        assertFalse(MainViewModel(app) { today }.showSampleDataNotice.value)
+
+        viewModel.dismissSampleDataNotice()
+        assertFalse(viewModel.showSampleDataNotice.value)
+        assertFalse(MainViewModel(app) { today }.showSampleDataNotice.value)
+        assertEquals(input, viewModel.inputData.value)
+        viewModel.flushPendingSave()
+    }
+
+    @Test
+    fun `dismissing the sample data notice also makes it one-shot`() {
+        val viewModel = MainViewModel(app) { today }
+        assertTrue(viewModel.showSampleDataNotice.value)
+
+        viewModel.dismissSampleDataNotice()
+
+        assertFalse(viewModel.showSampleDataNotice.value)
+        assertFalse(MainViewModel(app) { today }.showSampleDataNotice.value)
+        viewModel.flushPendingSave()
+    }
+
+    @Test
+    fun `sample data notice is not offered to an existing install`() {
+        val prefs = LocalPreferencesManager(app)
+        val input = FinancialInputData.usAverageData().copy(monthlyIncome = 12_345.0)
+        prefs.saveData(input)
+
+        val viewModel = MainViewModel(app) { today }
+        assertFalse(viewModel.showSampleDataNotice.value)
+
+        viewModel.dismissSampleDataNotice()
+        assertFalse(viewModel.showSampleDataNotice.value)
+        assertEquals(input, LocalPreferencesManager(app).loadData())
+        viewModel.flushPendingSave()
     }
 
     @Test
