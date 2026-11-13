@@ -49,6 +49,7 @@ import com.example.data.model.CalculatedMetrics
 import com.example.data.model.FinancialInputData
 import com.example.domain.FinancialMetricEvaluator
 import com.example.domain.model.AuditIndicatorStatus
+import com.example.ui.components.ExportResultsButton
 import com.example.ui.components.MetricCard
 import com.example.ui.theme.AccentGold
 import com.example.ui.theme.AccentTeal
@@ -428,6 +429,14 @@ fun MetricsScreen(
 
         item {
             Spacer(modifier = Modifier.height(14.dp))
+        }
+
+        // Единая кнопка экспорта краткого финансового отчёта (перенесена с вкладки «Итоги»)
+        item {
+            Column {
+                ExportResultsButton(inputData = inputData, metrics = metrics)
+                Spacer(modifier = Modifier.height(14.dp))
+            }
         }
     }
 }

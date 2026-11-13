@@ -220,4 +220,27 @@ class AuditScoreScreenRobolectricTest {
             .assert(hasAnyAncestor(hasTestTag("auditor_opinion_card")))
             .assertTextEquals("Экспорт заключения")
     }
+
+    @Test
+    fun `shared results export button is absent from the audit tab`() {
+        val input = FinancialInputData.defaultData()
+        val metrics = FinanceCalculator.calculate(input, today = LocalDate.of(2025, 1, 1))
+
+        composeRule.setContent {
+            MaterialTheme {
+                CompositionLocalProvider(
+                    LocalAppLanguage provides AppLanguage.RU,
+                    LocalAppStrings provides StringsRu
+                ) {
+                    AuditScoreScreen(inputData = input, metrics = metrics)
+                }
+            }
+        }
+
+        composeRule.onNode(hasScrollAction())
+            .performScrollToNode(hasTestTag("developer_disclaimer_card"))
+
+        composeRule.onAllNodes(hasTestTag("export_button"), useUnmergedTree = true)
+            .assertCountEquals(0)
+    }
 }

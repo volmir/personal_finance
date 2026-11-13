@@ -1,11 +1,16 @@
 package com.example
 
+import android.content.Context
+import android.content.ContextWrapper
+import android.content.Intent
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
@@ -17,9 +22,12 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.test.core.app.ApplicationProvider
 import com.example.data.model.FinancialInputData
+import com.example.domain.AuditorAnalysisGenerator
 import com.example.domain.FinanceCalculator
 import com.example.ui.screens.MetricsScreen
 import com.example.util.localization.AppLanguage
@@ -28,6 +36,7 @@ import com.example.util.localization.LocalAppStrings
 import com.example.util.localization.StringsRu
 import com.example.util.localization.getAppStrings
 import org.junit.Rule
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -196,5 +205,55 @@ class MetricsScreenRobolectricTest {
         }
 
         composeRule.onNodeWithText(StringsRu.metricCashFlowNeutralSub).assertExists()
+    }
+
+    @Test
+    fun `results export button is the only one at the bottom and keeps the original summary and share action`() {
+        val input = FinancialInputData.defaultData()
+        val metrics = FinanceCalculator.calculate(input, today = LocalDate.of(2025, 1, 1))
+        val startedIntents = mutableListOf<Intent>()
+        val recordingContext = object : ContextWrapper(ApplicationProvider.getApplicationContext<Context>()) {
+            override fun startActivity(intent: Intent) {
+                startedIntents += intent
+            }
+        }
+
+        composeRule.setContent {
+            MaterialTheme {
+                CompositionLocalProvider(
+                    LocalAppLanguage provides AppLanguage.RU,
+                    LocalAppStrings provides StringsRu,
+                    LocalContext provides recordingContext
+                ) {
+                    MetricsScreen(
+                        inputData = input,
+                        metrics = metrics,
+                        modifier = Modifier.testTag("metrics_export_list")
+                    )
+                }
+            }
+        }
+
+        composeRule.onNodeWithTag("metrics_export_list")
+            .performScrollToNode(hasTestTag("export_button"))
+
+        composeRule.onAllNodes(hasTestTag("export_button"), useUnmergedTree = true)
+            .assertCountEquals(1)
+        composeRule.onNodeWithTag("export_button")
+            .assertExists()
+            .assert(hasClickAction())
+            .assertTextEquals(StringsRu.exportButtonText)
+            .performClick()
+
+        val chooser = startedIntents.single()
+        assertEquals(Intent.ACTION_CHOOSER, chooser.action)
+        assertEquals(StringsRu.exportChooserTitle, chooser.getStringExtra(Intent.EXTRA_TITLE))
+        val sendIntent = requireNotNull(chooser.getParcelableExtra<Intent>(Intent.EXTRA_INTENT))
+        assertEquals(Intent.ACTION_SEND, sendIntent.action)
+        assertEquals("text/plain", sendIntent.type)
+        assertEquals(
+            AuditorAnalysisGenerator.generateExportSummary(input, metrics, AppLanguage.RU),
+            sendIntent.getStringExtra(Intent.EXTRA_TEXT)
+        )
     }
 }
