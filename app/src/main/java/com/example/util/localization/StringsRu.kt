@@ -327,7 +327,7 @@ val StringsRu: AppStrings = object : AppStrings {
     override val metricsHeaderSubtitle: String = "Все ключевые метрики с формулами и оценкой"
     override val categoryAll: String = "Все"
     override val categoryCashFlow: String = "Денежный поток"
-    override val categoryCapitalRisks: String = "Капитал & Риски"
+    override val categoryCapitalRisks: String = "Капитал и риски"
     override val categoryBenchmarks: String = "Бенчмарки"
     override val metricCardInfo: String = "Инфо"
     override val metricCardHide: String = "Скрыть"
@@ -391,7 +391,7 @@ val StringsRu: AppStrings = object : AppStrings {
     override val metricRealReturnSubFormat: (nom: String, infl: String) -> String = { nom, infl -> "Номинал: $nom | Инфляция: $infl" }
     override val metricUnavailableValue: String = "—"
 
-    override val scoresHeaderTitle: String = "Набранные баллы"
+    override val scoresHeaderTitle: String = "Финансовая оценка"
     override val scoresHeaderSubtitle: String = "Итоги и суммирование результатов"
     override val scoresShareReportChooser: String = "Поделиться отчетом"
     override val scoresGaugeOutOf: (max: Int) -> String = { max -> "из $max" }
