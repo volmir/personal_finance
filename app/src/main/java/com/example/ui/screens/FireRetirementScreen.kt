@@ -627,361 +627,365 @@ fun FireRetirementScreen(
             }
         }
 
-        // Интерактивный симулятор "Что если?"
-        // Во всех трех пунктах справа отображаются текущие значения, изменяемые ползунками!
-        item {
-            Card(
-                shape = RoundedCornerShape(14.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("fire_simulator_card")
-            ) {
-                Column(modifier = Modifier.padding(14.dp)) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                imageVector = Icons.Default.Tune,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(18.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = strings.fireSimSliderTitle,
-                                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
-                            )
+        // Ползунки, сценарии и сброс доступны только во внутреннем табе «Симуляция»;
+        // в FIRE управляющих элементов симулятора нет.
+        if (isSimulationSubtab) {
+            // Интерактивный симулятор "Что если?"
+            // Во всех трех пунктах справа отображаются текущие значения, изменяемые ползунками!
+            item {
+                Card(
+                    shape = RoundedCornerShape(14.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("fire_simulator_card")
+                ) {
+                    Column(modifier = Modifier.padding(14.dp)) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = Icons.Default.Tune,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = strings.fireSimSliderTitle,
+                                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
+                                )
+                            }
+
+                            if (isSimulating) {
+                                OutlinedButton(
+                                    onClick = onResetSimulation,
+                                    contentPadding = ButtonDefaults.ContentPadding,
+                                    modifier = Modifier.height(30.dp)
+                                ) {
+                                    Text(strings.fireSimReset, fontSize = 11.sp)
+                                }
+                            }
                         }
 
-                        if (isSimulating) {
-                            OutlinedButton(
-                                onClick = onResetSimulation,
-                                contentPadding = ButtonDefaults.ContentPadding,
-                                modifier = Modifier.height(30.dp)
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        Text(
+                            text = strings.fireSimFineTuning,
+                            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
+                        )
+
+                        Spacer(modifier = Modifier.height(6.dp))
+
+                        // Пункт 1: Ежемесячные сбережения (позволяет как повышать, так и понижать)
+                        Column {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text(strings.fireSimReset, fontSize = 11.sp)
-                            }
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    Text(
-                        text = strings.fireSimFineTuning,
-                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
-                    )
-
-                    Spacer(modifier = Modifier.height(6.dp))
-
-                    // Пункт 1: Ежемесячные сбережения (позволяет как повышать, так и понижать)
-                    Column {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = strings.fireSliderSavings,
-                                    style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium)
-                                )
-                                if (isSimulating) {
-                                    val netSavingsDiff = currentEffectiveSavings - metrics.cashFlow
-                                    if (kotlin.math.abs(netSavingsDiff) > 0.01) {
-                                        val isSavingsPositive = netSavingsDiff > 0
-                                        Text(
-                                            text = buildString {
-                                                append(if (isSavingsPositive) "+" else "")
-                                                append(Formatters.formatMoney(netSavingsDiff, inputData.currencySymbol, lang))
-                                                append(" ${strings.fireSliderBaseSuffix}")
-                                                val incFactors = mutableListOf<String>()
-                                                if (simulationState.scenarios.salaryIncrease20) incFactors.add(strings.scenarioSalaryIncreaseTitle.lowercase())
-                                                if (simulationState.scenarios.mortgage20Years35Income) incFactors.add(strings.scenarioMortgageTitle.lowercase())
-                                                if (simulationState.scenarios.carLoan5Years) incFactors.add(strings.scenarioCarLoanTitle.lowercase())
-                                                if (simulationState.scenarios.childOrDependent18Years) incFactors.add(strings.scenarioChildTitle.lowercase())
-                                                if (simulationState.scenarios.expenseOptimization15) incFactors.add(strings.scenarioExpenseOptTitle.lowercase())
-                                                if (simulationState.scenarios.relocationLowerCost30) incFactors.add(strings.scenarioRelocationTitle.lowercase())
-                                                if (simulationState.scenarios.expensesPlus25) incFactors.add(strings.scenarioInflationTitle.lowercase())
-                                                if (simulationState.extraMonthlySavings != 0.0) {
-                                                    incFactors.add("${strings.scenarioParamsPrefix.trim()} ${if (simulationState.extraMonthlySavings > 0) "+" else ""}${Formatters.formatMoney(simulationState.extraMonthlySavings, inputData.currencySymbol, lang)}")
-                                                }
-                                                if (simulationState.expenseReduction != 0.0) {
-                                                    incFactors.add("${strings.scenarioParamsPrefix.trim()} ${Formatters.formatMoney(-simulationState.expenseReduction, inputData.currencySymbol, lang)}")
-                                                }
-                                                if (incFactors.isNotEmpty()) {
-                                                    append(" (")
-                                                    append(incFactors.joinToString(", "))
-                                                    append(")")
-                                                }
-                                            },
-                                            style = MaterialTheme.typography.labelSmall.copy(
-                                                color = if (isSavingsPositive) SuccessGreen else AlertRed,
-                                                fontSize = 10.sp
-                                            )
-                                        )
-                                    }
-                                }
-                            }
-                            Text(
-                                text = Formatters.formatMoney(currentEffectiveSavings, inputData.currencySymbol, lang),
-                                style = MaterialTheme.typography.bodyMedium.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    color = if (currentEffectiveSavings >= 0) MaterialTheme.colorScheme.primary else AlertRed
-                                )
-                            )
-                        }
-                        Slider(
-                            value = simulationState.extraMonthlySavings.toFloat(),
-                            onValueChange = { rawValue ->
-                                val snapped = kotlin.math.round(rawValue / savingsConfig.stepSize) * savingsConfig.stepSize
-                                onUpdateSimulation(
-                                    snapped,
-                                    simulationState.realReturnAdjustment,
-                                    simulationState.expenseReduction
-                                )
-                            },
-                            valueRange = savingsConfig.minValue..savingsConfig.maxValue,
-                            steps = savingsConfig.steps,
-                            colors = SliderDefaults.colors(thumbColor = MaterialTheme.colorScheme.primary),
-                            modifier = Modifier.testTag("fire_slider_savings")
-                        )
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 4.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = strings.fireSliderFrom(Formatters.formatMoney(savingsConfig.minValue.toDouble(), inputData.currencySymbol, lang)),
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    fontSize = 10.sp
-                                )
-                            )
-                            Text(
-                                text = strings.fireSliderStep(Formatters.formatMoney(savingsConfig.stepSize, inputData.currencySymbol, lang)),
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    color = MaterialTheme.colorScheme.primary,
-                                    fontSize = 10.sp,
-                                    fontWeight = FontWeight.Medium
-                                )
-                            )
-                            Text(
-                                text = strings.fireSliderTo(Formatters.formatMoney(savingsConfig.maxValue.toDouble(), inputData.currencySymbol, lang)),
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    fontSize = 10.sp
-                                )
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(6.dp))
-
-                    // Пункт 2: Ежемесячные расходы (позволяет как понижать, так и повышать)
-                    Column {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = strings.fireSliderExpenses,
-                                    style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium)
-                                )
-                                if (isSimulating) {
-                                    val netExpChange = currentEffectiveExpenses - inputData.monthlyExpenses
-                                    if (kotlin.math.abs(netExpChange) > 0.01) {
-                                        val isReduced = netExpChange < 0
-                                        Text(
-                                            text = buildString {
-                                                append(if (netExpChange > 0) "+" else "")
-                                                val decOrInc = (if (isReduced) strings.fireSliderDec else strings.fireSliderInc).trim(' ', '(', ')')
-                                                append(" ($decOrInc)")
-                                                val factors = mutableListOf<String>()
-                                                if (simulationState.scenarios.expenseOptimization15) factors.add(strings.scenarioExpenseOptTitle.lowercase())
-                                                if (simulationState.scenarios.relocationLowerCost30) factors.add(strings.scenarioRelocationTitle.lowercase())
-                                                if (simulationState.scenarios.expensesPlus25) factors.add(strings.scenarioInflationTitle.lowercase())
-                                                if (simulationState.scenarios.mortgage20Years35Income) factors.add(strings.scenarioMortgageTitle.lowercase())
-                                                if (simulationState.scenarios.carLoan5Years) factors.add(strings.scenarioCarLoanTitle.lowercase())
-                                                if (simulationState.scenarios.childOrDependent18Years) factors.add(strings.scenarioChildTitle.lowercase())
-                                                if (simulationState.expenseReduction != 0.0) {
-                                                    val red = simulationState.expenseReduction
-                                                    factors.add("${if (red > 0) "-" else "+"}${Formatters.formatMoney(kotlin.math.abs(red), inputData.currencySymbol, lang)}")
-                                                }
-                                                if (factors.isNotEmpty()) {
-                                                    append(" • ")
-                                                    append(factors.joinToString(", "))
-                                                }
-                                            },
-                                            style = MaterialTheme.typography.labelSmall.copy(
-                                                color = if (isReduced) SuccessGreen else AlertRed,
-                                                fontSize = 10.sp
-                                            )
-                                        )
-                                    }
-                                }
-                            }
-                            Text(
-                                text = Formatters.formatMoney(currentEffectiveExpenses, inputData.currencySymbol, lang),
-                                style = MaterialTheme.typography.bodyMedium.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    color = if (currentEffectiveExpenses < inputData.monthlyExpenses) SuccessGreen
-                                    else if (currentEffectiveExpenses > inputData.monthlyExpenses) AlertRed
-                                    else MaterialTheme.colorScheme.onSurface
-                                )
-                            )
-                        }
-                        Slider(
-                            value = simulationState.expenseReduction.toFloat(),
-                            onValueChange = { rawValue ->
-                                val snapped = kotlin.math.round(rawValue / expensesConfig.stepSize) * expensesConfig.stepSize
-                                onUpdateSimulation(
-                                    simulationState.extraMonthlySavings,
-                                    simulationState.realReturnAdjustment,
-                                    snapped
-                                )
-                            },
-                            valueRange = expensesConfig.minValue..expensesConfig.maxValue,
-                            steps = expensesConfig.steps,
-                            colors = SliderDefaults.colors(thumbColor = MaterialTheme.colorScheme.primary),
-                            modifier = Modifier.testTag("fire_slider_expenses")
-                        )
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 4.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "${Formatters.formatMoney(expensesConfig.minValue.toDouble(), inputData.currencySymbol, lang)} (${strings.fireSliderInc.trim(' ', '(', ')')})",
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    fontSize = 10.sp
-                                )
-                            )
-                            Text(
-                                text = strings.fireSliderStep(Formatters.formatMoney(expensesConfig.stepSize, inputData.currencySymbol, lang)),
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    color = MaterialTheme.colorScheme.primary,
-                                    fontSize = 10.sp,
-                                    fontWeight = FontWeight.Medium
-                                )
-                            )
-                            Text(
-                                text = "+${Formatters.formatMoney(expensesConfig.maxValue.toDouble(), inputData.currencySymbol, lang)} (${strings.fireSliderDec.trim(' ', '(', ')')})",
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    fontSize = 10.sp
-                                )
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(6.dp))
-
-                    // Пункт 3: Реальная доходность (отображает текущее значение доходности)
-                    Column {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Column {
-                                Text(
-                                    text = strings.fireSliderReturn,
-                                    style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium)
-                                )
-                                val returnDiff = currentEffectiveReturn - metrics.realReturnPercent
-                                if (kotlin.math.abs(returnDiff) > 0.005) {
-                                    val isGain = returnDiff > 0
+                                Column(modifier = Modifier.weight(1f)) {
                                     Text(
-                                        text = buildString {
-                                            append(if (isGain) "+" else "")
-                                            append(Formatters.formatRatio(returnDiff, lang))
-                                            append("% ${strings.fireSliderBaseReturnSuffix}")
-                                            if (simulationState.scenarios.expensesPlus25) {
-                                                append(" • ")
-                                                append(strings.scenarioInflationTitle.lowercase())
-                                            }
-                                        },
-                                        style = MaterialTheme.typography.labelSmall.copy(
-                                            color = if (isGain) SuccessGreen else AlertRed,
-                                            fontSize = 10.sp
-                                        )
+                                        text = strings.fireSliderSavings,
+                                        style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium)
                                     )
+                                    if (isSimulating) {
+                                        val netSavingsDiff = currentEffectiveSavings - metrics.cashFlow
+                                        if (kotlin.math.abs(netSavingsDiff) > 0.01) {
+                                            val isSavingsPositive = netSavingsDiff > 0
+                                            Text(
+                                                text = buildString {
+                                                    append(if (isSavingsPositive) "+" else "")
+                                                    append(Formatters.formatMoney(netSavingsDiff, inputData.currencySymbol, lang))
+                                                    append(" ${strings.fireSliderBaseSuffix}")
+                                                    val incFactors = mutableListOf<String>()
+                                                    if (simulationState.scenarios.salaryIncrease20) incFactors.add(strings.scenarioSalaryIncreaseTitle.lowercase())
+                                                    if (simulationState.scenarios.mortgage20Years35Income) incFactors.add(strings.scenarioMortgageTitle.lowercase())
+                                                    if (simulationState.scenarios.carLoan5Years) incFactors.add(strings.scenarioCarLoanTitle.lowercase())
+                                                    if (simulationState.scenarios.childOrDependent18Years) incFactors.add(strings.scenarioChildTitle.lowercase())
+                                                    if (simulationState.scenarios.expenseOptimization15) incFactors.add(strings.scenarioExpenseOptTitle.lowercase())
+                                                    if (simulationState.scenarios.relocationLowerCost30) incFactors.add(strings.scenarioRelocationTitle.lowercase())
+                                                    if (simulationState.scenarios.expensesPlus25) incFactors.add(strings.scenarioInflationTitle.lowercase())
+                                                    if (simulationState.extraMonthlySavings != 0.0) {
+                                                        incFactors.add("${strings.scenarioParamsPrefix.trim()} ${if (simulationState.extraMonthlySavings > 0) "+" else ""}${Formatters.formatMoney(simulationState.extraMonthlySavings, inputData.currencySymbol, lang)}")
+                                                    }
+                                                    if (simulationState.expenseReduction != 0.0) {
+                                                        incFactors.add("${strings.scenarioParamsPrefix.trim()} ${Formatters.formatMoney(-simulationState.expenseReduction, inputData.currencySymbol, lang)}")
+                                                    }
+                                                    if (incFactors.isNotEmpty()) {
+                                                        append(" (")
+                                                        append(incFactors.joinToString(", "))
+                                                        append(")")
+                                                    }
+                                                },
+                                                style = MaterialTheme.typography.labelSmall.copy(
+                                                    color = if (isSavingsPositive) SuccessGreen else AlertRed,
+                                                    fontSize = 10.sp
+                                                )
+                                            )
+                                        }
+                                    }
                                 }
+                                Text(
+                                    text = Formatters.formatMoney(currentEffectiveSavings, inputData.currencySymbol, lang),
+                                    style = MaterialTheme.typography.bodyMedium.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (currentEffectiveSavings >= 0) MaterialTheme.colorScheme.primary else AlertRed
+                                    )
+                                )
                             }
-                            Text(
-                                text = Formatters.formatPercent(currentEffectiveReturn, lang),
-                                style = MaterialTheme.typography.bodyMedium.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
+                            Slider(
+                                value = simulationState.extraMonthlySavings.toFloat(),
+                                onValueChange = { rawValue ->
+                                    val snapped = kotlin.math.round(rawValue / savingsConfig.stepSize) * savingsConfig.stepSize
+                                    onUpdateSimulation(
+                                        snapped,
+                                        simulationState.realReturnAdjustment,
+                                        simulationState.expenseReduction
+                                    )
+                                },
+                                valueRange = savingsConfig.minValue..savingsConfig.maxValue,
+                                steps = savingsConfig.steps,
+                                colors = SliderDefaults.colors(thumbColor = MaterialTheme.colorScheme.primary),
+                                modifier = Modifier.testTag("fire_slider_savings")
                             )
-                        }
-                        Slider(
-                            value = simulationState.realReturnAdjustment.toFloat(),
-                            onValueChange = { rawValue ->
-                                val snapped = kotlin.math.round(rawValue / returnConfig.stepSize) * returnConfig.stepSize
-                                onUpdateSimulation(
-                                    simulationState.extraMonthlySavings,
-                                    snapped,
-                                    simulationState.expenseReduction
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 4.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = strings.fireSliderFrom(Formatters.formatMoney(savingsConfig.minValue.toDouble(), inputData.currencySymbol, lang)),
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        fontSize = 10.sp
+                                    )
                                 )
-                            },
-                            valueRange = returnConfig.minValue..returnConfig.maxValue,
-                            steps = returnConfig.steps,
-                            colors = SliderDefaults.colors(thumbColor = MaterialTheme.colorScheme.primary),
-                            modifier = Modifier.testTag("fire_slider_return")
+                                Text(
+                                    text = strings.fireSliderStep(Formatters.formatMoney(savingsConfig.stepSize, inputData.currencySymbol, lang)),
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        color = MaterialTheme.colorScheme.primary,
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                )
+                                Text(
+                                    text = strings.fireSliderTo(Formatters.formatMoney(savingsConfig.maxValue.toDouble(), inputData.currencySymbol, lang)),
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        fontSize = 10.sp
+                                    )
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(6.dp))
+
+                        // Пункт 2: Ежемесячные расходы (позволяет как понижать, так и повышать)
+                        Column {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = strings.fireSliderExpenses,
+                                        style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium)
+                                    )
+                                    if (isSimulating) {
+                                        val netExpChange = currentEffectiveExpenses - inputData.monthlyExpenses
+                                        if (kotlin.math.abs(netExpChange) > 0.01) {
+                                            val isReduced = netExpChange < 0
+                                            Text(
+                                                text = buildString {
+                                                    append(if (netExpChange > 0) "+" else "")
+                                                    val decOrInc = (if (isReduced) strings.fireSliderDec else strings.fireSliderInc).trim(' ', '(', ')')
+                                                    append(" ($decOrInc)")
+                                                    val factors = mutableListOf<String>()
+                                                    if (simulationState.scenarios.expenseOptimization15) factors.add(strings.scenarioExpenseOptTitle.lowercase())
+                                                    if (simulationState.scenarios.relocationLowerCost30) factors.add(strings.scenarioRelocationTitle.lowercase())
+                                                    if (simulationState.scenarios.expensesPlus25) factors.add(strings.scenarioInflationTitle.lowercase())
+                                                    if (simulationState.scenarios.mortgage20Years35Income) factors.add(strings.scenarioMortgageTitle.lowercase())
+                                                    if (simulationState.scenarios.carLoan5Years) factors.add(strings.scenarioCarLoanTitle.lowercase())
+                                                    if (simulationState.scenarios.childOrDependent18Years) factors.add(strings.scenarioChildTitle.lowercase())
+                                                    if (simulationState.expenseReduction != 0.0) {
+                                                        val red = simulationState.expenseReduction
+                                                        factors.add("${if (red > 0) "-" else "+"}${Formatters.formatMoney(kotlin.math.abs(red), inputData.currencySymbol, lang)}")
+                                                    }
+                                                    if (factors.isNotEmpty()) {
+                                                        append(" • ")
+                                                        append(factors.joinToString(", "))
+                                                    }
+                                                },
+                                                style = MaterialTheme.typography.labelSmall.copy(
+                                                    color = if (isReduced) SuccessGreen else AlertRed,
+                                                    fontSize = 10.sp
+                                                )
+                                            )
+                                        }
+                                    }
+                                }
+                                Text(
+                                    text = Formatters.formatMoney(currentEffectiveExpenses, inputData.currencySymbol, lang),
+                                    style = MaterialTheme.typography.bodyMedium.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (currentEffectiveExpenses < inputData.monthlyExpenses) SuccessGreen
+                                        else if (currentEffectiveExpenses > inputData.monthlyExpenses) AlertRed
+                                        else MaterialTheme.colorScheme.onSurface
+                                    )
+                                )
+                            }
+                            Slider(
+                                value = simulationState.expenseReduction.toFloat(),
+                                onValueChange = { rawValue ->
+                                    val snapped = kotlin.math.round(rawValue / expensesConfig.stepSize) * expensesConfig.stepSize
+                                    onUpdateSimulation(
+                                        simulationState.extraMonthlySavings,
+                                        simulationState.realReturnAdjustment,
+                                        snapped
+                                    )
+                                },
+                                valueRange = expensesConfig.minValue..expensesConfig.maxValue,
+                                steps = expensesConfig.steps,
+                                colors = SliderDefaults.colors(thumbColor = MaterialTheme.colorScheme.primary),
+                                modifier = Modifier.testTag("fire_slider_expenses")
+                            )
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 4.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "${Formatters.formatMoney(expensesConfig.minValue.toDouble(), inputData.currencySymbol, lang)} (${strings.fireSliderInc.trim(' ', '(', ')')})",
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        fontSize = 10.sp
+                                    )
+                                )
+                                Text(
+                                    text = strings.fireSliderStep(Formatters.formatMoney(expensesConfig.stepSize, inputData.currencySymbol, lang)),
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        color = MaterialTheme.colorScheme.primary,
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                )
+                                Text(
+                                    text = "+${Formatters.formatMoney(expensesConfig.maxValue.toDouble(), inputData.currencySymbol, lang)} (${strings.fireSliderDec.trim(' ', '(', ')')})",
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        fontSize = 10.sp
+                                    )
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(6.dp))
+
+                        // Пункт 3: Реальная доходность (отображает текущее значение доходности)
+                        Column {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column {
+                                    Text(
+                                        text = strings.fireSliderReturn,
+                                        style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium)
+                                    )
+                                    val returnDiff = currentEffectiveReturn - metrics.realReturnPercent
+                                    if (kotlin.math.abs(returnDiff) > 0.005) {
+                                        val isGain = returnDiff > 0
+                                        Text(
+                                            text = buildString {
+                                                append(if (isGain) "+" else "")
+                                                append(Formatters.formatRatio(returnDiff, lang))
+                                                append("% ${strings.fireSliderBaseReturnSuffix}")
+                                                if (simulationState.scenarios.expensesPlus25) {
+                                                    append(" • ")
+                                                    append(strings.scenarioInflationTitle.lowercase())
+                                                }
+                                            },
+                                            style = MaterialTheme.typography.labelSmall.copy(
+                                                color = if (isGain) SuccessGreen else AlertRed,
+                                                fontSize = 10.sp
+                                            )
+                                        )
+                                    }
+                                }
+                                Text(
+                                    text = Formatters.formatPercent(currentEffectiveReturn, lang),
+                                    style = MaterialTheme.typography.bodyMedium.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                )
+                            }
+                            Slider(
+                                value = simulationState.realReturnAdjustment.toFloat(),
+                                onValueChange = { rawValue ->
+                                    val snapped = kotlin.math.round(rawValue / returnConfig.stepSize) * returnConfig.stepSize
+                                    onUpdateSimulation(
+                                        simulationState.extraMonthlySavings,
+                                        snapped,
+                                        simulationState.expenseReduction
+                                    )
+                                },
+                                valueRange = returnConfig.minValue..returnConfig.maxValue,
+                                steps = returnConfig.steps,
+                                colors = SliderDefaults.colors(thumbColor = MaterialTheme.colorScheme.primary),
+                                modifier = Modifier.testTag("fire_slider_return")
+                            )
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 4.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = strings.fireSliderFrom("${Formatters.formatRatio(returnConfig.minValue.toDouble(), lang)}%"),
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        fontSize = 10.sp
+                                    )
+                                )
+                                Text(
+                                    text = strings.fireSliderStep("${Formatters.formatRatio(returnConfig.stepSize, lang)}%"),
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        color = MaterialTheme.colorScheme.primary,
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                )
+                                Text(
+                                    text = strings.fireSliderTo("${Formatters.formatRatio(returnConfig.maxValue.toDouble(), lang)}%"),
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        fontSize = 10.sp
+                                    )
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        // Панель с переключателями сценариев (стресс-тесты)
+                        ScenarioTogglesPanel(
+                            scenarios = simulationState.scenarios,
+                            inputData = inputData,
+                            onToggleScenario = onToggleScenario
                         )
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 4.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = strings.fireSliderFrom("${Formatters.formatRatio(returnConfig.minValue.toDouble(), lang)}%"),
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    fontSize = 10.sp
-                                )
-                            )
-                            Text(
-                                text = strings.fireSliderStep("${Formatters.formatRatio(returnConfig.stepSize, lang)}%"),
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    color = MaterialTheme.colorScheme.primary,
-                                    fontSize = 10.sp,
-                                    fontWeight = FontWeight.Medium
-                                )
-                            )
-                            Text(
-                                text = strings.fireSliderTo("${Formatters.formatRatio(returnConfig.maxValue.toDouble(), lang)}%"),
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    fontSize = 10.sp
-                                )
-                            )
-                        }
                     }
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // Панель с переключателями сценариев (стресс-тесты)
-                    ScenarioTogglesPanel(
-                        scenarios = simulationState.scenarios,
-                        inputData = inputData,
-                        onToggleScenario = onToggleScenario
-                    )
                 }
             }
         }

@@ -5,6 +5,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
@@ -16,7 +17,10 @@ import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performScrollToNode
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipeUp
 import com.example.data.model.FinancialInputData
 import com.example.domain.FinanceCalculator
 import com.example.ui.FireSimulationState
@@ -27,6 +31,7 @@ import com.example.util.localization.LocalAppLanguage
 import com.example.util.localization.LocalAppStrings
 import com.example.util.localization.getAppStrings
 import java.time.LocalDate
+import kotlin.math.abs
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -206,5 +211,90 @@ class FireRetirementScreenRobolectricTest {
         composeRule.onNodeWithTag("fire_simulation_summary").assertDoesNotExist()
         composeRule.onNodeWithTag("fire_test_list").performScrollToNode(hasTestTag("fire_trajectory_card"))
         composeRule.onNodeWithTag("fire_trajectory_card").assertIsDisplayed()
+    }
+
+    @Test
+    fun `simulator controls live only in the simulation subtab and keep their values`() {
+        val input = FinancialInputData.usAverageData()
+        val metrics = FinanceCalculator.calculate(input, today = LocalDate.of(2026, 11, 6))
+        val simulated = metrics.copy(realReturnPercent = metrics.realReturnPercent + 1.0)
+        val simulation = mutableStateOf(FireSimulationState(extraMonthlySavings = 200.0))
+        var toggleCalls = 0
+        var updateCalls = 0
+        val strings = getAppStrings(AppLanguage.RU)
+        composeRule.setContent {
+            MaterialTheme {
+                CompositionLocalProvider(
+                    LocalAppLanguage provides AppLanguage.RU,
+                    LocalAppStrings provides strings
+                ) {
+                    FireRetirementScreen(input, metrics, simulated, simulation.value, emptyList(),
+                        onUpdateSimulation = { _, _, _ -> updateCalls++ }, onToggleScenario = { toggleCalls++ },
+                        onResetSimulation = {}, modifier = Modifier.testTag("fire_test_list"))
+                }
+            }
+        }
+        val list = composeRule.onNodeWithTag("fire_test_list")
+
+        fun assertNoSimulatorUi() {
+            composeRule.onAllNodes(hasTestTag("fire_simulator_card"), useUnmergedTree = true)
+                .assertCountEquals(0)
+            composeRule.onAllNodes(hasTestTag("fire_slider_savings"), useUnmergedTree = true)
+                .assertCountEquals(0)
+            composeRule.onAllNodes(hasTestTag("fire_slider_expenses"), useUnmergedTree = true)
+                .assertCountEquals(0)
+            composeRule.onAllNodes(hasTestTag("fire_slider_return"), useUnmergedTree = true)
+                .assertCountEquals(0)
+            composeRule.onAllNodes(hasTestTag("scenario_card_pos_salary_increase"), useUnmergedTree = true)
+                .assertCountEquals(0)
+            composeRule.onAllNodes(hasText(strings.fireSimReset), useUnmergedTree = true)
+                .assertCountEquals(0)
+        }
+
+        // FIRE: ползунков, сценариев и сброса нет ни на одном участке списка
+        repeat(8) {
+            assertNoSimulatorUi()
+            list.performTouchInput { swipeUp() }
+        }
+        assertNoSimulatorUi()
+        // Дошли до конца списка — проверка отсутствия выше покрывает весь контент FIRE
+        list.performScrollToNode(hasText(strings.disclaimerTitle))
+        composeRule.onAllNodes(hasText(strings.disclaimerTitle), useUnmergedTree = true)
+            .assertCountEquals(1)
+
+        // «Симуляция»: три ползунка, сценарии и сброс на месте, значения из состояния сохранены
+        list.performScrollToNode(hasTestTag("fire_subtab_selector"))
+        composeRule.onNodeWithTag("fire_subtab_simulation").performClick()
+        list.performScrollToNode(hasTestTag("fire_simulator_card"))
+        composeRule.onNodeWithTag("fire_simulator_card").assertIsDisplayed()
+        composeRule.onNodeWithTag("fire_slider_savings").assertExists()
+        composeRule.onNodeWithTag("fire_slider_expenses").assertExists()
+        composeRule.onNodeWithTag("fire_slider_return").assertExists()
+        composeRule.onAllNodes(hasText(strings.fireSimReset), useUnmergedTree = true)
+            .assertCountEquals(1)
+        val savingsRange = composeRule.onNodeWithTag("fire_slider_savings")
+            .fetchSemanticsNode().config[SemanticsProperties.ProgressBarRangeInfo]
+        check(abs(savingsRange.current - 200f) < 1f) {
+            "savings slider must show the stored 200, was ${savingsRange.current}"
+        }
+        composeRule.onNodeWithTag("switch_pos_salary_increase").performScrollTo()
+        composeRule.onNodeWithTag("switch_pos_salary_increase").assertIsDisplayed()
+        composeRule.onNodeWithTag("switch_pos_salary_increase").performClick()
+        composeRule.runOnIdle {
+            check(toggleCalls == 1) { "scenario switch must call onToggleScenario" }
+            check(updateCalls == 0) { "showing or switching the subtabs must not call onUpdateSimulation" }
+        }
+
+        // Возврат в FIRE и снова в «Симуляцию»: состояние симуляции не сброшено
+        list.performScrollToNode(hasTestTag("fire_subtab_selector"))
+        composeRule.onNodeWithTag("fire_subtab_base").performClick()
+        assertNoSimulatorUi()
+        composeRule.onNodeWithTag("fire_subtab_simulation").performClick()
+        list.performScrollToNode(hasTestTag("fire_simulator_card"))
+        val savingsRangeAfterSwitch = composeRule.onNodeWithTag("fire_slider_savings")
+            .fetchSemanticsNode().config[SemanticsProperties.ProgressBarRangeInfo]
+        check(abs(savingsRangeAfterSwitch.current - 200f) < 1f) {
+            "subtab switching must not reset sliders, was ${savingsRangeAfterSwitch.current}"
+        }
     }
 }
