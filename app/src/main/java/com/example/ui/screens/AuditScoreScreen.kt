@@ -168,13 +168,13 @@ fun AuditScoreScreen(
 
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    val totalScoreColor = ScoreColorEvaluator.getTotalScoreColor(scores.totalScore)
+                    val totalScoreTextColor = ScoreColorEvaluator.getTotalScoreTextColor(scores.totalScore)
 
                     Text(
                         text = strings.scoresTotalResult(Formatters.formatScore(scores.totalScore, lang = lang)),
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.Bold,
-                            color = totalScoreColor
+                            color = totalScoreTextColor
                         )
                     )
 
@@ -303,6 +303,10 @@ fun AuditScoreScreen(
                 context.startActivity(Intent.createChooser(sendIntent, strings.shareAuditorOpinionChooser))
             }
 
+            val positiveTextColor = StatusColors.getTextColor(AuditIndicatorStatus.POSITIVE)
+            val neutralTextColor = StatusColors.getTextColor(AuditIndicatorStatus.NEUTRAL)
+            val negativeTextColor = StatusColors.getTextColor(AuditIndicatorStatus.NEGATIVE)
+
             Card(
                 shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
@@ -358,7 +362,7 @@ fun AuditScoreScreen(
                                     text = strings.positiveBadgeText(opinion.positive.size),
                                     style = MaterialTheme.typography.labelSmall.copy(
                                         fontWeight = FontWeight.Bold,
-                                        color = SuccessGreen,
+                                        color = positiveTextColor,
                                         fontSize = 11.sp
                                     ),
                                     maxLines = 1
@@ -380,7 +384,7 @@ fun AuditScoreScreen(
                                     text = strings.neutralBadgeText(opinion.neutral.size),
                                     style = MaterialTheme.typography.labelSmall.copy(
                                         fontWeight = FontWeight.Bold,
-                                        color = AccentGold,
+                                        color = neutralTextColor,
                                         fontSize = 11.sp
                                     ),
                                     maxLines = 1
@@ -402,7 +406,7 @@ fun AuditScoreScreen(
                                     text = strings.negativeBadgeText(opinion.negative.size),
                                     style = MaterialTheme.typography.labelSmall.copy(
                                         fontWeight = FontWeight.Bold,
-                                        color = AlertRed,
+                                        color = negativeTextColor,
                                         fontSize = 11.sp
                                     ),
                                     maxLines = 1
@@ -418,7 +422,7 @@ fun AuditScoreScreen(
                         text = strings.positiveSectionTitle(opinion.positive.size),
                         style = MaterialTheme.typography.titleSmall.copy(
                             fontWeight = FontWeight.Bold,
-                            color = SuccessGreen
+                            color = positiveTextColor
                         )
                     )
                     Spacer(modifier = Modifier.height(6.dp))
@@ -452,7 +456,7 @@ fun AuditScoreScreen(
                         text = strings.neutralSectionTitle(opinion.neutral.size),
                         style = MaterialTheme.typography.titleSmall.copy(
                             fontWeight = FontWeight.Bold,
-                            color = AccentGold
+                            color = neutralTextColor
                         )
                     )
                     Spacer(modifier = Modifier.height(6.dp))
@@ -486,7 +490,7 @@ fun AuditScoreScreen(
                         text = strings.negativeSectionTitle(opinion.negative.size),
                         style = MaterialTheme.typography.titleSmall.copy(
                             fontWeight = FontWeight.Bold,
-                            color = AlertRed
+                            color = negativeTextColor
                         )
                     )
                     Spacer(modifier = Modifier.height(6.dp))
@@ -500,7 +504,7 @@ fun AuditScoreScreen(
                             Text(
                                 text = strings.negativeEmptyText,
                                 style = MaterialTheme.typography.bodySmall.copy(
-                                    color = SuccessGreen,
+                                    color = positiveTextColor,
                                     fontWeight = FontWeight.Medium,
                                     fontSize = 11.sp
                                 ),
@@ -644,7 +648,9 @@ fun ScoreItemCard(
             .testTag(tag)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            val scoreColor = StatusColors.getColor(FinancialMetricEvaluator.getComponentScoreStatus(score))
+            val scoreStatus = FinancialMetricEvaluator.getComponentScoreStatus(score)
+            val scoreColor = StatusColors.getColor(scoreStatus)
+            val scoreTextColor = StatusColors.getTextColor(scoreStatus)
 
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -663,7 +669,7 @@ fun ScoreItemCard(
                     Text(
                         text = "$valuePrefix $currentValue",
                         style = MaterialTheme.typography.bodySmall.copy(
-                            color = scoreColor,
+                            color = scoreTextColor,
                             fontWeight = FontWeight.SemiBold
                         )
                     )
@@ -677,7 +683,7 @@ fun ScoreItemCard(
                         text = scoreOutOfTen,
                         style = MaterialTheme.typography.labelMedium.copy(
                             fontWeight = FontWeight.Bold,
-                            color = scoreColor
+                            color = scoreTextColor
                         ),
                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
                     )

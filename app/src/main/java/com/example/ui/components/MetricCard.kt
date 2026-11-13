@@ -42,11 +42,9 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.ui.theme.AlertRed
 import com.example.ui.theme.AlertRedBg
-import com.example.ui.theme.SuccessGreen
+import com.example.ui.theme.StatusColors
 import com.example.ui.theme.SuccessGreenBg
-import com.example.ui.theme.WarningYellow
 import com.example.ui.theme.WarningYellowBg
 import com.example.util.localization.LocalAppStrings
 
@@ -137,11 +135,7 @@ fun MetricCard(
                         score >= 5 -> WarningYellowBg
                         else -> AlertRedBg
                     }
-                    val scoreText = when {
-                        score >= 8 -> SuccessGreen
-                        score >= 5 -> WarningYellow
-                        else -> AlertRed
-                    }
+                    val scoreText = StatusColors.getComponentScoreTextColor(score)
                     Surface(
                         shape = CircleShape,
                         color = scoreBg,
@@ -167,7 +161,7 @@ fun MetricCard(
                 text = value,
                 style = MaterialTheme.typography.titleLarge.copy(
                     fontWeight = FontWeight.Bold,
-                    color = highlightColor,
+                    color = StatusColors.getReadableTextColor(highlightColor),
                     fontSize = 20.sp
                 )
             )

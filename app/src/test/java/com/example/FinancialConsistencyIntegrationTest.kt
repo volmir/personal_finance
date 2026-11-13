@@ -36,6 +36,7 @@ import com.example.domain.ProjectionParams
 import com.example.domain.model.AuditIndicatorStatus
 import com.example.ui.screens.InputDataScreen
 import com.example.ui.screens.MetricsScreen
+import com.example.ui.theme.MyApplicationTheme
 import com.example.ui.theme.StatusColors
 import com.example.util.Formatters
 import com.example.util.localization.AppLanguage
@@ -191,7 +192,7 @@ class FinancialConsistencyIntegrationTest {
         var showInput by mutableStateOf(true)
         var unavailableColor = Color.Unspecified
         composeRule.setContent {
-            MaterialTheme {
+            MyApplicationTheme(darkTheme = false) {
                 unavailableColor = MaterialTheme.colorScheme.onSurfaceVariant
                 CompositionLocalProvider(LocalAppLanguage provides lang, LocalAppStrings provides strings) {
                     if (showInput) {
@@ -239,7 +240,10 @@ class FinancialConsistencyIntegrationTest {
                     composeRule.onAllNodes(hasText(value.text) and hasAnyAncestor(hasTestTag(tag)), useUnmergedTree = true).onFirst()
                         .performSemanticsAction(SemanticsActions.GetTextLayoutResult) { it(layouts) }
                     assertEquals("${profile.name} $inputScreen ${value.id}", 1, layouts.size)
-                    val expectedColor = statuses[value.id]?.let(StatusColors::getColor) ?: unavailableColor
+                    val expectedColor = statuses[value.id]?.let {
+                        if (inputScreen) StatusColors.getColor(it)
+                        else StatusColors.getTextColor(it, darkTheme = false)
+                    } ?: unavailableColor
                     assertEquals("${profile.name} $inputScreen ${value.id}", expectedColor, layouts.single().layoutInput.style.color)
                 }
             }

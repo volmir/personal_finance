@@ -46,6 +46,7 @@ fun ScoreGauge(
     )
 
     val scoreColor = ScoreColorEvaluator.getTotalScoreColor(score)
+    val scoreTextColor = ScoreColorEvaluator.getTotalScoreTextColor(score)
 
     Box(
         contentAlignment = Alignment.Center,
@@ -85,7 +86,7 @@ fun ScoreGauge(
                 style = MaterialTheme.typography.headlineLarge.copy(
                     fontSize = 32.sp,
                     fontWeight = FontWeight.Bold,
-                    color = scoreColor
+                    color = scoreTextColor
                 )
             )
             Text(

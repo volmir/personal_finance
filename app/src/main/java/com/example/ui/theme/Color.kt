@@ -33,6 +33,16 @@ val WarningYellow = Color(0xFFF59E0B)
 val WarningYellowBg = Color(0x20F59E0B)
 val AlertRed = Color(0xFFEF4444)
 val AlertRedBg = Color(0x20EF4444)
+
+// Text-only status shades with WCAG AA contrast (>= 4.5:1) on card surfaces
+// and their translucent status fills. Accent colors above stay untouched so
+// charts, icons and containers keep their original palette.
+val SuccessGreenTextLight = Color(0xFF047857)
+val SuccessGreenTextDark = Color(0xFF34D399)
+val WarningYellowTextLight = Color(0xFF92400E)
+val WarningYellowTextDark = Color(0xFFF59E0B)
+val AlertRedTextLight = Color(0xFFB91C1C)
+val AlertRedTextDark = Color(0xFFF87171)
 val AccentGold = Color(0xFFD97706)
 val AccentTeal = Color(0xFF0D9488)
 val AccentPurple = Color(0xFF8B5CF6)
