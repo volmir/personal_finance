@@ -21,9 +21,9 @@
       "heavy": "gpt-6-astra"
     },
     "opencode": {
-      "light": "provider/model-light",
-      "standard": "provider/model-standard",
-      "heavy": "provider/model-heavy#max"
+      "light": "opencode/glm-5.3-flash-free",
+      "standard": "opencode/glm-5.3-flash-free#max",
+      "heavy": "opencode/beam-free#max"
     }
   },
   "efforts": {
