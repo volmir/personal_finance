@@ -330,7 +330,7 @@ fun FireRetirementScreen(
                         text = strings.fireHeroAssumption,
                         style = MaterialTheme.typography.bodySmall.copy(
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontSize = 11.sp
+                            fontSize = 12.sp
                         )
                     )
 
@@ -485,7 +485,7 @@ fun FireRetirementScreen(
                             text = strings.fireTrajectorySubtitle,
                             style = MaterialTheme.typography.bodySmall.copy(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                fontSize = 11.sp
+                                fontSize = 12.sp
                             )
                         )
 
@@ -1037,7 +1037,7 @@ fun FireRetirementScreen(
                                     Formatters.formatPercent(inputData.inflationPercent, lang)
                                 ),
                                 style = MaterialTheme.typography.bodySmall.copy(
-                                    fontSize = 11.5.sp,
+                                    fontSize = 12.sp,
                                     lineHeight = 16.sp,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -1079,7 +1079,7 @@ fun FireRetirementScreen(
                             Text(
                                 text = strings.disclaimerText,
                                 style = MaterialTheme.typography.bodySmall.copy(
-                                    fontSize = 11.5.sp,
+                                    fontSize = 12.sp,
                                     lineHeight = 16.sp,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )

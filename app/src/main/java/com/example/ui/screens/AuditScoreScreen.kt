@@ -335,7 +335,7 @@ fun AuditScoreScreen(
                                 text = strings.auditorOpinionSubtitle(opinion.totalCount),
                                 style = MaterialTheme.typography.bodySmall.copy(
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    fontSize = 11.sp
+                                    fontSize = 12.sp
                                 )
                             )
                         }
@@ -436,7 +436,7 @@ fun AuditScoreScreen(
                                 text = strings.positiveEmptyText,
                                 style = MaterialTheme.typography.bodySmall.copy(
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    fontSize = 11.sp
+                                    fontSize = 12.sp
                                 ),
                                 modifier = Modifier.padding(10.dp)
                             )
@@ -470,7 +470,7 @@ fun AuditScoreScreen(
                                 text = strings.neutralEmptyText,
                                 style = MaterialTheme.typography.bodySmall.copy(
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    fontSize = 11.sp
+                                    fontSize = 12.sp
                                 ),
                                 modifier = Modifier.padding(10.dp)
                             )
@@ -506,7 +506,7 @@ fun AuditScoreScreen(
                                 style = MaterialTheme.typography.bodySmall.copy(
                                     color = positiveTextColor,
                                     fontWeight = FontWeight.Medium,
-                                    fontSize = 11.sp
+                                    fontSize = 12.sp
                                 ),
                                 modifier = Modifier.padding(10.dp)
                             )
@@ -571,7 +571,7 @@ fun AuditScoreScreen(
                                     Formatters.formatPercent(inputData.inflationPercent, lang)
                                 ),
                                 style = MaterialTheme.typography.bodySmall.copy(
-                                    fontSize = 11.5.sp,
+                                    fontSize = 12.sp,
                                     lineHeight = 16.sp,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -615,7 +615,7 @@ fun AuditScoreScreen(
                             Text(
                                 text = strings.disclaimerText,
                                 style = MaterialTheme.typography.bodySmall.copy(
-                                    fontSize = 11.5.sp,
+                                    fontSize = 12.sp,
                                     lineHeight = 16.sp,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
