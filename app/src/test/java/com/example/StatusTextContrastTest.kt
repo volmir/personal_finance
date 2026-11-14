@@ -141,6 +141,26 @@ class StatusTextContrastTest {
         assertEquals(AlertRed, ScoreColorEvaluator.getTotalScoreColor(3.49))
     }
 
+    @Test
+    fun `unified foreground status colors meet graphical contrast on tracks and cards`() {
+        val lightSurface = Color(0xFFFFFFFF) // SlateLightSurface / SlateLightCard
+        val darkSurface = Color(0xFF0F1713)  // SlateDarkSurface (trackColor)
+        for (palette in palettes) {
+            assertTrue(
+                "${palette.status} light indicator on light track/card: ${contrast(palette.lightText, lightSurface)}",
+                contrast(palette.lightText, lightSurface) >= WCAG_NON_TEXT_GRAPHICS
+            )
+            assertTrue(
+                "${palette.status} dark indicator on dark track: ${contrast(palette.darkText, darkSurface)}",
+                contrast(palette.darkText, darkSurface) >= WCAG_NON_TEXT_GRAPHICS
+            )
+            assertTrue(
+                "${palette.status} dark indicator on dark card: ${contrast(palette.darkText, SlateDarkCard)}",
+                contrast(palette.darkText, SlateDarkCard) >= WCAG_NON_TEXT_GRAPHICS
+            )
+        }
+    }
+
     private fun relativeLuminance(color: Color): Double =
         0.2126 * linearChannel(color.red) +
             0.7152 * linearChannel(color.green) +
@@ -167,5 +187,6 @@ class StatusTextContrastTest {
 
     private companion object {
         const val WCAG_AA_NORMAL_TEXT = 4.5
+        const val WCAG_NON_TEXT_GRAPHICS = 3.0
     }
 }

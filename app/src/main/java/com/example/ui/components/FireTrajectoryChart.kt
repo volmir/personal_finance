@@ -28,7 +28,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.TrajectoryPoint
+import com.example.domain.model.AuditIndicatorStatus
 import com.example.ui.theme.AccentGold
+import com.example.ui.theme.StatusColors
 import com.example.ui.theme.SuccessGreen
 import com.example.util.Formatters
 import com.example.util.localization.LocalAppLanguage
@@ -236,8 +238,13 @@ fun FireTrajectoryChart(
                 text = if (isUnreachable) strings.fireUnreachableText else strings.fireChartFirePoint(Formatters.formatRatio(retireAge, lang)),
                 style = MaterialTheme.typography.labelSmall.copy(
                     fontWeight = FontWeight.Bold,
-                    color = if (isUnreachable) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
-                )
+                    color = if (isUnreachable) {
+                        StatusColors.getTextColor(AuditIndicatorStatus.NEGATIVE)
+                    } else {
+                        MaterialTheme.colorScheme.primary
+                    }
+                ),
+                modifier = Modifier.testTag("fire_chart_status_label")
             )
             Spacer(modifier = Modifier.weight(1f))
             Text(

@@ -694,12 +694,13 @@ fun ScoreItemCard(
 
             LinearProgressIndicator(
                 progress = { (score / 10f).coerceIn(0f, 1f) },
-                color = scoreColor,
+                color = scoreTextColor,
                 trackColor = MaterialTheme.colorScheme.surface,
                 strokeCap = StrokeCap.Round,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(6.dp)
+                    .testTag("${tag}_progress")
             )
 
             Spacer(modifier = Modifier.height(8.dp))

@@ -103,7 +103,7 @@ fun MetricCard(
                             Icon(
                                 imageVector = icon,
                                 contentDescription = null,
-                                tint = highlightColor,
+                                tint = StatusColors.getReadableTextColor(highlightColor),
                                 modifier = Modifier.size(18.dp)
                             )
                         }

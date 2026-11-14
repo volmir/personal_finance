@@ -21,8 +21,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.ui.theme.AlertRed
-import com.example.ui.theme.SuccessGreen
 import com.example.ui.theme.ScoreColorEvaluator
 import com.example.util.Formatters
 import com.example.util.localization.LocalAppLanguage
@@ -45,7 +43,6 @@ fun ScoreGauge(
         label = "score_progress"
     )
 
-    val scoreColor = ScoreColorEvaluator.getTotalScoreColor(score)
     val scoreTextColor = ScoreColorEvaluator.getTotalScoreTextColor(score)
 
     Box(
@@ -69,7 +66,7 @@ fun ScoreGauge(
 
             // Value arc
             drawArc(
-                color = scoreColor,
+                color = scoreTextColor,
                 startAngle = 135f,
                 sweepAngle = 270f * animatedProgress,
                 useCenter = false,

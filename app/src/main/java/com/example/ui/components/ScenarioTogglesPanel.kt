@@ -427,6 +427,7 @@ private fun ScenarioToggleCard(
     onToggle: () -> Unit
 ) {
     val accentColor = if (item.isPositive) SuccessGreen else AlertRed
+    val readableAccentColor = StatusColors.getReadableTextColor(accentColor)
 
     val containerColor by animateColorAsState(
         targetValue = if (item.isChecked) {
@@ -469,7 +470,7 @@ private fun ScenarioToggleCard(
                 Icon(
                     imageVector = item.icon,
                     contentDescription = null,
-                    tint = if (item.isChecked) accentColor else MaterialTheme.colorScheme.onSurfaceVariant,
+                    tint = if (item.isChecked) readableAccentColor else MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(18.dp)
                 )
             }
@@ -494,7 +495,7 @@ private fun ScenarioToggleCard(
                 }
 
                 val badgeTextColor = if (item.isChecked) {
-                    StatusColors.getReadableTextColor(accentColor)
+                    readableAccentColor
                 } else if (item.isPositive) {
                     StatusColors.getReadableTextColor(SuccessGreen)
                 } else {
@@ -534,7 +535,7 @@ private fun ScenarioToggleCard(
                 onCheckedChange = { onToggle() },
                 colors = SwitchDefaults.colors(
                     checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
-                    checkedTrackColor = accentColor,
+                    checkedTrackColor = readableAccentColor,
                     uncheckedThumbColor = MaterialTheme.colorScheme.outline,
                     uncheckedTrackColor = MaterialTheme.colorScheme.surfaceVariant
                 ),

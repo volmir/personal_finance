@@ -313,6 +313,7 @@ fun MetricsScreen(
                 } else {
                     MaterialTheme.colorScheme.onSurfaceVariant
                 }
+                val fidelityStatusColor = StatusColors.getReadableTextColor(fidelityColor)
 
                 MetricCard(
                     title = strings.metricFidelityTitle,
@@ -346,7 +347,7 @@ fun MetricsScreen(
                                     },
                                     style = MaterialTheme.typography.labelSmall.copy(
                                         fontWeight = FontWeight.Bold,
-                                        color = StatusColors.getReadableTextColor(fidelityColor),
+                                        color = fidelityStatusColor,
                                         fontSize = 12.sp
                                     )
                                 )
@@ -358,12 +359,13 @@ fun MetricsScreen(
                                         (fidelityRatio.toFloat()).coerceIn(0f, 1f)
                                     } else 0f
                                 },
-                                color = fidelityColor,
+                                color = fidelityStatusColor,
                                 trackColor = MaterialTheme.colorScheme.surface,
                                 strokeCap = StrokeCap.Round,
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(6.dp)
+                                    .testTag("fidelity_progress_indicator")
                             )
                             Spacer(modifier = Modifier.height(6.dp))
                             Text(
