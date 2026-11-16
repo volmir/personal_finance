@@ -62,6 +62,7 @@ import java.math.RoundingMode
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.CalculatedMetrics
@@ -515,7 +516,11 @@ fun InputDataScreen(
                     value = if (metrics.isAgeValid) {
                         strings.horizonValueFormat(metrics.remainingYearsHorizon, metrics.currentAge)
                     } else strings.metricUnavailableValue,
-                    valueColor = MaterialTheme.colorScheme.primary
+                    subValue = if (metrics.isAgeValid) {
+                        "${metrics.lifeExpectancy} \u2212 ${metrics.currentAge}"
+                    } else null,
+                    valueColor = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.testTag("input_metric_horizon")
                 )
             }
         }
@@ -547,6 +552,7 @@ fun MetricIndicatorRow(
     formula: String,
     value: String,
     valueColor: Color = MaterialTheme.colorScheme.primary,
+    subValue: String? = null,
     modifier: Modifier = Modifier
 ) {
     Surface(
@@ -577,13 +583,34 @@ fun MetricIndicatorRow(
                 )
             }
             Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = value,
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontWeight = FontWeight.Bold,
-                    color = StatusColors.getReadableTextColor(valueColor)
+            if (subValue != null) {
+                Column(horizontalAlignment = Alignment.End) {
+                    Text(
+                        text = value,
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = StatusColors.getReadableTextColor(valueColor)
+                        ),
+                        textAlign = TextAlign.End
+                    )
+                    Text(
+                        text = subValue,
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontSize = 11.sp
+                        ),
+                        textAlign = TextAlign.End
+                    )
+                }
+            } else {
+                Text(
+                    text = value,
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = StatusColors.getReadableTextColor(valueColor)
+                    )
                 )
-            )
+            }
         }
     }
 }

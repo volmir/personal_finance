@@ -314,7 +314,7 @@ val StringsRu: AppStrings = object : AppStrings {
     )
     override val horizonTitle: String = "Горизонт дожития:"
     override val horizonFormula: String = "(Возраст дожития - Текущий возраст)"
-    override val horizonValueFormat: (horizon: Int, age: Int) -> String = { horizon, age -> "$horizon ${plural(horizon, yearPluralForms)} (возраст $age ${plural(age, yearPluralForms)})" }
+    override val horizonValueFormat: (horizon: Int, age: Int) -> String = { horizon, _ -> "$horizon ${plural(horizon, yearPluralForms)}" }
     override val includePropertyInFireLabel: String = "Учитывать имущество и долги в расчёте FIRE"
     override val includePropertyInFireSubOn: String = "Используется чистый капитал (net worth), включая недвижимость за вычетом долгов"
     override val includePropertyInFireSubOff: String = "Используются только инвестируемые активы (ликвидные + финансовые)"

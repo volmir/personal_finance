@@ -153,4 +153,186 @@ class InputDataScreenRobolectricTest {
 
         assertTrue(navigatedToMetrics)
     }
+
+    @org.robolectric.annotation.Config(qualifiers = "w360dp-h800dp-xxhdpi")
+    @org.robolectric.annotation.GraphicsMode(org.robolectric.annotation.GraphicsMode.Mode.NATIVE)
+    @Test
+    fun `horizon row displays formula with unified style, main result, and numeric substitution across languages and themes`() {
+        val input = mutableStateOf(
+            FinancialInputData.usAverageData().copy(
+                birthDate = today.minusYears(38).toString(),
+                lifeExpectancy = 82
+            )
+        )
+        val language = mutableStateOf(AppLanguage.RU)
+        val darkTheme = mutableStateOf(false)
+
+        composeRule.setContent {
+            com.example.ui.theme.MyApplicationTheme(darkTheme = darkTheme.value, dynamicColor = false) {
+                CompositionLocalProvider(
+                    LocalAppLanguage provides language.value,
+                    LocalAppStrings provides getAppStrings(language.value)
+                ) {
+                    InputDataScreen(
+                        input.value,
+                        FinanceCalculator.calculate(input.value, today = today),
+                        onUpdate = { input.value = it(input.value) },
+                        onNavigateToMetrics = {},
+                        modifier = Modifier.testTag("input_test_list")
+                    )
+                }
+            }
+        }
+
+        // Сверяем стиль формулы горизонта с формулой чистого капитала на вкладке №1
+        composeRule.onNodeWithTag("input_test_list").performScrollToNode(hasTestTag("input_metric_net_worth"))
+        val netWorthFormulaStyle = composeRule.onNodeWithText(StringsRu.netWorthFormula, useUnmergedTree = true)
+            .textStyle()
+
+        composeRule.onNodeWithTag("input_test_list").performScrollToNode(hasTestTag("input_metric_horizon"))
+        composeRule.onNodeWithText(StringsRu.horizonTitle).assertExists()
+        composeRule.onNodeWithText(StringsRu.horizonFormula).assertExists()
+        composeRule.onNodeWithText("44 года").assertExists()
+        composeRule.onNodeWithText("82 \u2212 38").assertExists()
+
+        val horizonFormulaNode = composeRule.onNodeWithText(StringsRu.horizonFormula, useUnmergedTree = true)
+        val horizonFormulaStyle = horizonFormulaNode.textStyle()
+        assertEquals(netWorthFormulaStyle.fontFamily, horizonFormulaStyle.fontFamily)
+        assertEquals(netWorthFormulaStyle.fontSize, horizonFormulaStyle.fontSize)
+        assertEquals(netWorthFormulaStyle.color, horizonFormulaStyle.color)
+
+        // Формула не обрезана многоточием и имеет достаточную ширину слева без наложения справа
+        val formulaLayout = horizonFormulaNode.textLayoutResult()
+        assertFalse(formulaLayout.hasVisualOverflow)
+        val formulaBounds = horizonFormulaNode.fetchSemanticsNode().boundsInWindow
+        val resultBounds = composeRule.onNodeWithText("44 года", useUnmergedTree = true).fetchSemanticsNode().boundsInWindow
+        val subBounds = composeRule.onNodeWithText("82 \u2212 38", useUnmergedTree = true).fetchSemanticsNode().boundsInWindow
+        assertTrue(formulaBounds.width > resultBounds.width)
+        assertTrue(formulaBounds.right <= resultBounds.left)
+        assertTrue(resultBounds.bottom <= subBounds.top)
+
+        // Все 6 языков и тёмная тема
+        for (isDark in listOf(false, true)) {
+            composeRule.runOnIdle { darkTheme.value = isDark }
+            for (lang in AppLanguage.values()) {
+                composeRule.runOnIdle { language.value = lang }
+                composeRule.waitForIdle()
+                val localized = getAppStrings(lang)
+                composeRule.onNodeWithText(localized.horizonTitle).assertExists()
+                composeRule.onNodeWithText(localized.horizonFormula).assertExists()
+                composeRule.onNodeWithText(localized.horizonValueFormat(44, 38)).assertExists()
+                composeRule.onNodeWithText("82 \u2212 38").assertExists()
+                assertFalse(composeRule.onNodeWithText(localized.horizonFormula, useUnmergedTree = true).textLayoutResult().hasVisualOverflow)
+            }
+        }
+
+        // Динамическое обновление даты рождения и возраста дожития
+        composeRule.runOnIdle {
+            darkTheme.value = false
+            language.value = AppLanguage.RU
+            input.value = input.value.copy(
+                birthDate = today.minusYears(41).toString(),
+                lifeExpectancy = 90
+            )
+        }
+        composeRule.waitForIdle()
+        composeRule.onNodeWithText("49 лет").assertExists()
+        composeRule.onNodeWithText("90 \u2212 41").assertExists()
+
+        // Нулевой горизонт (82 - 82 -> 0 лет) и исчерпанный/отрицательный (82 - 85 -> 0 лет)
+        composeRule.runOnIdle {
+            input.value = input.value.copy(
+                birthDate = today.minusYears(82).toString(),
+                lifeExpectancy = 82
+            )
+        }
+        composeRule.waitForIdle()
+        composeRule.onNodeWithText("0 лет").assertExists()
+        composeRule.onNodeWithText("82 \u2212 82").assertExists()
+
+        composeRule.runOnIdle {
+            input.value = input.value.copy(
+                birthDate = today.minusYears(85).toString(),
+                lifeExpectancy = 82
+            )
+        }
+        composeRule.waitForIdle()
+        composeRule.onNodeWithText("0 лет").assertExists()
+        composeRule.onNodeWithText("82 \u2212 85").assertExists()
+    }
+
+    @org.robolectric.annotation.Config(qualifiers = "w320dp-h640dp-xxhdpi")
+    @org.robolectric.annotation.GraphicsMode(org.robolectric.annotation.GraphicsMode.Mode.NATIVE)
+    @Test
+    fun `horizon row has no clipping or overlap on narrow screens in all languages`() {
+        val input = mutableStateOf(
+            FinancialInputData.usAverageData().copy(
+                birthDate = today.minusYears(38).toString(),
+                lifeExpectancy = 82
+            )
+        )
+        val language = mutableStateOf(AppLanguage.RU)
+
+        composeRule.setContent {
+            com.example.ui.theme.MyApplicationTheme(darkTheme = false, dynamicColor = false) {
+                CompositionLocalProvider(
+                    LocalAppLanguage provides language.value,
+                    LocalAppStrings provides getAppStrings(language.value)
+                ) {
+                    InputDataScreen(
+                        input.value,
+                        FinanceCalculator.calculate(input.value, today = today),
+                        onUpdate = {},
+                        onNavigateToMetrics = {},
+                        modifier = Modifier.testTag("input_test_list")
+                    )
+                }
+            }
+        }
+
+        for (lang in AppLanguage.values()) {
+            composeRule.runOnIdle { language.value = lang }
+            composeRule.waitForIdle()
+            composeRule.onNodeWithTag("input_test_list").performScrollToNode(hasTestTag("input_metric_horizon"))
+            composeRule.waitForIdle()
+            val localized = getAppStrings(lang)
+            val titleNode = composeRule.onNodeWithText(localized.horizonTitle, useUnmergedTree = true)
+            val formulaNode = composeRule.onNodeWithText(localized.horizonFormula, useUnmergedTree = true)
+            val valueNode = composeRule.onNodeWithText(localized.horizonValueFormat(44, 38), useUnmergedTree = true)
+            val subNode = composeRule.onNodeWithText("82 \u2212 38", useUnmergedTree = true)
+
+            val titleLayout = titleNode.textLayoutResult()
+            val formulaLayout = formulaNode.textLayoutResult()
+            val valueLayout = valueNode.textLayoutResult()
+            val subLayout = subNode.textLayoutResult()
+            assertFalse("$lang title height overflow", titleLayout.didOverflowHeight)
+            assertFalse("$lang formula height overflow", formulaLayout.didOverflowHeight)
+            assertFalse("$lang value height overflow", valueLayout.didOverflowHeight)
+            assertFalse("$lang subValue height overflow", subLayout.didOverflowHeight)
+            assertTrue("$lang title width fits constraints", titleLayout.size.width <= titleLayout.layoutInput.constraints.maxWidth)
+            assertTrue("$lang formula width fits constraints", formulaLayout.size.width <= formulaLayout.layoutInput.constraints.maxWidth)
+            assertTrue("$lang value width fits constraints", valueLayout.size.width <= valueLayout.layoutInput.constraints.maxWidth)
+            assertTrue("$lang subValue width fits constraints", subLayout.size.width <= subLayout.layoutInput.constraints.maxWidth)
+
+            val titleBounds = titleNode.fetchSemanticsNode().boundsInWindow
+            val formulaBounds = formulaNode.fetchSemanticsNode().boundsInWindow
+            val valueBounds = valueNode.fetchSemanticsNode().boundsInWindow
+            val subBounds = subNode.fetchSemanticsNode().boundsInWindow
+            assertTrue("$lang title/value overlap: $titleBounds vs $valueBounds", titleBounds.right <= valueBounds.left)
+            assertTrue("$lang formula/value overlap: $formulaBounds vs $valueBounds", formulaBounds.right <= valueBounds.left)
+            assertTrue("$lang title/formula vertical order: $titleBounds vs $formulaBounds", titleBounds.bottom <= formulaBounds.top)
+            assertTrue("$lang value/sub overlap: $valueBounds vs $subBounds", valueBounds.bottom <= subBounds.top)
+        }
+    }
+
+    private fun androidx.compose.ui.test.SemanticsNodeInteraction.textLayoutResult(): androidx.compose.ui.text.TextLayoutResult {
+        val results = mutableListOf<androidx.compose.ui.text.TextLayoutResult>()
+        val config = fetchSemanticsNode().config
+        val action = checkNotNull(config[androidx.compose.ui.semantics.SemanticsActions.GetTextLayoutResult].action)
+        action(results)
+        return results.first()
+    }
+
+    private fun androidx.compose.ui.test.SemanticsNodeInteraction.textStyle(): androidx.compose.ui.text.TextStyle =
+        textLayoutResult().layoutInput.style
 }

@@ -186,12 +186,35 @@ class LocalizationReleaseTextTest {
         for ((age, word) in listOf(21 to "год", 22 to "года", 25 to "лет", 11 to "лет", 101 to "год")) {
             assertEquals("$age $word", strings.fireCurrentAgeValue(age))
             assertEquals("$age $word", strings.fireLifeExpectancyValue(age))
-            assertEquals("$age $word (возраст $age $word)", strings.horizonValueFormat(age, age))
+            assertEquals("$age $word", strings.horizonValueFormat(age, age))
             assertEquals("Возраст: $age $word | Множитель: 0,50x", strings.metricFidelitySubFormat(age, "0,50"))
             val input = FinancialInputData.usAverageData().copy(birthDate = today.minusYears(age.toLong()).toString(), lifeExpectancy = age + 1)
             val metrics = FinanceCalculator.calculate(input, today = today)
             val export = AuditorAnalysisGenerator.generateExportSummary(input, metrics, AppLanguage.RU)
             assertTrue(export.contains("• Возраст: $age $word (дожитие: ${age + 1} ${strings.plural(age + 1, strings.yearPluralForms)}, горизонт: 1 год)"))
+        }
+        val expectedHorizon44 = mapOf(
+            AppLanguage.RU to "44 года",
+            AppLanguage.EN to "44 years",
+            AppLanguage.DE to "44 Jahre",
+            AppLanguage.FR to "44 ans",
+            AppLanguage.IT to "44 anni",
+            AppLanguage.ES to "44 años"
+        )
+        val expectedHorizon1 = mapOf(
+            AppLanguage.RU to "1 год",
+            AppLanguage.EN to "1 year",
+            AppLanguage.DE to "1 Jahr",
+            AppLanguage.FR to "1 an",
+            AppLanguage.IT to "1 anno",
+            AppLanguage.ES to "1 año"
+        )
+        for (lang in AppLanguage.values()) {
+            val localized = getAppStrings(lang)
+            assertTrue("$lang horizonTitle colon", localized.horizonTitle.endsWith(":"))
+            assertTrue("$lang horizonFormula parens", localized.horizonFormula.startsWith("(") && localized.horizonFormula.endsWith(")"))
+            assertEquals("$lang 44", expectedHorizon44[lang], localized.horizonValueFormat(44, 38))
+            assertEquals("$lang 1", expectedHorizon1[lang], localized.horizonValueFormat(1, 38))
         }
     }
 

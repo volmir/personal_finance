@@ -312,7 +312,7 @@ val StringsEn: AppStrings = object : AppStrings {
     )
     override val horizonTitle: String = "Planning Horizon:"
     override val horizonFormula: String = "(Life expectancy - Current age)"
-    override val horizonValueFormat: (horizon: Int, age: Int) -> String = { horizon, age -> "$horizon yrs (current age: $age yrs)" }
+    override val horizonValueFormat: (horizon: Int, age: Int) -> String = { horizon, _ -> "$horizon ${plural(horizon, yearPluralForms)}" }
     override val includePropertyInFireLabel: String = "Include property and debts in FIRE calculation"
     override val includePropertyInFireSubOn: String = "Net worth is used, including property minus debts"
     override val includePropertyInFireSubOff: String = "Only investable assets are used (liquid + financial)"
