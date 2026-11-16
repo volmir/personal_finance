@@ -161,6 +161,63 @@ class StatusTextContrastTest {
         }
     }
 
+    @Test
+    fun `neutral status shades stay in golden-yellow range clearly distinct from red`() {
+        assertEquals(Color(0xFF856800), WarningYellowTextLight)
+        assertEquals(Color(0xFFFACC15), WarningYellowTextDark)
+
+        // Зелёный и красный оттенки остаются без изменений
+        assertEquals(Color(0xFF047857), SuccessGreenTextLight)
+        assertEquals(Color(0xFF34D399), SuccessGreenTextDark)
+        assertEquals(Color(0xFFB91C1C), AlertRedTextLight)
+        assertEquals(Color(0xFFF87171), AlertRedTextDark)
+
+        val lightBackground = Color(0xFFF6F9F7) // SlateLightBackground
+        assertTrue(
+            "Neutral light text on SlateLightBackground: ${contrast(WarningYellowTextLight, lightBackground)}",
+            contrast(WarningYellowTextLight, lightBackground) >= WCAG_AA_NORMAL_TEXT
+        )
+
+        val neutralLightHue = hueDegrees(WarningYellowTextLight)
+        val neutralDarkHue = hueDegrees(WarningYellowTextDark)
+        val negativeLightHue = hueDegrees(AlertRedTextLight)
+        val negativeDarkHue = hueDegrees(AlertRedTextDark)
+
+        // Золотисто-жёлтая область (40°..55°), без ухода в красно-коричневую (<= 38°) или оранжевую гамму
+        assertTrue("Expected golden-yellow light hue, got $neutralLightHue", neutralLightHue in 40f..55f)
+        assertTrue("Expected saturated yellow dark hue, got $neutralDarkHue", neutralDarkHue in 40f..55f)
+        assertTrue(
+            "Neutral light hue ($neutralLightHue) too close to negative red ($negativeLightHue)",
+            hueDistance(neutralLightHue, negativeLightHue) >= 40f
+        )
+        assertTrue(
+            "Neutral dark hue ($neutralDarkHue) too close to negative red ($negativeDarkHue)",
+            hueDistance(neutralDarkHue, negativeDarkHue) >= 40f
+        )
+    }
+
+    private fun hueDegrees(color: Color): Float {
+        val r = color.red
+        val g = color.green
+        val b = color.blue
+        val maxChannel = max(r, max(g, b))
+        val minChannel = min(r, min(g, b))
+        val delta = maxChannel - minChannel
+        if (delta == 0f) return 0f
+        val rawHue = when (maxChannel) {
+            r -> ((g - b) / delta) % 6f
+            g -> (b - r) / delta + 2f
+            else -> (r - g) / delta + 4f
+        }
+        val degrees = rawHue * 60f
+        return if (degrees < 0f) degrees + 360f else degrees
+    }
+
+    private fun hueDistance(a: Float, b: Float): Float {
+        val diff = kotlin.math.abs(a - b)
+        return kotlin.math.min(diff, 360f - diff)
+    }
+
     private fun relativeLuminance(color: Color): Double =
         0.2126 * linearChannel(color.red) +
             0.7152 * linearChannel(color.green) +

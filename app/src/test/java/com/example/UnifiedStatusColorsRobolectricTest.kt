@@ -412,6 +412,136 @@ class UnifiedStatusColorsRobolectricTest {
         assertEquals(expectedMaterialLightError, errorColor)
     }
 
+    @Test
+    fun `neutral status uses single unified golden-yellow color across all four main tabs in both themes`() {
+        val neutralInput = FinancialInputData(
+            monthlyIncome = 4_000.0,
+            monthlyExpenses = 3_600.0,
+            liquidAssets = 18_000.0,
+            financialAssets = 104_400.0,
+            propertyAssets = 130_000.0,
+            liabilities = 130_000.0,
+            includeFinancialInEmergencyFund = false,
+            nominalReturnPercent = 4.0,
+            inflationPercent = 4.0,
+            birthDate = "1986-01-01",
+            lifeExpectancy = 85
+        )
+        val neutralMetrics = FinanceCalculator.calculate(neutralInput, today = today)
+        assertEquals(AuditIndicatorStatus.NEUTRAL, FinancialMetricEvaluator.getSavingsRateStatus(neutralMetrics.savingsRate))
+        assertEquals(AuditIndicatorStatus.NEUTRAL, FinancialMetricEvaluator.getSafetyMonthsStatus(neutralMetrics.safetyMonths))
+        assertEquals(AuditIndicatorStatus.NEUTRAL, FinancialMetricEvaluator.getDebtRatioStatus(neutralMetrics.debtRatio))
+        assertEquals(AuditIndicatorStatus.NEUTRAL, FinancialMetricEvaluator.getNetWorthStatus(neutralMetrics.netWorth, neutralMetrics.totalAssets))
+        assertEquals(AuditIndicatorStatus.NEUTRAL, FinancialMetricEvaluator.getFidelityStatus(neutralMetrics.fidelityRatio))
+        assertEquals(AuditIndicatorStatus.NEUTRAL, FinancialMetricEvaluator.getCfsStatus(neutralMetrics.financialFreedomRatio))
+        assertEquals(AuditIndicatorStatus.NEUTRAL, FinancialMetricEvaluator.getRealReturnStatus(neutralMetrics.realReturnPercent))
+        assertEquals(AuditIndicatorStatus.NEUTRAL, FinancialMetricEvaluator.getTotalScoreStatus(neutralMetrics.scores.totalScore))
+
+        val trajectory = ProjectionEngine(ProjectionParams.from(neutralInput, today = today)).buildTrajectory()
+        assertTrue(trajectory.isNotEmpty())
+
+        val tabIndex = mutableStateOf(0)
+        val darkTheme = mutableStateOf(false)
+
+        composeRule.setContent {
+            TestTheme(darkTheme.value) {
+                CompositionLocalProvider(
+                    LocalAppLanguage provides AppLanguage.RU,
+                    LocalAppStrings provides strings
+                ) {
+                    when (tabIndex.value) {
+                        0 -> InputDataScreen(
+                            inputData = neutralInput,
+                            metrics = neutralMetrics,
+                            onUpdate = {},
+                            onNavigateToMetrics = {},
+                            modifier = Modifier.testTag("neutral_tab_input_list")
+                        )
+                        1 -> MetricsScreen(
+                            inputData = neutralInput,
+                            metrics = neutralMetrics,
+                            modifier = Modifier.testTag("neutral_tab_metrics_list")
+                        )
+                        2 -> AuditScoreScreen(
+                            inputData = neutralInput,
+                            metrics = neutralMetrics,
+                            modifier = Modifier.testTag("neutral_tab_audit_list")
+                        )
+                        else -> FireRetirementScreen(
+                            inputData = neutralInput,
+                            metrics = neutralMetrics,
+                            simulatedMetrics = neutralMetrics,
+                            simulationState = FireSimulationState(),
+                            trajectory = trajectory,
+                            onUpdateSimulation = { _, _, _ -> },
+                            onToggleScenario = {},
+                            onResetSimulation = {},
+                            modifier = Modifier.testTag("neutral_tab_fire_list")
+                        )
+                    }
+                }
+            }
+        }
+
+        for (isDark in listOf(false, true)) {
+            val expectedYellow = if (isDark) WarningYellowTextDark else WarningYellowTextLight
+
+            // 1. Вкладка «Данные»
+            composeRule.runOnIdle {
+                darkTheme.value = isDark
+                tabIndex.value = 0
+            }
+            composeRule.waitForIdle()
+            composeRule.onNodeWithTag("neutral_tab_input_list").performScrollToNode(hasTestTag("input_metric_savings_rate"))
+            assertEquals(expectedYellow, childTextColor("input_metric_savings_rate", Formatters.formatPercent(neutralMetrics.savingsRate, AppLanguage.RU)))
+            composeRule.onNodeWithTag("neutral_tab_input_list").performScrollToNode(hasTestTag("input_metric_net_worth"))
+            assertEquals(expectedYellow, childTextColor("input_metric_net_worth", Formatters.formatMoney(neutralMetrics.netWorth, neutralInput.currencySymbol, AppLanguage.RU)))
+            composeRule.onNodeWithTag("neutral_tab_input_list").performScrollToNode(hasTestTag("input_metric_real_return"))
+            assertEquals(expectedYellow, childTextColor("input_metric_real_return", Formatters.formatPercent(neutralMetrics.realReturnPercent, AppLanguage.RU)))
+
+            // 2. Вкладка «Показатели»: Fidelity, КФС и Реальная доходность (значение + процент + прогресс-бар + иконка)
+            composeRule.runOnIdle { tabIndex.value = 1 }
+            composeRule.waitForIdle()
+            val fidelityCardTag = "metric_card_${strings.metricFidelityTitle.replace(" ", "_")}"
+            composeRule.onNodeWithTag("neutral_tab_metrics_list").performScrollToNode(hasTestTag(fidelityCardTag))
+            composeRule.waitForIdle()
+            assertEquals(expectedYellow, childTextColor(fidelityCardTag, Formatters.formatMoney(neutralMetrics.fidelityTarget, neutralInput.currencySymbol, AppLanguage.RU)))
+            assertEquals(expectedYellow, childTextColor(fidelityCardTag, Formatters.formatPercent(neutralMetrics.fidelityPercent, AppLanguage.RU)))
+            val fidelityBarNode = composeRule.onNodeWithTag("fidelity_progress_indicator", useUnmergedTree = true).fetchSemanticsNode()
+            assertColorMatches("Neutral Fidelity progress bar (dark=$isDark)", expectedYellow, sampleProgressIndicatorFillPixel(fidelityBarNode, fraction = 0.25f))
+            val fidelityCardNode = composeRule.onNodeWithTag(fidelityCardTag, useUnmergedTree = true).fetchSemanticsNode()
+            assertNodeContainsColor("Neutral Fidelity card icon/value (dark=$isDark)", fidelityCardNode, expectedYellow)
+
+            val cfsCardTag = "metric_card_${strings.metricCfsTitle.replace(" ", "_")}"
+            composeRule.onNodeWithTag("neutral_tab_metrics_list").performScrollToNode(hasTestTag(cfsCardTag))
+            assertEquals(expectedYellow, childTextColor(cfsCardTag, Formatters.formatRatio(neutralMetrics.financialFreedomRatio, AppLanguage.RU)))
+
+            val realReturnCardTag = "metric_card_${strings.metricRealReturnTitle.replace(" ", "_")}"
+            composeRule.onNodeWithTag("neutral_tab_metrics_list").performScrollToNode(hasTestTag(realReturnCardTag))
+            assertEquals(expectedYellow, childTextColor(realReturnCardTag, Formatters.formatPercent(neutralMetrics.realReturnPercent, AppLanguage.RU)))
+
+            // 3. Вкладка «Итоги и Баллы»: ScoreGauge, итоговый результат, карточка компонента и прогресс-бар
+            composeRule.runOnIdle { tabIndex.value = 2 }
+            composeRule.waitForIdle()
+            assertEquals(expectedYellow, textColor(strings.scoresTotalResult(Formatters.formatScore(neutralMetrics.scores.totalScore, lang = AppLanguage.RU))))
+            val gaugeNode = composeRule.onNodeWithTag("score_gauge", useUnmergedTree = true).fetchSemanticsNode()
+            assertNodeContainsColor("Neutral ScoreGauge arc (dark=$isDark)", gaugeNode, expectedYellow)
+
+            composeRule.onNodeWithTag("neutral_tab_audit_list").performScrollToNode(hasTestTag("score_cfs_progress"))
+            composeRule.waitForIdle()
+            assertEquals(expectedYellow, childTextColor("score_cfs", strings.scoreOutOfTen(neutralMetrics.scores.cfsScore)))
+            val cfsBarNode = composeRule.onNodeWithTag("score_cfs_progress", useUnmergedTree = true).fetchSemanticsNode()
+            assertColorMatches("Neutral Audit CFS progress bar (dark=$isDark)", expectedYellow, sampleProgressIndicatorFillPixel(cfsBarNode, fraction = 0.25f))
+
+            // 4. Вкладка «FIRE»: ползунок доходности при 0,00 %
+            composeRule.runOnIdle { tabIndex.value = 3 }
+            composeRule.waitForIdle()
+            composeRule.onNodeWithTag("fire_subtab_simulation").performClick()
+            composeRule.onNodeWithTag("neutral_tab_fire_list").performScrollToNode(hasTestTag("fire_slider_return_value"))
+            assertEquals(expectedYellow, textColorByTag("fire_slider_return_value"))
+        }
+    }
+
     private fun sampleProgressIndicatorFillPixel(node: SemanticsNode, fraction: Float): Color {
         val (bitmap, origin) = captureContentBitmap()
         val rect = node.boundsInWindow
