@@ -34,7 +34,9 @@ task = re.search(r'одно задание: ([A-Za-z0-9_-]+):', prompt)[1]
 work = Path('orchestrator/.runtime'); work.mkdir(exist_ok=True)
 (work / 'worker.pid').write_text(str(os.getpid()))
 with (work / 'calls.jsonl').open('a') as stream:
-    stream.write(json.dumps({'id': task, 'args': args, 'prompt': prompt}) + '\n')
+    stream.write(json.dumps({'id': task, 'args': args, 'prompt': prompt,
+                            'env': {key: os.environ.get(key) for key in
+                                    ('CATEGORY_PROVIDER', 'CATEGORY_MODEL', 'SEMANTIC_CACHE')}}) + '\n')
 count_file = work / ('count-' + task)
 count = int(count_file.read_text()) + 1 if count_file.exists() else 1
 count_file.write_text(str(count))
@@ -84,7 +86,9 @@ prompt = sys.stdin.read()
 task = re.search(r'одно задание: ([A-Za-z0-9_-]+):', prompt)[1]
 work = Path('orchestrator/.runtime'); work.mkdir(exist_ok=True)
 with (work / 'calls.jsonl').open('a') as stream:
-    stream.write(json.dumps({'id': task, 'args': args, 'prompt': prompt}) + '\n')
+    stream.write(json.dumps({'id': task, 'args': args, 'prompt': prompt,
+                            'env': {key: os.environ.get(key) for key in
+                                    ('CATEGORY_PROVIDER', 'CATEGORY_MODEL', 'SEMANTIC_CACHE')}}) + '\n')
 mode = os.environ.get('MOCK_MODE', 'normal')
 marker = work / ('interrupted-' + task)
 if mode == 'interrupt-once' and os.environ.get('MOCK_INTERRUPT_TASK') == task and not marker.exists():
@@ -223,7 +227,7 @@ class FixtureTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             config = Path(directory) / 'config.json'
             for body in ({'model_sets': []},
-                         {'model_sets': {'codex': {'paid': {'light': 'a', 'standard': 'b', 'heavy': 'c'}}}},
+                         {'model_sets': {'other': {'paid': {'light': 'a', 'standard': 'b', 'heavy': 'c'}}}},
                          {'model_sets': {'opencode': {'paid': {'light': 'a', 'standard': 'b'}}}},
                          {'model_sets': {'opencode': {'paid': {'light': 'a', 'standard': 'b', 'heavy': ''}}}},
                          {'model_sets': {'opencode': {'paid': {'light': 'a', 'standard': 5, 'heavy': 'c'}}}},
@@ -236,15 +240,18 @@ class FixtureTests(unittest.TestCase):
                     with self.assertRaises(module.Error):
                         module.load_config(config)
 
-    def test_models_option_requires_opencode_and_known_set(self):
+    def test_models_option_uses_sets_of_the_active_backend(self):
         with tempfile.TemporaryDirectory() as directory:
             config = Path(directory) / 'config.json'
-            config.write_text(json.dumps({'model_sets': {'opencode': {'paid': {
-                'light': 'paid-l', 'standard': 'paid-s', 'heavy': 'paid-h'}}}}))
+            config.write_text(json.dumps({'model_sets': {
+                'opencode': {'paid': {'light': 'paid-l', 'standard': 'paid-s', 'heavy': 'paid-h'}},
+                'codex': {'cheap': {'light': 'cheap-l', 'standard': 'cheap-s', 'heavy': 'cheap-h'}}}}))
             with self.assertRaises(module.Error):
                 module.load_config(config, models_set='paid')  # backend по умолчанию codex
             self.assertEqual(module.load_config(config, backend='opencode', models_set='paid')['models']['heavy'],
                              'paid-h')
+            self.assertEqual(module.load_config(config, backend='codex', models_set='cheap')['models']['heavy'],
+                             'cheap-h')
             with self.assertRaises(module.Error) as caught:
                 module.load_config(config, backend='opencode', models_set='free')
             self.assertIn('paid', str(caught.exception))
@@ -267,28 +274,34 @@ class FixtureTests(unittest.TestCase):
             self.assertEqual(loaded['branch'], module.DEFAULTS['branch'])
             self.assertEqual(loaded['gate_base'], [])
 
-    def test_load_config_warns_efforts_ignored_for_opencode(self):
+    def test_load_config_does_not_warn_about_efforts_for_opencode(self):
         with tempfile.TemporaryDirectory() as directory:
             config = Path(directory) / 'config.json'
-            config.write_text(json.dumps({'backend': 'opencode', 'efforts': {'light': 'high'}}))
-            stderr = io.StringIO()
-            with contextlib.redirect_stderr(stderr):
-                module.load_config(config)
-            self.assertIn('efforts игнорируются', stderr.getvalue())
-            config.write_text(json.dumps({'backend': 'opencode'}))
-            stderr = io.StringIO()
-            with contextlib.redirect_stderr(stderr):
-                module.load_config(config)
-            self.assertNotIn('efforts', stderr.getvalue())
+            for body in ({'backend': 'opencode', 'efforts': {'light': 'high'}},
+                         {'backend': 'opencode'}):
+                with self.subTest(body=body):
+                    config.write_text(json.dumps(body))
+                    stderr = io.StringIO()
+                    with contextlib.redirect_stderr(stderr):
+                        loaded = module.load_config(config)
+                    self.assertEqual(loaded['backend'], 'opencode')
+                    self.assertEqual(stderr.getvalue(), '')
 
-    def test_codex_command_is_byte_identical_to_previous_version(self):
-        config = {'backend': 'codex', 'codex_bin': 'codex', 'sandbox': 'workspace-write'}
+    def test_codex_command_is_autonomous(self):
+        config = {'backend': 'codex', 'codex_bin': 'codex', 'sandbox': 'danger-full-access'}
         command = module.agent_start_command(config, 'm-1', 'high', Path('last.md'))
-        self.assertEqual(command, ['codex', 'exec', '--model', 'm-1', '-c', 'model_reasoning_effort="high"',
-                                   '--sandbox', 'workspace-write', '--output-last-message', 'last.md', '-'])
+        self.assertEqual(command, ['codex', 'exec', '--model', 'm-1',
+                                   '-c', 'model_reasoning_effort="high"',
+                                   '-c', 'approval_policy="never"',
+                                   '--sandbox', 'danger-full-access',
+                                   '--output-last-message', 'last.md', '-'])
         command = module.agent_start_command(config, '', 'low', Path('last.md'))
-        self.assertEqual(command, ['codex', 'exec', '-c', 'model_reasoning_effort="low"',
-                                   '--sandbox', 'workspace-write', '--output-last-message', 'last.md', '-'])
+        self.assertEqual(command, ['codex', 'exec',
+                                   '-c', 'model_reasoning_effort="low"',
+                                   '-c', 'approval_policy="never"',
+                                   '--sandbox', 'danger-full-access',
+                                   '--output-last-message', 'last.md', '-'])
+        self.assertEqual(module.DEFAULTS['sandbox'], 'danger-full-access')
 
     def test_opencode_command_shape(self):
         config = {'backend': 'opencode', 'opencode_bin': 'opencode'}
@@ -375,6 +388,21 @@ class QueueHelpers:
     def progress(self):
         return module.read_progress(self.repo / 'orchestrator/PROGRESS.md')
 
+    def test_agent_inherits_explicit_environment(self):
+        explicit = {'CATEGORY_PROVIDER': 'explicit-provider', 'CATEGORY_MODEL': 'explicit-model',
+                    'SEMANTIC_CACHE': '/explicit/cache'}
+        self.run_cli(**explicit)
+        self.assertEqual(self.calls()[0]['env'], explicit)
+        self.assertEqual(self.g('branch', '--show-current'), 'main')
+        self.assertEqual(self.g('for-each-ref', '--format=%(refname:short)', 'refs/heads/'), 'main')
+
+    def test_invalid_branch_is_rejected_before_agent(self):
+        for branch in ('bad..branch', '-bad', 'bad branch'):
+            with self.subTest(branch=branch):
+                self.set_config(branch=branch)
+                self.assertIn('branch:', self.run_cli(ok=False))
+                self.assertFalse(self.calls())
+
 
 class OrchestratorTests(QueueHelpers, unittest.TestCase):
     def setUp(self):
@@ -396,7 +424,10 @@ class OrchestratorTests(QueueHelpers, unittest.TestCase):
         self.g('config', 'user.email', 'test@example.invalid')
         self.g('config', 'core.hooksPath', '/dev/null')
         # Слой окружения удалён: все настройки оркестратора — только через config.json.
-        self.set_config(push=False, codex_bin=str(self.mock), restart_retries=0, retry_delay=0)
+        # Фикстура кодексового бэкенда фиксирует backend=codex независимо от
+        # значения по умолчанию в конфиге целевого проекта.
+        self.set_config(backend='codex', push=False, codex_bin=str(self.mock),
+                        restart_retries=0, retry_delay=0)
         self.save_tasks(task())
         self.commit()
 
@@ -405,7 +436,8 @@ class OrchestratorTests(QueueHelpers, unittest.TestCase):
         self.commit()
         self.run_cli()
         self.assertEqual([c['id'] for c in self.calls()], ['A-1', 'B'])
-        self.assertEqual(self.g('branch', '--show-current'), 'auto/tasks')
+        self.assertEqual(self.g('branch', '--show-current'), 'main')
+        self.assertEqual(self.g('for-each-ref', '--format=%(refname:short)', 'refs/heads/'), 'main')
         self.assertEqual(self.g('status', '--porcelain'), '')
         self.assertEqual(self.g('log', '-1', '--format=%s'), 'B: Название B')
         self.run_cli()
@@ -456,12 +488,12 @@ class OrchestratorTests(QueueHelpers, unittest.TestCase):
         subprocess.run(['git', 'init', '--bare', '-q', str(remote)], check=True, env=self.env)
         self.g('remote', 'add', 'origin', str(remote))
         self.run_cli('--push')
-        for call, tier, effort in zip(self.calls(), ('light', 'standard', 'heavy'), ('low', 'medium', 'high')):
+        for call, tier, effort in zip(self.calls(), ('light', 'standard', 'heavy'), ('medium', 'medium', 'high')):
             with self.subTest(tier=tier):
                 args = call['args']
                 self.assertEqual(args[args.index('--model') + 1], expected[tier])
                 self.assertIn(f'model_reasoning_effort="{effort}"', args)
-        self.assertEqual(self.g('rev-parse', 'HEAD'), self.g('rev-parse', 'origin/auto/tasks'))
+        self.assertEqual(self.g('rev-parse', 'HEAD'), self.g('rev-parse', 'origin/main'))
 
     def test_push_by_default_with_minimal_config(self):
         (self.repo / 'orchestrator/config.json').write_text(json.dumps({'codex_bin': str(self.mock)}))
@@ -470,7 +502,7 @@ class OrchestratorTests(QueueHelpers, unittest.TestCase):
         subprocess.run(['git', 'init', '--bare', '-q', str(remote)], check=True, env=self.env)
         self.g('remote', 'add', 'origin', str(remote))
         self.run_cli()
-        self.assertEqual(self.g('rev-parse', 'HEAD'), self.g('rev-parse', 'origin/auto/tasks'))
+        self.assertEqual(self.g('rev-parse', 'HEAD'), self.g('rev-parse', 'origin/main'))
 
     def test_no_push_works_without_remote_and_keeps_commit_local(self):
         self.run_cli('--no-push')
@@ -495,7 +527,7 @@ class OrchestratorTests(QueueHelpers, unittest.TestCase):
         self.save_tasks(task(gate='bash orchestrator/run.sh --check android'))
         (self.repo / 'gradlew').write_text(
             '#!/usr/bin/env bash\n'
-            'test "$*" = ":app:compileDebugKotlin :app:lintDebug --console=plain" && '
+            'test "$*" = ":app:compileDebugKotlin :app:lintDebug :app:compileDebugAndroidTestKotlin --console=plain" && '
             'test "$(cat result-A-1.txt)" = good\n')
         self.commit()
         self.run_cli(MOCK_MODE='retry')
@@ -825,8 +857,9 @@ class OrchestratorTests(QueueHelpers, unittest.TestCase):
         self.run_cli()
 
     def test_existing_branch_is_not_switched_automatically(self):
-        self.g('branch', 'auto/tasks')
+        self.g('switch', '-c', 'feature/work')
         self.assertIn('выберите её вручную', self.run_cli(ok=False))
+        self.assertEqual(self.g('branch', '--show-current'), 'feature/work')
         self.assertFalse(self.calls())
 
     def test_push_to_local_remote(self):
@@ -834,7 +867,7 @@ class OrchestratorTests(QueueHelpers, unittest.TestCase):
         subprocess.run(['git', 'init', '--bare', '-q', str(remote)], check=True, env=self.env)
         self.g('remote', 'add', 'origin', str(remote))
         self.run_cli('--push')
-        self.assertEqual(self.g('rev-parse', 'HEAD'), self.g('rev-parse', 'origin/auto/tasks'))
+        self.assertEqual(self.g('rev-parse', 'HEAD'), self.g('rev-parse', 'origin/main'))
 
     def test_push_failure_stops_after_local_commit(self):
         self.save_tasks(task() + '\n' + task('B', 'true'))
@@ -856,7 +889,7 @@ class OrchestratorTests(QueueHelpers, unittest.TestCase):
         self.run_cli('--push')
         self.assertEqual([c['id'] for c in self.calls()], ['A-1', 'B'])
         self.assertEqual(self.g('rev-parse', 'HEAD~1'), committed)
-        self.assertEqual(self.g('rev-parse', 'HEAD'), self.g('rev-parse', 'origin/auto/tasks'))
+        self.assertEqual(self.g('rev-parse', 'HEAD'), self.g('rev-parse', 'origin/main'))
 
     def test_sigkill_parent_cannot_start_second_agent_while_orphan_holds_lock(self):
         with tempfile.TemporaryFile() as output:
@@ -1063,11 +1096,47 @@ class OpenCodeTests(QueueHelpers, unittest.TestCase):
         self.assertEqual(self.progress()['A-1']['model'], 'opencode/paid-l')
         self.assertEqual(self.g('status', '--porcelain'), '')
 
-    def test_models_flag_is_rejected_for_codex(self):
-        self.set_config(backend='codex', codex_bin=str(self.mock), model_sets=self.paid_set())
+    def codex_cheap_set(self):
+        return {'codex': {'cheap': {'light': 'codex-cheap-l', 'standard': 'codex-cheap-s',
+                                    'heavy': 'codex-cheap-h'}}}
+
+    def codex_mock(self):
+        path = self.base / 'mock codex'
+        path.write_text(MOCK)
+        path.chmod(0o755)
+        return path
+
+    def test_models_flag_requires_a_set_for_the_active_backend(self):
+        self.set_config(backend='codex', codex_bin=str(self.codex_mock()), model_sets=self.paid_set())
         output = self.run_cli('--backend', 'codex', '--models', 'paid', ok=False)
-        self.assertIn('opencode', output)
+        self.assertIn('для backend codex', output)
+        self.assertIn('model_sets.codex', output)
         self.assertFalse(self.calls())
+
+    def test_models_flag_selects_named_set_for_codex(self):
+        self.set_config(backend='codex', codex_bin=str(self.codex_mock()),
+                        model_sets=self.codex_cheap_set())
+        self.run_cli('--models', 'cheap')
+        args = self.calls()[0]['args']
+        self.assertEqual(args[args.index('--model') + 1], 'codex-cheap-l')
+        self.assertEqual(self.progress()['A-1']['model'], 'codex-cheap-l')
+        self.assertEqual(self.g('status', '--porcelain'), '')
+
+    def test_backend_switch_rebinds_unfinished_task_model(self):
+        self.set_config(backend='opencode', opencode_bin=str(self.mock),
+                        codex_bin=str(self.codex_mock()),
+                        push=False, restart_retries=2, retry_delay=0,
+                        models={'codex': {'light': 'gpt-5.6-luna', 'standard': 'gpt-6.1-sol',
+                                          'heavy': 'gpt-6.1-sol'},
+                                'opencode': {'light': 'opencode/light', 'standard': 'opencode/standard',
+                                             'heavy': 'opencode/heavy'}})
+        self.save_tasks(task() + '\n' + task('B', 'test -f result-B.txt'))
+        self.commit()
+        self.run_cli(ok=False, MOCK_MODE='interrupt-once', MOCK_INTERRUPT_TASK='A-1')
+        output = self.run_cli('--backend', 'codex')
+        self.assertIn('модель пересчитана под backend codex', output)
+        self.assertEqual(self.progress()['A-1']['model'], 'gpt-6.1-sol')
+        self.assertEqual(self.g('status', '--porcelain'), '')
 
     def test_resume_with_models_flag_keeps_saved_models_and_warns(self):
         self.set_config(models={'opencode': {'light': 'free-l', 'standard': 'free-s', 'heavy': 'free-h'}},

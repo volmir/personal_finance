@@ -52,7 +52,10 @@ class ProjectGateTests(unittest.TestCase):
     def test_profiles_run_project_checks_from_repository_root(self):
         expected = {
             "orchestrator": ["python3 -m unittest discover -s orchestrator/tests"],
-            "android": ["gradle :app:compileDebugKotlin :app:lintDebug --console=plain"],
+            "tools": ["python3 -m unittest discover -s tools/tests"],
+            "core": ["gradle :core:test --console=plain"],
+            "data": ["gradle :app:verifyDictionaryLicenses :core:test --console=plain"],
+            "android": ["gradle :app:compileDebugKotlin :app:lintDebug :app:compileDebugAndroidTestKotlin --console=plain"],
         }
         for profile, commands in expected.items():
             with self.subTest(profile=profile):
@@ -68,14 +71,15 @@ class ProjectGateTests(unittest.TestCase):
                 result, calls = self.run_gate(*args)
                 self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
                 self.assertEqual(calls, [
+                    "python3 -m unittest discover -s tools/tests",
                     "python3 -m unittest discover -s orchestrator/tests",
-                    "gradle testDebugUnitTest lintDebug --console=plain",
+                    "gradle :core:test :app:assembleDebug --console=plain",
                 ])
 
     def test_failed_check_stops_full_gate_and_preserves_exit_code(self):
         result, calls = self.run_gate("full", exit_code=7)
         self.assertEqual(result.returncode, 7)
-        self.assertEqual(calls, ["python3 -m unittest discover -s orchestrator/tests"])
+        self.assertEqual(calls, ["python3 -m unittest discover -s tools/tests"])
 
     def test_gradle_failure_is_not_reported_as_success(self):
         result, calls = self.run_gate("android", exit_code=9)

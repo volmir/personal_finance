@@ -1,25 +1,28 @@
 {
   "tasks_file": "orchestrator/TASKS.md",
   "progress_file": "orchestrator/PROGRESS.md",
-  "branch": "auto/tasks",
+  "branch": "main",
   "remote": "origin",
   "push": true,
-  "backend": "codex",
+  "backend": "opencode",
   "codex_bin": "codex",
   "opencode_bin": "opencode",
-  "sandbox": "workspace-write",
+  "sandbox": "danger-full-access",
   "gate_base": [],
   "checks": {
+    "tools": ["python3 -m unittest discover -s tools/tests"],
+    "core": ["bash ./gradlew :core:test --console=plain"],
+    "data": ["bash ./gradlew :app:verifyDictionaryLicenses :core:test --console=plain"],
+    "android": ["bash ./gradlew :app:compileDebugKotlin :app:lintDebug :app:compileDebugAndroidTestKotlin --console=plain"],
     "full": [
+      "python3 -m unittest discover -s tools/tests",
       "python3 -m unittest discover -s orchestrator/tests",
-      "bash ./gradlew testDebugUnitTest lintDebug --console=plain"
+      "bash ./gradlew :core:test :app:assembleDebug --console=plain"
     ],
-    "android": [
-      "bash ./gradlew :app:compileDebugKotlin :app:lintDebug --console=plain"
-    ]
+    "release": ["bash ./gradlew :app:assembleRelease --console=plain"]
   },
-  "task_timeout": 3600,
-  "gate_timeout": 3600,
+  "task_timeout": 14400,
+  "gate_timeout": 7200,
   "git_timeout": 120,
   "restart_retries": 3,
   "retry_delay": 30,
@@ -30,22 +33,22 @@
       "heavy": "gpt-6.1-sol"
     },
     "opencode": {
-      "light": "opencode/glm-5.3-flash-free",
-      "standard": "opencode/glm-5.3-flash-free#max",
-      "heavy": "opencode/beam-free#max"
+      "light": "opencode/muse-ember-1.0#medium",
+      "standard": "opencode/deepseek-v4.1-flash#max",
+      "heavy": "opencode/deepseek-v4.1-flash#max"
     }
   },
   "model_sets": {
     "opencode": {
-      "paid": {
-        "light": "opencode/muse-ember-1.0#low",
-        "standard": "opencode/deepseek-v4.1-flash#max",
-        "heavy": "opencode/deepseek-v4-pro#max"
+      "free": {
+        "light": "opencode/glm-5.3-flash-free",
+        "standard": "opencode/glm-5.3-flash-free#max",
+        "heavy": "opencode/beam-free#max"
       }
     }
   },
   "efforts": {
-    "light": "low",
+    "light": "medium",
     "standard": "medium",
     "heavy": "high"
   }
