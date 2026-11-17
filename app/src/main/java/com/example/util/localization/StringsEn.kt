@@ -467,6 +467,7 @@ val StringsEn: AppStrings = object : AppStrings {
     override val fireSimSame: (target: String) -> String = { target -> "Retirement timeline remains unchanged (in $target yrs)." }
     override val fireSimWithoutBase: (target: String, age: String) -> String = { target, age -> "Retirement reachable in $target yrs (at age $age yrs)." }
     override val fireUnreachableText: String = "Unachievable with current parameters"
+    override val fireUnreachableShortText: String = "Unreachable"
     override val fireUnreachableSimulationText: String = "Unachievable with simulation parameters"
     override val fireReachedBaseText: String = "FIRE goal reached"
     override val fireReachedSimulationText: String = "FIRE goal reached in scenario"

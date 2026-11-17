@@ -467,6 +467,7 @@ val StringsIt: AppStrings = object : AppStrings {
     override val fireSimSame: (target: String) -> String = { target -> "L'orizzonte pensionistico resta invariato (tra $target anni)." }
     override val fireSimWithoutBase: (target: String, age: String) -> String = { target, age -> "Pensione raggiungibile tra $target anni (all'età di $age anni)." }
     override val fireUnreachableText: String = "Non raggiungibile con i parametri attuali"
+    override val fireUnreachableShortText: String = "Non raggiungibile"
     override val fireUnreachableSimulationText: String = "Non raggiungibile con i parametri di simulazione"
     override val fireReachedBaseText: String = "Obiettivo FIRE raggiunto"
     override val fireReachedSimulationText: String = "Obiettivo FIRE raggiunto nello scenario"

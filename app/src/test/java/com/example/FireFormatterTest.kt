@@ -58,6 +58,43 @@ class FireFormatterTest {
         assertEquals("Unachievable with current parameters", Formatters.formatFireRetirementAge(80.0, FireStatus.HORIZON_EXHAUSTED, AppLanguage.EN))
         assertEquals("Укажите корректную дату рождения", Formatters.formatFireYearsToRetirement(0.0, FireStatus.INVALID_AGE, AppLanguage.RU))
         assertEquals("Please specify a valid birth date", Formatters.formatFireRetirementAge(0.0, FireStatus.INVALID_AGE, AppLanguage.EN))
+
+        val expectedShortUnreachable = mapOf(
+            AppLanguage.RU to "Недостижимо",
+            AppLanguage.EN to "Unreachable",
+            AppLanguage.DE to "Nicht erreichbar",
+            AppLanguage.FR to "Inatteignable",
+            AppLanguage.ES to "Inalcanzable",
+            AppLanguage.IT to "Non raggiungibile"
+        )
+        for (lang in AppLanguage.values()) {
+            val strings = com.example.util.localization.getAppStrings(lang)
+            assertEquals(
+                "$lang compact UNREACHABLE",
+                expectedShortUnreachable[lang],
+                Formatters.formatFireRetirementAge(80.0, FireStatus.UNREACHABLE, lang, compactUnreachable = true)
+            )
+            assertEquals(
+                "$lang compact equals fireUnreachableShortText",
+                strings.fireUnreachableShortText,
+                Formatters.formatFireRetirementAge(80.0, FireStatus.UNREACHABLE, lang, compactUnreachable = true)
+            )
+            assertEquals(
+                "$lang full UNREACHABLE unchanged",
+                strings.fireUnreachableText,
+                Formatters.formatFireRetirementAge(80.0, FireStatus.UNREACHABLE, lang)
+            )
+            assertEquals(
+                "$lang compact REACHABLE",
+                strings.fireRetirementAgeValue(Formatters.formatRatio(62.5, lang)),
+                Formatters.formatFireRetirementAge(62.5, FireStatus.REACHABLE, lang, compactUnreachable = true)
+            )
+            assertEquals(
+                "$lang compact REACHED_NOW",
+                strings.fireRetirementAgeValue(Formatters.formatRatio(38.0, lang)),
+                Formatters.formatFireRetirementAge(38.0, FireStatus.REACHED_NOW, lang, compactUnreachable = true)
+            )
+        }
     }
 
     @Test

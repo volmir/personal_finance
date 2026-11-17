@@ -279,18 +279,20 @@ object Formatters {
 
     /**
      * Форматирует возраст выхода на пенсию:
-     * Если недостижимо -> «Недостижимо при текущих параметрах»
+     * Если недостижимо -> «Недостижимо» (при compactUnreachable = true) или полное сообщение
      * Иначе -> возраст с суффиксом лет/yrs
      */
     fun formatFireRetirementAge(
         retirementAge: Double,
         status: FireStatus,
-        lang: AppLanguage
+        lang: AppLanguage,
+        compactUnreachable: Boolean = false
     ): String {
         val strings = com.example.util.localization.getAppStrings(lang)
         return when (status) {
             FireStatus.INVALID_AGE -> strings.invalidBirthDateError
-            FireStatus.UNREACHABLE, FireStatus.HORIZON_EXHAUSTED -> strings.fireUnreachableText
+            FireStatus.UNREACHABLE -> if (compactUnreachable) strings.fireUnreachableShortText else strings.fireUnreachableText
+            FireStatus.HORIZON_EXHAUSTED -> strings.fireUnreachableText
             FireStatus.REACHED_NOW, FireStatus.REACHABLE -> strings.fireRetirementAgeValue(formatRatio(retirementAge, lang))
         }
     }

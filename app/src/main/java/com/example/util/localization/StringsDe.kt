@@ -467,6 +467,7 @@ val StringsDe: AppStrings = object : AppStrings {
     override val fireSimSame: (target: String) -> String = { target -> "Ruhestandszeitplan bleibt unverändert (in $target Jahren)." }
     override val fireSimWithoutBase: (target: String, age: String) -> String = { target, age -> "Ruhestand erreichbar in $target Jahren (mit $age Jahren)." }
     override val fireUnreachableText: String = "Nicht erreichbar bei aktuellen Parametern"
+    override val fireUnreachableShortText: String = "Nicht erreichbar"
     override val fireUnreachableSimulationText: String = "Mit Simulationsparametern nicht erreichbar"
     override val fireReachedBaseText: String = "FIRE-Ziel erreicht"
     override val fireReachedSimulationText: String = "FIRE-Ziel im Szenario erreicht"

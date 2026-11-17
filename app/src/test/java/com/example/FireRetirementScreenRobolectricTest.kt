@@ -4,6 +4,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
@@ -14,6 +15,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotSelected
 import androidx.compose.ui.test.assertIsOn
 import androidx.compose.ui.test.assertIsSelected
+import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.assertWidthIsAtLeast
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasTestTag
@@ -26,6 +28,7 @@ import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeUp
 import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import com.example.data.model.FireStatus
 import com.example.data.model.FinancialInputData
@@ -33,6 +36,9 @@ import com.example.domain.FinanceCalculator
 import com.example.ui.FireScenarioToggles
 import com.example.ui.FireSimulationState
 import com.example.ui.screens.FireRetirementScreen
+import com.example.ui.theme.AlertRed
+import com.example.ui.theme.MyApplicationTheme
+import com.example.ui.theme.StatusColors
 import com.example.util.Formatters
 import com.example.util.localization.AppLanguage
 import com.example.util.localization.LocalAppLanguage
@@ -40,6 +46,9 @@ import com.example.util.localization.LocalAppStrings
 import com.example.util.localization.getAppStrings
 import java.time.LocalDate
 import kotlin.math.abs
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -788,6 +797,182 @@ class FireRetirementScreenRobolectricTest {
                 simMetrics.value = sampleMetrics.copy(fireStatus = FireStatus.REACHABLE, yearsToRetirement = 0.004)
             }
             assertTextFits("fire_sub_hundredth_title", "$lang SIM SUB-HUNDREDTH", hasBadge = true)
+        }
+    }
+
+    @Test
+    @Config(qualifiers = "w360dp-h800dp-xxhdpi")
+    @GraphicsMode(GraphicsMode.Mode.NATIVE)
+    fun `retirement age row shows short unreachable label in both subtabs across all six languages and themes`() {
+        val input = FinancialInputData.usAverageData()
+        val sampleMetrics = FinanceCalculator.calculate(input, today = LocalDate.of(2026, 11, 6))
+        val baseMetrics = mutableStateOf(sampleMetrics.copy(fireStatus = FireStatus.UNREACHABLE))
+        val simMetrics = mutableStateOf(sampleMetrics.copy(fireStatus = FireStatus.UNREACHABLE))
+        val simState = mutableStateOf(FireSimulationState(extraMonthlySavings = 200.0))
+        val language = mutableStateOf(AppLanguage.RU)
+        val darkTheme = mutableStateOf(false)
+
+        composeRule.setContent {
+            MyApplicationTheme(darkTheme = darkTheme.value, dynamicColor = false) {
+                CompositionLocalProvider(
+                    LocalAppLanguage provides language.value,
+                    LocalAppStrings provides getAppStrings(language.value)
+                ) {
+                    FireRetirementScreen(
+                        inputData = input,
+                        metrics = baseMetrics.value,
+                        simulatedMetrics = simMetrics.value,
+                        simulationState = simState.value,
+                        trajectory = emptyList(),
+                        onUpdateSimulation = { _, _, _ -> },
+                        onToggleScenario = {},
+                        onResetSimulation = {},
+                        modifier = Modifier.testTag("fire_test_list")
+                    )
+                }
+            }
+        }
+
+        fun assertTwoColumnRow(lang: AppLanguage, subtabLabel: String, expectedValue: String, expectRed: Boolean, isDark: Boolean) {
+            val labelNode = composeRule.onNodeWithTag("fire_retirement_age_label", useUnmergedTree = true)
+            val valueNode = composeRule.onNodeWithTag("fire_retirement_age_value", useUnmergedTree = true)
+            labelNode.assertIsDisplayed()
+            valueNode.assertIsDisplayed().assertTextEquals(expectedValue)
+
+            val valueLayouts = mutableListOf<TextLayoutResult>()
+            valueNode.fetchSemanticsNode().config[SemanticsActions.GetTextLayoutResult].action?.invoke(valueLayouts)
+            val valueLayout = valueLayouts.single()
+            assertFalse("$lang $subtabLabel value height overflow", valueLayout.didOverflowHeight)
+            assertFalse("$lang $subtabLabel value ellipsized", (0 until valueLayout.lineCount).any { valueLayout.isLineEllipsized(it) })
+            assertTrue("$lang $subtabLabel value width fits", valueLayout.size.width <= valueLayout.layoutInput.constraints.maxWidth)
+
+            if (expectRed) {
+                val expectedColor = if (isDark) com.example.ui.theme.AlertRedTextDark else com.example.ui.theme.AlertRedTextLight
+                assertEquals("$lang $subtabLabel red color", expectedColor, valueLayout.layoutInput.style.color)
+            }
+
+            val labelBounds = labelNode.fetchSemanticsNode().boundsInWindow
+            val valueBounds = valueNode.fetchSemanticsNode().boundsInWindow
+            assertTrue(
+                "$lang $subtabLabel must remain two columns with gap: $labelBounds vs $valueBounds",
+                labelBounds.right < valueBounds.left
+            )
+        }
+
+        for (isDark in listOf(false, true)) {
+            composeRule.runOnIdle { darkTheme.value = isDark }
+            for (lang in AppLanguage.values()) {
+                val strings = getAppStrings(lang)
+                composeRule.runOnIdle {
+                    language.value = lang
+                    baseMetrics.value = sampleMetrics.copy(fireStatus = FireStatus.UNREACHABLE)
+                    simMetrics.value = sampleMetrics.copy(fireStatus = FireStatus.UNREACHABLE)
+                }
+                composeRule.onNodeWithTag("fire_subtab_base").performClick()
+                composeRule.onNodeWithTag("fire_unreachable_title").assertTextEquals(strings.fireUnreachableText)
+                assertTwoColumnRow(lang, "BASE UNREACHABLE", strings.fireUnreachableShortText, expectRed = true, isDark = isDark)
+
+                composeRule.onNodeWithTag("fire_subtab_simulation").performClick()
+                composeRule.onNodeWithTag("fire_unreachable_title").assertTextEquals(strings.fireUnreachableSimulationText)
+                assertTwoColumnRow(lang, "SIM UNREACHABLE", strings.fireUnreachableShortText, expectRed = true, isDark = isDark)
+
+                composeRule.runOnIdle {
+                    baseMetrics.value = sampleMetrics.copy(fireStatus = FireStatus.REACHABLE, yearsToRetirement = 14.5, retirementAge = 52.5)
+                    simMetrics.value = sampleMetrics.copy(fireStatus = FireStatus.REACHED_NOW, yearsToRetirement = 0.0, retirementAge = 38.0)
+                }
+                composeRule.onNodeWithTag("fire_subtab_base").performClick()
+                assertTwoColumnRow(
+                    lang,
+                    "BASE REACHABLE",
+                    Formatters.formatFireRetirementAge(52.5, FireStatus.REACHABLE, lang, compactUnreachable = true),
+                    expectRed = false,
+                    isDark = isDark
+                )
+                composeRule.onNodeWithTag("fire_subtab_simulation").performClick()
+                assertTwoColumnRow(
+                    lang,
+                    "SIM REACHED_NOW",
+                    Formatters.formatFireRetirementAge(38.0, FireStatus.REACHED_NOW, lang, compactUnreachable = true),
+                    expectRed = false,
+                    isDark = isDark
+                )
+            }
+        }
+    }
+
+    @Test
+    @Config(qualifiers = "w320dp-h640dp-xxhdpi")
+    @GraphicsMode(GraphicsMode.Mode.NATIVE)
+    fun `retirement age row does not clip or overlap on 320dp screens and large font scale across all six languages`() {
+        val input = FinancialInputData.usAverageData()
+        val sampleMetrics = FinanceCalculator.calculate(input, today = LocalDate.of(2026, 11, 6))
+        val unreachableMetrics = sampleMetrics.copy(fireStatus = FireStatus.UNREACHABLE)
+        val simState = FireSimulationState(extraMonthlySavings = 200.0)
+        val language = mutableStateOf(AppLanguage.RU)
+        val fontScaleState = mutableStateOf(1.0f)
+
+        composeRule.setContent {
+            val baseDensity = LocalDensity.current
+            MyApplicationTheme(darkTheme = false, dynamicColor = false) {
+                CompositionLocalProvider(
+                    LocalAppLanguage provides language.value,
+                    LocalAppStrings provides getAppStrings(language.value),
+                    LocalDensity provides Density(baseDensity.density, fontScale = fontScaleState.value)
+                ) {
+                    FireRetirementScreen(
+                        inputData = input,
+                        metrics = unreachableMetrics,
+                        simulatedMetrics = unreachableMetrics,
+                        simulationState = simState,
+                        trajectory = emptyList(),
+                        onUpdateSimulation = { _, _, _ -> },
+                        onToggleScenario = {},
+                        onResetSimulation = {},
+                        modifier = Modifier.testTag("fire_test_list")
+                    )
+                }
+            }
+        }
+
+        for (scale in listOf(1.0f, 1.6f)) {
+            composeRule.runOnIdle { fontScaleState.value = scale }
+            for (subtabTag in listOf("fire_subtab_base", "fire_subtab_simulation")) {
+                composeRule.onNodeWithTag("fire_test_list").performScrollToNode(hasTestTag("fire_subtab_selector"))
+                composeRule.onNodeWithTag(subtabTag).performClick()
+                for (lang in AppLanguage.values()) {
+                    composeRule.runOnIdle { language.value = lang }
+                    composeRule.waitForIdle()
+                    composeRule.onNodeWithTag("fire_test_list").performScrollToNode(hasTestTag("fire_hero_card"))
+                    val strings = getAppStrings(lang)
+                    val labelNode = composeRule.onNodeWithTag("fire_retirement_age_label", useUnmergedTree = true)
+                    val valueNode = composeRule.onNodeWithTag("fire_retirement_age_value", useUnmergedTree = true)
+                    valueNode.performScrollTo()
+                    composeRule.waitForIdle()
+                    labelNode.assertIsDisplayed().assertTextEquals(strings.fireRetirementAgeLabel)
+                    valueNode.assertIsDisplayed().assertTextEquals(strings.fireUnreachableShortText)
+
+                    val labelLayouts = mutableListOf<TextLayoutResult>()
+                    val valueLayouts = mutableListOf<TextLayoutResult>()
+                    labelNode.fetchSemanticsNode().config[SemanticsActions.GetTextLayoutResult].action?.invoke(labelLayouts)
+                    valueNode.fetchSemanticsNode().config[SemanticsActions.GetTextLayoutResult].action?.invoke(valueLayouts)
+                    val labelLayout = labelLayouts.single()
+                    val valueLayout = valueLayouts.single()
+                    assertFalse("$lang scale=$scale $subtabTag label height overflow", labelLayout.didOverflowHeight)
+                    assertFalse("$lang scale=$scale $subtabTag value height overflow", valueLayout.didOverflowHeight)
+                    assertFalse("$lang scale=$scale $subtabTag value ellipsized", (0 until valueLayout.lineCount).any { valueLayout.isLineEllipsized(it) })
+                    assertTrue("$lang scale=$scale $subtabTag label fits", labelLayout.size.width <= labelLayout.layoutInput.constraints.maxWidth)
+                    assertTrue("$lang scale=$scale $subtabTag value fits", valueLayout.size.width <= valueLayout.layoutInput.constraints.maxWidth)
+
+                    val labelBounds = labelNode.fetchSemanticsNode().boundsInWindow
+                    val valueBounds = valueNode.fetchSemanticsNode().boundsInWindow
+                    val sideBySide = labelBounds.right < valueBounds.left
+                    val stacked = labelBounds.bottom <= valueBounds.top
+                    assertTrue(
+                        "$lang scale=$scale $subtabTag overlap: $labelBounds vs $valueBounds",
+                        if (scale == 1.0f) sideBySide else (sideBySide || stacked)
+                    )
+                }
+            }
         }
     }
 }

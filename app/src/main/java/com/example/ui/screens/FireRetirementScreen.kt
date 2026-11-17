@@ -4,6 +4,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -45,6 +46,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
@@ -368,18 +370,64 @@ fun FireRetirementScreen(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Column(modifier = Modifier.padding(12.dp)) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Text(strings.fireRetirementAgeLabel, style = MaterialTheme.typography.bodySmall)
-                                Text(
-                                    text = Formatters.formatFireRetirementAge(displayMetrics.retirementAge, displayMetrics.fireStatus, lang),
-                                    style = MaterialTheme.typography.bodySmall.copy(
-                                        fontWeight = FontWeight.Bold,
-                                        color = if (isUnreachable) StatusColors.getReadableTextColor(AlertRed) else MaterialTheme.colorScheme.onSurface
-                                    )
-                                )
+                            val retirementAgeText = Formatters.formatFireRetirementAge(
+                                displayMetrics.retirementAge,
+                                displayMetrics.fireStatus,
+                                lang,
+                                compactUnreachable = true
+                            )
+                            val retirementAgeColor = if (isUnreachable) {
+                                StatusColors.getReadableTextColor(AlertRed)
+                            } else {
+                                MaterialTheme.colorScheme.onSurface
+                            }
+                            BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+                                val availableWidth = maxWidth
+                                val fontScale = LocalDensity.current.fontScale.coerceAtLeast(1f)
+                                val stackVertically = availableWidth / fontScale < 180.dp
+                                if (stackVertically) {
+                                    Column(modifier = Modifier.fillMaxWidth()) {
+                                        Text(
+                                            text = strings.fireRetirementAgeLabel,
+                                            style = MaterialTheme.typography.bodySmall,
+                                            modifier = Modifier.testTag("fire_retirement_age_label")
+                                        )
+                                        Spacer(modifier = Modifier.height(2.dp))
+                                        Text(
+                                            text = retirementAgeText,
+                                            style = MaterialTheme.typography.bodySmall.copy(
+                                                fontWeight = FontWeight.Bold,
+                                                color = retirementAgeColor
+                                            ),
+                                            modifier = Modifier.testTag("fire_retirement_age_value")
+                                        )
+                                    }
+                                } else {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Text(
+                                            text = strings.fireRetirementAgeLabel,
+                                            style = MaterialTheme.typography.bodySmall,
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .testTag("fire_retirement_age_label")
+                                        )
+                                        Spacer(modifier = Modifier.width(12.dp))
+                                        Text(
+                                            text = retirementAgeText,
+                                            style = MaterialTheme.typography.bodySmall.copy(
+                                                fontWeight = FontWeight.Bold,
+                                                color = retirementAgeColor
+                                            ),
+                                            textAlign = TextAlign.End,
+                                            modifier = Modifier
+                                                .widthIn(max = availableWidth * 0.48f)
+                                                .testTag("fire_retirement_age_value")
+                                        )
+                                    }
+                                }
                             }
                             Spacer(modifier = Modifier.height(4.dp))
                             Row(
