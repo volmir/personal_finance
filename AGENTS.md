@@ -5,7 +5,7 @@ Personal Finance & FIRE Audit — offline Android app (Kotlin, Jetpack Compose, 
 ## 0. Working rules
 
 - Reply to the user in **Russian**, briefly. Code identifiers and commit messages stay in English.
-- Current phase: **release hardening; `1.0.2` / `3` prepared, `1.0.1` / `2` is the published release**. Fix defects and logical inconsistencies only. **No new features, no behavior changes beyond the fix, no refactors that are not needed for the fix.** If a fix would change a user-visible number, say so before applying it.
+- Current phase: **release hardening; `1.0.2` / `3` is the published release, the next version is not started**. Fix defects and logical inconsistencies only. **No new features, no behavior changes beyond the fix, no refactors that are not needed for the fix.** If a fix would change a user-visible number, say so before applying it.
 - Minimal diffs: do not reformat, rename, or reorder untouched code. One logical change per commit.
 - Never silently edit a test expectation to make a test pass. If an expectation must change, state which value changed, by how much, and why.
 - Every bug fix ships with a regression test (boundary values for formulas).
@@ -18,8 +18,8 @@ Personal Finance & FIRE Audit — offline Android app (Kotlin, Jetpack Compose, 
 |---|---|
 | applicationId | `io.github.volmir.personalfinance` (**never change**: it is the app identity for updates and F-Droid) |
 | namespace / package | `com.example` (keep until after 1.0; renaming is a repo-wide refactor with no user benefit) |
-| Version | `versionName 1.0.2`, `versionCode 3` (`app/build.gradle.kts`); published release is `1.0.1` / `2` |
-| Release tag | Published `v1.0.1`, commit `b94949e09844450a126a16a8f73f50edd87cd64a`; never delete or move published tags |
+| Version | `versionName 1.0.2`, `versionCode 3` (`app/build.gradle.kts`); published release is `1.0.2` / `3` |
+| Release tag | Published `v1.0.2`, commit `293849bcb33355ef68df9da68e09892fe2262529`; never delete or move published tags |
 | SDK | minSdk 24, targetSdk 36, compileSdk 36.1 (`release(36) { minorApiLevel = 1 }`) |
 | Toolchain | JDK 17 in CI; JDK 21 verified locally. AGP 9.1.1, Kotlin 2.2.10, Compose BOM 2024.09.00, core library desugaring 2.1.5 |
 | Dependencies | all in `gradle/libs.versions.toml`; FLOSS only |
@@ -141,12 +141,12 @@ Order for multi-step plans: numeric foundation (rounding, score) → status/text
 
 ## 9. Known open defects (remove a line when fixed)
 
-Current verification results and their limits are recorded in `docs/release-readiness-1.0.1.md`. The former total-score rounding defect is covered by `FinanceCalculatorTest` boundary regressions and is no longer an open item.
+Current verification results and their limits are recorded in `docs/release-readiness-1.0.2.md`. The former total-score rounding defect is covered by `FinanceCalculatorTest` boundary regressions and is no longer an open item.
 
 ## 10. Release and F-Droid
 
 - Before tagging a future release: tests green, `lintRelease` without errors, two unsigned release builds byte-identical, store screenshots refreshed after text changes, release commit pushed and its Run Unit Tests job green, explicit author confirmation received. Signing uses GitHub Actions secrets (`KEYSTORE_BASE64`, `STORE_PASSWORD`, `KEY_PASSWORD`, `KEY_ALIAS`); verify the published signed APK and run available API 24 and 36 emulators after publication.
-- `metadata/io.github.volmir.personalfinance.yml` preserves published `v1.0` and adds `v1.0.1` with its full tag commit hash. Future builds are added separately after publication and artifact verification. compileSdk 36.1 is verified in the local official F-Droid container; production F-Droid verification remains pending.
+- `metadata/io.github.volmir.personalfinance.yml` preserves published `v1.0` and `v1.0.1` and adds `v1.0.2` with its full tag commit hash. Future builds are added separately after publication and artifact verification. compileSdk 36.1 is verified in the local official F-Droid container; production F-Droid verification remains pending.
 - F-Droid normally requires 3 months of active development (threshold ~2027-01-10). At the author's explicit request, early MR [!56526](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/56526) was opened on 2026-11-09 with the unmet criterion disclosed; no policy exception has been approved. Continue that MR rather than opening a duplicate.
 - Pushing a `v*` tag triggers the signed release workflow (`.github/workflows/build-and-release.yml`). Never push tags unless the user asks. Never delete or move a published tag.
 - Release signing uses `KEYSTORE_PATH`, `STORE_PASSWORD`, `KEY_PASSWORD`, `KEY_ALIAS`. Keep keystores, passwords, tokens and `local.properties` out of Git. Preserve the signing key.
