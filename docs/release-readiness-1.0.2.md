@@ -45,14 +45,26 @@
 - Запись `META-INF/version-control-info.textproto` в обеих сборках указывает `293849bcb33355ef68df9da68e09892fe2262529`. Предварительные unsigned-сборки до создания релизного коммита записали `46919a0` — это ожидаемое различие происхождения, а не расхождение кода.
 - Локальная release-сборка не подписывалась; подпись выполнялась только в GitHub Actions, секреты и keystore не извлекались.
 
-## Локальная проверка F-Droid
+## Локальная проверка F-Droid — 18.11.2026
 
-- Рецепт `metadata/io.github.volmir.personalfinance.yml` сохраняет `v1.0` и `v1.0.1` и добавляет `1.0.2` / `3` на полный SHA `293849bcb33355ef68df9da68e09892fe2262529`; CurrentVersion / CurrentVersionCode — `1.0.2` / `3`. Binaries и AllowedAPKSigningKeys сохранены, ключ подписи не менялся.
-- `.fdroid.yml` ссылается на тег `v1.0.2`.
-- Сборка версии 3 в официальном контейнере F-Droid и сравнение с опубликованным APK через `apksigcopier` **не выполнялись**; для версий 1 и 2 такие проверки проходили.
+- Рецепт `metadata/io.github.volmir.personalfinance.yml` (в fdroiddata, ветка MR) содержит последнюю сборку `1.0.2` / `3` на полный SHA `293849bcb33355ef68df9da68e09892fe2262529`, `CurrentVersion` / `CurrentVersionCode` — `1.0.2` / `3`, `Binaries` и `AllowedAPKSigningKeys` сохранены, ключ подписи не менялся.
+- `.fdroid.yml` в репозитории приложения ссылается на тег `v1.0.2`.
+- `fdroid rewritemeta` и `fdroid lint io.github.volmir.personalfinance`: успешно.
+- `fdroid build --verbose io.github.volmir.personalfinance:3` в официальном контейнере: **1 build succeeded**, исходники просканированы, 48 задач Gradle выполнены.
+- `Binaries`: F-Droid сам сравнил собранный APK с опубликованным `PersonalFinance-v1.0.2.apk`, проверка прошла; `allowed signer` совпал с `d67a62a2…d9b6609`.
+- Независимое сравнение `apksigcopier` (`3546ac6`, `do_compare(..., unsigned=True)`) опубликованного APK с `unsigned/io.github.volmir.personalfinance_3.apk`: успешно.
+- Unsigned APK из контейнера: SHA-256 `d65d928e8495e31c6e679b0e24b81c5095e4994b4d4a6d6637d31d1162ab16bc`, 1 560 018 байт; он **побайтово совпал** с независимой пересборкой того же коммита на хосте.
+- Окружение контейнера: `registry.gitlab.com/fdroid/fdroidserver@sha256:1ea8bef1820bff06c2974e31b4fc4c79c364cd24231b86e71fa4b926797e0dac`, fdroidserver `cdfdce8`, OpenJDK 21.0.12.1, Gradle 9.3.1, SDK 36.1, Build Tools 36.0.0.
+- Локальный успех не заменяет сборку на производственной инфраструктуре каталога.
+
+## Обновление MR F-Droid
+
+- Ветка `submit-personal-finance-1.0.1` форка `volmir561/fdroiddata` обновлена коммитами `ee47cf92` (рецепт `1.0.2`) и `4a4470b4` (`AutoName` → `Finance & FIRE`); MR [!56526](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/56526) обновлён, описание и комментарий приведены к версии `1.0.2`.
+- [Pipeline 3083348788](https://gitlab.com/volmir561/fdroiddata/-/pipelines/3083348788) на коммите `4a4470b4849f8982a503a10d9dccde72bc394b58`: **9 из 9 заданий успешны**, включая `fdroid build`, `check apk`, `checkupdates`, `fdroid lint`, `rewritemeta` и проверки схемы.
+- Предыдущий прогон `3083300199` падал только в `checkupdates`: Android-label приложения изменился на «Finance & FIRE», и задание переписывало `AutoName`. Исправлено в `4a4470b4`; других изменений поведения нет.
+- Решение о включении остаётся за мейнтейнерами: трёхмесячный срок не достигнут, исключение не подтверждено.
 
 ## Что осталось
 
-1. Повторить `fdroid lint` / `fdroid build` для `v1.0.2` в официальном контейнере и сравнить APK через `apksigcopier`.
-2. Обновить ветку MR [!56526](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/56526) рецептом `1.0.2` и дождаться pipeline.
-3. Проверить опубликованный APK на устройствах или эмуляторах API 24 и 36: установка, холодный запуск, четыре вкладки, возврат из фона. Для версии 3 такая проверка не выполнялась.
+1. Проверить опубликованный APK на устройствах или эмуляторах API 24 и 36: установка, холодный запуск, четыре вкладки, возврат из фона. Для версии 3 такая проверка не выполнялась.
+2. Дождаться решения мейнтейнеров по MR [!56526](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/56526) и, при необходимости, ответить на замечания.
