@@ -1,0 +1,6 @@
+• New FIRE subtabs: sliders, scenarios and reset live in Simulation; base metrics and the chart stay in FIRE.
+• Results export moved to the end of the Metrics tab; the opinion export sits at the bottom of the audit card.
+• New app icon.
+• Contrast-safe status colours in light and dark themes, larger small labels, filters in one row.
+• One-time sample-data notice on first launch.
+• Compact "time to retirement" status and a planning-horizon sub-label.

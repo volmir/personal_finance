@@ -1,0 +1,6 @@
+• Nuevas subpestañas FIRE: controles, escenarios y reinicio solo en «Simulación»; los indicadores y el gráfico quedan en «FIRE».
+• Exportación de resultados al final de «Métricas»; exportación del dictamen al pie de la tarjeta de auditoría.
+• Nuevo icono de la app.
+• Colores de estado con contraste en tema claro y oscuro, etiquetas pequeñas más grandes, filtros en una fila.
+• Aviso único de datos de ejemplo al inicio.
+• Estado «hasta la jubilación» compacto y subtítulo del horizonte.

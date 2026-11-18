@@ -1,0 +1,6 @@
+• Nuove sotto-schede FIRE: cursori, scenari e ripristino solo in «Simulazione»; indicatori di base e grafico restano in «FIRE».
+• Esportazione dei risultati in fondo a «Metriche», esportazione del parere in fondo alla scheda di audit.
+• Nuova icona dell’app.
+• Colori di stato contrastati nei temi chiaro e scuro, etichette piccole più grandi, filtri su una riga.
+• Avviso una tantum sui dati di esempio al primo avvio.
+• Stato «mancano alla pensione» compatto e sottotitolo dell’orizzonte.

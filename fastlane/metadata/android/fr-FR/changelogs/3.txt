@@ -1,0 +1,6 @@
+• Nouveaux sous-onglets « FIRE » et « Simulation » : curseurs, scénarios et réinitialisation dans Simulation ; indicateurs et graphique restent dans FIRE.
+• Export des résultats en fin d’onglet « Indicateurs », export de l’avis sous la carte d’audit.
+• Nouvelle icône de l’app.
+• Couleurs de statut contrastées en thème clair et sombre, libellés agrandis, filtres sur une ligne.
+• Avis sur les données d’exemple au premier lancement.
+• Statut « avant la retraite » compact et sous-titre d’horizon.

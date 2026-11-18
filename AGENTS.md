@@ -5,7 +5,7 @@ Personal Finance & FIRE Audit — offline Android app (Kotlin, Jetpack Compose, 
 ## 0. Working rules
 
 - Reply to the user in **Russian**, briefly. Code identifiers and commit messages stay in English.
-- Current phase: **release hardening after published v1.0.1 (version 1.0.1 / 2)**. Fix defects and logical inconsistencies only. **No new features, no behavior changes beyond the fix, no refactors that are not needed for the fix.** If a fix would change a user-visible number, say so before applying it.
+- Current phase: **release hardening; `1.0.2` / `3` prepared, `1.0.1` / `2` is the published release**. Fix defects and logical inconsistencies only. **No new features, no behavior changes beyond the fix, no refactors that are not needed for the fix.** If a fix would change a user-visible number, say so before applying it.
 - Minimal diffs: do not reformat, rename, or reorder untouched code. One logical change per commit.
 - Never silently edit a test expectation to make a test pass. If an expectation must change, state which value changed, by how much, and why.
 - Every bug fix ships with a regression test (boundary values for formulas).
@@ -18,7 +18,7 @@ Personal Finance & FIRE Audit — offline Android app (Kotlin, Jetpack Compose, 
 |---|---|
 | applicationId | `io.github.volmir.personalfinance` (**never change**: it is the app identity for updates and F-Droid) |
 | namespace / package | `com.example` (keep until after 1.0; renaming is a repo-wide refactor with no user benefit) |
-| Version | `versionName 1.0.1`, `versionCode 2` (`app/build.gradle.kts`) |
+| Version | `versionName 1.0.2`, `versionCode 3` (`app/build.gradle.kts`); published release is `1.0.1` / `2` |
 | Release tag | Published `v1.0.1`, commit `b94949e09844450a126a16a8f73f50edd87cd64a`; never delete or move published tags |
 | SDK | minSdk 24, targetSdk 36, compileSdk 36.1 (`release(36) { minorApiLevel = 1 }`) |
 | Toolchain | JDK 17 in CI; JDK 21 verified locally. AGP 9.1.1, Kotlin 2.2.10, Compose BOM 2024.09.00, core library desugaring 2.1.5 |

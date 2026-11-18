@@ -1,0 +1,6 @@
+• Neue FIRE-Unterreiter: Regler, Szenarien und Zurücksetzen nur unter „Simulation“; Basiskennzahlen und Diagramm bleiben unter „FIRE“.
+• Export der Ergebnisse ans Ende des Tabs „Kennzahlen“, Gutachten-Export unten in der Audit-Karte.
+• Neues App-Symbol.
+• Kontrastsichere Statusfarben in hell und dunkel, größere kleine Beschriftungen, Filter in einer Zeile.
+• Einmaliger Hinweis auf Beispieldaten beim ersten Start.
+• Kompakter Status „Bis zur Rente“ und Untertitel zum Planungshorizont.
