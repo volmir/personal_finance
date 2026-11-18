@@ -1,8 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <item
-        android:width="66dp"
-        android:height="66dp"
-        android:drawable="@drawable/ic_app_finance_logo"
-        android:gravity="center" />
-</layer-list>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:pathData="M25.727,68.989 A32,32 0 1 1 31.008,76.257 A2.84,2.84 0 0 1 35.089,72.307 A26.32,26.32 0 1 0 30.746,66.328 A2.84,2.84 0 0 1 25.727,68.989 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="22" android:startY="22"
+                android:endX="86" android:endY="86"
+                android:startColor="#3085FA"
+                android:endColor="#97CBFD" />
+        </aapt:attr>
+    </path>
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M37.999,58.344 A4.344,4.344 0 0 1 46.687,58.344 L46.687,65.312 A4.344,4.344 0 0 1 37.999,65.312 Z" />
+    <path
+        android:fillColor="#5AA0F5"
+        android:pathData="M49.699,51.763 A4.301,4.301 0 0 1 58.301,51.763 L58.301,65.355 A4.301,4.301 0 0 1 49.699,65.355 Z" />
+    <path
+        android:fillColor="#95CAFC"
+        android:pathData="M61.226,48.71 A4.344,4.344 0 0 1 69.914,48.71 L69.914,65.312 A4.344,4.344 0 0 1 61.226,65.312 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M53.96,35.64 Q54.776,38.904 58.04,39.72 Q54.776,40.536 53.96,43.8 Q53.144,40.536 49.88,39.72 Q53.144,38.904 53.96,35.64 Z" />
+</vector>
