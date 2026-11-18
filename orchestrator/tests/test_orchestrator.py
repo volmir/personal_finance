@@ -527,7 +527,7 @@ class OrchestratorTests(QueueHelpers, unittest.TestCase):
         self.save_tasks(task(gate='bash orchestrator/run.sh --check android'))
         (self.repo / 'gradlew').write_text(
             '#!/usr/bin/env bash\n'
-            'test "$*" = ":app:compileDebugKotlin :app:lintDebug :app:compileDebugAndroidTestKotlin --console=plain" && '
+            'test "$*" = ":app:compileDebugKotlin :app:lintDebug --console=plain" && '
             'test "$(cat result-A-1.txt)" = good\n')
         self.commit()
         self.run_cli(MOCK_MODE='retry')

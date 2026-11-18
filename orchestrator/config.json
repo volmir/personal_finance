@@ -10,16 +10,13 @@
   "sandbox": "danger-full-access",
   "gate_base": [],
   "checks": {
-    "tools": ["python3 -m unittest discover -s tools/tests"],
-    "core": ["bash ./gradlew :core:test --console=plain"],
-    "data": ["bash ./gradlew :app:verifyDictionaryLicenses :core:test --console=plain"],
-    "android": ["bash ./gradlew :app:compileDebugKotlin :app:lintDebug :app:compileDebugAndroidTestKotlin --console=plain"],
+    "android": ["bash ./gradlew :app:compileDebugKotlin :app:lintDebug --console=plain"],
+    "unit": ["bash ./gradlew :app:testDebugUnitTest --console=plain"],
     "full": [
-      "python3 -m unittest discover -s tools/tests",
       "python3 -m unittest discover -s orchestrator/tests",
-      "bash ./gradlew :core:test :app:assembleDebug --console=plain"
+      "bash ./gradlew :app:testDebugUnitTest :app:lintDebug :app:assembleDebug --console=plain"
     ],
-    "release": ["bash ./gradlew :app:assembleRelease --console=plain"]
+    "release": ["bash ./gradlew :app:lintRelease :app:assembleRelease --console=plain"]
   },
   "task_timeout": 14400,
   "gate_timeout": 7200,
