@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: "Обсуждения / Questions and ideas"
+    url: "https://github.com/volmir/personal_finance/discussions"
+    about: "Вопросы, идеи, предложения новых функций и обсуждение финансовой модели."
