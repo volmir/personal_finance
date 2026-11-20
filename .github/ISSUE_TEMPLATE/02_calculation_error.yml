@@ -1,0 +1,55 @@
+name: "Ошибка расчёта / Calculation error"
+description: "Проверка формулы, результата или граничного случая"
+title: "[Calculation] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Для воспроизводимости указывайте вымышленные финансовые данные. Пожалуйста, не публикуйте сведения о реальных счетах или капитале.
+  - type: input
+    id: app_version
+    attributes:
+      label: "Версия приложения"
+      placeholder: "1.0.2"
+    validations:
+      required: true
+  - type: dropdown
+    id: screen
+    attributes:
+      label: "Раздел"
+      options:
+        - "Данные"
+        - "Показатели"
+        - "Итоги и баллы"
+        - "FIRE (реальное)"
+        - "Симуляция"
+        - "Экспорт результатов"
+    validations:
+      required: true
+  - type: textarea
+    id: inputs
+    attributes:
+      label: "Входные данные (пример, без персональных сведений)"
+      description: "Укажите суммы, валюту, возраст, доходность, инфляцию и другие параметры, влияющие на расчёт."
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: "Результат приложения"
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: "Ожидаемый результат и способ проверки"
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: "Дополнительно"
+      description: "Версия Android, скриншоты, порядок действий."
+    validations:
+      required: false

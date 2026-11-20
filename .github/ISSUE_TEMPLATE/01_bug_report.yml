@@ -1,0 +1,55 @@
+name: "Ошибка приложения / Bug report"
+description: "Сбой, зависание или неправильная работа приложения"
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Спасибо за сообщение! Не прикладывайте реальные финансовые данные, пароли или другую личную информацию. При возможности используйте вымышленные примеры.
+  - type: input
+    id: app_version
+    attributes:
+      label: "Версия приложения / App version"
+      placeholder: "1.0.2"
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: "Модель устройства / Device"
+      placeholder: "Samsung Galaxy..., Xiaomi..."
+    validations:
+      required: true
+  - type: input
+    id: android
+    attributes:
+      label: "Версия Android / Android version"
+      placeholder: "Android 13"
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: "Как воспроизвести / Steps to reproduce"
+      placeholder: "1. Откройте...\n2. Нажмите...\n3. ..."
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: "Ожидаемый результат / Expected"
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: "Фактический результат / Actual"
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: "Скриншоты или логи (без личных данных)"
+    validations:
+      required: false

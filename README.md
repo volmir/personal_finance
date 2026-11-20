@@ -229,3 +229,15 @@ This project is open source and available under the terms of the **[MIT License]
 
 Icon provenance, adaptation, and licensing notes are recorded in [docs/icon-source.md](./docs/icon-source.md).
 
+
+---
+
+## 💬 Feedback and Community
+
+Questions about the app, FIRE assumptions, and feature ideas: **[GitHub Discussions](https://github.com/volmir/personal_finance/discussions)**.
+
+Reproducible bugs, calculation errors, and interface problems: **[Report an issue](https://github.com/volmir/personal_finance/issues/new/choose)** using the guided forms.
+
+See [FEEDBACK.md](./docs/FEEDBACK.md) for Russian and English guidance. The [video walkthrough](https://www.youtube.com/watch?v=BnHzJTz49Uo) demonstrates the main workflows.
+
+Please use fictional financial figures when reporting problems. Do not post private balances, account information, or personal documents.
