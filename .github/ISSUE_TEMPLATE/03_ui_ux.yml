@@ -1,0 +1,43 @@
+name: "Проблема интерфейса / UI/UX issue"
+description: "Неудобный, непонятный или некорректно отображаемый элемент"
+title: "[UI/UX] "
+labels: ["enhancement"]
+body:
+  - type: input
+    id: app_version
+    attributes:
+      label: "Версия приложения"
+      placeholder: "1.0.2"
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: "Устройство и Android"
+      placeholder: "Модель, Android 13"
+    validations:
+      required: false
+  - type: input
+    id: screen
+    attributes:
+      label: "Экран или элемент"
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: "Что неудобно или непонятно?"
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: "Как можно улучшить?"
+    validations:
+      required: false
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: "Скриншоты (без персональных данных)"
+    validations:
+      required: false
