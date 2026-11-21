@@ -6,6 +6,7 @@ Personal Finance & FIRE Audit — offline Android app (Kotlin, Jetpack Compose, 
 
 - Reply to the user in **Russian**, briefly. Code identifiers and commit messages stay in English.
 - Current phase: **release hardening; `1.0.2` / `3` is the published release, the next version is not started**. Fix defects and logical inconsistencies only. **No new features, no behavior changes beyond the fix, no refactors that are not needed for the fix.** If a fix would change a user-visible number, say so before applying it.
+- **Exception for branch `feature/redesign-v2` only:** the owner approved the C + optimized B4 UX redesign and logical separation of calculations from Compose. Tasks in `orchestrator/TASKS.md` may perform the approved UI/navigation refactor on this branch under `docs/redesign_v2/UIUX_V2_SPEC.md` and `docs/redesign_v2/IMPLEMENTATION_PLAN.md`. This does **not** authorize changes to financial formulas, thresholds, `applicationId`, published versions/tags, data semantics or release behavior; no separate Gradle module `:core`. On `main`, the release-hardening restriction remains in force.
 - Minimal diffs: do not reformat, rename, or reorder untouched code. One logical change per commit.
 - Never silently edit a test expectation to make a test pass. If an expectation must change, state which value changed, by how much, and why.
 - Every bug fix ships with a regression test (boundary values for formulas).
@@ -38,6 +39,7 @@ Personal Finance & FIRE Audit — offline Android app (Kotlin, Jetpack Compose, 
 - Total score may be green with a neutral CFS. The cap (6.0) applies only when the CFS component score is below 5.
 - Yen (¥) amounts are shown and entered as whole numbers.
 - Simulation badge in the FIRE hero card sits to the right of "До пенсии осталось", only while simulating.
+- **v2-only UI change:** the old simulation badge/duplicate summary is replaced by a pinned panel with FIRE time and retirement age only. Exclude cash flow from pinned and detailed simulation results while retaining underlying calculations.
 - The simulator never changes the saved base input; the Audit and export always use base metrics.
 - findYearsToRetirement использует бисекцию, обоснование в KDoc; не заменять сеточным поиском без нового контрпримера.
 
@@ -205,6 +207,8 @@ Current verification results and their limits are recorded in `docs/release-read
 - Commit messages: `fix: handle yen amounts`, `refactor(ui): simplify metric cards`. PRs state the problem, resulting behavior, validation; add screenshots for visual changes.
 
 ## 12. Orchestrator
+
+**v2 branch-specific instruction:** on `feature/redesign-v2`, configure the queue to use this branch; no automatic merge to `main`. The approved references are `docs/redesign_v2/UIUX_V2_SPEC.md`, `docs/redesign_v2/IMPLEMENTATION_PLAN.md` and `docs/redesign_v2/mockups/` (10 PNG/SVG pairs). Mockup numbers and decorative colors are illustrative; the actual status color mapping and domain results in code are authoritative. Application tasks must not edit protected `orchestrator/` files.
 
 The `orchestrator/` directory is a self-contained task-queue module (Codex CLI / OpenCode → gate → auto-commit → journal). Its own rules, checks and docs live inside it: read `orchestrator/AGENTS.md` for rules and `orchestrator/README.md` for usage. Queue runs commit and push directly on `main` (configured via `branch` in `orchestrator/config.json`; no separate queue branch is used) and are managed by `bash orchestrator/run.sh`. Do not edit `orchestrator/` during a regular app task: its files are checksum-protected and any agent edits inside it stop the queue.
 

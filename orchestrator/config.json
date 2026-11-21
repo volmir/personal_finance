@@ -1,7 +1,7 @@
 {
   "tasks_file": "orchestrator/TASKS.md",
   "progress_file": "orchestrator/PROGRESS.md",
-  "branch": "main",
+  "branch": "feature/redesign-v2",
   "remote": "origin",
   "push": true,
   "backend": "opencode",
