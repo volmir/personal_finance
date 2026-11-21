@@ -124,8 +124,8 @@ bash orchestrator/run.sh --config orchestrator/opencode.config.json
 "model_sets": {
   "opencode": {
     "free": {
-      "light": "opencode/glm-5.3-flash-free",
-      "standard": "opencode/glm-5.3-flash-free#max",
+      "light": "opencode/beam-free",
+      "standard": "opencode/beam-free#max",
       "heavy": "opencode/beam-free#max"
     }
   }
@@ -448,7 +448,8 @@ gate: bash orchestrator/run.sh --check unit && bash orchestrator/run.sh --check 
 `heavy`; OpenCode — бесплатные `opencode/glm-5.3-flash-free` и `opencode/beam-free`. Текущий `config.json`
 переопределяет OpenCode на `opencode/muse-ember-1.0#medium` (`light`) и
 `opencode/deepseek-v4.1-flash#max` (`standard` и `heavy`); набор `free`
-содержит отдельные бесплатные модели.
+использует `opencode/beam-free` для всех tier (`light` — вариант по
+умолчанию, `standard` и `heavy` — `#max`).
 
 ## Новая пачка задач: очистить и заполнить заново
 
