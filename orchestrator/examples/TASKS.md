@@ -2,11 +2,14 @@
 
 Перенесите согласованную секцию в рабочую очередь `orchestrator/TASKS.md`
 и подставьте команды gate вашего проекта (см.
-`orchestrator/examples/config.example.json`, ключ `checks`).
+`orchestrator/examples/config.example.json`, ключ `checks`). Правила выбора —
+в `orchestrator/README.md`, раздел «Выбор gate»: DOC-1 меняет только
+документацию без исполняемых проверок, поэтому использует `skip`; FIX-2
+проверяет логику unit-тестами и компиляцией со статическим анализом.
 
 ## DOC-1: Уточнить инструкцию локальной сборки
 tier: light
-gate: bash orchestrator/run.sh --check full
+gate: skip
 retries: 1
 ```prompt
 Проверь раздел о сборке и запуске в README.md по текущим конфигурационным
@@ -19,7 +22,7 @@ retries: 1
 
 ## FIX-2: Исправить обработку пустого ввода
 tier: standard
-gate: bash orchestrator/run.sh --check full
+gate: bash orchestrator/run.sh --check unit && bash orchestrator/run.sh --check android
 retries: 1
 ```prompt
 Опиши здесь конкретную ошибку: шаги воспроизведения, ожидаемое поведение,

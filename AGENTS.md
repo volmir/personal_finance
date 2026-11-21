@@ -129,6 +129,51 @@ Which tests to run first:
 | Strings, formatters, languages | `LocalizationFormattersTest`, `AppLanguageTest`, `AuditorAnalysisTest` |
 | Screens and input fields | `MetricsScreenRobolectricTest`, `AuditScoreScreenRobolectricTest`, `NumberInputFieldRobolectricTest`, `MainActivityRobolectricTest` |
 
+### Gate selection for orchestrator tasks
+
+`--check` profiles are defined in `orchestrator/config.json`; change that file,
+not the generic resolver. The built-in `orchestrator` profile always exists.
+
+| Profile | Purpose | Commands |
+|---|---|---|
+| `android` | compilation + static analysis, **no unit tests** | `bash ./gradlew :app:compileDebugKotlin :app:lintDebug --console=plain` |
+| `unit` | unit tests (JVM + Robolectric) | `bash ./gradlew :app:testDebugUnitTest --console=plain` |
+| `full` | comprehensive check: orchestrator self-test + unit + lint + assembleDebug | `python3 -m unittest discover -s orchestrator/tests` and `bash ./gradlew :app:testDebugUnitTest :app:lintDebug :app:assembleDebug --console=plain` |
+| `release` | release checks only: lintRelease + assembleRelease | `bash ./gradlew :app:lintRelease :app:assembleRelease --console=plain` |
+| `orchestrator` | self-check of the automation (built-in) | `python3 -m unittest discover -s orchestrator/tests` |
+
+`full` stays the default for `--check` without an argument and the composition
+of the comprehensive check. It is **not** the default gate for small tasks.
+
+| Change type | gate |
+|---|---|
+| Docs only, no runnable checks | `skip` |
+| Docs with runnable commands/examples | `bash orchestrator/run.sh --check orchestrator` plus a targeted parse/check |
+| Kotlin/Compose code, no logic or test changes | `bash orchestrator/run.sh --check android` |
+| Financial math, scores, rounding, FIRE, formatters, persistence logic, ViewModel logic | `bash orchestrator/run.sh --check unit && bash orchestrator/run.sh --check android` |
+| Screens/components with changed Robolectric tests | `bash orchestrator/run.sh --check unit && bash orchestrator/run.sh --check android` |
+| Screens/components without test changes | `bash orchestrator/run.sh --check android` |
+| Tests only | `bash orchestrator/run.sh --check unit` (or `--check orchestrator` for module tests) |
+| Orchestrator code/tests | `bash orchestrator/run.sh --check orchestrator`; for `run.sh`/`checks.py` also `bash -n` and `--check --help` |
+| Orchestrator config/queue/examples | `bash orchestrator/run.sh --check orchestrator` plus parser or affected-profile check |
+| Version, release artifacts, store texts | `bash orchestrator/run.sh --check release`; add the changed area's profile if code/text changed |
+| Several areas, final confidence | `bash orchestrator/run.sh --check full` |
+
+Mandatory gate rules (full rationale in `orchestrator/README.md`, "Выбор gate"):
+
+1. Every task in `TASKS.md` has a `gate`: a command or the exact value `skip`.
+2. Pick the gate by change type from the matrix; `tier` and model do not affect it.
+3. `skip` is allowed only when there is no executable check; it is logged as **ПРОПУЩЕНА**.
+4. A missing SDK, reluctance to run tests, or a small task is not a reason for `skip` or a weaker gate.
+5. Docs without runnable checks get no artificial gate; if commands are listed, check them narrowly.
+6. Compilation/static analysis never replaces unit tests when logic changed.
+7. Financial calculations and other business logic require `unit && android` together.
+8. Test-only changes run the profile that executes those tests, not automatically `full`.
+9. Orchestrator changes use the built-in `orchestrator` profile; `run.sh`/`checks.py` also need syntax and `--check --help` checks.
+10. `full` is reserved for comprehensive/final verification, not for routine small tasks.
+11. Combine gates with `&&`: left to right, stop on the first error, non-zero exit code of the first failing command.
+12. Never use `||`, `;`, or suppressed exit codes in a gate; put `&&` in `gate`, not in `gate_base`.
+
 ## 8. Workflow for a fix
 
 1. Reproduce with a failing test (or a minimal numeric example) before changing code.
