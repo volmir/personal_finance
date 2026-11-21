@@ -426,7 +426,7 @@ class OrchestratorTests(QueueHelpers, unittest.TestCase):
         # Слой окружения удалён: все настройки оркестратора — только через config.json.
         # Фикстура кодексового бэкенда фиксирует backend=codex независимо от
         # значения по умолчанию в конфиге целевого проекта.
-        self.set_config(backend='codex', push=False, codex_bin=str(self.mock),
+        self.set_config(branch='main', backend='codex', push=False, codex_bin=str(self.mock),
                         restart_retries=0, retry_delay=0)
         self.save_tasks(task())
         self.commit()
@@ -1023,7 +1023,7 @@ class OpenCodeTests(QueueHelpers, unittest.TestCase):
         self.g('config', 'user.name', 'Test')
         self.g('config', 'user.email', 'test@example.invalid')
         self.g('config', 'core.hooksPath', '/dev/null')
-        self.set_config(backend='opencode', opencode_bin=str(self.mock), push=False,
+        self.set_config(branch='main', backend='opencode', opencode_bin=str(self.mock), push=False,
                         restart_retries=0, retry_delay=0,
                         models={'opencode': {'light': 'opencode/test-m', 'standard': 'opencode/test-s',
                                              'heavy': 'opencode/test-h'}})
