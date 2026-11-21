@@ -1,6 +1,7 @@
 package com.example.domain
 
 import com.example.domain.model.AuditIndicatorStatus
+import com.example.domain.model.DebtRatioCommentKind
 import com.example.util.localization.AppLanguage
 
 /**
@@ -283,5 +284,21 @@ object FinancialMetricEvaluator {
         score >= COMPONENT_SCORE_POSITIVE_THRESHOLD -> AuditIndicatorStatus.POSITIVE
         score >= COMPONENT_SCORE_NEUTRAL_THRESHOLD -> AuditIndicatorStatus.NEUTRAL
         else -> AuditIndicatorStatus.NEGATIVE
+    }
+
+    /**
+     * Вид комментария для коэффициента задолженности (логика, ранее inline в AuditScoreScreen).
+     */
+    fun getDebtRatioCommentKind(debtRatio: Double): DebtRatioCommentKind {
+        val status = getDebtRatioStatus(debtRatio)
+        return when (status) {
+            AuditIndicatorStatus.POSITIVE -> DebtRatioCommentKind.POSITIVE
+            AuditIndicatorStatus.NEUTRAL -> DebtRatioCommentKind.NEUTRAL
+            AuditIndicatorStatus.NEGATIVE -> if (debtRatio <= DEBT_RATIO_TIER_CRITICAL) {
+                DebtRatioCommentKind.NEGATIVE_CRITICAL
+            } else {
+                DebtRatioCommentKind.NEGATIVE_SEVERE
+            }
+        }
     }
 }

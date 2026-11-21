@@ -244,25 +244,22 @@ fun AuditScoreScreen(
 
         // 3. Коэффициент задолженности Score
         item {
-            val debtComment = when (FinancialMetricEvaluator.getDebtRatioStatus(metrics.debtRatio)) {
-                AuditIndicatorStatus.POSITIVE -> strings.debtComment0(
+            val debtComment = when (FinancialMetricEvaluator.getDebtRatioCommentKind(metrics.debtRatio)) {
+                com.example.domain.model.DebtRatioCommentKind.POSITIVE -> strings.debtComment0(
                     strings.formatDebtRatioThreshold(FinancialMetricEvaluator.DEBT_RATIO_ZERO_THRESHOLD),
                     strings.formatDebtRatioThreshold(FinancialMetricEvaluator.DEBT_RATIO_POSITIVE_THRESHOLD)
                 )
-                AuditIndicatorStatus.NEUTRAL -> strings.debtComment1(
+                com.example.domain.model.DebtRatioCommentKind.NEUTRAL -> strings.debtComment1(
                     strings.formatDebtRatioThreshold(FinancialMetricEvaluator.DEBT_RATIO_POSITIVE_THRESHOLD),
                     strings.formatDebtRatioThreshold(FinancialMetricEvaluator.DEBT_RATIO_NEUTRAL_THRESHOLD)
                 )
-                AuditIndicatorStatus.NEGATIVE -> if (metrics.debtRatio <= FinancialMetricEvaluator.DEBT_RATIO_TIER_CRITICAL) {
-                    strings.debtComment2(
-                        strings.formatDebtRatioThreshold(FinancialMetricEvaluator.DEBT_RATIO_NEUTRAL_THRESHOLD),
-                        strings.formatDebtRatioThreshold(FinancialMetricEvaluator.DEBT_RATIO_TIER_CRITICAL)
-                    )
-                } else {
-                    strings.debtComment3(
-                        strings.formatDebtRatioThreshold(FinancialMetricEvaluator.DEBT_RATIO_TIER_CRITICAL)
-                    )
-                }
+                com.example.domain.model.DebtRatioCommentKind.NEGATIVE_CRITICAL -> strings.debtComment2(
+                    strings.formatDebtRatioThreshold(FinancialMetricEvaluator.DEBT_RATIO_NEUTRAL_THRESHOLD),
+                    strings.formatDebtRatioThreshold(FinancialMetricEvaluator.DEBT_RATIO_TIER_CRITICAL)
+                )
+                com.example.domain.model.DebtRatioCommentKind.NEGATIVE_SEVERE -> strings.debtComment3(
+                    strings.formatDebtRatioThreshold(FinancialMetricEvaluator.DEBT_RATIO_TIER_CRITICAL)
+                )
             }
             ScoreItemCard(
                 title = strings.metricDebtRatioTitle,

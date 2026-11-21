@@ -70,8 +70,6 @@ import com.example.util.FireHeroDisplay
 import com.example.util.Formatters
 import com.example.util.localization.LocalAppLanguage
 import com.example.util.localization.LocalAppStrings
-import java.math.BigDecimal
-import java.math.RoundingMode
 
 @Composable
 fun FireRetirementScreen(
@@ -114,8 +112,7 @@ fun FireRetirementScreen(
         isSimulationSubtab = isSimulationSubtab,
         lang = lang
     )
-    val isUnreachable = displayMetrics.fireStatus == FireStatus.UNREACHABLE ||
-            displayMetrics.fireStatus == FireStatus.HORIZON_EXHAUSTED
+    val isUnreachable = com.example.domain.FireSimulationComparisonCalculator.isUnreachable(displayMetrics.fireStatus)
     val activeScenariosCount = simulationState.scenarios.activeCount
     val hasSliders = simulationState.extraMonthlySavings != 0.0 ||
             simulationState.expenseReduction != 0.0 ||
@@ -581,13 +578,12 @@ fun FireRetirementScreen(
         // при активных изменениях.
         if (isSimulationSubtab && isSimulating) {
             item {
-                val isSimUnreachable = simulatedMetrics.fireStatus == FireStatus.UNREACHABLE ||
-                        simulatedMetrics.fireStatus == FireStatus.HORIZON_EXHAUSTED
-                val isBaseUnreachable = metrics.fireStatus == FireStatus.UNREACHABLE ||
-                        metrics.fireStatus == FireStatus.HORIZON_EXHAUSTED
-                val yearsDiff = metrics.yearsToRetirement - simulatedMetrics.yearsToRetirement
-                val isPositive = !isSimUnreachable && (isBaseUnreachable || yearsDiff > 0)
-                val isNegative = !isBaseUnreachable && (isSimUnreachable || yearsDiff < 0)
+                val comparison = com.example.domain.FireSimulationComparisonCalculator.compare(metrics, simulatedMetrics)
+                val isSimUnreachable = comparison.isSimUnreachable
+                val isBaseUnreachable = comparison.isBaseUnreachable
+                val yearsDiff = comparison.yearsDiff
+                val isPositive = comparison.isPositive
+                val isNegative = comparison.isNegative
                 val alertColor = if (isSimUnreachable) {
                     AlertRed
                 } else if (isPositive) {
@@ -1010,13 +1006,7 @@ fun FireRetirementScreen(
                                         )
                                     }
                                 }
-                                val roundedReturnForStatus = if (currentEffectiveReturn.isFinite()) {
-                                    BigDecimal.valueOf(currentEffectiveReturn)
-                                        .setScale(2, RoundingMode.HALF_EVEN)
-                                        .toDouble()
-                                } else {
-                                    0.0
-                                }
+                                val roundedReturnForStatus = com.example.domain.FireSimulationComparisonCalculator.roundRealReturnForStatus(currentEffectiveReturn)
                                 val returnValueStatus = FinancialMetricEvaluator.getRealReturnStatus(roundedReturnForStatus)
                                 Text(
                                     text = Formatters.formatPercent(currentEffectiveReturn, lang),
