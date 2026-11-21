@@ -1,0 +1,4 @@
+# Журнал задач
+
+- [ARCH-01] ✓ 2026-11-21T16:16:17+00:00 — Зафиксировать эталон финансовых расчётов — ИТОГ: Добавлен детерминированный тест `app/src/test/java/com/example/FinancialBaselineTest.kt` и отчёт `docs/redesign_v2/FINANCIAL_BASELINE.md`. Тест фиксирует текущую семантику денежного потока, нормы сбережений, капитала/рисков, порогов статусов, FIRE-состояний и сценарных констант на контролируем
+<!-- orchestrator:v1 {"id": "ARCH-01", "fingerprint": "8cae1b3e5a5c379b28e5104cdb7e97b23a2667f297d2069f35f7354b106e4540", "date": "2026-11-21T16:16:17+00:00", "gate": "passed", "manual": false, "summary": "ИТОГ: Добавлен детерминированный тест `app/src/test/java/com/example/FinancialBaselineTest.kt` и отчёт `docs/redesign_v2/FINANCIAL_BASELINE.md`. Тест фиксирует текущую семантику денежного потока, нормы сбережений, капитала/рисков, порогов статусов, FIRE-состояний и сценарных констант на контролируем", "model": "opencode/beam-free#high", "effort": "high"} -->
