@@ -770,6 +770,7 @@ fun InputSectionCard(
                             color = MaterialTheme.colorScheme.onSurface
                         )
                     )
+                    Spacer(modifier = Modifier.height(6.dp))
                     Text(
                         text = subtitle,
                         style = MaterialTheme.typography.bodySmall.copy(

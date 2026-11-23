@@ -1,5 +1,6 @@
 package com.example.ui.screens
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -8,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -73,16 +75,36 @@ internal fun FireSimulationSummaryPanel(
                         modifier = Modifier.weight(0.45f).alignByBaseline()
                             .padding(end = 8.dp).testTag("fire_sim_changes_count")
                     )
+                    val resetEnabled = activeChanges > 0
+                    val resetColor = if (resetEnabled) {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    } else {
+                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                    }
                     OutlinedButton(
                         onClick = onResetSimulation,
-                        enabled = activeChanges > 0,
+                        enabled = resetEnabled,
+                        border = BorderStroke(
+                            width = 1.dp,
+                            color = resetColor
+                        ),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            containerColor = Color.Transparent,
+                            contentColor = resetColor,
+                            disabledContainerColor = Color.Transparent,
+                            disabledContentColor = resetColor
+                        ),
                         contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
                         modifier = Modifier.weight(0.55f)
                             .heightIn(min = 48.dp)
                             .alignByBaseline()
                             .testTag("fire_sim_reset_button")
                     ) {
-                        Text(strings.fireSimReset, style = MaterialTheme.typography.labelLarge)
+                        Text(
+                            text = strings.fireSimReset,
+                            style = MaterialTheme.typography.labelLarge,
+                            color = resetColor
+                        )
                     }
                 }
             }

@@ -392,4 +392,75 @@ class FireSimulationStickySummaryRobolectricTest {
         assertEquals("rounded corner", color.toArgb(), bitmap.getPixel(inset, gap))
     }
 
+    @Test
+    fun `reset button keeps uniform gray text color independent of FIRE status and theme`() {
+        val input = FinancialInputData.usAverageData()
+        val base = FinanceCalculator.calculate(input, today = LocalDate.of(2026, 11, 6)).copy(
+            fireStatus = FireStatus.REACHABLE, yearsToRetirement = 24.0, retirementAge = 62.0
+        )
+        val dark = mutableStateOf(false)
+        val simulation = mutableStateOf(FireSimulationState())
+        val simulated = mutableStateOf(base)
+        var onSurfaceVariant = Color.Transparent
+        var onSurface = Color.Transparent
+        var resetClicks = 0
+        composeRule.setContent {
+            MyApplicationTheme(darkTheme = dark.value, dynamicColor = false) {
+                onSurfaceVariant = MaterialTheme.colorScheme.onSurfaceVariant
+                onSurface = MaterialTheme.colorScheme.onSurface
+                CompositionLocalProvider(
+                    LocalAppLanguage provides AppLanguage.RU,
+                    LocalAppStrings provides getAppStrings(AppLanguage.RU)
+                ) {
+                    FireRetirementScreen(
+                        inputData = input,
+                        metrics = base,
+                        simulatedMetrics = simulated.value,
+                        simulationState = simulation.value,
+                        trajectory = emptyList(),
+                        onUpdateSimulation = { _, _, _ -> },
+                        onToggleScenario = {},
+                        onResetSimulation = { resetClicks++ },
+                        modifier = Modifier.testTag("fire_test_list")
+                    )
+                }
+            }
+        }
+        composeRule.onNodeWithTag("fire_subtab_simulation").performClick()
+
+        fun resetTextColor(): Color {
+            val buttonNode = composeRule.onNodeWithTag("fire_sim_reset_button", useUnmergedTree = true)
+            val textLayout = mutableListOf<TextLayoutResult>()
+            val textChild = buttonNode.fetchSemanticsNode().children.first()
+            textChild.config[SemanticsActions.GetTextLayoutResult].action!!.invoke(textLayout)
+            return textLayout.single().layoutInput.style.color
+        }
+
+        for (isDark in listOf(false, true)) {
+            composeRule.runOnIdle {
+                dark.value = isDark
+                simulation.value = FireSimulationState()
+                simulated.value = base
+            }
+            composeRule.onNodeWithTag("fire_sim_reset_button").assertIsNotEnabled()
+            assertEquals(onSurface.copy(alpha = 0.38f), resetTextColor())
+
+            for ((status, years) in listOf(
+                FireStatus.REACHABLE to 20.0,   // positive (green)
+                FireStatus.REACHABLE to 28.0,   // negative (red)
+                FireStatus.REACHABLE to 24.0,   // neutral (yellow)
+                FireStatus.UNREACHABLE to 24.0, // neutral unreachable
+                FireStatus.REACHED_NOW to 0.0   // reached now
+            )) {
+                composeRule.runOnIdle {
+                    simulation.value = FireSimulationState(extraMonthlySavings = 100.0)
+                    simulated.value = base.copy(fireStatus = status, yearsToRetirement = years)
+                }
+                composeRule.onNodeWithTag("fire_sim_reset_button").assertIsEnabled()
+                assertEquals("dark=$isDark status=$status years=$years", onSurfaceVariant, resetTextColor())
+            }
+        }
+        composeRule.onNodeWithTag("fire_sim_reset_button").performClick()
+        composeRule.runOnIdle { assertEquals(1, resetClicks) }
+    }
 }
