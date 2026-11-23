@@ -15,6 +15,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.heading
@@ -43,13 +44,13 @@ internal fun FireSimulationSummaryPanel(
     // Подложка покрывает также поля, зазоры и скруглённые углы внутренней панели.
     Surface(
         color = MaterialTheme.colorScheme.background.copy(alpha = 1f),
-        modifier = Modifier.fillMaxWidth().testTag("fire_sim_sticky_summary")
+        modifier = Modifier.fillMaxWidth().clipToBounds().testTag("fire_sim_sticky_summary")
     ) {
         Surface(
             shape = RoundedCornerShape(12.dp),
             color = statusColor.copy(alpha = 0.08f),
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)
-                .fillMaxWidth().testTag("fire_simulation_summary")
+                .fillMaxWidth()
         ) {
             Column(
                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),

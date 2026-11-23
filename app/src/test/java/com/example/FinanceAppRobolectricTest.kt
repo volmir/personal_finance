@@ -250,21 +250,21 @@ class FinanceAppRobolectricTest {
         val list = composeRule.onNode(hasScrollAction())
         list.performScrollToNode(hasTestTag("fire_trajectory_card"))
         composeRule.onNodeWithTag("fire_trajectory_card").assertIsDisplayed()
-        composeRule.onAllNodes(hasTestTag("fire_simulation_summary"), useUnmergedTree = true)
+        composeRule.onAllNodes(hasTestTag("fire_sim_sticky_summary"), useUnmergedTree = true)
             .assertCountEquals(0)
 
         // «Симуляция»: графика нет, есть резюме сравнения и управление.
         list.performScrollToNode(hasTestTag("fire_subtab_selector"))
         composeRule.onNodeWithTag("fire_subtab_simulation").performClick()
-        list.performScrollToNode(hasTestTag("fire_simulation_summary"))
-        composeRule.onNodeWithTag("fire_simulation_summary").assertIsDisplayed()
-        // Резюме — сосед графика в списке, поэтому проверка отсутствия графика
+        list.performScrollToNode(hasTestTag("fire_sim_sticky_summary"))
+        composeRule.onNodeWithTag("fire_sim_sticky_summary").assertIsDisplayed()
+        // Закреплённое резюме доступно при прокрутке, поэтому проверка отсутствия графика
         // не зависит от того, какие элементы LazyColumn успела скомпоновать.
         composeRule.onAllNodes(hasTestTag("fire_trajectory_card"), useUnmergedTree = true)
             .assertCountEquals(0)
         composeRule.onAllNodes(
             hasText(Formatters.formatFireSimulationComparison(base, simulated, 1, lang).delta) and
-                hasAnyAncestor(hasTestTag("fire_simulation_summary")),
+                hasAnyAncestor(hasTestTag("fire_sim_sticky_summary")),
             useUnmergedTree = true
         ).assertCountEquals(1)
         list.performScrollToNode(hasTestTag("fire_simulator_card"))

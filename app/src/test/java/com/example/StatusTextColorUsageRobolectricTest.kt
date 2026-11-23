@@ -107,7 +107,7 @@ class StatusTextColorUsageRobolectricTest {
         }
 
         composeRule.onNodeWithTag("fire_subtab_simulation").performClick()
-        composeRule.onNodeWithTag("fire_test_list").performScrollToNode(hasTestTag("fire_simulation_summary"))
+        composeRule.onNodeWithTag("fire_test_list").performScrollToNode(hasTestTag("fire_sim_sticky_summary"))
         assertEquals(SuccessGreenTextLight, textColorByTag("fire_sim_delta_value"))
         composeRule.runOnIdle { darkTheme.value = true }
         assertEquals(SuccessGreenTextDark, textColorByTag("fire_sim_delta_value"))

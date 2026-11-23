@@ -189,8 +189,8 @@ class FireRetirementScreenRobolectricTest {
         // но карточка базовых параметров туда не дублируется (UX-F06).
         composeRule.onNodeWithTag("fire_test_list").performScrollToNode(hasTestTag("fire_subtab_selector"))
         composeRule.onNodeWithTag("fire_subtab_simulation").performClick()
-        composeRule.onNodeWithTag("fire_test_list").performScrollToNode(hasTestTag("fire_simulation_summary"))
-        composeRule.onNodeWithTag("fire_simulation_summary").assertIsDisplayed()
+        composeRule.onNodeWithTag("fire_test_list").performScrollToNode(hasTestTag("fire_sim_sticky_summary"))
+        composeRule.onNodeWithTag("fire_sim_sticky_summary").assertIsDisplayed()
         composeRule.onAllNodes(hasTestTag("fire_parameters_card"), useUnmergedTree = true)
             .assertCountEquals(0)
 
@@ -221,7 +221,7 @@ class FireRetirementScreenRobolectricTest {
         }
 
         // В базовом FIRE резюме симуляции отсутствует
-        composeRule.onNodeWithTag("fire_simulation_summary").assertDoesNotExist()
+        composeRule.onNodeWithTag("fire_sim_sticky_summary").assertDoesNotExist()
 
         composeRule.onNodeWithTag("fire_subtab_simulation").performClick()
         composeRule.onNodeWithTag("fire_sim_sticky_summary").assertIsDisplayed()
@@ -233,25 +233,25 @@ class FireRetirementScreenRobolectricTest {
         composeRule.runOnIdle { simulation.value = FireSimulationState(extraMonthlySavings = 100.0) }
         composeRule.onNodeWithTag("fire_test_list").performScrollToNode(hasTestTag("fire_trajectory_card"))
         composeRule.onNodeWithTag("fire_trajectory_card").assertIsDisplayed()
-        composeRule.onNodeWithTag("fire_simulation_summary").assertDoesNotExist()
+        composeRule.onNodeWithTag("fire_sim_sticky_summary").assertDoesNotExist()
 
         // Резюме ровно в одном экземпляре и вне карточки графика — только в «Симуляции» (UX-F03/F04)
         composeRule.onNodeWithTag("fire_test_list").performScrollToNode(hasTestTag("fire_subtab_selector"))
         composeRule.onNodeWithTag("fire_subtab_simulation").performClick()
-        composeRule.onNodeWithTag("fire_test_list").performScrollToNode(hasTestTag("fire_simulation_summary"))
-        composeRule.onAllNodes(hasTestTag("fire_simulation_summary"), useUnmergedTree = true)
+        composeRule.onNodeWithTag("fire_test_list").performScrollToNode(hasTestTag("fire_sim_sticky_summary"))
+        composeRule.onAllNodes(hasTestTag("fire_sim_sticky_summary"), useUnmergedTree = true)
             .assertCountEquals(1)
         composeRule.onAllNodes(
-            hasTestTag("fire_simulation_summary") and hasAnyAncestor(hasTestTag("fire_trajectory_card")),
+            hasTestTag("fire_sim_sticky_summary") and hasAnyAncestor(hasTestTag("fire_trajectory_card")),
             useUnmergedTree = true
         ).assertCountEquals(0)
         composeRule.onNodeWithTag("fire_trajectory_card").assertDoesNotExist()
-        composeRule.onNodeWithTag("fire_simulation_summary").assertIsDisplayed()
+        composeRule.onNodeWithTag("fire_sim_sticky_summary").assertIsDisplayed()
 
         // Возврат в FIRE: резюме скрыто, базовый график снова на месте
         composeRule.onNodeWithTag("fire_test_list").performScrollToNode(hasTestTag("fire_subtab_selector"))
         composeRule.onNodeWithTag("fire_subtab_base").performClick()
-        composeRule.onNodeWithTag("fire_simulation_summary").assertDoesNotExist()
+        composeRule.onNodeWithTag("fire_sim_sticky_summary").assertDoesNotExist()
         composeRule.onNodeWithTag("fire_test_list").performScrollToNode(hasTestTag("fire_trajectory_card"))
         composeRule.onNodeWithTag("fire_trajectory_card").assertIsDisplayed()
     }
@@ -381,7 +381,7 @@ class FireRetirementScreenRobolectricTest {
             .assertCountEquals(1)
 
         // В FIRE нет резюме и управляющих элементов «Симуляции».
-        composeRule.onAllNodes(hasTestTag("fire_simulation_summary"), useUnmergedTree = true)
+        composeRule.onAllNodes(hasTestTag("fire_sim_sticky_summary"), useUnmergedTree = true)
             .assertCountEquals(0)
         composeRule.onAllNodes(hasTestTag("fire_simulator_card"), useUnmergedTree = true)
             .assertCountEquals(0)
@@ -403,7 +403,7 @@ class FireRetirementScreenRobolectricTest {
             .assertCountEquals(0)
         composeRule.onAllNodes(hasText(strings.disclaimerTitle), useUnmergedTree = true)
             .assertCountEquals(0)
-        composeRule.onAllNodes(hasTestTag("fire_simulation_summary"), useUnmergedTree = true)
+        composeRule.onAllNodes(hasTestTag("fire_sim_sticky_summary"), useUnmergedTree = true)
             .assertCountEquals(1)
     }
 
@@ -469,7 +469,7 @@ class FireRetirementScreenRobolectricTest {
             composeRule.onNodeWithTag("fire_subtab_content_simulation").assertIsDisplayed()
             composeRule.onNodeWithTag("fire_sim_sticky_summary").assertIsDisplayed()
             composeRule.onAllNodes(
-                hasText(strings.fireSimChangesCount(3)) and hasAnyAncestor(hasTestTag("fire_simulation_summary")),
+                hasText(strings.fireSimChangesCount(3)) and hasAnyAncestor(hasTestTag("fire_sim_sticky_summary")),
                 useUnmergedTree = true
             ).assertCountEquals(1)
             composeRule.onAllNodes(hasTestTag("fire_trajectory_card"), useUnmergedTree = true)

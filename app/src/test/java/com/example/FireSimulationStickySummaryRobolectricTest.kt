@@ -4,12 +4,13 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.view.View
 import androidx.activity.ComponentActivity
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.mutableStateOf
@@ -23,8 +24,10 @@ import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.hasTestTag
+import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.performScrollToIndex
+import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.click
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeUp
@@ -94,6 +97,18 @@ class FireSimulationStickySummaryRobolectricTest {
         composeRule.onNodeWithTag("fire_sim_age_value", useUnmergedTree = true).assertTextEquals("62 → 59,5")
         composeRule.onNodeWithTag("fire_sim_delta_value", useUnmergedTree = true).assertTextEquals("↓ −2,5 года")
         composeRule.onNodeWithTag("fire_hero_card").assertDoesNotExist()
+        assertSingleSummaryAndReset()
+        composeRule.onNodeWithTag("fire_test_list")
+            .performScrollToNode(hasTestTag("switch_pos_salary_increase"))
+        // Все сценарии остаются в прежней общей группе, без аккордеонов.
+        for (id in listOf("pos_salary_increase", "pos_market_growth", "pos_expense_optimization",
+            "pos_relocation", "pos_inheritance", "pos_property_sale", "pos_children_self_sufficient",
+            "job_loss", "market_crash", "mortgage", "car_loan", "large_expense", "inflation", "child_dependent")) {
+            composeRule.onNodeWithTag("switch_$id").assertExists()
+        }
+        assertSingleSummaryAndReset()
+        composeRule.onNodeWithTag("fire_test_list").performScrollToIndex(0)
+        assertSingleSummaryAndReset()
     }
 
     @Test
@@ -223,14 +238,19 @@ class FireSimulationStickySummaryRobolectricTest {
                     LocalAppStrings provides getAppStrings(AppLanguage.RU),
                     LocalDensity provides Density(density.density, scale.value)
                 ) {
-                    Column(Modifier.fillMaxSize().background(Color.Magenta)) {
-                        Spacer(Modifier.fillMaxWidth().height(56.dp).testTag("top_bar"))
+                    // Ненулевые system insets и Scaffold padding, как в FinanceApp.
+                    Scaffold(
+                        modifier = Modifier.fillMaxSize(),
+                        containerColor = Color.Magenta,
+                        contentWindowInsets = WindowInsets(left = 8.dp, top = 24.dp, right = 8.dp, bottom = 24.dp),
+                        topBar = { Spacer(Modifier.fillMaxWidth().height(80.dp).testTag("top_bar")) },
+                        bottomBar = { Text("bottom tabs", modifier = Modifier.height(80.dp).testTag("bottom_tabs")) }
+                    ) { innerPadding ->
                         FireRetirementScreen(input, base, base.copy(yearsToRetirement = 21.5, retirementAge = 59.5),
                             FireSimulationState(extraMonthlySavings = 100.0), emptyList(),
                             onUpdateSimulation = { _, _, _ -> leverCalls++ }, onToggleScenario = { leverCalls++ },
                             onResetSimulation = { resetCalls++ },
-                            modifier = Modifier.weight(1f).testTag("fire_test_list"))
-                        Text("bottom tabs", modifier = Modifier.height(56.dp).testTag("bottom_tabs"))
+                            modifier = Modifier.padding(innerPadding).testTag("fire_test_list"))
                     }
                 }
             }
@@ -244,6 +264,7 @@ class FireSimulationStickySummaryRobolectricTest {
             }
             list.performScrollToIndex(0)
             composeRule.onNodeWithTag("fire_subtab_selector").assertIsDisplayed()
+            assertSingleSummaryAndReset()
             val initialTop = composeRule.onNodeWithTag("fire_sim_sticky_summary").fetchSemanticsNode().boundsInRoot.top
             list.performTouchInput { swipeUp() }
             composeRule.waitForIdle()
@@ -254,8 +275,10 @@ class FireSimulationStickySummaryRobolectricTest {
             assertEquals(viewport.left, pinned.left, 1f)
             assertEquals(viewport.right, pinned.right, 1f)
             assertEquals(composeRule.onNodeWithTag("top_bar").fetchSemanticsNode().boundsInRoot.bottom, pinned.top, 1f)
+            assertEquals(composeRule.onNodeWithTag("bottom_tabs").fetchSemanticsNode().boundsInRoot.top, viewport.bottom, 1f)
             assertTrue("content below panel", pinned.bottom < viewport.bottom)
             composeRule.onNodeWithTag("fire_subtab_selector").assertIsNotDisplayed()
+            assertSingleSummaryAndReset()
             val before = capturePanel()
             assertOpaqueInsets(before, background)
             list.performTouchInput { swipeUp() }
@@ -270,8 +293,20 @@ class FireSimulationStickySummaryRobolectricTest {
             composeRule.onNodeWithTag("bottom_tabs").assertIsDisplayed()
             list.performScrollToIndex(0)
             composeRule.onNodeWithTag("fire_subtab_selector").assertIsDisplayed()
+            assertSingleSummaryAndReset()
             assertEquals(initialTop, composeRule.onNodeWithTag("fire_sim_sticky_summary").fetchSemanticsNode().boundsInRoot.top, 1f)
         }
+    }
+
+    private fun assertSingleSummaryAndReset() {
+        composeRule.onNodeWithTag("fire_simulation_summary").assertDoesNotExist()
+        composeRule.onNodeWithTag("fire_hero_simulation_badge").assertDoesNotExist()
+        composeRule.onAllNodes(hasTestTag("fire_sim_sticky_summary"), true).assertCountEquals(1)
+        composeRule.onAllNodes(hasTestTag("fire_sim_reset_button"), true).assertCountEquals(1)
+        composeRule.onAllNodes(
+            hasTestTag("fire_sim_reset_button") and hasAnyAncestor(hasTestTag("fire_sim_sticky_summary")),
+            true
+        ).assertCountEquals(1)
     }
 
     private fun assertFits(tag: String): TextLayoutResult {
