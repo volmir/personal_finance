@@ -4,6 +4,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.sp
 import com.example.ui.theme.Typography
+import java.io.File
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -14,6 +15,21 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35])
 class TypographyTest {
+    @Test
+    fun `screens and components use typography roles without local size overrides`() {
+        val root = generateSequence(File(requireNotNull(System.getProperty("user.dir")))) { it.parentFile }
+            .first { File(it, "settings.gradle.kts").isFile }
+        val ui = File(root, "app/src/main/java/com/example/ui")
+        val files = listOf(File(ui, "FinanceApp.kt")) +
+            listOf("screens", "components").flatMap { File(ui, it).walkTopDown().filter { file -> file.extension == "kt" }.toList() }
+        val overrides = files.flatMap { file ->
+            file.readLines().mapIndexedNotNull { index, line ->
+                if (Regex("\\bfontSize\\s*=").containsMatchIn(line)) "${file.name}:${index + 1}: $line" else null
+            }
+        }
+        assertTrue("Use a complete typography role, not a local fontSize:\n${overrides.joinToString("\n")}", overrides.isEmpty())
+    }
+
     private val styles = with(Typography) {
         listOf(
             displayLarge, displayMedium, displaySmall,

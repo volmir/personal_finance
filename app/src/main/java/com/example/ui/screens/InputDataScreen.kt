@@ -78,7 +78,6 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.example.data.model.CalculatedMetrics
 import com.example.data.model.FinancialInputData
 import com.example.domain.AuditorAnalysisGenerator
@@ -198,7 +197,7 @@ fun InputDataScreen(
                         FilterChip(
                             selected = isSelected,
                             onClick = { onUpdate { it.copy(currencySymbol = cur.symbol) } },
-                            label = { Text(cur.display, fontWeight = FontWeight.Bold, fontSize = 13.sp) },
+                            label = { Text(cur.display, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall) },
                             colors = FilterChipDefaults.filterChipColors(
                                 selectedContainerColor = MaterialTheme.colorScheme.primary,
                                 selectedLabelColor = MaterialTheme.colorScheme.onPrimary
@@ -374,8 +373,7 @@ fun InputDataScreen(
                         Text(
                             text = if (inputData.includeFinancialInEmergencyFund) strings.toggleEmergencyFundSubOn else strings.toggleEmergencyFundSubOff,
                             style = MaterialTheme.typography.labelSmall.copy(
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                fontSize = 12.sp
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         )
                     }
@@ -551,7 +549,7 @@ fun InputDataScreen(
                         label = { Text(if (isBirthDateFocused || !metrics.isAgeValid) strings.birthDateLabel else strings.fireBirthDateLabel) },
                         isError = !metrics.isAgeValid,
                         supportingText = if (!metrics.isAgeValid) {
-                            { Text(strings.invalidBirthDateError, color = MaterialTheme.colorScheme.error, fontSize = MaterialTheme.typography.labelSmall.fontSize) }
+                            { Text(strings.invalidBirthDateError, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
                         } else null,
                         singleLine = true,
                         colors = OutlinedTextFieldDefaults.colors(
@@ -591,8 +589,8 @@ fun InputDataScreen(
                         supportingText = if (lifeExpectancyInvalid) {
                             {
                                 Column {
-                                    Text(strings.lifeExpectancyError, color = MaterialTheme.colorScheme.error, fontSize = MaterialTheme.typography.labelSmall.fontSize)
-                                    Text(strings.lifeExpectancyUsedValueFormat(inputData.lifeExpectancy), fontSize = MaterialTheme.typography.labelSmall.fontSize)
+                                    Text(strings.lifeExpectancyError, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                                    Text(strings.lifeExpectancyUsedValueFormat(inputData.lifeExpectancy), style = MaterialTheme.typography.bodySmall)
                                 }
                             }
                         } else null,
@@ -686,16 +684,14 @@ fun MetricIndicatorRow(
                 Text(
                     text = title,
                     style = MaterialTheme.typography.labelSmall.copy(
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontSize = 12.sp
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 )
                 Text(
                     text = formula,
                     style = MaterialTheme.typography.labelSmall.copy(
                         color = MaterialTheme.colorScheme.primary,
-                        fontFamily = FontFamily.Monospace,
-                        fontSize = MaterialTheme.typography.labelSmall.fontSize
+                        fontFamily = FontFamily.Monospace
                     )
                 )
             }
@@ -713,8 +709,7 @@ fun MetricIndicatorRow(
                     Text(
                         text = subValue,
                         style = MaterialTheme.typography.labelSmall.copy(
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontSize = MaterialTheme.typography.labelSmall.fontSize
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         ),
                         textAlign = TextAlign.End
                     )
@@ -769,17 +764,15 @@ fun InputSectionCard(
                 Column {
                     Text(
                         text = title,
-                        style = MaterialTheme.typography.titleMedium.copy(
+                        style = MaterialTheme.typography.titleSmall.copy(
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            fontSize = 15.sp
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                     )
                     Text(
                         text = subtitle,
                         style = MaterialTheme.typography.bodySmall.copy(
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontSize = 12.sp
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     )
                 }
@@ -886,7 +879,7 @@ fun NumberInputField(
                 onValueChange(finalValue)
             }
         },
-        label = { Text(label, fontSize = 12.sp) },
+        label = { Text(label, style = MaterialTheme.typography.labelMedium) },
         trailingIcon = {
             Text(
                 text = currency,
@@ -980,8 +973,7 @@ fun CategoryBreakdownHint(
                         text = if (isExpanded) hintExpanded else hintCollapsed,
                         style = MaterialTheme.typography.labelSmall.copy(
                             color = MaterialTheme.colorScheme.primary,
-                            fontWeight = FontWeight.Medium,
-                            fontSize = 12.sp
+                            fontWeight = FontWeight.Medium
                         )
                     )
                 }
@@ -1008,15 +1000,13 @@ fun CategoryBreakdownHint(
                     ) {
                         Text(
                             text = strings.breakdownInstructionIcon,
-                            fontSize = 12.sp
+                            style = MaterialTheme.typography.labelSmall
                         )
                         Text(
                             text = instruction,
                             style = MaterialTheme.typography.bodySmall.copy(
                                 fontWeight = FontWeight.SemiBold,
-                                color = MaterialTheme.colorScheme.onSurface,
-                                fontSize = 12.sp,
-                                lineHeight = 15.sp
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                         )
                     }
@@ -1035,17 +1025,14 @@ fun CategoryBreakdownHint(
                             text = strings.breakdownCategoryTitleFormat(cat.title),
                             style = MaterialTheme.typography.labelSmall.copy(
                                 fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface,
-                                fontSize = MaterialTheme.typography.labelSmall.fontSize
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                         )
                         cat.items.forEach { itemText ->
                             Text(
                                 text = strings.breakdownCategoryItemFormat(itemText),
                                 style = MaterialTheme.typography.bodySmall.copy(
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    fontSize = MaterialTheme.typography.labelSmall.fontSize,
-                                    lineHeight = MaterialTheme.typography.labelSmall.lineHeight
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 ),
                                 modifier = Modifier.padding(vertical = 1.dp)
                             )

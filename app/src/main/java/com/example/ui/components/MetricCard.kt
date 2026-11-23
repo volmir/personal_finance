@@ -38,7 +38,6 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.example.ui.theme.AlertRedBg
 import com.example.ui.theme.StatusColors
 import com.example.ui.theme.SuccessGreenBg
@@ -111,16 +110,14 @@ fun MetricCard(
                             text = title,
                             style = MaterialTheme.typography.titleSmall.copy(
                                 fontWeight = FontWeight.SemiBold,
-                                color = MaterialTheme.colorScheme.onSurface,
-                                fontSize = 14.sp
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                         )
                         if (subValue != null) {
                             Text(
                                 text = subValue,
                                 style = MaterialTheme.typography.bodySmall.copy(
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    fontSize = MaterialTheme.typography.labelSmall.fontSize
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             )
                         }
@@ -143,8 +140,7 @@ fun MetricCard(
                             text = strings.scoreSlashOutOfTen(score.toString()),
                             style = MaterialTheme.typography.labelSmall.copy(
                                 fontWeight = FontWeight.Bold,
-                                color = scoreText,
-                                fontSize = MaterialTheme.typography.labelSmall.fontSize
+                                color = scoreText
                             ),
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
                         )
@@ -157,10 +153,9 @@ fun MetricCard(
             // Main Value
             Text(
                 text = value,
-                style = MaterialTheme.typography.titleLarge.copy(
+                style = MaterialTheme.typography.titleMedium.copy(
                     fontWeight = FontWeight.Bold,
-                    color = StatusColors.getReadableTextColor(highlightColor),
-                    fontSize = 20.sp
+                    color = StatusColors.getReadableTextColor(highlightColor)
                 )
             )
 
@@ -187,7 +182,6 @@ fun MetricCard(
                         text = "${strings.metricCardFormulaPrefix} $formula",
                         style = MaterialTheme.typography.labelSmall.copy(
                             fontFamily = FontFamily.Monospace,
-                            fontSize = MaterialTheme.typography.labelSmall.fontSize,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         ),
                         maxLines = if (expanded) Int.MAX_VALUE else 1,
@@ -207,8 +201,7 @@ fun MetricCard(
                     Text(
                         text = if (expanded) strings.metricCardHide else strings.metricCardInfo,
                         style = MaterialTheme.typography.labelSmall.copy(
-                            color = MaterialTheme.colorScheme.primary,
-                            fontSize = MaterialTheme.typography.labelSmall.fontSize
+                            color = MaterialTheme.colorScheme.primary
                         )
                     )
                     Icon(
@@ -248,8 +241,6 @@ fun MetricCard(
                             Text(
                                 text = description,
                                 style = MaterialTheme.typography.bodySmall.copy(
-                                    lineHeight = 16.sp,
-                                    fontSize = 12.sp,
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
                             )

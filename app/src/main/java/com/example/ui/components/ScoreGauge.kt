@@ -20,7 +20,6 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.example.ui.theme.ScoreColorEvaluator
 import com.example.util.Formatters
 import com.example.util.localization.LocalAppLanguage
@@ -81,7 +80,6 @@ fun ScoreGauge(
             Text(
                 text = Formatters.formatScore(score, lang = lang),
                 style = MaterialTheme.typography.headlineLarge.copy(
-                    fontSize = 32.sp,
                     fontWeight = FontWeight.Bold,
                     color = scoreTextColor
                 )

@@ -57,6 +57,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -121,6 +122,8 @@ fun FinanceApp(viewModel: MainViewModel) {
             snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
             topBar = {
                 TopAppBar(
+                    expandedHeight = TopAppBarDefaults.TopAppBarExpandedHeight *
+                        LocalDensity.current.fontScale.coerceAtLeast(1f),
                     title = {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Box(
@@ -200,7 +203,7 @@ fun FinanceApp(viewModel: MainViewModel) {
                             label = {
                                 Text(
                                     text = tab.localizedShortTitle(strings),
-                                    fontSize = MaterialTheme.typography.labelSmall.fontSize,
+                                    style = MaterialTheme.typography.labelSmall,
                                     fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
                                 )
                             },

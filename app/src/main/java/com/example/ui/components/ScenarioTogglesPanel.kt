@@ -287,8 +287,7 @@ fun ScenarioTogglesPanel(
                 Text(
                     text = strings.scenarioHeaderSubtitle,
                     style = MaterialTheme.typography.bodySmall.copy(
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontSize = MaterialTheme.typography.labelSmall.fontSize
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 )
             }
@@ -303,8 +302,7 @@ fun ScenarioTogglesPanel(
                         text = strings.scenarioTotalBadge(scenarios.activeCount),
                         style = MaterialTheme.typography.labelSmall.copy(
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary,
-                            fontSize = MaterialTheme.typography.labelSmall.fontSize
+                            color = MaterialTheme.colorScheme.primary
                         ),
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                     )
@@ -338,8 +336,7 @@ fun ScenarioTogglesPanel(
                         text = strings.scenarioPositiveActive(scenarios.positiveActiveCount),
                         style = MaterialTheme.typography.labelSmall.copy(
                             fontWeight = FontWeight.Bold,
-                            color = StatusColors.getReadableTextColor(SuccessGreen),
-                            fontSize = MaterialTheme.typography.labelSmall.fontSize
+                            color = StatusColors.getReadableTextColor(SuccessGreen)
                         ),
                         modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp)
                     )
@@ -350,8 +347,7 @@ fun ScenarioTogglesPanel(
         Text(
             text = strings.scenarioPositiveSubtitle,
             style = MaterialTheme.typography.bodySmall.copy(
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                fontSize = MaterialTheme.typography.labelSmall.fontSize
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             ),
             modifier = Modifier.padding(top = 2.dp, bottom = 8.dp)
         )
@@ -392,8 +388,7 @@ fun ScenarioTogglesPanel(
                         text = strings.scenarioNegativeActive(scenarios.negativeActiveCount),
                         style = MaterialTheme.typography.labelSmall.copy(
                             fontWeight = FontWeight.Bold,
-                            color = StatusColors.getReadableTextColor(AlertRed),
-                            fontSize = MaterialTheme.typography.labelSmall.fontSize
+                            color = StatusColors.getReadableTextColor(AlertRed)
                         ),
                         modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp)
                     )
@@ -404,8 +399,7 @@ fun ScenarioTogglesPanel(
         Text(
             text = strings.scenarioNegativeSubtitle,
             style = MaterialTheme.typography.bodySmall.copy(
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                fontSize = MaterialTheme.typography.labelSmall.fontSize
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             ),
             modifier = Modifier.padding(top = 2.dp, bottom = 8.dp)
         )
@@ -513,8 +507,7 @@ private fun ScenarioToggleCard(
                         text = "$paramPrefix ${item.parametersText}",
                         style = MaterialTheme.typography.labelSmall.copy(
                             fontWeight = FontWeight.Medium,
-                            color = badgeTextColor,
-                            fontSize = MaterialTheme.typography.labelSmall.fontSize
+                            color = badgeTextColor
                         ),
                         modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                     )
@@ -523,9 +516,7 @@ private fun ScenarioToggleCard(
                 Text(
                     text = item.description,
                     style = MaterialTheme.typography.bodySmall.copy(
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontSize = MaterialTheme.typography.labelSmall.fontSize,
-                        lineHeight = MaterialTheme.typography.labelSmall.lineHeight
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 )
             }

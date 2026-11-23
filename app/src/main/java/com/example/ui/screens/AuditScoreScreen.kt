@@ -44,7 +44,6 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.example.data.model.CalculatedMetrics
 import com.example.data.model.FinancialInputData
 import com.example.domain.AuditorAnalysisGenerator
@@ -334,8 +333,7 @@ fun AuditScoreScreen(
                             Text(
                                 text = strings.auditorOpinionSubtitle(opinion.totalCount),
                                 style = MaterialTheme.typography.bodySmall.copy(
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    fontSize = 12.sp
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             )
                         }
@@ -362,10 +360,8 @@ fun AuditScoreScreen(
                                     text = strings.positiveBadgeText(opinion.positive.size),
                                     style = MaterialTheme.typography.labelSmall.copy(
                                         fontWeight = FontWeight.Bold,
-                                        color = positiveTextColor,
-                                        fontSize = MaterialTheme.typography.labelSmall.fontSize
-                                    ),
-                                    maxLines = 1
+                                        color = positiveTextColor
+                                    )
                                 )
                             }
                         }
@@ -384,10 +380,8 @@ fun AuditScoreScreen(
                                     text = strings.neutralBadgeText(opinion.neutral.size),
                                     style = MaterialTheme.typography.labelSmall.copy(
                                         fontWeight = FontWeight.Bold,
-                                        color = neutralTextColor,
-                                        fontSize = MaterialTheme.typography.labelSmall.fontSize
-                                    ),
-                                    maxLines = 1
+                                        color = neutralTextColor
+                                    )
                                 )
                             }
                         }
@@ -406,10 +400,8 @@ fun AuditScoreScreen(
                                     text = strings.negativeBadgeText(opinion.negative.size),
                                     style = MaterialTheme.typography.labelSmall.copy(
                                         fontWeight = FontWeight.Bold,
-                                        color = negativeTextColor,
-                                        fontSize = MaterialTheme.typography.labelSmall.fontSize
-                                    ),
-                                    maxLines = 1
+                                        color = negativeTextColor
+                                    )
                                 )
                             }
                         }
@@ -435,8 +427,7 @@ fun AuditScoreScreen(
                             Text(
                                 text = strings.positiveEmptyText,
                                 style = MaterialTheme.typography.bodySmall.copy(
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    fontSize = 12.sp
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 ),
                                 modifier = Modifier.padding(10.dp)
                             )
@@ -469,8 +460,7 @@ fun AuditScoreScreen(
                             Text(
                                 text = strings.neutralEmptyText,
                                 style = MaterialTheme.typography.bodySmall.copy(
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    fontSize = 12.sp
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 ),
                                 modifier = Modifier.padding(10.dp)
                             )
@@ -505,8 +495,7 @@ fun AuditScoreScreen(
                                 text = strings.negativeEmptyText,
                                 style = MaterialTheme.typography.bodySmall.copy(
                                     color = positiveTextColor,
-                                    fontWeight = FontWeight.Medium,
-                                    fontSize = 12.sp
+                                    fontWeight = FontWeight.Medium
                                 ),
                                 modifier = Modifier.padding(10.dp)
                             )
@@ -571,8 +560,6 @@ fun AuditScoreScreen(
                                     Formatters.formatPercent(inputData.inflationPercent, lang)
                                 ),
                                 style = MaterialTheme.typography.bodySmall.copy(
-                                    fontSize = 12.sp,
-                                    lineHeight = 16.sp,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             )
@@ -615,8 +602,6 @@ fun AuditScoreScreen(
                             Text(
                                 text = strings.disclaimerText,
                                 style = MaterialTheme.typography.bodySmall.copy(
-                                    fontSize = 12.sp,
-                                    lineHeight = 16.sp,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             )
@@ -756,9 +741,7 @@ internal fun AuditOpinionIndicatorItem(
     ) {
         Text(
             text = displayText,
-            style = MaterialTheme.typography.bodyMedium.copy(
-                fontSize = 12.5.sp,
-                lineHeight = 18.sp,
+            style = MaterialTheme.typography.bodySmall.copy(
                 color = MaterialTheme.colorScheme.onSurface
             ),
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp)

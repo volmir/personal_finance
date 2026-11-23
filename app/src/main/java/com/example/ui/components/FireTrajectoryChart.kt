@@ -5,6 +5,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -28,7 +31,6 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.example.data.model.TrajectoryPoint
 import com.example.data.model.FireStatus
 import com.example.domain.model.AuditIndicatorStatus
@@ -50,6 +52,7 @@ internal fun interpolateAccumulatedCapital(trajectory: List<TrajectoryPoint>, ag
     return left.accumulatedCapital + fraction * (right.accumulatedCapital - left.accumulatedCapital)
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun FireTrajectoryChart(
     trajectory: List<TrajectoryPoint>,
@@ -102,37 +105,40 @@ fun FireTrajectoryChart(
             .semantics { contentDescription = chartDescription }
     ) {
         // Legend
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
             modifier = Modifier.padding(bottom = 8.dp)
         ) {
-            Box(
-                modifier = Modifier
-                    .size(10.dp)
-                    .background(SuccessGreen, CircleShape)
-            )
-            Spacer(modifier = Modifier.width(6.dp))
-            Text(
-                text = strings.fireChartAccumulated,
-                style = MaterialTheme.typography.labelSmall.copy(
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier
+                        .size(10.dp)
+                        .background(SuccessGreen, CircleShape)
                 )
-            )
-
-            Spacer(modifier = Modifier.width(16.dp))
-
-            Box(
-                modifier = Modifier
-                    .size(10.dp)
-                    .background(AccentGold, CircleShape)
-            )
-            Spacer(modifier = Modifier.width(6.dp))
-            Text(
-                text = strings.fireChartRequired,
-                style = MaterialTheme.typography.labelSmall.copy(
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                    text = strings.fireChartAccumulated,
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 )
-            )
+            }
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier
+                        .size(10.dp)
+                        .background(AccentGold, CircleShape)
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                    text = strings.fireChartRequired,
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                )
+            }
         }
 
         Text(
@@ -254,17 +260,17 @@ fun FireTrajectoryChart(
         }
 
         // Axis labels
-        Row(
+        FlowRow(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = 4.dp, start = 4.dp, end = 4.dp),
-            verticalAlignment = Alignment.CenterVertically
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             Text(
                 text = "${minAge.toInt()} ${strings.fireChartYearsSuffix}",
                 style = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
             )
-            Spacer(modifier = Modifier.weight(1f))
             Text(
                 text = if (isUnreachable) strings.fireUnreachableText else strings.fireChartFirePoint(Formatters.formatRatio(retireAge, lang)),
                 style = MaterialTheme.typography.labelSmall.copy(
@@ -277,7 +283,6 @@ fun FireTrajectoryChart(
                 ),
                 modifier = Modifier.testTag("fire_chart_status_label")
             )
-            Spacer(modifier = Modifier.weight(1f))
             Text(
                 text = "${maxAge.toInt()} ${strings.fireChartYearsSuffix}",
                 style = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)

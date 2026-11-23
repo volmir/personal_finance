@@ -42,9 +42,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.example.data.model.CalculatedMetrics
 import com.example.data.model.FinancialInputData
 import com.example.domain.FinancialMetricEvaluator
@@ -117,8 +115,7 @@ fun MetricsScreen(
                             Text(
                                 text = strings.metricsHeaderSubtitle,
                                 style = MaterialTheme.typography.bodySmall.copy(
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    fontSize = 12.sp
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             )
                         }
@@ -137,7 +134,7 @@ fun MetricsScreen(
                         FilterChip(
                             selected = selectedCategory == MetricFilterCategory.ALL,
                             onClick = { selectedCategory = MetricFilterCategory.ALL },
-                            label = { Text(strings.categoryAll, fontSize = MaterialTheme.typography.labelSmall.fontSize) },
+                            label = { Text(strings.categoryAll, style = MaterialTheme.typography.labelSmall) },
                             colors = FilterChipDefaults.filterChipColors(
                                 selectedContainerColor = MaterialTheme.colorScheme.primary,
                                 selectedLabelColor = MaterialTheme.colorScheme.onPrimary
@@ -146,7 +143,7 @@ fun MetricsScreen(
                         FilterChip(
                             selected = selectedCategory == MetricFilterCategory.CASH_FLOW,
                             onClick = { selectedCategory = MetricFilterCategory.CASH_FLOW },
-                            label = { Text(strings.categoryCashFlow, fontSize = MaterialTheme.typography.labelSmall.fontSize) },
+                            label = { Text(strings.categoryCashFlow, style = MaterialTheme.typography.labelSmall) },
                             colors = FilterChipDefaults.filterChipColors(
                                 selectedContainerColor = MaterialTheme.colorScheme.primary,
                                 selectedLabelColor = MaterialTheme.colorScheme.onPrimary
@@ -155,7 +152,7 @@ fun MetricsScreen(
                         FilterChip(
                             selected = selectedCategory == MetricFilterCategory.CAPITAL_RISKS,
                             onClick = { selectedCategory = MetricFilterCategory.CAPITAL_RISKS },
-                            label = { Text(strings.categoryCapitalRisks, fontSize = MaterialTheme.typography.labelSmall.fontSize) },
+                            label = { Text(strings.categoryCapitalRisks, style = MaterialTheme.typography.labelSmall) },
                             colors = FilterChipDefaults.filterChipColors(
                                 selectedContainerColor = MaterialTheme.colorScheme.primary,
                                 selectedLabelColor = MaterialTheme.colorScheme.onPrimary
@@ -164,7 +161,7 @@ fun MetricsScreen(
                         FilterChip(
                             selected = selectedCategory == MetricFilterCategory.BENCHMARKS,
                             onClick = { selectedCategory = MetricFilterCategory.BENCHMARKS },
-                            label = { Text(strings.categoryBenchmarks, fontSize = MaterialTheme.typography.labelSmall.fontSize) },
+                            label = { Text(strings.categoryBenchmarks, style = MaterialTheme.typography.labelSmall) },
                             colors = FilterChipDefaults.filterChipColors(
                                 selectedContainerColor = MaterialTheme.colorScheme.primary,
                                 selectedLabelColor = MaterialTheme.colorScheme.onPrimary
@@ -365,9 +362,9 @@ fun MetricsScreen(
                             ) {
                                 Text(
                                     text = strings.metricFidelityProgress,
+                                    modifier = Modifier.weight(1f).padding(end = 8.dp),
                                     style = MaterialTheme.typography.labelSmall.copy(
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        fontSize = MaterialTheme.typography.labelSmall.fontSize
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 )
                                 Text(
@@ -378,8 +375,7 @@ fun MetricsScreen(
                                     },
                                     style = MaterialTheme.typography.labelSmall.copy(
                                         fontWeight = FontWeight.Bold,
-                                        color = fidelityStatusColor,
-                                        fontSize = 12.sp
+                                        color = fidelityStatusColor
                                     )
                                 )
                             }
@@ -408,11 +404,8 @@ fun MetricsScreen(
                                     }
                                 ),
                                 style = MaterialTheme.typography.bodySmall.copy(
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    fontSize = MaterialTheme.typography.labelSmall.fontSize
-                                ),
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
                             )
                         }
                     }
