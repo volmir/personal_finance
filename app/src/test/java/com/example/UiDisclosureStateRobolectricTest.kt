@@ -58,12 +58,23 @@ class UiDisclosureStateRobolectricTest {
         assertFormulaExpanded(title, true)
         openTab("input")
         openTab("metrics")
+
+        // После восстановления Metrics вертикальная позиция LazyColumn
+        // может находиться возле карточки Fidelity.
+        // Возвращаем первый элемент списка в область композиции.
+        list().performScrollToIndex(0)
+
         filter(strings.categoryBenchmarks).assertIsSelected()
         assertEquals(expectedScroll, filterPosition(), 0f)
         assertFormulaExpanded(title, true)
         openTab("scores")
         composeRule.activityRule.scenario.recreate()
         openTab("metrics")
+
+        // После пересоздания Activity восстанавливается вертикальная
+        // позиция LazyColumn, поэтому строка фильтров может быть скрыта.
+        list().performScrollToIndex(0)
+
         filter(strings.categoryBenchmarks).assertIsSelected()
         assertEquals(expectedScroll, filterPosition(), 0f)
         assertFormulaExpanded(title, true)
