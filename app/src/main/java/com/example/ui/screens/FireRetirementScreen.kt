@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -104,6 +105,8 @@ fun FireRetirementScreen(
             localSubtab = tab
         }
     }
+    val baseListState = rememberLazyListState()
+    val simulationListState = rememberLazyListState()
     val isSimulationSubtab = activeSubtab == FireSubtab.SIMULATION
     // FIRE всегда показывает базовые метрики; «Симуляция» — смоделированный результат
     // при активных изменениях, иначе базовые метрики.
@@ -166,6 +169,7 @@ fun FireRetirementScreen(
     }
 
     LazyColumn(
+        state = if (isSimulationSubtab) simulationListState else baseListState,
         modifier = modifier
             .fillMaxSize()
             .clipToBounds()

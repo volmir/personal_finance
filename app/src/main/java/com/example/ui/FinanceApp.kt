@@ -48,6 +48,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -98,6 +99,7 @@ fun FinanceApp(viewModel: MainViewModel) {
     val feedbackMessage by viewModel.userFeedbackMessage.collectAsStateWithLifecycle()
     val showSampleDataNotice by viewModel.showSampleDataNotice.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
+    val tabStateHolder = rememberSaveableStateHolder()
     var selectedFireSubtab by rememberSaveable { mutableStateOf(FireSubtab.BASE) }
 
     LaunchedEffect(feedbackMessage) {
@@ -221,40 +223,42 @@ fun FinanceApp(viewModel: MainViewModel) {
                     .fillMaxSize()
                     .padding(innerPadding)
             ) { activeTab ->
-                when (activeTab) {
-                    AppTab.INPUT -> InputDataScreen(
-                        inputData = inputData,
-                        metrics = metrics,
-                        onUpdate = { transform -> viewModel.updateInputData(transform) },
-                        onNavigateToMetrics = { viewModel.selectTab(AppTab.METRICS) }
-                    )
+                tabStateHolder.SaveableStateProvider(activeTab.name) {
+                    when (activeTab) {
+                        AppTab.INPUT -> InputDataScreen(
+                            inputData = inputData,
+                            metrics = metrics,
+                            onUpdate = { transform -> viewModel.updateInputData(transform) },
+                            onNavigateToMetrics = { viewModel.selectTab(AppTab.METRICS) }
+                        )
 
-                    AppTab.METRICS -> MetricsScreen(
-                        inputData = inputData,
-                        metrics = metrics
-                    )
+                        AppTab.METRICS -> MetricsScreen(
+                            inputData = inputData,
+                            metrics = metrics
+                        )
 
-                    AppTab.SCORES -> AuditScoreScreen(
-                        inputData = inputData,
-                        metrics = metrics
-                    )
+                        AppTab.SCORES -> AuditScoreScreen(
+                            inputData = inputData,
+                            metrics = metrics
+                        )
 
-                    AppTab.FIRE -> FireRetirementScreen(
-                        inputData = inputData,
-                        metrics = metrics,
-                        simulatedMetrics = simulatedMetrics,
-                        simulationState = simulationState,
-                        trajectory = trajectory,
-                        selectedSubtab = selectedFireSubtab,
-                        onSelectSubtab = { selectedFireSubtab = it },
-                        onUpdateSimulation = { extraSavings, returnDelta, expReduction ->
-                            viewModel.updateSimulation(extraSavings, returnDelta, expReduction)
-                        },
-                        onToggleScenario = { scenarioId ->
-                            viewModel.toggleScenario(scenarioId)
-                        },
-                        onResetSimulation = { viewModel.resetSimulation() }
-                    )
+                        AppTab.FIRE -> FireRetirementScreen(
+                            inputData = inputData,
+                            metrics = metrics,
+                            simulatedMetrics = simulatedMetrics,
+                            simulationState = simulationState,
+                            trajectory = trajectory,
+                            selectedSubtab = selectedFireSubtab,
+                            onSelectSubtab = { selectedFireSubtab = it },
+                            onUpdateSimulation = { extraSavings, returnDelta, expReduction ->
+                                viewModel.updateSimulation(extraSavings, returnDelta, expReduction)
+                            },
+                            onToggleScenario = { scenarioId ->
+                                viewModel.toggleScenario(scenarioId)
+                            },
+                            onResetSimulation = { viewModel.resetSimulation() }
+                        )
+                    }
                 }
             }
         }

@@ -335,6 +335,8 @@ class FinanceAppRobolectricTest {
         composeRule.onNodeWithTag("nav_item_metrics").performClick()
         composeRule.onNodeWithTag("metrics_header_card").assertIsDisplayed()
         composeRule.onNodeWithTag("nav_item_fire").performClick()
+        // Возвращаемся к селектору из сохранённой позиции списка.
+        list.performScrollToNode(hasTestTag("fire_subtab_selector"))
         composeRule.onNodeWithTag("fire_subtab_simulation").assertIsSelected()
         composeRule.onNodeWithTag("fire_subtab_content_simulation").assertIsDisplayed()
         composeRule.onNodeWithTag("fire_subtab_content_base").assertDoesNotExist()
@@ -444,6 +446,8 @@ class FinanceAppRobolectricTest {
         composeRule.onNodeWithTag("nav_item_scores").performClick()
         composeRule.onNodeWithTag("nav_item_metrics").performClick()
         composeRule.onNodeWithTag("nav_item_fire").performClick()
+        // Возвращаемся к селектору из сохранённой позиции списка.
+        list.performScrollToNode(hasTestTag("fire_subtab_selector"))
 
         composeRule.onNodeWithTag("fire_subtab_simulation").assertIsSelected()
         composeRule.onNodeWithTag("fire_subtab_content_simulation").assertIsDisplayed()
