@@ -137,6 +137,10 @@ object Formatters {
         return if (bd.signum() == 0) df.format(0.0) else df.format(value)
     }
 
+    /** В редакторе без группировки оба разделителя означают десятичную часть. */
+    fun parseDecimalInput(input: String): Double =
+        parseDouble(input.replace(',', '.'), AppLanguage.EN)
+
     fun parseDouble(input: String, lang: AppLanguage = AppLanguage.RU): Double {
         val trimmed = input.trim()
         if (trimmed.isEmpty() || trimmed == "-" || trimmed == "." || trimmed == "," || trimmed == "-." || trimmed == "-,") {

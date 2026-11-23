@@ -18,6 +18,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBalance
@@ -47,11 +51,19 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
@@ -61,6 +73,7 @@ import java.math.BigDecimal
 import java.math.RoundingMode
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -75,6 +88,7 @@ import com.example.ui.theme.AlertRed
 import com.example.ui.theme.StatusColors
 import com.example.ui.theme.SuccessGreen
 import com.example.ui.theme.WarningYellow
+import kotlinx.coroutines.launch
 import com.example.util.Formatters
 import com.example.util.localization.BreakdownCategory
 import com.example.util.localization.LocalAppLanguage
@@ -97,6 +111,27 @@ fun InputDataScreen(
     val lang = LocalAppLanguage.current
     val strings = LocalAppStrings.current
 
+    val focusManager = LocalFocusManager.current
+    val keyboard = LocalSoftwareKeyboardController.current
+    val listState = rememberLazyListState()
+    val scope = rememberCoroutineScope()
+    val fieldFocus = remember { List(11) { FocusRequester() } }
+    // Индексы секций в LazyColumn; следующий редактор может ещё не быть создан.
+    val fieldSections = remember { listOf(1, 1, 2, 2, 2, 3, 4, 4, 4, 5, 5) }
+    fun dismissKeyboard() {
+        focusManager.clearFocus()
+        keyboard?.hide()
+    }
+    fun nextField(index: Int) {
+        scope.launch {
+            if (fieldSections[index] != fieldSections[index + 1]) {
+                listState.scrollToItem(fieldSections[index + 1])
+                withFrameNanos { }
+            }
+            fieldFocus[index + 1].requestFocus()
+        }
+    }
+
     // Список поддерживаемых валют: базовые ($ на 1-м месте, € на 2-м, ₴ на 4-м, ֏), а новые валюты (GBP, JPY, CHF, CAD, AUD, INR) в конце без трехбуквенных описаний
     val currencies = listOf(
         CurrencyOption("$", "$", listOf("USD")),
@@ -117,7 +152,23 @@ fun InputDataScreen(
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
+            .pointerInput(focusManager, keyboard) {
+                // Наблюдаем после дочерних обработчиков, не потребляя события.
+                awaitEachGesture {
+                    val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Final)
+                    var handled = down.isConsumed
+                    do {
+                        val event = awaitPointerEvent(PointerEventPass.Final)
+                        if (event.changes.any {
+                            it.isConsumed || it.id != down.id ||
+                                (it.position - down.position).getDistance() > viewConfiguration.touchSlop
+                        }) handled = true
+                    } while (event.changes.any { it.pressed })
+                    if (!handled) dismissKeyboard()
+                }
+            }
             .padding(horizontal = 16.dp),
+        state = listState,
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         // Компактная горизонтальная панель выбора валюты
@@ -167,7 +218,10 @@ fun InputDataScreen(
                     value = inputData.monthlyIncome,
                     currency = inputData.currencySymbol,
                     onValueChange = { newVal -> onUpdate { it.copy(monthlyIncome = newVal.coerceAtLeast(0.0)) } },
-                    testTag = "input_monthly_income"
+                    testTag = "input_monthly_income",
+                    modifier = Modifier.focusRequester(fieldFocus[0]),
+                    imeAction = ImeAction.Next,
+                    onNext = { nextField(0) }
                 )
 
                 CategoryBreakdownHint(
@@ -186,7 +240,10 @@ fun InputDataScreen(
                     value = inputData.monthlyExpenses,
                     currency = inputData.currencySymbol,
                     onValueChange = { newVal -> onUpdate { it.copy(monthlyExpenses = newVal.coerceAtLeast(0.0)) } },
-                    testTag = "input_monthly_expenses"
+                    testTag = "input_monthly_expenses",
+                    modifier = Modifier.focusRequester(fieldFocus[1]),
+                    imeAction = ImeAction.Next,
+                    onNext = { nextField(1) }
                 )
 
                 CategoryBreakdownHint(
@@ -234,7 +291,10 @@ fun InputDataScreen(
                     value = inputData.liquidAssets,
                     currency = inputData.currencySymbol,
                     onValueChange = { newVal -> onUpdate { it.copy(liquidAssets = newVal.coerceAtLeast(0.0)) } },
-                    testTag = "input_liquid_assets"
+                    testTag = "input_liquid_assets",
+                    modifier = Modifier.focusRequester(fieldFocus[2]),
+                    imeAction = ImeAction.Next,
+                    onNext = { nextField(2) }
                 )
 
                 Spacer(modifier = Modifier.height(10.dp))
@@ -244,7 +304,10 @@ fun InputDataScreen(
                     value = inputData.financialAssets,
                     currency = inputData.currencySymbol,
                     onValueChange = { newVal -> onUpdate { it.copy(financialAssets = newVal.coerceAtLeast(0.0)) } },
-                    testTag = "input_financial_assets"
+                    testTag = "input_financial_assets",
+                    modifier = Modifier.focusRequester(fieldFocus[3]),
+                    imeAction = ImeAction.Next,
+                    onNext = { nextField(3) }
                 )
 
                 Spacer(modifier = Modifier.height(10.dp))
@@ -254,7 +317,10 @@ fun InputDataScreen(
                     value = inputData.propertyAssets,
                     currency = inputData.currencySymbol,
                     onValueChange = { newVal -> onUpdate { it.copy(propertyAssets = newVal.coerceAtLeast(0.0)) } },
-                    testTag = "input_property_assets"
+                    testTag = "input_property_assets",
+                    modifier = Modifier.focusRequester(fieldFocus[4]),
+                    imeAction = ImeAction.Next,
+                    onNext = { nextField(4) }
                 )
 
                 CategoryBreakdownHint(
@@ -322,7 +388,10 @@ fun InputDataScreen(
                     value = inputData.liabilities,
                     currency = inputData.currencySymbol,
                     onValueChange = { newVal -> onUpdate { it.copy(liabilities = newVal.coerceAtLeast(0.0)) } },
-                    testTag = "input_liabilities"
+                    testTag = "input_liabilities",
+                    modifier = Modifier.focusRequester(fieldFocus[5]),
+                    imeAction = ImeAction.Next,
+                    onNext = { nextField(5) }
                 )
 
                 CategoryBreakdownHint(
@@ -365,6 +434,9 @@ fun InputDataScreen(
                             currency = "%",
                             onValueChange = { newVal -> onUpdate { it.copy(nominalReturnPercent = FinancialInputLimits.clampRatePercent(newVal)) } },
                             testTag = "input_nominal_return",
+                            modifier = Modifier.focusRequester(fieldFocus[6]),
+                            imeAction = ImeAction.Next,
+                            onNext = { nextField(6) },
                             isMoney = false,
                             allowNegative = true
                         )
@@ -376,6 +448,9 @@ fun InputDataScreen(
                             currency = "%",
                             onValueChange = { newVal -> onUpdate { it.copy(inflationPercent = FinancialInputLimits.clampRatePercent(newVal)) } },
                             testTag = "input_inflation",
+                            modifier = Modifier.focusRequester(fieldFocus[7]),
+                            imeAction = ImeAction.Next,
+                            onNext = { nextField(7) },
                             isMoney = false,
                             allowNegative = true
                         )
@@ -390,6 +465,9 @@ fun InputDataScreen(
                     currency = "%",
                     onValueChange = { newVal -> onUpdate { it.copy(capitalGainsTaxPercent = FinancialInputLimits.clampTaxPercent(newVal)) } },
                     testTag = "input_capital_gains_tax",
+                    modifier = Modifier.focusRequester(fieldFocus[8]),
+                    imeAction = ImeAction.Next,
+                    onNext = { nextField(8) },
                     isMoney = false
                 )
 
@@ -437,6 +515,8 @@ fun InputDataScreen(
                     verticalAlignment = Alignment.Top
                 ) {
                     OutlinedTextField(
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                        keyboardActions = KeyboardActions(onNext = { nextField(9) }),
                         value = inputData.birthDate,
                         onValueChange = { newDate -> onUpdate { it.copy(birthDate = newDate) } },
                         label = { Text(strings.birthDateLabel) },
@@ -453,6 +533,7 @@ fun InputDataScreen(
                         modifier = Modifier
                             .weight(1.3f)
                             .testTag("input_birth_date")
+                            .focusRequester(fieldFocus[9])
                     )
 
                     var lifeExpectancyText by remember { mutableStateOf(inputData.lifeExpectancy.toString()) }
@@ -485,7 +566,8 @@ fun InputDataScreen(
                                 }
                             }
                         } else null,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
+                        keyboardActions = KeyboardActions(onDone = { dismissKeyboard() }),
                         singleLine = true,
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = MaterialTheme.colorScheme.primary,
@@ -495,6 +577,7 @@ fun InputDataScreen(
                         modifier = Modifier
                             .weight(0.9f)
                             .testTag("input_life_expectancy")
+                            .focusRequester(fieldFocus[10])
                     )
                 }
 
@@ -682,9 +765,13 @@ fun NumberInputField(
     testTag: String,
     modifier: Modifier = Modifier,
     allowNegative: Boolean = false,
-    isMoney: Boolean = true
+    isMoney: Boolean = true,
+    imeAction: ImeAction = ImeAction.Done,
+    onNext: (() -> Unit)? = null
 ) {
     val lang = LocalAppLanguage.current
+    val focusManager = LocalFocusManager.current
+    val keyboard = LocalSoftwareKeyboardController.current
     val fractionDigits = if (isMoney) Formatters.currencyFractionDigits(currency) else 2
     val roundingMode = if (isMoney) RoundingMode.HALF_UP else RoundingMode.HALF_EVEN
     val wholeMoney = isMoney && fractionDigits == 0
@@ -720,7 +807,7 @@ fun NumberInputField(
                 val prefixLength = textValue.commonPrefixWith(inputStr).length
                 val suffixLength = textValue.drop(prefixLength).commonSuffixWith(inputStr.drop(prefixLength)).length
                 val inserted = inputStr.substring(prefixLength, inputStr.length - suffixLength)
-                if (inserted == "." || inserted == localDecimal.toString()) return@OutlinedTextField
+                if (inserted == "." || inserted == ",") return@OutlinedTextField
             }
             val formattedCurrent = formattedValue()
             val effectiveInput = if (textValue == formattedCurrent && inputStr.startsWith(textValue) && value != 0.0) {
@@ -729,18 +816,18 @@ fun NumberInputField(
                 inputStr
             }
 
-            val hasLocal = effectiveInput.contains(localDecimal)
+            val decimalChar = when {
+                effectiveInput.contains(localDecimal) -> localDecimal
+                effectiveInput.contains('.') -> '.'
+                else -> ','
+            }
             val filtered = buildString {
                 var hasDecimal = false
                 effectiveInput.forEachIndexed { index, char ->
                     when {
                         char.isDigit() -> append(char)
                         char == '-' && allowNegative && index == 0 && isEmpty() -> append(char)
-                        char == localDecimal && !hasDecimal -> {
-                            append(char)
-                            hasDecimal = true
-                        }
-                        char == '.' && localDecimal != '.' && !hasLocal && !hasDecimal -> {
+                        char == decimalChar && !hasDecimal -> {
                             append(char)
                             hasDecimal = true
                         }
@@ -748,7 +835,7 @@ fun NumberInputField(
                 }
             }
             if (wholeMoney && filtered == textValue) return@OutlinedTextField
-            val parsed = Formatters.parseDouble(filtered, lang)
+            val parsed = Formatters.parseDecimalInput(filtered)
             val clamped = if (allowNegative) {
                 parsed.coerceIn(-Formatters.MAX_INPUT_VALUE, Formatters.MAX_INPUT_VALUE)
             } else {
@@ -758,7 +845,7 @@ fun NumberInputField(
             val rounded = BigDecimal.valueOf(clamped).setScale(scale, RoundingMode.HALF_UP).toDouble()
             val finalValue = if (rounded == 0.0) 0.0 else rounded
             if (wholeMoney) {
-                textValue = if (filtered.contains(localDecimal) || filtered.contains('.')) BigDecimal.valueOf(clamped).setScale(0, RoundingMode.HALF_UP).toPlainString() else filtered
+                textValue = if (filtered.contains(',') || filtered.contains('.')) BigDecimal.valueOf(clamped).setScale(0, RoundingMode.HALF_UP).toPlainString() else filtered
                 onValueChange(finalValue)
             } else {
                 textValue = filtered
@@ -777,7 +864,17 @@ fun NumberInputField(
             )
         },
         singleLine = true,
-        keyboardOptions = KeyboardOptions(keyboardType = if (allowNegative && !wholeMoney) KeyboardType.Decimal else KeyboardType.Number),
+        keyboardOptions = KeyboardOptions(
+            keyboardType = if (wholeMoney) KeyboardType.Number else KeyboardType.Decimal,
+            imeAction = imeAction
+        ),
+        keyboardActions = KeyboardActions(
+            onNext = { onNext?.invoke() },
+            onDone = {
+                focusManager.clearFocus()
+                keyboard?.hide()
+            }
+        ),
         colors = OutlinedTextFieldDefaults.colors(
             focusedBorderColor = MaterialTheme.colorScheme.primary,
             unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)

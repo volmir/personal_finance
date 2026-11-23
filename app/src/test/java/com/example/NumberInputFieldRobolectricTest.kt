@@ -319,7 +319,7 @@ class NumberInputFieldRobolectricTest {
     }
 
     @Test
-    fun `pasted grouping comma in EN is ignored and parses as 1500`() {
+    fun `comma in EN editor is a decimal separator even for pasted input`() {
         val value = mutableStateOf(0.0)
         composeRule.setContent {
             CompositionLocalProvider(LocalAppLanguage provides AppLanguage.EN) {
@@ -328,8 +328,8 @@ class NumberInputFieldRobolectricTest {
         }
 
         composeRule.onNodeWithTag("input_en_paste").performTextInput("1,500")
-        composeRule.onNodeWithTag("input_en_paste").assertEditableTextEquals("1500")
-        assertEquals(1500.0, value.value, 0.0)
+        composeRule.onNodeWithTag("input_en_paste").assertEditableTextEquals("1,500")
+        assertEquals(1.5, value.value, 0.0)
     }
 
     @Test
