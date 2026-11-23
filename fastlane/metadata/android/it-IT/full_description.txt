@@ -22,3 +22,5 @@ LINGUE E DATI
 L’interfaccia segue la lingua del dispositivo: inglese, russo, tedesco, francese, italiano o spagnolo. Sono disponibili 13 simboli di valuta, senza conversione né download dei tassi di cambio. Gli importi in yen sono inseriti e mostrati come numeri interi.
 
 L’app funziona completamente offline, senza permessi Internet né account. Dati e stato del simulatore vengono salvati localmente. I report sono condivisi solo su tua iniziativa tramite Android e l’app scelta.
+
+Le descrizioni di accessibilità spiegano il grafico del capitale di base, i valori dei cursori, gli intervalli e i passi di variazione e gli interruttori degli scenari.

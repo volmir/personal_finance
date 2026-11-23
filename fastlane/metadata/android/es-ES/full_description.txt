@@ -22,3 +22,5 @@ IDIOMAS Y DATOS
 La interfaz sigue el idioma del dispositivo: inglés, ruso, alemán, francés, italiano o español. Se ofrecen 13 símbolos de moneda, sin conversión ni descarga de tipos de cambio. Los importes en yenes se introducen y muestran como enteros.
 
 La aplicación funciona sin conexión, sin permisos de Internet ni cuenta. Los datos y el estado del simulador se guardan localmente. Los informes se comparten solo por iniciativa tuya mediante Android y la aplicación elegida.
+
+Las descripciones de accesibilidad explican el gráfico del capital base, los valores de los controles deslizantes, los rangos y pasos de ajuste y los interruptores de escenarios.

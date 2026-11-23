@@ -2,7 +2,7 @@ package com.example.ui.components
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -43,6 +43,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -448,7 +451,7 @@ private fun ScenarioToggleCard(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
-            .clickable { onToggle() }
+            .toggleable(value = item.isChecked, role = Role.Switch, onValueChange = { onToggle() })
             .testTag("scenario_card_${item.id}")
     ) {
         Row(
@@ -540,6 +543,7 @@ private fun ScenarioToggleCard(
                     uncheckedTrackColor = MaterialTheme.colorScheme.surfaceVariant
                 ),
                 modifier = Modifier.testTag("switch_${item.id}")
+                    .semantics { contentDescription = "${item.title}. ${item.parametersText}. ${item.description}" }
             )
         }
     }

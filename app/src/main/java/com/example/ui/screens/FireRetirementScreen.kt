@@ -50,6 +50,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -557,7 +560,8 @@ fun FireRetirementScreen(
                             yearsToRetire = metrics.yearsToRetirement,
                             currentAge = metrics.currentAge,
                             currencySymbol = inputData.currencySymbol,
-                            isUnreachable = isUnreachable
+                            isUnreachable = isUnreachable,
+                            fireStatus = metrics.fireStatus
                         )
                     }
                 }
@@ -681,6 +685,16 @@ fun FireRetirementScreen(
                                 steps = savingsConfig.steps,
                                 colors = SliderDefaults.colors(thumbColor = MaterialTheme.colorScheme.primary),
                                 modifier = Modifier.testTag("fire_slider_savings")
+                                    .semantics {
+                                        contentDescription = strings.fireSliderSavings
+                                        stateDescription = strings.fireSliderAccessibility(
+                                            Formatters.formatMoney(currentEffectiveSavings, inputData.currencySymbol, lang),
+                                            Formatters.formatMoney(simulationState.extraMonthlySavings, inputData.currencySymbol, lang),
+                                            Formatters.formatMoney(savingsConfig.minValue.toDouble(), inputData.currencySymbol, lang),
+                                            Formatters.formatMoney(savingsConfig.maxValue.toDouble(), inputData.currencySymbol, lang),
+                                            Formatters.formatMoney(savingsConfig.stepSize, inputData.currencySymbol, lang)
+                                        )
+                                    }
                             )
                             Row(
                                 modifier = Modifier
@@ -785,6 +799,16 @@ fun FireRetirementScreen(
                                 steps = expensesConfig.steps,
                                 colors = SliderDefaults.colors(thumbColor = MaterialTheme.colorScheme.primary),
                                 modifier = Modifier.testTag("fire_slider_expenses")
+                                    .semantics {
+                                        contentDescription = strings.fireSliderExpenses
+                                        stateDescription = strings.fireSliderAccessibility(
+                                            Formatters.formatMoney(currentEffectiveExpenses, inputData.currencySymbol, lang),
+                                            Formatters.formatMoney(simulationState.expenseReduction, inputData.currencySymbol, lang),
+                                            Formatters.formatMoney(expensesConfig.minValue.toDouble(), inputData.currencySymbol, lang),
+                                            Formatters.formatMoney(expensesConfig.maxValue.toDouble(), inputData.currencySymbol, lang),
+                                            Formatters.formatMoney(expensesConfig.stepSize, inputData.currencySymbol, lang)
+                                        ) + " " + strings.fireSliderReductionAccessibility
+                                    }
                             )
                             Row(
                                 modifier = Modifier
@@ -879,6 +903,16 @@ fun FireRetirementScreen(
                                 steps = returnConfig.steps,
                                 colors = SliderDefaults.colors(thumbColor = MaterialTheme.colorScheme.primary),
                                 modifier = Modifier.testTag("fire_slider_return")
+                                    .semantics {
+                                        contentDescription = strings.fireSliderReturn
+                                        stateDescription = strings.fireSliderAccessibility(
+                                            Formatters.formatPercent(currentEffectiveReturn, lang),
+                                            strings.firePercentagePoints(Formatters.formatRatio(simulationState.realReturnAdjustment, lang)),
+                                            strings.firePercentagePoints(Formatters.formatRatio(returnConfig.minValue.toDouble(), lang)),
+                                            strings.firePercentagePoints(Formatters.formatRatio(returnConfig.maxValue.toDouble(), lang)),
+                                            strings.firePercentagePoints(Formatters.formatRatio(returnConfig.stepSize, lang))
+                                        )
+                                    }
                             )
                             Row(
                                 modifier = Modifier

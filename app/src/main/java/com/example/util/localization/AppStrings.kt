@@ -268,6 +268,12 @@ interface AppStrings {
     val fireRealReturnLabel: String
     val fireTrajectoryTitle: String
     val fireTrajectorySubtitle: String
+    val fireChartBaseForecast: String
+    val fireChartAxes: (minAge: String, maxAge: String, maxCapital: String) -> String
+    val fireChartDataPoint: (age: String, accumulated: String, required: String) -> String
+    val fireSliderAccessibility: (value: String, adjustment: String, min: String, max: String, step: String) -> String
+    val fireSliderReductionAccessibility: String
+    val firePercentagePoints: (value: String) -> String
     val fireChartAccumulated: String
     val fireChartRequired: String
     val fireChartYearsSuffix: String

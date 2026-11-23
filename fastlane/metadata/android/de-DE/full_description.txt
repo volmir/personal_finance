@@ -22,3 +22,5 @@ SPRACHEN UND DATEN
 Die Oberfläche folgt der Gerätesprache: Englisch, Russisch, Deutsch, Französisch, Italienisch oder Spanisch. 13 Währungssymbole stehen ohne Umrechnung oder Kursabruf zur Wahl. Yen-Beträge werden ganzzahlig eingegeben und angezeigt.
 
 Die App arbeitet vollständig offline, ohne Internetberechtigung oder Konto. Eingaben und Simulatorzustand werden lokal gespeichert. Berichte werden nur auf Ihre Initiative über Android und die gewählte App geteilt.
+
+Beschreibungen für Bedienungshilfen erläutern das Basiskapitaldiagramm, die Schiebereglerwerte, Anpassungsbereiche und Schritte sowie die Szenarioschalter.

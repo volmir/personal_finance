@@ -24,10 +24,13 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.TrajectoryPoint
+import com.example.data.model.FireStatus
 import com.example.domain.model.AuditIndicatorStatus
 import com.example.ui.theme.AccentGold
 import com.example.ui.theme.StatusColors
@@ -54,7 +57,8 @@ fun FireTrajectoryChart(
     currentAge: Int,
     currencySymbol: String = "$",
     isUnreachable: Boolean = false,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    fireStatus: FireStatus = if (isUnreachable) FireStatus.UNREACHABLE else FireStatus.REACHABLE
 ) {
     if (trajectory.isEmpty()) return
 
@@ -65,10 +69,37 @@ fun FireTrajectoryChart(
     val maxAge = trajectory.last().age
     val retireAge = currentAge + yearsToRetire
 
+    val chartDescription = buildString {
+        append(strings.fireChartBaseForecast)
+        append(" ")
+        if (fireStatus == FireStatus.REACHED_NOW) {
+            append(strings.fireReachedBaseText)
+            append(". ")
+        }
+        append(strings.fireRetirementAgeLabel)
+        append(" ")
+        append(Formatters.formatFireRetirementAge(retireAge, fireStatus, lang).trimEnd('.'))
+        append(". ")
+        append(strings.fireChartAxes(
+            Formatters.formatRatio(minAge, lang),
+            Formatters.formatRatio(maxAge, lang),
+            Formatters.formatMoney(maxCapital, currencySymbol, lang)
+        ))
+        listOf(trajectory.first(), trajectory.last()).distinct().forEach { point ->
+            append(" ")
+            append(strings.fireChartDataPoint(
+                Formatters.formatRatio(point.age, lang),
+                Formatters.formatMoney(point.accumulatedCapital, currencySymbol, lang),
+                Formatters.formatMoney(point.requiredCapital, currencySymbol, lang)
+            ))
+        }
+    }
+
     Column(
         modifier = modifier
             .fillMaxWidth()
             .testTag("fire_trajectory_chart")
+            .semantics { contentDescription = chartDescription }
     ) {
         // Legend
         Row(

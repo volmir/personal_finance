@@ -22,3 +22,5 @@ LANGUAGES AND DATA
 The interface follows the device language: English, Russian, German, French, Italian or Spanish. Choose among 13 currency symbols; amounts are not converted and no exchange rates are downloaded. Yen amounts use whole units.
 
 The app works fully offline, requires no account and requests no internet permission. Inputs and simulator state are stored locally. Reports are shared only at your initiative through Android and the app you select.
+
+Accessibility descriptions cover the base capital chart, slider values, adjustment ranges and steps, and scenario switches.
