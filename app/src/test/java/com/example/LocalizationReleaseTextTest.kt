@@ -227,7 +227,7 @@ class LocalizationReleaseTextTest {
     fun yearFormsFollowDisplayedTwoDecimalValue() {
         val strings = getAppStrings(AppLanguage.RU)
         for ((number, word) in listOf(20.999 to "год", 21.004 to "год", 21.006 to "года", 21.5 to "года", 21.996 to "года", 24.999 to "лет")) {
-            val display = Formatters.formatRatio(number, AppLanguage.RU)
+            val display = Formatters.formatYears(number, AppLanguage.RU)
             assertEquals("$display $word", "$display ${strings.fireYearsSuffix(number)}")
             assertEquals("$display $word", Formatters.formatFireRetirementAge(number, FireStatus.REACHABLE, AppLanguage.RU))
         }

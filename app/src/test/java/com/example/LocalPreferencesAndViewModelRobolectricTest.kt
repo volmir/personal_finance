@@ -213,7 +213,7 @@ class LocalPreferencesAndViewModelRobolectricTest {
     @Test
     fun `disclaimer text matches user specification in both languages`() {
         val ruStrings = com.example.util.localization.getAppStrings(AppLanguage.RU)
-        assertEquals("Отказ от отвествености", ruStrings.disclaimerTitle)
+        assertEquals("Отказ от ответственности", ruStrings.disclaimerTitle)
         assertTrue(ruStrings.disclaimerText.contains("Важно: Проект является персональной разработкой и предоставляется исключительно в ознакомительных целях «как есть»"))
         assertTrue(ruStrings.disclaimerText.contains("Все расчеты, формулы, метрики и симуляции носят исключительно информационно-ознакомительный характер"))
         assertTrue(ruStrings.disclaimerText.contains("Вы используете этот инструмент на свой собственный страх и риск"))

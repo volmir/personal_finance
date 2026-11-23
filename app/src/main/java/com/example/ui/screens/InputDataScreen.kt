@@ -542,12 +542,13 @@ fun InputDataScreen(
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     verticalAlignment = Alignment.Top
                 ) {
+                    var isBirthDateFocused by remember { mutableStateOf(false) }
                     OutlinedTextField(
                         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
                         keyboardActions = KeyboardActions(onNext = { nextField(9) }),
-                        value = inputData.birthDate,
+                        value = if (isBirthDateFocused || !metrics.isAgeValid) inputData.birthDate else Formatters.formatDate(inputData.birthDate, lang),
                         onValueChange = { newDate -> onUpdate { it.copy(birthDate = newDate) } },
-                        label = { Text(strings.birthDateLabel) },
+                        label = { Text(if (isBirthDateFocused || !metrics.isAgeValid) strings.birthDateLabel else strings.fireBirthDateLabel) },
                         isError = !metrics.isAgeValid,
                         supportingText = if (!metrics.isAgeValid) {
                             { Text(strings.invalidBirthDateError, color = MaterialTheme.colorScheme.error, fontSize = 11.sp) }
@@ -562,6 +563,7 @@ fun InputDataScreen(
                             .weight(1.3f)
                             .testTag("input_birth_date")
                             .focusRequester(fieldFocus[9])
+                            .onFocusChanged { isBirthDateFocused = it.isFocused }
                     )
 
                     var lifeExpectancyText by remember { mutableStateOf(inputData.lifeExpectancy.toString()) }

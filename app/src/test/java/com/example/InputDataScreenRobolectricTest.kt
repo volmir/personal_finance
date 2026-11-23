@@ -62,6 +62,27 @@ class InputDataScreenRobolectricTest {
     }
 
     @Test
+    fun `birth date is localized outside editing and ISO input remains unchanged`() {
+        val input = mutableStateOf(FinancialInputData.usAverageData().copy(birthDate = "2000-01-02"))
+        val language = mutableStateOf(AppLanguage.RU)
+        showInput(input, language)
+        for (lang in listOf(AppLanguage.RU, AppLanguage.EN, AppLanguage.DE)) {
+            composeRule.runOnIdle { language.value = lang }
+            composeRule.onNodeWithTag("input_birth_date")
+                .assertTextEquals(getAppStrings(lang).fireBirthDateLabel, com.example.util.Formatters.formatDate("2000-01-02", lang))
+        }
+        composeRule.onNodeWithTag("input_birth_date").performClick()
+        composeRule.onNodeWithTag("input_birth_date")
+            .assertTextEquals(getAppStrings(AppLanguage.DE).birthDateLabel, "2000-01-02")
+        composeRule.onNodeWithTag("input_birth_date").performTextClearance()
+        composeRule.onNodeWithTag("input_birth_date").performTextInput("2001-02-03")
+        composeRule.runOnIdle { assertEquals("2001-02-03", input.value.birthDate) }
+        composeRule.onNodeWithTag("input_life_expectancy").performClick()
+        composeRule.onNodeWithTag("input_birth_date")
+            .assertTextEquals(getAppStrings(AppLanguage.DE).fireBirthDateLabel, com.example.util.Formatters.formatDate("2001-02-03", AppLanguage.DE))
+    }
+
+    @Test
     fun `invalid and empty life expectancy show the saved calculation value in every language`() {
         val input = mutableStateOf(FinancialInputData.usAverageData())
         val language = mutableStateOf(AppLanguage.RU)

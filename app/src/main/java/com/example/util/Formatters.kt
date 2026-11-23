@@ -9,6 +9,10 @@ import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
 import java.math.BigDecimal
 import java.math.RoundingMode
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeParseException
+import java.time.format.FormatStyle
 
 sealed interface FireHeroDisplay {
     data class Numeric(
@@ -90,6 +94,24 @@ object Formatters {
         val df = decimalFormat(lang, fractionDigits).apply { this.roundingMode = roundingMode }
         val bd = BigDecimal.valueOf(clamped).setScale(fractionDigits, roundingMode)
         return if (bd.signum() == 0) df.format(0.0) else df.format(clamped)
+    }
+
+    /** Дата хранится и редактируется в ISO, отображается на выбранном языке приложения. */
+    fun formatDate(isoDate: String, lang: AppLanguage): String = try {
+        LocalDate.parse(isoDate.trim()).format(
+            DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(lang.locale)
+        )
+    } catch (_: DateTimeParseException) {
+        com.example.util.localization.getAppStrings(lang).metricUnavailableValue
+    }
+
+    /** Сохраняет точность до сотых года, убирая только незначащие нули. */
+    fun formatYears(years: Double, lang: AppLanguage): String {
+        if (!years.isFinite()) return com.example.util.localization.getAppStrings(lang).metricUnavailableValue
+        val rounded = BigDecimal.valueOf(years).setScale(2, RoundingMode.HALF_EVEN)
+        return decimalFormat(lang, 2).apply { minimumFractionDigits = 0 }.format(
+            if (rounded.signum() == 0) BigDecimal.ZERO else rounded
+        )
     }
 
     fun formatRawNumber(
@@ -218,7 +240,7 @@ object Formatters {
     /**
      * Форматирует срок до пенсии в годах:
      * Если недостижимо -> «Недостижимо при текущих параметрах»
-     * Иначе -> число лет с форматированием ratio
+     * Иначе -> число лет без незначащих нулей
      */
     fun formatFireYearsToRetirement(
         yearsToRetirement: Double,
@@ -228,8 +250,12 @@ object Formatters {
         val strings = com.example.util.localization.getAppStrings(lang)
         return when (status) {
             FireStatus.INVALID_AGE -> strings.invalidBirthDateError
-            FireStatus.UNREACHABLE, FireStatus.HORIZON_EXHAUSTED -> strings.fireUnreachableText
-            FireStatus.REACHED_NOW, FireStatus.REACHABLE -> formatRatio(yearsToRetirement, lang)
+            FireStatus.UNREACHABLE -> strings.fireUnreachableText
+            FireStatus.HORIZON_EXHAUSTED -> strings.fireHorizonExhaustedText
+            FireStatus.REACHED_NOW -> strings.fireReachedBaseText
+            FireStatus.REACHABLE -> if (isSubHundredthPositiveYears(yearsToRetirement)) {
+                strings.fireLessThanHundredthYearText
+            } else formatYears(yearsToRetirement, lang)
         }
     }
 
@@ -306,8 +332,8 @@ object Formatters {
         return when (status) {
             FireStatus.INVALID_AGE -> strings.invalidBirthDateError
             FireStatus.UNREACHABLE -> if (compactUnreachable) strings.fireUnreachableShortText else strings.fireUnreachableText
-            FireStatus.HORIZON_EXHAUSTED -> strings.fireUnreachableText
-            FireStatus.REACHED_NOW, FireStatus.REACHABLE -> strings.fireRetirementAgeValue(formatRatio(retirementAge, lang))
+            FireStatus.HORIZON_EXHAUSTED -> strings.fireHorizonExhaustedText
+            FireStatus.REACHED_NOW, FireStatus.REACHABLE -> strings.fireRetirementAgeValue(formatYears(retirementAge, lang))
         }
     }
 
@@ -320,12 +346,7 @@ object Formatters {
     ): FireSimulationSummaryDisplay {
         val strings = com.example.util.localization.getAppStrings(lang)
         val current = if (activeChanges > 0) simulated else base
-        fun compact(value: Double): String {
-            if (!value.isFinite()) return strings.metricUnavailableValue
-            return decimalFormat(lang, 2).apply { minimumFractionDigits = 0 }.format(
-                BigDecimal.valueOf(value).setScale(2, RoundingMode.HALF_EVEN)
-            )
-        }
+        fun compact(value: Double): String = formatYears(value, lang)
         fun years(metrics: CalculatedMetrics): String = when (
             val display = formatFireHeroDisplay(metrics.yearsToRetirement, metrics.fireStatus, true, lang)
         ) {
@@ -395,25 +416,27 @@ object Formatters {
             baseStatus == FireStatus.INVALID_AGE -> strings.invalidBirthDateError
             simulatedStatus == FireStatus.HORIZON_EXHAUSTED -> strings.fireHorizonExhaustedText
             isSimUnreachable -> strings.fireUnreachableText
+            simulatedStatus == FireStatus.REACHED_NOW -> strings.fireReachedSimulationText
+            isSubHundredthPositiveYears(simulatedYearsToRetirement) -> strings.fireLessThanHundredthYearText
             isBaseUnreachable -> strings.fireSimWithoutBase(
-                formatRatio(simulatedYearsToRetirement, lang),
-                formatRatio(simulatedRetirementAge, lang)
+                formatYears(simulatedYearsToRetirement, lang),
+                formatYears(simulatedRetirementAge, lang)
             )
             else -> {
                 val yearsDiff = baseYearsToRetirement - simulatedYearsToRetirement
                 when {
                     yearsDiff > 0 -> strings.fireSimEarlier(
-                        formatRatio(yearsDiff, lang),
-                        formatRatio(simulatedYearsToRetirement, lang),
-                        formatRatio(simulatedRetirementAge, lang)
+                        formatYears(yearsDiff, lang),
+                        formatYears(simulatedYearsToRetirement, lang),
+                        formatYears(simulatedRetirementAge, lang)
                     )
                     yearsDiff < 0 -> strings.fireSimLater(
-                        formatRatio(-yearsDiff, lang),
-                        formatRatio(simulatedYearsToRetirement, lang),
-                        formatRatio(simulatedRetirementAge, lang)
+                        formatYears(-yearsDiff, lang),
+                        formatYears(simulatedYearsToRetirement, lang),
+                        formatYears(simulatedRetirementAge, lang)
                     )
                     else -> strings.fireSimSame(
-                        formatRatio(simulatedYearsToRetirement, lang)
+                        formatYears(simulatedYearsToRetirement, lang)
                     )
                 }
             }

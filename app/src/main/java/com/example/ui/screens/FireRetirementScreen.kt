@@ -472,7 +472,7 @@ fun FireRetirementScreen(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(strings.fireBirthDateLabel, style = MaterialTheme.typography.bodySmall)
-                        Text(inputData.birthDate, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold))
+                        Text(Formatters.formatDate(inputData.birthDate, lang), style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold))
                     }
 
                     Spacer(modifier = Modifier.height(6.dp))

@@ -63,6 +63,31 @@ class FireRetirementScreenRobolectricTest {
     val composeRule = createComposeRule()
 
     @Test
+    fun `FIRE birth date follows selected app language`() {
+        val input = FinancialInputData.usAverageData().copy(birthDate = "2000-01-02")
+        val metrics = FinanceCalculator.calculate(input, today = LocalDate.of(2026, 11, 6))
+        val language = mutableStateOf(AppLanguage.RU)
+        composeRule.setContent {
+            MaterialTheme {
+                CompositionLocalProvider(
+                    LocalAppLanguage provides language.value,
+                    LocalAppStrings provides getAppStrings(language.value)
+                ) {
+                    FireRetirementScreen(input, metrics, metrics, FireSimulationState(), emptyList(),
+                        onUpdateSimulation = { _, _, _ -> }, onToggleScenario = {}, onResetSimulation = {},
+                        modifier = Modifier.testTag("fire_test_list"))
+                }
+            }
+        }
+        for (lang in AppLanguage.values()) {
+            composeRule.runOnIdle { language.value = lang }
+            val dateText = Formatters.formatDate(input.birthDate, lang)
+            composeRule.onNodeWithTag("fire_test_list").performScrollToNode(hasText(dateText))
+            composeRule.onAllNodes(hasText(dateText)).assertCountEquals(1)
+        }
+    }
+
+    @Test
     fun `slider subtitles preserve scenario titles in all six languages`() {
         val input = FinancialInputData.usAverageData()
         val metrics = FinanceCalculator.calculate(input, today = LocalDate.of(2026, 11, 6))
@@ -724,7 +749,7 @@ class FireRetirementScreenRobolectricTest {
                         composeRule.onAllNodes(hasText("0,00", substring = true) and hasAnyAncestor(hasTestTag("fire_hero_card")), useUnmergedTree = true)
                             .assertCountEquals(0)
                     } else {
-                        val expected = Formatters.formatRatio(years, AppLanguage.RU)
+                        val expected = Formatters.formatYears(years, AppLanguage.RU)
                         composeRule.onAllNodes(hasText(expected) and hasAnyAncestor(hasTestTag("fire_hero_card")), useUnmergedTree = true)
                             .assertCountEquals(1)
                     }

@@ -11,6 +11,72 @@ import org.junit.Test
 class FireFormatterTest {
 
     @Test
+    fun `dates follow app language regardless of default locale and reject invalid dates`() {
+        val original = java.util.Locale.getDefault()
+        try {
+            for (systemLocale in listOf(java.util.Locale.JAPAN, java.util.Locale.US)) {
+                java.util.Locale.setDefault(systemLocale)
+                for ((lang, expected) in mapOf(AppLanguage.RU to "2 янв. 2000 г.",
+                    AppLanguage.EN to "Jan 2, 2000", AppLanguage.DE to "02.01.2000")) {
+                    // CLDR в JDK 17/21 различается пробелом перед «г.».
+                    assertEquals(expected, Formatters.formatDate("2000-01-02", lang).replace('\u202F', ' '))
+                }
+                for (lang in AppLanguage.values()) {
+                    for (invalid in listOf("", "invalid", "2000-02-30", "2000-13-01")) {
+                        assertEquals("—", Formatters.formatDate(invalid, lang))
+                    }
+                }
+            }
+        } finally {
+            java.util.Locale.setDefault(original)
+        }
+    }
+
+    @Test
+    fun `special FIRE statuses never fall back to numeric years or infinity`() {
+        for (lang in AppLanguage.values()) {
+            val strings = com.example.util.localization.getAppStrings(lang)
+            for ((status, expected) in mapOf(FireStatus.REACHED_NOW to strings.fireReachedBaseText,
+                FireStatus.UNREACHABLE to strings.fireUnreachableText,
+                FireStatus.HORIZON_EXHAUSTED to strings.fireHorizonExhaustedText,
+                FireStatus.INVALID_AGE to strings.invalidBirthDateError)) {
+                for (value in listOf(0.0, Double.POSITIVE_INFINITY, Double.NaN)) {
+                    assertEquals("$lang $status $value", expected,
+                        Formatters.formatFireYearsToRetirement(value, status, lang))
+                    if (status != FireStatus.REACHED_NOW) {
+                        assertEquals(expected, Formatters.formatFireRetirementAge(value, status, lang))
+                    }
+                    assertEquals(if (status == FireStatus.REACHED_NOW) strings.fireReachedSimulationText else expected,
+                        Formatters.formatFireSimulationSummary(24.0, 60.0, FireStatus.REACHABLE,
+                            value, value, status, lang))
+                }
+            }
+            assertEquals(strings.fireLessThanHundredthYearText,
+                Formatters.formatFireYearsToRetirement(0.004, FireStatus.REACHABLE, lang))
+            assertEquals("—", Formatters.formatYears(Double.POSITIVE_INFINITY, lang))
+            assertEquals("0", Formatters.formatYears(-0.0, lang))
+            assertEquals("0", Formatters.formatYears(-0.001, lang))
+            assertEquals(strings.fireSimWithoutBase(if (lang == AppLanguage.EN) "21.5" else "21,5", "60"),
+                Formatters.formatFireSimulationSummary(Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY,
+                    FireStatus.UNREACHABLE, 21.5, 60.0, FireStatus.REACHABLE, lang))
+        }
+    }
+
+    @Test
+    fun `FIRE years remove only insignificant fractional zeroes`() {
+        for (lang in AppLanguage.values()) {
+            for ((value, expected) in listOf(24.0 to "24", 21.5 to if (lang == AppLanguage.EN) "21.5" else "21,5",
+                21.56 to if (lang == AppLanguage.EN) "21.56" else "21,56")) {
+                assertEquals("$lang $value", expected,
+                    Formatters.formatFireYearsToRetirement(value, FireStatus.REACHABLE, lang))
+                val strings = com.example.util.localization.getAppStrings(lang)
+                assertEquals(strings.fireRetirementAgeValue(expected),
+                    Formatters.formatFireRetirementAge(value, FireStatus.REACHABLE, lang))
+            }
+        }
+    }
+
+    @Test
     fun `target capital is unavailable for invalid age unreachable and exhausted horizon`() {
         for (lang in AppLanguage.values()) {
             val unavailable = com.example.util.localization.getAppStrings(lang).metricUnavailableValue
@@ -52,10 +118,10 @@ class FireFormatterTest {
 
     @Test
     fun testFormatFireYearsAndAgeByStatus() {
-        assertEquals("15,50", Formatters.formatFireYearsToRetirement(15.5, FireStatus.REACHABLE, AppLanguage.RU))
-        assertEquals("15.50", Formatters.formatFireYearsToRetirement(15.5, FireStatus.REACHABLE, AppLanguage.EN))
+        assertEquals("15,5", Formatters.formatFireYearsToRetirement(15.5, FireStatus.REACHABLE, AppLanguage.RU))
+        assertEquals("15.5", Formatters.formatFireYearsToRetirement(15.5, FireStatus.REACHABLE, AppLanguage.EN))
         assertEquals("Недостижимо при текущих параметрах", Formatters.formatFireYearsToRetirement(45.0, FireStatus.UNREACHABLE, AppLanguage.RU))
-        assertEquals("Unachievable with current parameters", Formatters.formatFireRetirementAge(80.0, FireStatus.HORIZON_EXHAUSTED, AppLanguage.EN))
+        assertEquals(com.example.util.localization.getAppStrings(AppLanguage.EN).fireHorizonExhaustedText, Formatters.formatFireRetirementAge(80.0, FireStatus.HORIZON_EXHAUSTED, AppLanguage.EN))
         assertEquals("Укажите корректную дату рождения", Formatters.formatFireYearsToRetirement(0.0, FireStatus.INVALID_AGE, AppLanguage.RU))
         assertEquals("Please specify a valid birth date", Formatters.formatFireRetirementAge(0.0, FireStatus.INVALID_AGE, AppLanguage.EN))
 
@@ -86,12 +152,12 @@ class FireFormatterTest {
             )
             assertEquals(
                 "$lang compact REACHABLE",
-                strings.fireRetirementAgeValue(Formatters.formatRatio(62.5, lang)),
+                strings.fireRetirementAgeValue(Formatters.formatYears(62.5, lang)),
                 Formatters.formatFireRetirementAge(62.5, FireStatus.REACHABLE, lang, compactUnreachable = true)
             )
             assertEquals(
                 "$lang compact REACHED_NOW",
-                strings.fireRetirementAgeValue(Formatters.formatRatio(38.0, lang)),
+                strings.fireRetirementAgeValue(Formatters.formatYears(38.0, lang)),
                 Formatters.formatFireRetirementAge(38.0, FireStatus.REACHED_NOW, lang, compactUnreachable = true)
             )
         }
@@ -119,7 +185,7 @@ class FireFormatterTest {
             simulatedStatus = FireStatus.REACHABLE,
             lang = AppLanguage.RU
         )
-        assertEquals("Пенсия достижима через 20,00 лет (в возрасте 55,00 лет).", improved)
+        assertEquals("Пенсия достижима через 20 лет (в возрасте 55 лет).", improved)
 
         val invalid = Formatters.formatFireSimulationSummary(
             baseYearsToRetirement = 20.0,
