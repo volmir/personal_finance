@@ -35,7 +35,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -76,7 +76,10 @@ fun MetricsScreen(
 ) {
     val lang = LocalAppLanguage.current
     val strings = LocalAppStrings.current
-    var selectedCategory by remember { mutableStateOf(MetricFilterCategory.ALL) }
+    var selectedCategory by rememberSaveable { mutableStateOf(MetricFilterCategory.ALL) }
+    val filterScrollState = rememberScrollState()
+    // Состояние принадлежит показателю, даже когда фильтр исключает его из LazyColumn.
+    var expandedMetrics by rememberSaveable { mutableStateOf(setOf<String>()) }
 
     LazyColumn(
         modifier = modifier
@@ -84,7 +87,7 @@ fun MetricsScreen(
             .padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        item {
+        item(key = "header") {
             Spacer(modifier = Modifier.height(4.dp))
             // Компактный заголовок экрана
             Card(
@@ -127,7 +130,7 @@ fun MetricsScreen(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .horizontalScroll(rememberScrollState())
+                            .horizontalScroll(filterScrollState)
                             .testTag("metrics_filter_row"),
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
@@ -174,9 +177,13 @@ fun MetricsScreen(
 
         // 1. Денежный поток
         if (selectedCategory == MetricFilterCategory.ALL || selectedCategory == MetricFilterCategory.CASH_FLOW) {
-            item {
+            item(key = "cash_flow") {
                 MetricCard(
                     title = strings.metricCashFlowTitle,
+                    expanded = "cash_flow" in expandedMetrics,
+                    onExpandedChange = { expanded ->
+                        expandedMetrics = if (expanded) expandedMetrics + "cash_flow" else expandedMetrics - "cash_flow"
+                    },
                     value = Formatters.formatMoney(metrics.cashFlow, inputData.currencySymbol, lang),
                     formula = strings.metricCashFlowFormula,
                     description = strings.metricCashFlowDesc,
@@ -193,9 +200,13 @@ fun MetricsScreen(
 
         // 2. Норма сбережений
         if (selectedCategory == MetricFilterCategory.ALL || selectedCategory == MetricFilterCategory.CASH_FLOW) {
-            item {
+            item(key = "savings_rate") {
                 MetricCard(
                     title = strings.metricSavingsRateTitle,
+                    expanded = "savings_rate" in expandedMetrics,
+                    onExpandedChange = { expanded ->
+                        expandedMetrics = if (expanded) expandedMetrics + "savings_rate" else expandedMetrics - "savings_rate"
+                    },
                     value = Formatters.formatPercent(metrics.savingsRate, lang),
                     formula = strings.metricSavingsRateFormula,
                     description = strings.metricSavingsRateDesc(
@@ -214,9 +225,13 @@ fun MetricsScreen(
 
         // 3. Подушка безопасности
         if (selectedCategory == MetricFilterCategory.ALL || selectedCategory == MetricFilterCategory.CAPITAL_RISKS) {
-            item {
+            item(key = "emergency_fund") {
                 MetricCard(
                     title = strings.metricEmergencyFundTitle,
+                    expanded = "emergency_fund" in expandedMetrics,
+                    onExpandedChange = { expanded ->
+                        expandedMetrics = if (expanded) expandedMetrics + "emergency_fund" else expandedMetrics - "emergency_fund"
+                    },
                     value = Formatters.formatMoney(metrics.emergencyFund, inputData.currencySymbol, lang),
                     formula = strings.metricEmergencyFundFormula,
                     description = strings.metricEmergencyFundDesc,
@@ -229,9 +244,13 @@ fun MetricsScreen(
 
         // 4. Запас месячных расходов
         if (selectedCategory == MetricFilterCategory.ALL || selectedCategory == MetricFilterCategory.CAPITAL_RISKS) {
-            item {
+            item(key = "safety_months") {
                 MetricCard(
                     title = strings.metricSafetyMonthsTitle,
+                    expanded = "safety_months" in expandedMetrics,
+                    onExpandedChange = { expanded ->
+                        expandedMetrics = if (expanded) expandedMetrics + "safety_months" else expandedMetrics - "safety_months"
+                    },
                     value = "${Formatters.formatRatio(metrics.safetyMonths, lang)} ${strings.monthsSuffix}",
                     formula = strings.metricSafetyMonthsFormula,
                     description = strings.metricSafetyMonthsDesc(
@@ -252,9 +271,13 @@ fun MetricsScreen(
 
         // 5. Коэффициент задолженности
         if (selectedCategory == MetricFilterCategory.ALL || selectedCategory == MetricFilterCategory.CAPITAL_RISKS) {
-            item {
+            item(key = "debt_ratio") {
                 MetricCard(
                     title = strings.metricDebtRatioTitle,
+                    expanded = "debt_ratio" in expandedMetrics,
+                    onExpandedChange = { expanded ->
+                        expandedMetrics = if (expanded) expandedMetrics + "debt_ratio" else expandedMetrics - "debt_ratio"
+                    },
                     value = Formatters.formatRatio(metrics.debtRatio, lang),
                     formula = strings.metricDebtRatioFormula,
                     description = strings.metricDebtRatioDesc(
@@ -279,9 +302,13 @@ fun MetricsScreen(
 
         // 6. Чистый капитал
         if (selectedCategory == MetricFilterCategory.ALL || selectedCategory == MetricFilterCategory.CAPITAL_RISKS) {
-            item {
+            item(key = "net_worth") {
                 MetricCard(
                     title = strings.metricNetWorthTitle,
+                    expanded = "net_worth" in expandedMetrics,
+                    onExpandedChange = { expanded ->
+                        expandedMetrics = if (expanded) expandedMetrics + "net_worth" else expandedMetrics - "net_worth"
+                    },
                     value = Formatters.formatMoney(metrics.netWorth, inputData.currencySymbol, lang),
                     formula = strings.metricNetWorthFormula,
                     description = strings.metricNetWorthDesc,
@@ -305,7 +332,7 @@ fun MetricsScreen(
 
         // 7. Бенчмарк Fidelity
         if (selectedCategory == MetricFilterCategory.ALL || selectedCategory == MetricFilterCategory.BENCHMARKS) {
-            item {
+            item(key = "fidelity") {
                 val fidelityRatio = metrics.fidelityRatio
                 val fidelityPercent = metrics.fidelityPercent
                 val fidelityColor = if (metrics.isFidelityAvailable) {
@@ -317,6 +344,10 @@ fun MetricsScreen(
 
                 MetricCard(
                     title = strings.metricFidelityTitle,
+                    expanded = "fidelity" in expandedMetrics,
+                    onExpandedChange = { expanded ->
+                        expandedMetrics = if (expanded) expandedMetrics + "fidelity" else expandedMetrics - "fidelity"
+                    },
                     value = if (metrics.isFidelityAvailable) Formatters.formatMoney(metrics.fidelityTarget, inputData.currencySymbol, lang) else strings.metricUnavailableValue,
                     formula = strings.metricFidelityFormula,
                     description = strings.metricFidelityDesc,
@@ -391,9 +422,13 @@ fun MetricsScreen(
 
         // 8. Коэффициент финансовой свободы (КФС)
         if (selectedCategory == MetricFilterCategory.ALL || selectedCategory == MetricFilterCategory.BENCHMARKS) {
-            item {
+            item(key = "cfs") {
                 MetricCard(
                     title = strings.metricCfsTitle,
+                    expanded = "cfs" in expandedMetrics,
+                    onExpandedChange = { expanded ->
+                        expandedMetrics = if (expanded) expandedMetrics + "cfs" else expandedMetrics - "cfs"
+                    },
                     value = Formatters.formatRatio(metrics.financialFreedomRatio, lang),
                     formula = strings.metricCfsFormula,
                     description = strings.metricCfsDesc(
@@ -413,9 +448,13 @@ fun MetricsScreen(
 
         // 9. Реальная доходность капитала
         if (selectedCategory == MetricFilterCategory.ALL || selectedCategory == MetricFilterCategory.BENCHMARKS) {
-            item {
+            item(key = "real_return") {
                 MetricCard(
                     title = strings.metricRealReturnTitle,
+                    expanded = "real_return" in expandedMetrics,
+                    onExpandedChange = { expanded ->
+                        expandedMetrics = if (expanded) expandedMetrics + "real_return" else expandedMetrics - "real_return"
+                    },
                     value = Formatters.formatPercent(metrics.realReturnPercent, lang),
                     formula = strings.metricRealReturnFormula,
                     description = strings.metricRealReturnDesc,
@@ -430,7 +469,7 @@ fun MetricsScreen(
         }
 
         // Единая кнопка экспорта краткого финансового отчёта (перенесена с вкладки «Итоги»)
-        item {
+        item(key = "export") {
             Column {
                 ExportResultsButton(inputData = inputData, metrics = metrics)
                 Spacer(modifier = Modifier.height(14.dp))

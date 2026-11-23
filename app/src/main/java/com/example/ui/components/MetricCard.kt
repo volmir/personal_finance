@@ -28,10 +28,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -55,6 +51,8 @@ fun MetricCard(
     value: String,
     formula: String,
     description: String,
+    expanded: Boolean,
+    onExpandedChange: (Boolean) -> Unit,
     icon: ImageVector? = null,
     score: Int? = null,
     highlightColor: Color = MaterialTheme.colorScheme.primary,
@@ -62,7 +60,6 @@ fun MetricCard(
     extraContent: (@Composable () -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
-    var expanded by remember { mutableStateOf(false) }
     val strings = LocalAppStrings.current
 
     Card(
@@ -74,7 +71,7 @@ fun MetricCard(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(14.dp))
-            .clickable { expanded = !expanded }
+            .clickable { onExpandedChange(!expanded) }
             .animateContentSize()
             .testTag("metric_card_${title.replace(" ", "_")}")
     ) {

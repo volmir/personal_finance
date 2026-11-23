@@ -51,6 +51,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.runtime.setValue
@@ -114,6 +115,9 @@ fun InputDataScreen(
     val focusManager = LocalFocusManager.current
     val keyboard = LocalSoftwareKeyboardController.current
     val listState = rememberLazyListState()
+    val currencyScrollState = rememberScrollState()
+    // Подсказки сохраняются и вне видимой части LazyColumn.
+    var expandedHints by rememberSaveable { mutableStateOf(setOf<String>()) }
     val scope = rememberCoroutineScope()
     val fieldFocus = remember { List(11) { FocusRequester() } }
     // Индексы секций в LazyColumn; следующий редактор может ещё не быть создан.
@@ -172,7 +176,7 @@ fun InputDataScreen(
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         // Компактная горизонтальная панель выбора валюты
-        item {
+        item(key = "currency") {
             Spacer(modifier = Modifier.height(6.dp))
             Row(
                 modifier = Modifier
@@ -184,7 +188,7 @@ fun InputDataScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState()),
+                        .horizontalScroll(currencyScrollState),
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -207,7 +211,7 @@ fun InputDataScreen(
         }
 
         // Блок №1: Доходы и Расходы
-        item {
+        item(key = "cash_flow") {
             InputSectionCard(
                 title = strings.block1Title,
                 icon = Icons.Default.AttachMoney,
@@ -226,6 +230,10 @@ fun InputDataScreen(
 
                 CategoryBreakdownHint(
                     metricName = strings.incomeBreakdownName,
+                    isExpanded = "income" in expandedHints,
+                    onExpandedChange = { expanded ->
+                        expandedHints = if (expanded) expandedHints + "income" else expandedHints - "income"
+                    },
                     hintCollapsed = strings.incomeHintCollapsed,
                     hintExpanded = strings.incomeHintExpanded,
                     instruction = strings.breakdownInstruction,
@@ -248,6 +256,10 @@ fun InputDataScreen(
 
                 CategoryBreakdownHint(
                     metricName = strings.expensesBreakdownName,
+                    isExpanded = "expenses" in expandedHints,
+                    onExpandedChange = { expanded ->
+                        expandedHints = if (expanded) expandedHints + "expenses" else expandedHints - "expenses"
+                    },
                     hintCollapsed = strings.expensesHintCollapsed,
                     hintExpanded = strings.expensesHintExpanded,
                     instruction = strings.breakdownInstruction,
@@ -280,7 +292,7 @@ fun InputDataScreen(
         }
 
         // Блок №2: Активы (Σ)
-        item {
+        item(key = "assets") {
             InputSectionCard(
                 title = strings.block2Title,
                 icon = Icons.Default.AccountBalance,
@@ -325,6 +337,10 @@ fun InputDataScreen(
 
                 CategoryBreakdownHint(
                     metricName = strings.assetsBreakdownName,
+                    isExpanded = "assets" in expandedHints,
+                    onExpandedChange = { expanded ->
+                        expandedHints = if (expanded) expandedHints + "assets" else expandedHints - "assets"
+                    },
                     hintCollapsed = strings.assetsHintCollapsed,
                     hintExpanded = strings.assetsHintExpanded,
                     instruction = strings.breakdownInstruction,
@@ -377,7 +393,7 @@ fun InputDataScreen(
         }
 
         // Блок №3: Пассивы
-        item {
+        item(key = "liabilities") {
             InputSectionCard(
                 title = strings.block3Title,
                 icon = Icons.Default.TrendingUp,
@@ -396,6 +412,10 @@ fun InputDataScreen(
 
                 CategoryBreakdownHint(
                     metricName = strings.liabilitiesBreakdownName,
+                    isExpanded = "liabilities" in expandedHints,
+                    onExpandedChange = { expanded ->
+                        expandedHints = if (expanded) expandedHints + "liabilities" else expandedHints - "liabilities"
+                    },
                     hintCollapsed = strings.liabilitiesHintCollapsed,
                     hintExpanded = strings.liabilitiesHintExpanded,
                     instruction = strings.breakdownInstruction,
@@ -417,7 +437,7 @@ fun InputDataScreen(
         }
 
         // Блок №4: Инвестиции & Инфляция
-        item {
+        item(key = "returns") {
             InputSectionCard(
                 title = strings.block4Title,
                 icon = Icons.Default.Percent,
@@ -473,6 +493,10 @@ fun InputDataScreen(
 
                 CategoryBreakdownHint(
                     metricName = strings.investmentsBreakdownName,
+                    isExpanded = "investments" in expandedHints,
+                    onExpandedChange = { expanded ->
+                        expandedHints = if (expanded) expandedHints + "investments" else expandedHints - "investments"
+                    },
                     hintCollapsed = strings.investmentsHintCollapsed,
                     hintExpanded = strings.investmentsHintExpanded,
                     instruction = strings.breakdownInstruction,
@@ -482,6 +506,10 @@ fun InputDataScreen(
 
                 CategoryBreakdownHint(
                     metricName = strings.capitalGainsTaxBreakdownName,
+                    isExpanded = "capitalGainsTax" in expandedHints,
+                    onExpandedChange = { expanded ->
+                        expandedHints = if (expanded) expandedHints + "capitalGainsTax" else expandedHints - "capitalGainsTax"
+                    },
                     hintCollapsed = strings.capitalGainsTaxHintCollapsed,
                     hintExpanded = strings.capitalGainsTaxHintExpanded,
                     instruction = strings.breakdownInstruction,
@@ -503,7 +531,7 @@ fun InputDataScreen(
         }
 
         // Блок №5: Возраст & Горизонт FIRE
-        item {
+        item(key = "horizon") {
             InputSectionCard(
                 title = strings.block5Title,
                 icon = Icons.Default.CalendarMonth,
@@ -583,6 +611,10 @@ fun InputDataScreen(
 
                 CategoryBreakdownHint(
                     metricName = strings.fireHorizonBreakdownName,
+                    isExpanded = "fireHorizon" in expandedHints,
+                    onExpandedChange = { expanded ->
+                        expandedHints = if (expanded) expandedHints + "fireHorizon" else expandedHints - "fireHorizon"
+                    },
                     hintCollapsed = strings.fireHorizonHintCollapsed,
                     hintExpanded = strings.fireHorizonHintExpanded,
                     instruction = strings.fireHorizonInstruction,
@@ -609,7 +641,7 @@ fun InputDataScreen(
         }
 
         // Кнопка перехода к расчету показателей
-        item {
+        item(key = "navigate_metrics") {
             SecondaryActionButton(
                 text = strings.calculateButtonText,
                 onClick = onNavigateToMetrics,
@@ -906,10 +938,11 @@ fun CategoryBreakdownHint(
     hintExpanded: String,
     instruction: String,
     categories: List<BreakdownCategory>,
+    isExpanded: Boolean,
+    onExpandedChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val strings = LocalAppStrings.current
-    var isExpanded by remember { mutableStateOf(false) }
 
     Surface(
         shape = RoundedCornerShape(10.dp),
@@ -918,7 +951,7 @@ fun CategoryBreakdownHint(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(10.dp))
-            .clickable { isExpanded = !isExpanded }
+            .clickable { onExpandedChange(!isExpanded) }
     ) {
         Column(
             modifier = Modifier
