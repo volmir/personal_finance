@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.gestures.awaitEachGesture
@@ -114,7 +115,7 @@ fun InputDataScreen(
     val focusManager = LocalFocusManager.current
     val keyboard = LocalSoftwareKeyboardController.current
     val listState = rememberLazyListState()
-    val currencyScrollState = rememberScrollState()
+    val currencyScrollState = rememberSaveable(saver = ScrollState.Saver) { ScrollState(0) }
     // Подсказки сохраняются и вне видимой части LazyColumn.
     var expandedHints by rememberSaveable { mutableStateOf(setOf<String>()) }
     val scope = rememberCoroutineScope()

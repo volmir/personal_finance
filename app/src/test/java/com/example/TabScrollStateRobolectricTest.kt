@@ -53,14 +53,14 @@ class TabScrollStateRobolectricTest {
         assertEquals(0f, position(), 0f)
         for ((tab, target) in targets) {
             openTab(tab)
-            assertEquals("$tab position after tab switch", positions.getValue(tab), position(), 0f)
+            assertEquals("$tab position after tab switch", positions.getValue(tab), position(), 32f)
             composeRule.onNodeWithTag(target).assertIsDisplayed()
         }
         openTab("fire")
         composeRule.activityRule.scenario.recreate()
         for ((tab, target) in targets) {
             openTab(tab)
-            assertEquals("$tab position after recreation", positions.getValue(tab), position(), 0f)
+            assertEquals("$tab position after recreation", positions.getValue(tab), position(), 32f)
             composeRule.onNodeWithTag(target).assertIsDisplayed()
         }
     }

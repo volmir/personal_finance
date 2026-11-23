@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -75,7 +76,7 @@ fun MetricsScreen(
     val lang = LocalAppLanguage.current
     val strings = LocalAppStrings.current
     var selectedCategory by rememberSaveable { mutableStateOf(MetricFilterCategory.ALL) }
-    val filterScrollState = rememberScrollState()
+    val filterScrollState = rememberSaveable(saver = ScrollState.Saver) { ScrollState(0) }
     // Состояние принадлежит показателю, даже когда фильтр исключает его из LazyColumn.
     var expandedMetrics by rememberSaveable { mutableStateOf(setOf<String>()) }
 
