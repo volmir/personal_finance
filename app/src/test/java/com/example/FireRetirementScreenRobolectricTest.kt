@@ -105,6 +105,49 @@ class FireRetirementScreenRobolectricTest {
     }
 
     @Test
+    fun `expense increase scenario is not shown in real return slider subtitle`() {
+        val input = FinancialInputData.usAverageData()
+        val metrics = FinanceCalculator.calculate(input, today = LocalDate.of(2026, 11, 6))
+        val simulation = FireSimulationState(
+            realReturnAdjustment = 1.0,
+            scenarios = FireScenarioToggles(expensesPlus25 = true)
+        )
+        val language = AppLanguage.RU
+        val strings = getAppStrings(language)
+
+        composeRule.setContent {
+            MaterialTheme {
+                CompositionLocalProvider(
+                    LocalAppLanguage provides language,
+                    LocalAppStrings provides strings
+                ) {
+                    FireRetirementScreen(
+                        inputData = input,
+                        metrics = metrics,
+                        simulatedMetrics = metrics.copy(realReturnPercent = metrics.realReturnPercent + 1.0),
+                        simulationState = simulation,
+                        trajectory = emptyList(),
+                        onUpdateSimulation = { _, _, _ -> },
+                        onToggleScenario = {},
+                        onResetSimulation = {},
+                        modifier = Modifier.testTag("fire_test_list")
+                    )
+                }
+            }
+        }
+
+        composeRule.onNodeWithTag("fire_subtab_simulation").performClick()
+        composeRule.onNodeWithTag("fire_test_list").performScrollToNode(hasTestTag("fire_simulator_card"))
+
+        val expectedSubtitle = "+${Formatters.formatRatio(1.0, language)}% ${strings.fireSliderBaseReturnSuffix}"
+        composeRule.onAllNodes(hasText(expectedSubtitle), useUnmergedTree = true).assertCountEquals(1)
+        composeRule.onAllNodes(
+            hasText("${expectedSubtitle} • ${strings.scenarioInflationTitle.lowercase()}"),
+            useUnmergedTree = true
+        ).assertCountEquals(0)
+    }
+
+    @Test
     fun `subtab selector switches selection and keeps simulation state intact`() {
         val input = FinancialInputData.usAverageData()
         val metrics = FinanceCalculator.calculate(input, today = LocalDate.of(2026, 11, 6))

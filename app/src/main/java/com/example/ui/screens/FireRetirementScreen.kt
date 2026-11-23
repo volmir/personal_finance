@@ -840,10 +840,6 @@ fun FireRetirementScreen(
                                                 append(if (isGain) "+" else "")
                                                 append(Formatters.formatRatio(returnDiff, lang))
                                                 append("% ${strings.fireSliderBaseReturnSuffix}")
-                                                if (simulationState.scenarios.expensesPlus25) {
-                                                    append(" • ")
-                                                    append(strings.scenarioInflationTitle.lowercase())
-                                                }
                                             },
                                             style = MaterialTheme.typography.labelSmall.copy(
                                                 color = StatusColors.getReadableTextColor(if (isGain) SuccessGreen else AlertRed),
