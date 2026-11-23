@@ -1,5 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.PersonalFinance" parent="android:Theme.DeviceDefault.NoActionBar" />
+    <color name="window_background">#F6F9F7</color>
+    <bool name="light_system_bars">true</bool>
+
+    <style name="PlatformTheme.PersonalFinance" parent="android:Theme.DeviceDefault.Light.NoActionBar" />
+
+    <style name="BaseTheme.PersonalFinance" parent="PlatformTheme.PersonalFinance">
+        <!-- A plain color also supplies the standard Android 12+ launch background. -->
+        <item name="android:windowBackground">@color/window_background</item>
+        <item name="android:colorBackground">@color/window_background</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">@bool/light_system_bars</item>
+    </style>
+
+    <style name="Theme.PersonalFinance" parent="BaseTheme.PersonalFinance" />
 </resources>
