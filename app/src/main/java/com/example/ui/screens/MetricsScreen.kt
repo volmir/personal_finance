@@ -137,7 +137,7 @@ fun MetricsScreen(
                         FilterChip(
                             selected = selectedCategory == MetricFilterCategory.ALL,
                             onClick = { selectedCategory = MetricFilterCategory.ALL },
-                            label = { Text(strings.categoryAll, fontSize = 11.sp) },
+                            label = { Text(strings.categoryAll, fontSize = MaterialTheme.typography.labelSmall.fontSize) },
                             colors = FilterChipDefaults.filterChipColors(
                                 selectedContainerColor = MaterialTheme.colorScheme.primary,
                                 selectedLabelColor = MaterialTheme.colorScheme.onPrimary
@@ -146,7 +146,7 @@ fun MetricsScreen(
                         FilterChip(
                             selected = selectedCategory == MetricFilterCategory.CASH_FLOW,
                             onClick = { selectedCategory = MetricFilterCategory.CASH_FLOW },
-                            label = { Text(strings.categoryCashFlow, fontSize = 11.sp) },
+                            label = { Text(strings.categoryCashFlow, fontSize = MaterialTheme.typography.labelSmall.fontSize) },
                             colors = FilterChipDefaults.filterChipColors(
                                 selectedContainerColor = MaterialTheme.colorScheme.primary,
                                 selectedLabelColor = MaterialTheme.colorScheme.onPrimary
@@ -155,7 +155,7 @@ fun MetricsScreen(
                         FilterChip(
                             selected = selectedCategory == MetricFilterCategory.CAPITAL_RISKS,
                             onClick = { selectedCategory = MetricFilterCategory.CAPITAL_RISKS },
-                            label = { Text(strings.categoryCapitalRisks, fontSize = 11.sp) },
+                            label = { Text(strings.categoryCapitalRisks, fontSize = MaterialTheme.typography.labelSmall.fontSize) },
                             colors = FilterChipDefaults.filterChipColors(
                                 selectedContainerColor = MaterialTheme.colorScheme.primary,
                                 selectedLabelColor = MaterialTheme.colorScheme.onPrimary
@@ -164,7 +164,7 @@ fun MetricsScreen(
                         FilterChip(
                             selected = selectedCategory == MetricFilterCategory.BENCHMARKS,
                             onClick = { selectedCategory = MetricFilterCategory.BENCHMARKS },
-                            label = { Text(strings.categoryBenchmarks, fontSize = 11.sp) },
+                            label = { Text(strings.categoryBenchmarks, fontSize = MaterialTheme.typography.labelSmall.fontSize) },
                             colors = FilterChipDefaults.filterChipColors(
                                 selectedContainerColor = MaterialTheme.colorScheme.primary,
                                 selectedLabelColor = MaterialTheme.colorScheme.onPrimary
@@ -367,7 +367,7 @@ fun MetricsScreen(
                                     text = strings.metricFidelityProgress,
                                     style = MaterialTheme.typography.labelSmall.copy(
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        fontSize = 11.sp
+                                        fontSize = MaterialTheme.typography.labelSmall.fontSize
                                     )
                                 )
                                 Text(
@@ -409,7 +409,7 @@ fun MetricsScreen(
                                 ),
                                 style = MaterialTheme.typography.bodySmall.copy(
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    fontSize = 11.5.sp
+                                    fontSize = MaterialTheme.typography.labelSmall.fontSize
                                 ),
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis

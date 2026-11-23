@@ -48,7 +48,6 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.example.data.model.FinancialInputData
 import com.example.ui.FireScenarioToggles
 import com.example.ui.theme.AccentGold
@@ -289,7 +288,7 @@ fun ScenarioTogglesPanel(
                     text = strings.scenarioHeaderSubtitle,
                     style = MaterialTheme.typography.bodySmall.copy(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontSize = 11.sp
+                        fontSize = MaterialTheme.typography.labelSmall.fontSize
                     )
                 )
             }
@@ -305,7 +304,7 @@ fun ScenarioTogglesPanel(
                         style = MaterialTheme.typography.labelSmall.copy(
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary,
-                            fontSize = 11.sp
+                            fontSize = MaterialTheme.typography.labelSmall.fontSize
                         ),
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                     )
@@ -340,7 +339,7 @@ fun ScenarioTogglesPanel(
                         style = MaterialTheme.typography.labelSmall.copy(
                             fontWeight = FontWeight.Bold,
                             color = StatusColors.getReadableTextColor(SuccessGreen),
-                            fontSize = 10.sp
+                            fontSize = MaterialTheme.typography.labelSmall.fontSize
                         ),
                         modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp)
                     )
@@ -352,7 +351,7 @@ fun ScenarioTogglesPanel(
             text = strings.scenarioPositiveSubtitle,
             style = MaterialTheme.typography.bodySmall.copy(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                fontSize = 11.sp
+                fontSize = MaterialTheme.typography.labelSmall.fontSize
             ),
             modifier = Modifier.padding(top = 2.dp, bottom = 8.dp)
         )
@@ -394,7 +393,7 @@ fun ScenarioTogglesPanel(
                         style = MaterialTheme.typography.labelSmall.copy(
                             fontWeight = FontWeight.Bold,
                             color = StatusColors.getReadableTextColor(AlertRed),
-                            fontSize = 10.sp
+                            fontSize = MaterialTheme.typography.labelSmall.fontSize
                         ),
                         modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp)
                     )
@@ -406,7 +405,7 @@ fun ScenarioTogglesPanel(
             text = strings.scenarioNegativeSubtitle,
             style = MaterialTheme.typography.bodySmall.copy(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                fontSize = 11.sp
+                fontSize = MaterialTheme.typography.labelSmall.fontSize
             ),
             modifier = Modifier.padding(top = 2.dp, bottom = 8.dp)
         )
@@ -515,7 +514,7 @@ private fun ScenarioToggleCard(
                         style = MaterialTheme.typography.labelSmall.copy(
                             fontWeight = FontWeight.Medium,
                             color = badgeTextColor,
-                            fontSize = 10.sp
+                            fontSize = MaterialTheme.typography.labelSmall.fontSize
                         ),
                         modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                     )
@@ -525,8 +524,8 @@ private fun ScenarioToggleCard(
                     text = item.description,
                     style = MaterialTheme.typography.bodySmall.copy(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontSize = 10.sp,
-                        lineHeight = 13.sp
+                        fontSize = MaterialTheme.typography.labelSmall.fontSize,
+                        lineHeight = MaterialTheme.typography.labelSmall.lineHeight
                     )
                 )
             }

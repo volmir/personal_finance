@@ -657,7 +657,7 @@ fun FireRetirementScreen(
                                                 },
                                                 style = MaterialTheme.typography.labelSmall.copy(
                                                     color = StatusColors.getReadableTextColor(if (isSavingsPositive) SuccessGreen else AlertRed),
-                                                    fontSize = 10.sp
+                                                    fontSize = MaterialTheme.typography.labelSmall.fontSize
                                                 )
                                             )
                                         }
@@ -707,14 +707,14 @@ fun FireRetirementScreen(
                                     text = strings.fireSliderFrom(Formatters.formatMoney(savingsConfig.minValue.toDouble(), inputData.currencySymbol, lang)),
                                     style = MaterialTheme.typography.labelSmall.copy(
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        fontSize = 10.sp
+                                        fontSize = MaterialTheme.typography.labelSmall.fontSize
                                     )
                                 )
                                 Text(
                                     text = strings.fireSliderStep(Formatters.formatMoney(savingsConfig.stepSize, inputData.currencySymbol, lang)),
                                     style = MaterialTheme.typography.labelSmall.copy(
                                         color = MaterialTheme.colorScheme.primary,
-                                        fontSize = 10.sp,
+                                        fontSize = MaterialTheme.typography.labelSmall.fontSize,
                                         fontWeight = FontWeight.Medium
                                     )
                                 )
@@ -722,7 +722,7 @@ fun FireRetirementScreen(
                                     text = strings.fireSliderTo(Formatters.formatMoney(savingsConfig.maxValue.toDouble(), inputData.currencySymbol, lang)),
                                     style = MaterialTheme.typography.labelSmall.copy(
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        fontSize = 10.sp
+                                        fontSize = MaterialTheme.typography.labelSmall.fontSize
                                     )
                                 )
                             }
@@ -769,7 +769,7 @@ fun FireRetirementScreen(
                                                 },
                                                 style = MaterialTheme.typography.labelSmall.copy(
                                                     color = StatusColors.getReadableTextColor(if (isReduced) SuccessGreen else AlertRed),
-                                                    fontSize = 10.sp
+                                                    fontSize = MaterialTheme.typography.labelSmall.fontSize
                                                 )
                                             )
                                         }
@@ -821,14 +821,14 @@ fun FireRetirementScreen(
                                     text = "${Formatters.formatMoney(expensesConfig.minValue.toDouble(), inputData.currencySymbol, lang)} (${strings.fireSliderInc.trim(' ', '(', ')')})",
                                     style = MaterialTheme.typography.labelSmall.copy(
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        fontSize = 10.sp
+                                        fontSize = MaterialTheme.typography.labelSmall.fontSize
                                     )
                                 )
                                 Text(
                                     text = strings.fireSliderStep(Formatters.formatMoney(expensesConfig.stepSize, inputData.currencySymbol, lang)),
                                     style = MaterialTheme.typography.labelSmall.copy(
                                         color = MaterialTheme.colorScheme.primary,
-                                        fontSize = 10.sp,
+                                        fontSize = MaterialTheme.typography.labelSmall.fontSize,
                                         fontWeight = FontWeight.Medium
                                     )
                                 )
@@ -836,7 +836,7 @@ fun FireRetirementScreen(
                                     text = "+${Formatters.formatMoney(expensesConfig.maxValue.toDouble(), inputData.currencySymbol, lang)} (${strings.fireSliderDec.trim(' ', '(', ')')})",
                                     style = MaterialTheme.typography.labelSmall.copy(
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        fontSize = 10.sp
+                                        fontSize = MaterialTheme.typography.labelSmall.fontSize
                                     )
                                 )
                             }
@@ -867,7 +867,7 @@ fun FireRetirementScreen(
                                             },
                                             style = MaterialTheme.typography.labelSmall.copy(
                                                 color = StatusColors.getReadableTextColor(if (isGain) SuccessGreen else AlertRed),
-                                                fontSize = 10.sp
+                                                fontSize = MaterialTheme.typography.labelSmall.fontSize
                                             )
                                         )
                                     }
@@ -925,14 +925,14 @@ fun FireRetirementScreen(
                                     text = strings.fireSliderFrom("${Formatters.formatRatio(returnConfig.minValue.toDouble(), lang)}%"),
                                     style = MaterialTheme.typography.labelSmall.copy(
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        fontSize = 10.sp
+                                        fontSize = MaterialTheme.typography.labelSmall.fontSize
                                     )
                                 )
                                 Text(
                                     text = strings.fireSliderStep("${Formatters.formatRatio(returnConfig.stepSize, lang)}%"),
                                     style = MaterialTheme.typography.labelSmall.copy(
                                         color = MaterialTheme.colorScheme.primary,
-                                        fontSize = 10.sp,
+                                        fontSize = MaterialTheme.typography.labelSmall.fontSize,
                                         fontWeight = FontWeight.Medium
                                     )
                                 )
@@ -940,7 +940,7 @@ fun FireRetirementScreen(
                                     text = strings.fireSliderTo("${Formatters.formatRatio(returnConfig.maxValue.toDouble(), lang)}%"),
                                     style = MaterialTheme.typography.labelSmall.copy(
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        fontSize = 10.sp
+                                        fontSize = MaterialTheme.typography.labelSmall.fontSize
                                     )
                                 )
                             }

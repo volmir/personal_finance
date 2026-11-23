@@ -120,7 +120,7 @@ fun MetricCard(
                                 text = subValue,
                                 style = MaterialTheme.typography.bodySmall.copy(
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    fontSize = 11.sp
+                                    fontSize = MaterialTheme.typography.labelSmall.fontSize
                                 )
                             )
                         }
@@ -144,7 +144,7 @@ fun MetricCard(
                             style = MaterialTheme.typography.labelSmall.copy(
                                 fontWeight = FontWeight.Bold,
                                 color = scoreText,
-                                fontSize = 11.sp
+                                fontSize = MaterialTheme.typography.labelSmall.fontSize
                             ),
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
                         )
@@ -187,7 +187,7 @@ fun MetricCard(
                         text = "${strings.metricCardFormulaPrefix} $formula",
                         style = MaterialTheme.typography.labelSmall.copy(
                             fontFamily = FontFamily.Monospace,
-                            fontSize = 10.sp,
+                            fontSize = MaterialTheme.typography.labelSmall.fontSize,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         ),
                         maxLines = if (expanded) Int.MAX_VALUE else 1,
@@ -208,7 +208,7 @@ fun MetricCard(
                         text = if (expanded) strings.metricCardHide else strings.metricCardInfo,
                         style = MaterialTheme.typography.labelSmall.copy(
                             color = MaterialTheme.colorScheme.primary,
-                            fontSize = 11.sp
+                            fontSize = MaterialTheme.typography.labelSmall.fontSize
                         )
                     )
                     Icon(

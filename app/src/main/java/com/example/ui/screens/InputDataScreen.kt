@@ -551,7 +551,7 @@ fun InputDataScreen(
                         label = { Text(if (isBirthDateFocused || !metrics.isAgeValid) strings.birthDateLabel else strings.fireBirthDateLabel) },
                         isError = !metrics.isAgeValid,
                         supportingText = if (!metrics.isAgeValid) {
-                            { Text(strings.invalidBirthDateError, color = MaterialTheme.colorScheme.error, fontSize = 11.sp) }
+                            { Text(strings.invalidBirthDateError, color = MaterialTheme.colorScheme.error, fontSize = MaterialTheme.typography.labelSmall.fontSize) }
                         } else null,
                         singleLine = true,
                         colors = OutlinedTextFieldDefaults.colors(
@@ -591,8 +591,8 @@ fun InputDataScreen(
                         supportingText = if (lifeExpectancyInvalid) {
                             {
                                 Column {
-                                    Text(strings.lifeExpectancyError, color = MaterialTheme.colorScheme.error, fontSize = 11.sp)
-                                    Text(strings.lifeExpectancyUsedValueFormat(inputData.lifeExpectancy), fontSize = 11.sp)
+                                    Text(strings.lifeExpectancyError, color = MaterialTheme.colorScheme.error, fontSize = MaterialTheme.typography.labelSmall.fontSize)
+                                    Text(strings.lifeExpectancyUsedValueFormat(inputData.lifeExpectancy), fontSize = MaterialTheme.typography.labelSmall.fontSize)
                                 }
                             }
                         } else null,
@@ -695,7 +695,7 @@ fun MetricIndicatorRow(
                     style = MaterialTheme.typography.labelSmall.copy(
                         color = MaterialTheme.colorScheme.primary,
                         fontFamily = FontFamily.Monospace,
-                        fontSize = 11.sp
+                        fontSize = MaterialTheme.typography.labelSmall.fontSize
                     )
                 )
             }
@@ -714,7 +714,7 @@ fun MetricIndicatorRow(
                         text = subValue,
                         style = MaterialTheme.typography.labelSmall.copy(
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontSize = 11.sp
+                            fontSize = MaterialTheme.typography.labelSmall.fontSize
                         ),
                         textAlign = TextAlign.End
                     )
@@ -1036,7 +1036,7 @@ fun CategoryBreakdownHint(
                             style = MaterialTheme.typography.labelSmall.copy(
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurface,
-                                fontSize = 11.sp
+                                fontSize = MaterialTheme.typography.labelSmall.fontSize
                             )
                         )
                         cat.items.forEach { itemText ->
@@ -1044,8 +1044,8 @@ fun CategoryBreakdownHint(
                                 text = strings.breakdownCategoryItemFormat(itemText),
                                 style = MaterialTheme.typography.bodySmall.copy(
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    fontSize = 11.sp,
-                                    lineHeight = 14.sp
+                                    fontSize = MaterialTheme.typography.labelSmall.fontSize,
+                                    lineHeight = MaterialTheme.typography.labelSmall.lineHeight
                                 ),
                                 modifier = Modifier.padding(vertical = 1.dp)
                             )

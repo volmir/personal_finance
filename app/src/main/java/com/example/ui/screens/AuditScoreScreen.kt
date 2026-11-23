@@ -363,7 +363,7 @@ fun AuditScoreScreen(
                                     style = MaterialTheme.typography.labelSmall.copy(
                                         fontWeight = FontWeight.Bold,
                                         color = positiveTextColor,
-                                        fontSize = 11.sp
+                                        fontSize = MaterialTheme.typography.labelSmall.fontSize
                                     ),
                                     maxLines = 1
                                 )
@@ -385,7 +385,7 @@ fun AuditScoreScreen(
                                     style = MaterialTheme.typography.labelSmall.copy(
                                         fontWeight = FontWeight.Bold,
                                         color = neutralTextColor,
-                                        fontSize = 11.sp
+                                        fontSize = MaterialTheme.typography.labelSmall.fontSize
                                     ),
                                     maxLines = 1
                                 )
@@ -407,7 +407,7 @@ fun AuditScoreScreen(
                                     style = MaterialTheme.typography.labelSmall.copy(
                                         fontWeight = FontWeight.Bold,
                                         color = negativeTextColor,
-                                        fontSize = 11.sp
+                                        fontSize = MaterialTheme.typography.labelSmall.fontSize
                                     ),
                                     maxLines = 1
                                 )

@@ -59,7 +59,6 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
@@ -201,7 +200,7 @@ fun FinanceApp(viewModel: MainViewModel) {
                             label = {
                                 Text(
                                     text = tab.localizedShortTitle(strings),
-                                    fontSize = 11.sp,
+                                    fontSize = MaterialTheme.typography.labelSmall.fontSize,
                                     fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
                                 )
                             },
