@@ -131,6 +131,31 @@ class ScenarioSimulationTest {
     }
 
     @Test
+    fun `active market scenario with no financial assets keeps zero displayed FIRE effect`() {
+        val viewModel = createViewModel(baseInput.copy(financialAssets = 0.0))
+        val originalInput = viewModel.inputData.value
+        val originalMetrics = viewModel.metrics.value
+        val before = viewModel.simulatedMetrics.value
+        assertEquals(FireStatus.REACHABLE, before.fireStatus)
+
+        viewModel.toggleScenario("pos_market_growth")
+
+        val state = viewModel.fireSimulation.value
+        val after = viewModel.simulatedMetrics.value
+        assertEquals(1, state.activeChangesCount)
+        assertEquals(before.fireStatus, after.fireStatus)
+        assertEquals(before.yearsToRetirement, after.yearsToRetirement, 0.0)
+        assertEquals(before.retirementAge, after.retirementAge, 0.0)
+        for (language in AppLanguage.values()) {
+            val display = Formatters.formatFireSimulationComparison(originalMetrics, after, state.activeChangesCount, language)
+            assertEquals("0 ${com.example.util.localization.getAppStrings(language).fireYearsSuffix(0.0)}", display.delta)
+            assertEquals(com.example.domain.model.AuditIndicatorStatus.NEUTRAL, display.status)
+        }
+        assertEquals(originalInput, viewModel.inputData.value)
+        assertEquals(originalMetrics, viewModel.metrics.value)
+    }
+
+    @Test
     fun `shared scenario amounts use the correct income and property sale bounds`() {
         for (raise in listOf(false, true)) {
             for ((property, expectedSale) in listOf(0.0 to 0.0, 1_000.0 to 1_000.0, 120_000.0 to 120_000.0, 120_001.0 to 120_000.0)) {

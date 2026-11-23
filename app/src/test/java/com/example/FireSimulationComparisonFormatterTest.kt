@@ -23,6 +23,7 @@ class FireSimulationComparisonFormatterTest {
         val cases = listOf(
             Triple(21.5, "↓ −2,5 года", AuditIndicatorStatus.POSITIVE),
             Triple(26.5, "↑ +2,5 года", AuditIndicatorStatus.NEGATIVE),
+            Triple(27.0, "↑ +3 года", AuditIndicatorStatus.NEGATIVE),
             Triple(24.0, "0 лет", AuditIndicatorStatus.NEUTRAL),
             Triple(23.996, "0 лет", AuditIndicatorStatus.NEUTRAL),
             Triple(24.004, "0 лет", AuditIndicatorStatus.NEUTRAL),

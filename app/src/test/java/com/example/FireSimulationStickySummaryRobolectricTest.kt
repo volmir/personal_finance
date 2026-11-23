@@ -28,6 +28,7 @@ import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.performScrollToIndex
 import androidx.compose.ui.test.performScrollToNode
+import androidx.compose.ui.test.isDisplayed
 import androidx.compose.ui.test.click
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeUp
@@ -50,6 +51,7 @@ import com.example.ui.theme.MyApplicationTheme
 import com.example.ui.theme.StatusColors
 import com.example.domain.model.AuditIndicatorStatus
 import com.example.ui.screens.FireRetirementScreen
+import com.example.util.Formatters
 import com.example.util.localization.AppLanguage
 import com.example.util.localization.LocalAppLanguage
 import com.example.util.localization.LocalAppStrings
@@ -156,7 +158,17 @@ class FireSimulationStickySummaryRobolectricTest {
     }
 
     @Test
-    fun `three rows align and wrap at 320dp in both themes all languages and large fonts`() {
+    fun `comparison matrix at 320dp`() = assertComparisonMatrix()
+
+    @Test
+    @Config(qualifiers = "w360dp-h640dp-xxhdpi")
+    fun `comparison matrix at 360dp`() = assertComparisonMatrix()
+
+    @Test
+    @Config(qualifiers = "w411dp-h640dp-xxhdpi")
+    fun `comparison matrix at 411dp`() = assertComparisonMatrix()
+
+    private fun assertComparisonMatrix() {
         val input = FinancialInputData.usAverageData()
         val base = FinanceCalculator.calculate(input, today = LocalDate.of(2026, 11, 6)).copy(
             fireStatus = FireStatus.REACHABLE, yearsToRetirement = 24.0, retirementAge = 62.0
@@ -173,16 +185,18 @@ class FireSimulationStickySummaryRobolectricTest {
                     LocalAppStrings provides getAppStrings(language.value),
                     LocalDensity provides Density(density.density, scale.value)
                 ) {
-                    FireRetirementScreen(input, base, simulated.value, FireSimulationState(extraMonthlySavings = 100.0),
+                    FireRetirementScreen(input, base, simulated.value, FireSimulationState(scenarios = FireScenarioToggles(salaryIncrease20 = true)),
                         emptyList(), onUpdateSimulation = { _, _, _ -> }, onToggleScenario = {}, onResetSimulation = {},
                         modifier = Modifier.testTag("fire_test_list"))
                 }
             }
         }
         composeRule.onNodeWithTag("fire_subtab_simulation").performClick()
-        for (isDark in listOf(false, true)) for (font in listOf(1f, 1.6f)) for (lang in AppLanguage.values()) {
-            for ((status, years) in listOf(FireStatus.REACHABLE to 21.5, FireStatus.REACHABLE to 26.5,
-                FireStatus.UNREACHABLE to 21.5, FireStatus.INVALID_AGE to 21.5)) {
+        for (isDark in listOf(false, true)) for (font in listOf(1f, 1.3f, 1.6f)) for (lang in AppLanguage.values()) {
+            for ((status, years) in listOf(FireStatus.REACHABLE to 21.5, FireStatus.REACHABLE to 27.0,
+                FireStatus.REACHABLE to 24.0, FireStatus.REACHED_NOW to 0.0,
+                FireStatus.UNREACHABLE to 21.5, FireStatus.HORIZON_EXHAUSTED to 21.5,
+                FireStatus.INVALID_AGE to 21.5)) {
                 composeRule.runOnIdle {
                     dark.value = isDark
                     scale.value = font
@@ -210,22 +224,40 @@ class FireSimulationStickySummaryRobolectricTest {
                 composeRule.onNodeWithTag("fire_sim_reset_button").assertIsDisplayed()
                 val expected = when {
                     status != FireStatus.REACHABLE -> AuditIndicatorStatus.NEUTRAL
+                    years == 24.0 -> AuditIndicatorStatus.NEUTRAL
                     years < 24.0 -> AuditIndicatorStatus.POSITIVE
                     else -> AuditIndicatorStatus.NEGATIVE
                 }
                 assertEquals(StatusColors.getTextColor(expected, isDark), assertFits("fire_sim_delta_value").layoutInput.style.color)
+                composeRule.onNodeWithTag("fire_sim_changes_count").assertTextEquals(getAppStrings(lang).fireSimChangesCount(1))
+                composeRule.onNodeWithTag("fire_sim_reset_button").assertIsEnabled()
+                val display = Formatters.formatFireSimulationComparison(base, simulated.value, 1, lang)
+                composeRule.onNodeWithTag("fire_sim_years_value", true).assertTextEquals(display.years)
+                composeRule.onNodeWithTag("fire_sim_age_value", true).assertTextEquals(display.age)
+                composeRule.onNodeWithTag("fire_sim_delta_value", true).assertTextEquals(display.delta)
             }
         }
     }
 
     @Test
-    fun `only the opaque summary pins below the top bar while content scrolls down and back`() {
+    fun `opaque sticky panel at 320dp`() = assertStickyPanel()
+
+    @Test
+    @Config(qualifiers = "w360dp-h640dp-xxhdpi")
+    fun `opaque sticky panel at 360dp`() = assertStickyPanel()
+
+    @Test
+    @Config(qualifiers = "w411dp-h640dp-xxhdpi")
+    fun `opaque sticky panel at 411dp`() = assertStickyPanel()
+
+    private fun assertStickyPanel() {
         val input = FinancialInputData.usAverageData()
         val base = FinanceCalculator.calculate(input, today = LocalDate.of(2026, 11, 6)).copy(
             fireStatus = FireStatus.REACHABLE, yearsToRetirement = 24.0, retirementAge = 62.0
         )
         val dark = mutableStateOf(false)
         val scale = mutableStateOf(1f)
+        val language = mutableStateOf(AppLanguage.RU)
         var background = Color.Transparent
         var resetCalls = 0
         var leverCalls = 0
@@ -234,8 +266,8 @@ class FireSimulationStickySummaryRobolectricTest {
             MyApplicationTheme(darkTheme = dark.value, dynamicColor = false) {
                 background = MaterialTheme.colorScheme.background
                 CompositionLocalProvider(
-                    LocalAppLanguage provides AppLanguage.RU,
-                    LocalAppStrings provides getAppStrings(AppLanguage.RU),
+                    LocalAppLanguage provides language.value,
+                    LocalAppStrings provides getAppStrings(language.value),
                     LocalDensity provides Density(density.density, scale.value)
                 ) {
                     // Ненулевые system insets и Scaffold padding, как в FinanceApp.
@@ -257,8 +289,9 @@ class FireSimulationStickySummaryRobolectricTest {
         }
         composeRule.onNodeWithTag("fire_subtab_simulation").performClick()
         val list = composeRule.onNodeWithTag("fire_test_list")
-        for (isDark in listOf(false, true)) for (font in listOf(1f, 1.6f)) {
+        for (isDark in listOf(false, true)) for (font in listOf(1f, 1.3f, 1.6f)) for (lang in AppLanguage.values()) {
             composeRule.runOnIdle {
+                language.value = lang
                 dark.value = isDark
                 scale.value = font
             }
@@ -284,6 +317,18 @@ class FireSimulationStickySummaryRobolectricTest {
             list.performTouchInput { swipeUp() }
             composeRule.waitForIdle()
             assertTrue("content must not bleed through the header", before.sameAs(capturePanel()))
+            list.performScrollToNode(hasTestTag("switch_child_dependent"))
+            // Все сценарии находятся внутри одного lazy item: поиск узла лишь
+            // компонует этот item, до последнего переключателя прокручиваем жестами.
+            repeat(30) {
+                if (!composeRule.onNodeWithTag("switch_child_dependent").isDisplayed()) {
+                    list.performTouchInput { swipeUp() }
+                }
+            }
+            composeRule.onNodeWithTag("switch_child_dependent").assertIsDisplayed()
+            composeRule.onNodeWithTag("fire_subtab_selector").assertIsNotDisplayed()
+            assertEquals(pinned, composeRule.onNodeWithTag("fire_sim_sticky_summary").fetchSemanticsNode().boundsInRoot)
+            assertTrue("last scenarios must not bleed through the header", before.sameAs(capturePanel()))
             val beforeReset = resetCalls
             composeRule.onNodeWithTag("fire_sim_reset_button").performTouchInput { click() }
             composeRule.runOnIdle {

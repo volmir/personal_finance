@@ -651,6 +651,8 @@ class FireRetirementScreenRobolectricTest {
             FireStatus.REACHED_NOW to FireStatus.REACHED_NOW,
             FireStatus.REACHED_NOW to FireStatus.UNREACHABLE,
             FireStatus.UNREACHABLE to FireStatus.REACHED_NOW,
+            FireStatus.UNREACHABLE to FireStatus.REACHABLE,
+            FireStatus.REACHABLE to FireStatus.UNREACHABLE,
             FireStatus.REACHABLE to FireStatus.REACHED_NOW,
             FireStatus.REACHED_NOW to FireStatus.REACHABLE,
             FireStatus.UNREACHABLE to FireStatus.UNREACHABLE,
