@@ -114,6 +114,7 @@ fun MetricCard(
                             )
                         )
                         if (subValue != null) {
+                            Spacer(modifier = Modifier.height(6.dp))
                             Text(
                                 text = subValue,
                                 style = MaterialTheme.typography.bodySmall.copy(

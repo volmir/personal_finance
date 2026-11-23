@@ -51,11 +51,15 @@ class FireFormatterTest {
                             value, value, status, lang))
                 }
             }
-            assertEquals(strings.fireLessThanHundredthYearText,
+            assertEquals(strings.fireLessThanTenthYearText,
                 Formatters.formatFireYearsToRetirement(0.004, FireStatus.REACHABLE, lang))
+            assertEquals(strings.fireLessThanTenthYearText,
+                Formatters.formatFireYearsToRetirement(0.04, FireStatus.REACHABLE, lang))
+            assertEquals(strings.fireLessThanTenthYearText,
+                Formatters.formatFireYearsToRetirement(0.05, FireStatus.REACHABLE, lang))
             assertEquals("—", Formatters.formatYears(Double.POSITIVE_INFINITY, lang))
             assertEquals("0", Formatters.formatYears(-0.0, lang))
-            assertEquals("0", Formatters.formatYears(-0.001, lang))
+            assertEquals("0", Formatters.formatYears(-0.04, lang))
             assertEquals(strings.fireSimWithoutBase(if (lang == AppLanguage.EN) "21.5" else "21,5", "60"),
                 Formatters.formatFireSimulationSummary(Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY,
                     FireStatus.UNREACHABLE, 21.5, 60.0, FireStatus.REACHABLE, lang))
@@ -63,10 +67,22 @@ class FireFormatterTest {
     }
 
     @Test
-    fun `FIRE years remove only insignificant fractional zeroes`() {
+    fun `FIRE years round to max one decimal and remove insignificant zeroes`() {
         for (lang in AppLanguage.values()) {
-            for ((value, expected) in listOf(24.0 to "24", 21.5 to if (lang == AppLanguage.EN) "21.5" else "21,5",
-                21.56 to if (lang == AppLanguage.EN) "21.56" else "21,56")) {
+            val sep = if (lang == AppLanguage.EN) "." else ","
+            val cases = listOf(
+                24.00 to "24",
+                62.00 to "62",
+                24.46 to "24${sep}5",
+                24.84 to "24${sep}8",
+                21.53 to "21${sep}5",
+                59.54 to "59${sep}5",
+                0.75 to "0${sep}8",
+                0.65 to "0${sep}6",
+                2.50 to "2${sep}5",
+                21.56 to "21${sep}6"
+            )
+            for ((value, expected) in cases) {
                 assertEquals("$lang $value", expected,
                     Formatters.formatFireYearsToRetirement(value, FireStatus.REACHABLE, lang))
                 val strings = com.example.util.localization.getAppStrings(lang)
@@ -198,6 +214,30 @@ class FireFormatterTest {
         )
         assertTrue(invalid.contains("корректную дату рождения"))
         assertFalse(invalid.contains("раньше"))
+
+        // Изменение < 0,05 года (оба срока округляются к 24) не должно показывать «на 0 года раньше»
+        val unchangedRounded = Formatters.formatFireSimulationSummary(
+            baseYearsToRetirement = 24.04,
+            baseRetirementAge = 62.04,
+            baseStatus = FireStatus.REACHABLE,
+            simulatedYearsToRetirement = 23.96,
+            simulatedRetirementAge = 61.96,
+            simulatedStatus = FireStatus.REACHABLE,
+            lang = AppLanguage.RU
+        )
+        assertEquals("Срок выхода на пенсию остается прежним (через 24 лет).", unchangedRounded)
+
+        // Согласованность разницы в сводке с округлёнными сроками (24 и 21,5 -> 2,5 года раньше)
+        val earlierRounded = Formatters.formatFireSimulationSummary(
+            baseYearsToRetirement = 24.04,
+            baseRetirementAge = 62.04,
+            baseStatus = FireStatus.REACHABLE,
+            simulatedYearsToRetirement = 21.46,
+            simulatedRetirementAge = 59.46,
+            simulatedStatus = FireStatus.REACHABLE,
+            lang = AppLanguage.RU
+        )
+        assertEquals("⚡ Пенсия наступит на 2,5 года раньше (через 21,5 лет, в возрасте 59,5 лет)!", earlierRounded)
     }
 
     @Test
@@ -243,22 +283,72 @@ class FireFormatterTest {
                 invalidAge
             )
 
-            // Положительные значения < 0.005 (HALF_EVEN -> 0.00) не должны показываться как "0,00" или "Цель достигнута"
-            for (tiny in listOf(0.0001, 0.004, 0.005)) {
-                val subHundredth = Formatters.formatFireHeroDisplay(tiny, FireStatus.REACHABLE, isSimulationSubtab = false, lang = lang)
+            // Положительные значения <= 0.05 (HALF_EVEN -> 0.0) не должны показываться как "0" или "Цель достигнута"
+            for (tiny in listOf(0.0001, 0.001, 0.01, 0.049, 0.05)) {
+                val subTenth = Formatters.formatFireHeroDisplay(tiny, FireStatus.REACHABLE, isSimulationSubtab = false, lang = lang)
                 assertEquals(
-                    com.example.util.FireHeroDisplay.Message(strings.fireLessThanHundredthYearText, isPositive = true, testTag = "fire_sub_hundredth_title"),
-                    subHundredth
+                    "$lang $tiny",
+                    com.example.util.FireHeroDisplay.Message(strings.fireLessThanTenthYearText, isPositive = true, testTag = "fire_sub_hundredth_title"),
+                    subTenth
                 )
             }
 
-            // Граница округления вверх (>= 0.0051) -> числовой формат >= 0.01
-            for (positive in listOf(0.0051, 0.01)) {
+            // Граница округления вверх (>= 0.051) -> числовой формат >= 0.1
+            for (positive in listOf(0.051, 0.1)) {
                 val numeric = Formatters.formatFireHeroDisplay(positive, FireStatus.REACHABLE, isSimulationSubtab = false, lang = lang)
                 assertTrue("$lang $positive should be Numeric", numeric is com.example.util.FireHeroDisplay.Numeric)
                 val formatted = (numeric as com.example.util.FireHeroDisplay.Numeric).formattedYears
-                assertEquals(Formatters.formatRatio(0.01, lang), formatted)
+                assertEquals(Formatters.formatYears(0.1, lang), formatted)
             }
         }
+    }
+
+    @Test
+    fun `isSubTenthPositiveYears and HALF_EVEN boundary cases align across all formatters`() {
+        val ruStrings = com.example.util.localization.getAppStrings(AppLanguage.RU)
+
+        // Не являются малым положительным сроком
+        for (nonSubTenth in listOf(0.0, -0.0, -0.01, Double.NaN, Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY, 0.051, 0.1, 0.149, 0.15, 1.0)) {
+            assertFalse("Expected isSubTenthPositiveYears($nonSubTenth) == false",
+                Formatters.isSubTenthPositiveYears(nonSubTenth))
+        }
+
+        // Малые положительные сроки (0 < y <= 0.05 при HALF_EVEN)
+        for (subTenth in listOf(0.001, 0.01, 0.049, 0.05)) {
+            assertTrue("Expected isSubTenthPositiveYears($subTenth) == true",
+                Formatters.isSubTenthPositiveYears(subTenth))
+            for (lang in AppLanguage.values()) {
+                val strings = com.example.util.localization.getAppStrings(lang)
+                assertEquals(strings.fireLessThanTenthYearText,
+                    Formatters.formatFireYearsToRetirement(subTenth, FireStatus.REACHABLE, lang))
+                assertEquals(strings.fireLessThanTenthYearText,
+                    Formatters.formatFireSimulationSummary(
+                        24.0, 62.0, FireStatus.REACHABLE,
+                        subTenth, 38.0 + subTenth, FireStatus.REACHABLE,
+                        lang
+                    ))
+                assertFalse(Formatters.formatFireYearsToRetirement(subTenth, FireStatus.REACHABLE, lang) == "0")
+                assertFalse(Formatters.formatFireYearsToRetirement(subTenth, FireStatus.REACHABLE, lang) == strings.fireReachedBaseText)
+            }
+        }
+
+        // Точные граничные значения formatYears / formatFireYearsToRetirement (RU)
+        assertEquals("0", Formatters.formatYears(0.0, AppLanguage.RU))
+        assertEquals("0", Formatters.formatFireYearsToRetirement(0.0, FireStatus.REACHABLE, AppLanguage.RU))
+        assertEquals("0,1", Formatters.formatFireYearsToRetirement(0.051, FireStatus.REACHABLE, AppLanguage.RU))
+        assertEquals("0,1", Formatters.formatFireYearsToRetirement(0.1, FireStatus.REACHABLE, AppLanguage.RU))
+        assertEquals("0,1", Formatters.formatFireYearsToRetirement(0.149, FireStatus.REACHABLE, AppLanguage.RU))
+        assertEquals("0,2", Formatters.formatFireYearsToRetirement(0.15, FireStatus.REACHABLE, AppLanguage.RU))
+        assertEquals("1", Formatters.formatFireYearsToRetirement(1.0, FireStatus.REACHABLE, AppLanguage.RU))
+        assertEquals("0", Formatters.formatYears(-0.01, AppLanguage.RU))
+        assertEquals(ruStrings.metricUnavailableValue, Formatters.formatYears(Double.NaN, AppLanguage.RU))
+        assertEquals(ruStrings.metricUnavailableValue, Formatters.formatYears(Double.POSITIVE_INFINITY, AppLanguage.RU))
+        assertEquals(ruStrings.metricUnavailableValue, Formatters.formatYears(Double.NEGATIVE_INFINITY, AppLanguage.RU))
+
+        // REACHED_NOW не смешивается с REACHABLE при 0.05
+        assertEquals(ruStrings.fireReachedBaseText,
+            Formatters.formatFireYearsToRetirement(0.0, FireStatus.REACHED_NOW, AppLanguage.RU))
+        assertEquals("Менее 0,1 года",
+            Formatters.formatFireYearsToRetirement(0.05, FireStatus.REACHABLE, AppLanguage.RU))
     }
 }

@@ -272,7 +272,7 @@ fun FireTrajectoryChart(
                 style = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
             )
             Text(
-                text = if (isUnreachable) strings.fireUnreachableText else strings.fireChartFirePoint(Formatters.formatRatio(retireAge, lang)),
+                text = if (isUnreachable) strings.fireUnreachableText else strings.fireChartFirePoint(Formatters.formatYears(retireAge, lang)),
                 style = MaterialTheme.typography.labelSmall.copy(
                     fontWeight = FontWeight.Bold,
                     color = if (isUnreachable) {

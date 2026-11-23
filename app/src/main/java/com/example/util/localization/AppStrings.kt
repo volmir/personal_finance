@@ -250,7 +250,7 @@ interface AppStrings {
     val fireTimeToRetire: String
     val fireYearsSuffix: String
     fun fireYearsSuffix(years: Double): String = plural(
-        Formatters.parseDouble(Formatters.formatRatio(years, language), language),
+        Formatters.parseDouble(Formatters.formatYears(years, language), language),
         yearPluralForms
     )
     val fireHeroAssumption: String
@@ -293,7 +293,7 @@ interface AppStrings {
     val fireUnreachableSimulationText: String
     val fireReachedBaseText: String
     val fireReachedSimulationText: String
-    val fireLessThanHundredthYearText: String
+    val fireLessThanTenthYearText: String
     val fireHorizonExhaustedText: String
     val fireSimCashFlowRow: String
     val fireSimExpensesRow: String

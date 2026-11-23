@@ -673,7 +673,7 @@ class FireRetirementScreenRobolectricTest {
     }
 
     @Test
-    fun `hero status matrix across base and simulation subtabs never renders 0,00 for reached or sub-hundredth`() {
+    fun `hero status matrix across base and simulation subtabs never renders 0 for reached or sub-tenth`() {
         val input = FinancialInputData.usAverageData()
         val sampleMetrics = FinanceCalculator.calculate(input, today = LocalDate.of(2026, 11, 6))
         val baseMetrics = mutableStateOf(sampleMetrics)
@@ -743,10 +743,10 @@ class FireRetirementScreenRobolectricTest {
                         .assert(hasText(strings.invalidBirthDateError))
                 }
                 FireStatus.REACHABLE -> {
-                    if (Formatters.isSubHundredthPositiveYears(years)) {
+                    if (Formatters.isSubTenthPositiveYears(years)) {
                         composeRule.onNodeWithTag("fire_sub_hundredth_title").assertIsDisplayed()
-                            .assert(hasText(strings.fireLessThanHundredthYearText))
-                        composeRule.onAllNodes(hasText("0,00", substring = true) and hasAnyAncestor(hasTestTag("fire_hero_card")), useUnmergedTree = true)
+                            .assert(hasText(strings.fireLessThanTenthYearText))
+                        composeRule.onAllNodes(hasText("0 лет", substring = true) and hasAnyAncestor(hasTestTag("fire_hero_card")), useUnmergedTree = true)
                             .assertCountEquals(0)
                     } else {
                         val expected = Formatters.formatYears(years, AppLanguage.RU)
@@ -764,8 +764,8 @@ class FireRetirementScreenRobolectricTest {
                 FireStatus.UNREACHABLE -> strings.fireUnreachableSimulationText
                 FireStatus.HORIZON_EXHAUSTED -> strings.fireHorizonExhaustedText
                 FireStatus.INVALID_AGE -> strings.invalidBirthDateError
-                FireStatus.REACHABLE -> if (Formatters.isSubHundredthPositiveYears(years)) {
-                    strings.fireLessThanHundredthYearText
+                FireStatus.REACHABLE -> if (Formatters.isSubTenthPositiveYears(years)) {
+                    strings.fireLessThanTenthYearText
                 } else null
             }
             val value = composeRule.onNodeWithTag("fire_sim_years_value", useUnmergedTree = true)
@@ -799,14 +799,14 @@ class FireRetirementScreenRobolectricTest {
             assertSimulationHeroMatches(simulatedStatus, years = 8.75)
         }
 
-        // Граница < 0.01 года (0.004) и 0.01 года, а также HORIZON_EXHAUSTED и INVALID_AGE
+        // Граница < 0.1 года (0.05 при HALF_EVEN -> 0.0) и 0.051 (-> 0.1 года), а также HORIZON_EXHAUSTED и INVALID_AGE
         composeRule.runOnIdle {
-            baseMetrics.value = metricsFor(FireStatus.REACHABLE, years = 0.004)
-            simMetrics.value = metricsFor(FireStatus.REACHABLE, years = 0.01)
+            baseMetrics.value = metricsFor(FireStatus.REACHABLE, years = 0.05)
+            simMetrics.value = metricsFor(FireStatus.REACHABLE, years = 0.051)
             simState.value = FireSimulationState(extraMonthlySavings = 100.0)
         }
-        assertBaseHeroMatches(FireStatus.REACHABLE, years = 0.004)
-        assertSimulationHeroMatches(FireStatus.REACHABLE, years = 0.01)
+        assertBaseHeroMatches(FireStatus.REACHABLE, years = 0.05)
+        assertSimulationHeroMatches(FireStatus.REACHABLE, years = 0.051)
 
         composeRule.runOnIdle {
             baseMetrics.value = metricsFor(FireStatus.HORIZON_EXHAUSTED)
@@ -909,11 +909,11 @@ class FireRetirementScreenRobolectricTest {
             composeRule.onNodeWithTag("fire_subtab_simulation").performClick()
             assertTextFits("fire_sim_years_value", "$lang SIM UNREACHABLE", isSimulation = true)
 
-            // 3) REACHABLE < 0.01 in the simulation comparison cell
+            // 3) REACHABLE < 0.1 (HALF_EVEN -> 0.0) in the simulation comparison cell
             composeRule.runOnIdle {
-                simMetrics.value = sampleMetrics.copy(fireStatus = FireStatus.REACHABLE, yearsToRetirement = 0.004)
+                simMetrics.value = sampleMetrics.copy(fireStatus = FireStatus.REACHABLE, yearsToRetirement = 0.05)
             }
-            assertTextFits("fire_sim_years_value", "$lang SIM SUB-HUNDREDTH", isSimulation = true)
+            assertTextFits("fire_sim_years_value", "$lang SIM SUB-TENTH", isSimulation = true)
         }
     }
 

@@ -224,17 +224,17 @@ class LocalizationReleaseTextTest {
     }
 
     @Test
-    fun yearFormsFollowDisplayedTwoDecimalValue() {
+    fun yearFormsFollowDisplayedOneDecimalValue() {
         val strings = getAppStrings(AppLanguage.RU)
-        for ((number, word) in listOf(20.999 to "год", 21.004 to "год", 21.006 to "года", 21.5 to "года", 21.996 to "года", 24.999 to "лет")) {
+        for ((number, word) in listOf(20.96 to "год", 21.04 to "год", 21.06 to "года", 21.5 to "года", 21.96 to "года", 24.96 to "лет")) {
             val display = Formatters.formatYears(number, AppLanguage.RU)
             assertEquals("$display $word", "$display ${strings.fireYearsSuffix(number)}")
             assertEquals("$display $word", Formatters.formatFireRetirementAge(number, FireStatus.REACHABLE, AppLanguage.RU))
         }
-        assertEquals("21,50 года", strings.fireRetirementAgeValue("21,50"))
+        assertEquals("21,5 года", strings.fireRetirementAgeValue("21,5"))
         for (lang in AppLanguage.values()) {
             val localized = getAppStrings(lang)
-            assertEquals("$lang rounded 1", localized.plural(1, localized.yearPluralForms), localized.fireYearsSuffix(1.004))
+            assertEquals("$lang rounded 1", localized.plural(1, localized.yearPluralForms), localized.fireYearsSuffix(1.04))
         }
     }
 

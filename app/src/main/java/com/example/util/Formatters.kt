@@ -105,14 +105,20 @@ object Formatters {
         com.example.util.localization.getAppStrings(lang).metricUnavailableValue
     }
 
-    /** Сохраняет точность до сотых года, убирая только незначащие нули. */
+    /** Округляет годы до десятых (HALF_EVEN), убирая незначащие нули и отрицательный ноль. */
     fun formatYears(years: Double, lang: AppLanguage): String {
         if (!years.isFinite()) return com.example.util.localization.getAppStrings(lang).metricUnavailableValue
-        val rounded = BigDecimal.valueOf(years).setScale(2, RoundingMode.HALF_EVEN)
-        return decimalFormat(lang, 2).apply { minimumFractionDigits = 0 }.format(
+        val rounded = roundYearsToTenth(years)
+        return decimalFormat(lang, 1).apply {
+            minimumFractionDigits = 0
+            roundingMode = RoundingMode.HALF_EVEN
+        }.format(
             if (rounded.signum() == 0) BigDecimal.ZERO else rounded
         )
     }
+
+    private fun roundYearsToTenth(years: Double): BigDecimal =
+        BigDecimal.valueOf(years).setScale(1, RoundingMode.HALF_EVEN)
 
     fun formatRawNumber(
         amount: Double,
@@ -253,20 +259,19 @@ object Formatters {
             FireStatus.UNREACHABLE -> strings.fireUnreachableText
             FireStatus.HORIZON_EXHAUSTED -> strings.fireHorizonExhaustedText
             FireStatus.REACHED_NOW -> strings.fireReachedBaseText
-            FireStatus.REACHABLE -> if (isSubHundredthPositiveYears(yearsToRetirement)) {
-                strings.fireLessThanHundredthYearText
+            FireStatus.REACHABLE -> if (isSubTenthPositiveYears(yearsToRetirement)) {
+                strings.fireLessThanTenthYearText
             } else formatYears(yearsToRetirement, lang)
         }
     }
 
     /**
-     * Проверяет, что положительный срок до FIRE округляется к 0,00 при точности 2 знаков (HALF_EVEN).
-     * Такие значения нельзя показывать как «0,00 лет» или как достигнутую цель.
+     * Проверяет, что положительный срок до FIRE округляется к 0,0 при точности 1 знак (HALF_EVEN).
+     * Такие значения нельзя показывать как «0 лет» или как достигнутую цель.
      */
-    fun isSubHundredthPositiveYears(yearsToRetirement: Double): Boolean {
+    fun isSubTenthPositiveYears(yearsToRetirement: Double): Boolean {
         if (!yearsToRetirement.isFinite() || yearsToRetirement <= 0.0) return false
-        val roundingMode = decimalFormat(AppLanguage.EN, 2).roundingMode
-        return BigDecimal.valueOf(yearsToRetirement).setScale(2, roundingMode).signum() == 0
+        return roundYearsToTenth(yearsToRetirement).signum() == 0
     }
 
     /**
@@ -301,9 +306,9 @@ object Formatters {
                 testTag = "fire_unreachable_title"
             )
             FireStatus.REACHABLE -> {
-                if (isSubHundredthPositiveYears(yearsToRetirement)) {
+                if (isSubTenthPositiveYears(yearsToRetirement)) {
                     FireHeroDisplay.Message(
-                        text = strings.fireLessThanHundredthYearText,
+                        text = strings.fireLessThanTenthYearText,
                         isPositive = true,
                         testTag = "fire_sub_hundredth_title"
                     )
@@ -363,7 +368,7 @@ object Formatters {
         val yearsText = if (activeChanges > 0 && (bothReachable || years(base) != years(current))) {
             // Единица срока нужна только после правого числового значения.
             val baseText = if (base.fireStatus == FireStatus.REACHABLE &&
-                base.yearsToRetirement.isFinite() && !isSubHundredthPositiveYears(base.yearsToRetirement)
+                base.yearsToRetirement.isFinite() && !isSubTenthPositiveYears(base.yearsToRetirement)
             ) compact(base.yearsToRetirement) else years(base)
             "$baseText → ${years(current)}"
         } else years(current)
@@ -376,9 +381,9 @@ object Formatters {
             base.fireStatus != FireStatus.REACHABLE || current.fireStatus != FireStatus.REACHABLE ||
                 !base.yearsToRetirement.isFinite() || !current.yearsToRetirement.isFinite() -> strings.metricUnavailableValue
             else -> {
-                // Сравниваем показанные сроки, чтобы округлённый ноль не получал похвалу/критику.
-                val difference = BigDecimal.valueOf(current.yearsToRetirement).setScale(2, RoundingMode.HALF_EVEN)
-                    .subtract(BigDecimal.valueOf(base.yearsToRetirement).setScale(2, RoundingMode.HALF_EVEN))
+                // Сравниваем округлённые до 0,1 года сроки, чтобы разница совпадала с колонкой сравнения и округлённый ноль не получал похвалу/критику.
+                val difference = roundYearsToTenth(current.yearsToRetirement)
+                    .subtract(roundYearsToTenth(base.yearsToRetirement))
                 status = FinancialMetricEvaluator.getFireTimeChangeStatus(difference.toDouble())
                 val sign = when (difference.signum()) {
                     -1 -> "↓ −"
@@ -417,21 +422,23 @@ object Formatters {
             simulatedStatus == FireStatus.HORIZON_EXHAUSTED -> strings.fireHorizonExhaustedText
             isSimUnreachable -> strings.fireUnreachableText
             simulatedStatus == FireStatus.REACHED_NOW -> strings.fireReachedSimulationText
-            isSubHundredthPositiveYears(simulatedYearsToRetirement) -> strings.fireLessThanHundredthYearText
+            isSubTenthPositiveYears(simulatedYearsToRetirement) -> strings.fireLessThanTenthYearText
             isBaseUnreachable -> strings.fireSimWithoutBase(
                 formatYears(simulatedYearsToRetirement, lang),
                 formatYears(simulatedRetirementAge, lang)
             )
             else -> {
-                val yearsDiff = baseYearsToRetirement - simulatedYearsToRetirement
+                val yearsDiff = roundYearsToTenth(baseYearsToRetirement)
+                    .subtract(roundYearsToTenth(simulatedYearsToRetirement))
+                val diffMagnitude = yearsDiff.abs().toDouble()
                 when {
-                    yearsDiff > 0 -> strings.fireSimEarlier(
-                        formatYears(yearsDiff, lang),
+                    yearsDiff.signum() > 0 -> strings.fireSimEarlier(
+                        formatYears(diffMagnitude, lang),
                         formatYears(simulatedYearsToRetirement, lang),
                         formatYears(simulatedRetirementAge, lang)
                     )
-                    yearsDiff < 0 -> strings.fireSimLater(
-                        formatYears(-yearsDiff, lang),
+                    yearsDiff.signum() < 0 -> strings.fireSimLater(
+                        formatYears(diffMagnitude, lang),
                         formatYears(simulatedYearsToRetirement, lang),
                         formatYears(simulatedRetirementAge, lang)
                     )

@@ -25,16 +25,91 @@ class FireSimulationComparisonFormatterTest {
             Triple(26.5, "↑ +2,5 года", AuditIndicatorStatus.NEGATIVE),
             Triple(27.0, "↑ +3 года", AuditIndicatorStatus.NEGATIVE),
             Triple(24.0, "0 лет", AuditIndicatorStatus.NEUTRAL),
-            Triple(23.996, "0 лет", AuditIndicatorStatus.NEUTRAL),
-            Triple(24.004, "0 лет", AuditIndicatorStatus.NEUTRAL),
-            Triple(23.994, "↓ −0,01 года", AuditIndicatorStatus.POSITIVE),
-            Triple(24.006, "↑ +0,01 года", AuditIndicatorStatus.NEGATIVE)
+            Triple(23.96, "0 лет", AuditIndicatorStatus.NEUTRAL),
+            Triple(23.95, "0 лет", AuditIndicatorStatus.NEUTRAL),
+            Triple(24.04, "0 лет", AuditIndicatorStatus.NEUTRAL),
+            Triple(24.05, "0 лет", AuditIndicatorStatus.NEUTRAL),
+            Triple(23.94, "↓ −0,1 года", AuditIndicatorStatus.POSITIVE),
+            Triple(24.06, "↑ +0,1 года", AuditIndicatorStatus.NEGATIVE)
         )
         for ((years, delta, status) in cases) {
             val display = Formatters.formatFireSimulationComparison(base, base.copy(yearsToRetirement = years), 1, AppLanguage.RU)
             assertEquals("$years", delta, display.delta)
             assertEquals("$years", status, display.status)
         }
+    }
+
+    @Test
+    fun `displayed delta always agrees with rounded comparison columns and avoids negative zero`() {
+        // Одинаковые после округления до 0,1 сроки должны давать 0 лет и NEUTRAL даже при сырой разнице > 0,05
+        val sameDisplayed = Formatters.formatFireSimulationComparison(
+            base.copy(yearsToRetirement = 24.04, retirementAge = 62.04),
+            base.copy(yearsToRetirement = 23.96, retirementAge = 61.96),
+            1,
+            AppLanguage.RU
+        )
+        assertEquals("24 → 24 года", sameDisplayed.years)
+        assertEquals("62 → 62", sameDisplayed.age)
+        assertEquals("0 лет", sameDisplayed.delta)
+        assertFalse(sameDisplayed.delta.contains("−0"))
+        assertEquals(AuditIndicatorStatus.NEUTRAL, sameDisplayed.status)
+
+        // Округлённые 24 и 21,5 -> разница должна быть -2,5 (а не -2,6 от сырого 21.46 - 24.04 = -2.58)
+        val earlierDisplayed = Formatters.formatFireSimulationComparison(
+            base.copy(yearsToRetirement = 24.04, retirementAge = 62.04),
+            base.copy(yearsToRetirement = 21.46, retirementAge = 59.46),
+            1,
+            AppLanguage.RU
+        )
+        assertEquals("24 → 21,5 года", earlierDisplayed.years)
+        assertEquals("62 → 59,5", earlierDisplayed.age)
+        assertEquals("↓ −2,5 года", earlierDisplayed.delta)
+        assertEquals(AuditIndicatorStatus.POSITIVE, earlierDisplayed.status)
+
+        // Округлённые 23,9 и 24 -> разница +0,1 (согласована с колонкой срока)
+        val laterDisplayed = Formatters.formatFireSimulationComparison(
+            base.copy(yearsToRetirement = 23.94, retirementAge = 61.94),
+            base.copy(yearsToRetirement = 23.96, retirementAge = 61.96),
+            1,
+            AppLanguage.RU
+        )
+        assertEquals("23,9 → 24 года", laterDisplayed.years)
+        assertEquals("61,9 → 62", laterDisplayed.age)
+        assertEquals("↑ +0,1 года", laterDisplayed.delta)
+        assertEquals(AuditIndicatorStatus.NEGATIVE, laterDisplayed.status)
+
+        // Малый положительный срок (< 0,1) отображается как локализованное сообщение, а не «0 лет»
+        val fromSubTenth = Formatters.formatFireSimulationComparison(
+            base.copy(yearsToRetirement = 0.04, retirementAge = 38.04),
+            base.copy(yearsToRetirement = 2.0, retirementAge = 40.0),
+            1,
+            AppLanguage.RU
+        )
+        assertEquals("Менее 0,1 года → 2 года", fromSubTenth.years)
+        assertEquals("↑ +2 года", fromSubTenth.delta)
+        assertEquals(AuditIndicatorStatus.NEGATIVE, fromSubTenth.status)
+
+        // Сценарий сократил срок до 0.05 (HALF_EVEN -> 0.0), но FIRE ещё не достигнут (REACHABLE)
+        val toSubTenth = Formatters.formatFireSimulationComparison(
+            base.copy(yearsToRetirement = 2.0, retirementAge = 40.0),
+            base.copy(yearsToRetirement = 0.05, retirementAge = 38.05),
+            1,
+            AppLanguage.RU
+        )
+        assertEquals("2 → Менее 0,1 года", toSubTenth.years)
+        assertEquals("↓ −2 года", toSubTenth.delta)
+        assertEquals(AuditIndicatorStatus.POSITIVE, toSubTenth.status)
+
+        // Оба срока < 0.05 (незначимое изменение): дельта нейтральна, нет похвалы/критики и ложного REACHED_NOW
+        val bothSubTenth = Formatters.formatFireSimulationComparison(
+            base.copy(yearsToRetirement = 0.049, retirementAge = 38.049),
+            base.copy(yearsToRetirement = 0.01, retirementAge = 38.01),
+            1,
+            AppLanguage.RU
+        )
+        assertEquals("Менее 0,1 года → Менее 0,1 года", bothSubTenth.years)
+        assertEquals("0 лет", bothSubTenth.delta)
+        assertEquals(AuditIndicatorStatus.NEUTRAL, bothSubTenth.status)
     }
 
     @Test
