@@ -569,4 +569,18 @@ class FinancialMetricEvaluatorTest {
         assertFalse(enAllText.contains("rubles"))
         assertFalse(ruAllText.contains("ЦБ"))
     }
+
+    @Test
+    fun `FIRE time reduction is positive while zero and unavailable changes are neutral`() {
+        for (change in listOf(-2.5, -0.01)) {
+            assertEquals(AuditIndicatorStatus.POSITIVE, FinancialMetricEvaluator.getFireTimeChangeStatus(change))
+        }
+        for (change in listOf(0.01, 2.5)) {
+            assertEquals(AuditIndicatorStatus.NEGATIVE, FinancialMetricEvaluator.getFireTimeChangeStatus(change))
+        }
+        for (change in listOf(null, 0.0, -0.0, Double.NaN, Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY)) {
+            assertEquals(AuditIndicatorStatus.NEUTRAL, FinancialMetricEvaluator.getFireTimeChangeStatus(change))
+        }
+    }
+
 }

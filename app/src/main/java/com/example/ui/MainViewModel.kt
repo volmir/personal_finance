@@ -103,6 +103,11 @@ data class FireSimulationState(
     val expenseReduction: Double = 0.0,
     val scenarios: FireScenarioToggles = FireScenarioToggles()
 ) {
+    val activeChangesCount: Int
+        get() = scenarios.activeCount + listOf(
+            extraMonthlySavings, realReturnAdjustment, expenseReduction
+        ).count { it != 0.0 }
+
     val isSimulating: Boolean
         get() = extraMonthlySavings != 0.0 ||
                 realReturnAdjustment != 0.0 ||

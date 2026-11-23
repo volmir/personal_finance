@@ -1,12 +1,12 @@
 package com.example.ui.screens
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -17,12 +17,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.RestartAlt
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.filled.WorkspacePremium
 import androidx.compose.material.icons.outlined.Analytics
@@ -31,7 +31,6 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Surface
@@ -45,6 +44,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
@@ -73,6 +73,7 @@ import com.example.util.localization.LocalAppStrings
 import java.math.BigDecimal
 import java.math.RoundingMode
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun FireRetirementScreen(
     inputData: FinancialInputData,
@@ -116,11 +117,6 @@ fun FireRetirementScreen(
     )
     val isUnreachable = displayMetrics.fireStatus == FireStatus.UNREACHABLE ||
             displayMetrics.fireStatus == FireStatus.HORIZON_EXHAUSTED
-    val activeScenariosCount = simulationState.scenarios.activeCount
-    val hasSliders = simulationState.extraMonthlySavings != 0.0 ||
-            simulationState.expenseReduction != 0.0 ||
-            simulationState.realReturnAdjustment != 0.0
-    val simulationBadge = Formatters.formatSimulationBadge(activeScenariosCount, hasSliders, lang)
 
     // Динамический расчет шкал и шагов симулятора исходя из текущих значений показателей
     val savingsConfig = remember(metrics.cashFlow, inputData.monthlyIncome, inputData.monthlyExpenses, inputData.currencySymbol) {
@@ -172,23 +168,33 @@ fun FireRetirementScreen(
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
-            .padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+            .clipToBounds()
     ) {
         item {
-            Spacer(modifier = Modifier.height(4.dp))
-            Box(
-                modifier = Modifier.testTag(contentTestTag)
-            ) {
-                FireSubtabSelector(
-                    selectedSubtab = activeSubtab,
-                    onSelectSubtab = handleSelectSubtab
+            Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                Spacer(modifier = Modifier.height(4.dp))
+                Box(modifier = Modifier.testTag(contentTestTag)) {
+                    FireSubtabSelector(
+                        selectedSubtab = activeSubtab,
+                        onSelectSubtab = handleSelectSubtab
+                    )
+                }
+            }
+        }
+
+        if (isSimulationSubtab) {
+            stickyHeader {
+                FireSimulationSummaryPanel(
+                    metrics = metrics,
+                    simulatedMetrics = simulatedMetrics,
+                    activeChanges = simulationState.activeChangesCount,
+                    onResetSimulation = onResetSimulation
                 )
             }
         }
 
         if (isInvalidAge) {
-            item {
+            fireItem {
                 Spacer(modifier = Modifier.height(4.dp))
                 Surface(
                     shape = RoundedCornerShape(14.dp),
@@ -220,7 +226,7 @@ fun FireRetirementScreen(
             }
         }
 
-        item {
+        if (!isSimulationSubtab) fireItem {
             Spacer(modifier = Modifier.height(4.dp))
             // Главный баннер FIRE
             ElevatedCard(
@@ -329,29 +335,6 @@ fun FireRetirementScreen(
                                 }
                             }
                         }
-                        if (isSimulationSubtab && isSimulating) {
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Surface(
-                                shape = RoundedCornerShape(8.dp),
-                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
-                                modifier = Modifier
-                                    .widthIn(max = 112.dp)
-                                    .testTag("fire_hero_simulation_badge")
-                            ) {
-                                Text(
-                                    text = simulationBadge.replace('\u00A0', ' '),
-                                    style = MaterialTheme.typography.labelSmall.copy(
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.primary,
-                                        fontSize = 10.sp
-                                    ),
-                                    textAlign = TextAlign.End,
-                                    maxLines = 3,
-                                    softWrap = true,
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                                )
-                            }
-                        }
                     }
 
                     Text(
@@ -455,7 +438,7 @@ fun FireRetirementScreen(
         }
 
         // Параметры возраста и горизонта: только базовый FIRE (UX-F06)
-        if (!isSimulationSubtab) item {
+        if (!isSimulationSubtab) fireItem {
             Card(
                 shape = RoundedCornerShape(14.dp),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
@@ -542,7 +525,7 @@ fun FireRetirementScreen(
 
         // График траектории капитала: только базовый FIRE, без заглушек в «Симуляции»
         if (!isSimulationSubtab) {
-            item {
+            fireItem {
                 Card(
                     shape = RoundedCornerShape(14.dp),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
@@ -577,140 +560,12 @@ fun FireRetirementScreen(
             }
         }
 
-        // Итог симуляции (совместное влияние): только во внутреннем табе «Симуляция»
-        // при активных изменениях.
-        if (isSimulationSubtab && isSimulating) {
-            item {
-                val isSimUnreachable = simulatedMetrics.fireStatus == FireStatus.UNREACHABLE ||
-                        simulatedMetrics.fireStatus == FireStatus.HORIZON_EXHAUSTED
-                val isBaseUnreachable = metrics.fireStatus == FireStatus.UNREACHABLE ||
-                        metrics.fireStatus == FireStatus.HORIZON_EXHAUSTED
-                val yearsDiff = metrics.yearsToRetirement - simulatedMetrics.yearsToRetirement
-                val isPositive = !isSimUnreachable && (isBaseUnreachable || yearsDiff > 0)
-                val isNegative = !isBaseUnreachable && (isSimUnreachable || yearsDiff < 0)
-                val alertColor = if (isSimUnreachable) {
-                    AlertRed
-                } else if (isPositive) {
-                    SuccessGreen
-                } else if (isNegative) {
-                    AlertRed
-                } else {
-                    MaterialTheme.colorScheme.primary
-                }
-                // Фон плашки остаётся статусным, а текст — контрастным оттенком той же гаммы.
-                val alertTextColor = StatusColors.getReadableTextColor(alertColor)
-
-                Surface(
-                    shape = RoundedCornerShape(12.dp),
-                    color = alertColor.copy(alpha = 0.12f),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .testTag("fire_simulation_summary")
-                ) {
-                    Column(modifier = Modifier.padding(14.dp)) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text(
-                                text = strings.fireSimSummaryTitle,
-                                style = MaterialTheme.typography.titleSmall.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    color = alertTextColor
-                                ),
-                                modifier = Modifier.weight(1f, fill = false)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Surface(
-                                shape = RoundedCornerShape(8.dp),
-                                color = alertColor.copy(alpha = 0.20f)
-                            ) {
-                                Text(
-                                    text = simulationBadge,
-                                    style = MaterialTheme.typography.labelSmall.copy(
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.onSurface,
-                                        fontSize = 10.sp
-                                    ),
-                                    maxLines = 1,
-                                    softWrap = false,
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
-                                )
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        val summaryDiffText = Formatters.formatFireSimulationSummary(
-                            baseMetrics = metrics,
-                            simulatedMetrics = simulatedMetrics,
-                            lang = lang
-                        )
-
-                        Text(
-                            text = summaryDiffText,
-                            style = MaterialTheme.typography.bodyMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = alertTextColor
-                            )
-                        )
-
-                        Spacer(modifier = Modifier.height(10.dp))
-
-                        // Сводные строки кумулятивного пересчета
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(strings.fireSimCashFlowRow, style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp))
-                            Text(
-                                "${Formatters.formatMoney(metrics.cashFlow, inputData.currencySymbol, lang)} ➔ ${Formatters.formatMoney(simulatedMetrics.cashFlow, inputData.currencySymbol, lang)}",
-                                style = MaterialTheme.typography.bodySmall.copy(
-                                    fontWeight = FontWeight.SemiBold,
-                                    fontSize = 11.sp,
-                                    color = if (simulatedMetrics.cashFlow >= 0) MaterialTheme.colorScheme.onSurface else StatusColors.getReadableTextColor(AlertRed)
-                                )
-                            )
-                        }
-                        Spacer(modifier = Modifier.height(3.dp))
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(strings.fireSimExpensesRow, style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp))
-                            Text(
-                                "${Formatters.formatMoney(inputData.monthlyExpenses, inputData.currencySymbol, lang)} ➔ ${Formatters.formatMoney(currentEffectiveExpenses, inputData.currencySymbol, lang)}",
-                                style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold, fontSize = 11.sp)
-                            )
-                        }
-                        Spacer(modifier = Modifier.height(3.dp))
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(strings.fireSimNetWorthRow, style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp))
-                            Text(
-                                "${Formatters.formatMoney(metrics.netWorth, inputData.currencySymbol, lang)} ➔ ${Formatters.formatMoney(simulatedMetrics.netWorth, inputData.currencySymbol, lang)}",
-                                style = MaterialTheme.typography.bodySmall.copy(
-                                    fontWeight = FontWeight.SemiBold,
-                                    fontSize = 11.sp,
-                                    color = if (simulatedMetrics.netWorth >= metrics.netWorth) StatusColors.getReadableTextColor(SuccessGreen)
-                                    else StatusColors.getReadableTextColor(AlertRed)
-                                )
-                            )
-                        }
-                    }
-                }
-            }
-        }
-
         // Ползунки, сценарии и сброс доступны только во внутреннем табе «Симуляция»;
         // в FIRE управляющих элементов симулятора нет.
         if (isSimulationSubtab) {
             // Интерактивный симулятор "Что если?"
             // Во всех трех пунктах справа отображаются текущие значения, изменяемые ползунками!
-            item {
+            fireItem {
                 Card(
                     shape = RoundedCornerShape(14.dp),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
@@ -739,23 +594,6 @@ fun FireRetirementScreen(
                                     text = strings.fireSimSliderTitle,
                                     style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
                                 )
-                            }
-
-                            if (isSimulating) {
-                                Spacer(modifier = Modifier.width(8.dp))
-                                OutlinedButton(
-                                    onClick = onResetSimulation,
-                                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
-                                    modifier = Modifier.testTag("fire_sim_reset_button")
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.RestartAlt,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(16.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    Text(strings.fireSimReset, fontSize = 11.sp, maxLines = 1)
-                                }
                             }
                         }
 
@@ -1088,11 +926,11 @@ fun FireRetirementScreen(
         }
 
         // Предпосылки и дисклеймер относятся к базовому FIRE, в «Симуляции» их нет (UX-F06)
-        if (!isSimulationSubtab) item {
+        if (!isSimulationSubtab) fireItem {
             Spacer(modifier = Modifier.height(14.dp))
         }
 
-        if (!isSimulationSubtab) item {
+        if (!isSimulationSubtab) fireItem {
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Card(
                     shape = RoundedCornerShape(14.dp),
@@ -1268,5 +1106,13 @@ private fun FireSubtabOption(
                 .fillMaxWidth()
                 .padding(vertical = 10.dp)
         )
+    }
+}
+
+private fun LazyListScope.fireItem(content: @Composable () -> Unit) {
+    item {
+        Column(modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 12.dp)) {
+            content()
+        }
     }
 }

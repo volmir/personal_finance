@@ -5,7 +5,7 @@ CUATRO PANTALLAS
 • Datos: ingresos, gastos, activos líquidos y financieros, valor total de los bienes, deudas, rentabilidad nominal, inflación, impuesto sobre plusvalías, fecha de nacimiento y esperanza de vida. Las indicaciones explican las categorías. Los activos financieros pueden formar parte del fondo de emergencia.
 • Indicadores: flujo de caja, tasa de ahorro, reserva, cobertura en meses, endeudamiento, patrimonio neto, referencia Fidelity por edad, ratio de libertad financiera (CFS) y rentabilidad real.
 • Puntuación & Auditoría: nota global de 0 a 10, notas de los componentes y evaluación automática de indicadores positivos, neutros y negativos. Comparte el resumen de base o la evaluación desde el menú de Android.
-• FIRE: plazo y edad de jubilación estimados, capital objetivo y trayectoria del capital hasta la edad elegida. Tres deslizadores y 14 escenarios modifican una simulación separada; los datos de base se conservan.
+• FIRE: plazo y edad de jubilación estimados, capital objetivo y trayectoria del capital hasta la edad elegida. Tres deslizadores y 14 escenarios modifican una simulación separada; los datos de base se conservan. Un panel fijo de simulación compara el plazo y la edad FIRE con los valores de base y muestra el cambio del plazo y el número de escenarios seleccionados y deslizadores distintos de cero.
 
 MODELO Y ESCENARIOS
 

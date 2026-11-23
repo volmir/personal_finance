@@ -108,30 +108,15 @@ class StatusTextColorUsageRobolectricTest {
 
         composeRule.onNodeWithTag("fire_subtab_simulation").performClick()
         composeRule.onNodeWithTag("fire_test_list").performScrollToNode(hasTestTag("fire_simulation_summary"))
-        assertEquals(SuccessGreenTextLight, textColor(strings.fireSimSummaryTitle))
-
-        val cashFlowRow = "${Formatters.formatMoney(metrics.cashFlow, input.currencySymbol, AppLanguage.RU)} ➔ " +
-            Formatters.formatMoney(faster.cashFlow, input.currencySymbol, AppLanguage.RU)
-        val netWorthRow = "${Formatters.formatMoney(metrics.netWorth, input.currencySymbol, AppLanguage.RU)} ➔ " +
-            Formatters.formatMoney(faster.netWorth, input.currencySymbol, AppLanguage.RU)
-        assertEquals(AlertRedTextLight, textColor(cashFlowRow))
-        assertEquals(AlertRedTextLight, textColor(netWorthRow))
-
-        val badgeText = Formatters.formatSimulationBadge(0, hasSliders = true, AppLanguage.RU)
-        val summaryBadge = hasText(badgeText) and hasAnyAncestor(hasTestTag("fire_simulation_summary"))
-        assertEquals(Color(0xFF131D18), textColor(summaryBadge))
-
+        assertEquals(SuccessGreenTextLight, textColorByTag("fire_sim_delta_value"))
         composeRule.runOnIdle { darkTheme.value = true }
-        assertEquals(SuccessGreenTextDark, textColor(strings.fireSimSummaryTitle))
-        assertEquals(AlertRedTextDark, textColor(cashFlowRow))
-        assertEquals(AlertRedTextDark, textColor(netWorthRow))
-        assertEquals(Color(0xFFE2EBE5), textColor(summaryBadge))
-
+        assertEquals(SuccessGreenTextDark, textColorByTag("fire_sim_delta_value"))
+        // Недоступная разница не оценивается по случайному числу в metrics.
         composeRule.runOnIdle { simulated.value = unreachable }
-        assertEquals(AlertRedTextDark, textColor(strings.fireSimSummaryTitle))
-
+        assertEquals(WarningYellowTextDark, textColorByTag("fire_sim_delta_value"))
         composeRule.runOnIdle { darkTheme.value = false }
-        assertEquals(AlertRedTextLight, textColor(strings.fireSimSummaryTitle))
+        assertEquals(WarningYellowTextLight, textColorByTag("fire_sim_delta_value"))
+
     }
 
     @Test
@@ -193,17 +178,12 @@ class StatusTextColorUsageRobolectricTest {
         composeRule.onNodeWithTag("fire_subtab_simulation").performClick()
         composeRule.runOnIdle {
             metrics.value = baseMetrics.copy(fireStatus = FireStatus.REACHED_NOW, yearsToRetirement = 0.0)
+            darkTheme.value = true
         }
-        assertEquals(SuccessGreenTextLight, textColorByTag("fire_reached_title"))
-        composeRule.runOnIdle { darkTheme.value = true }
-        assertEquals(SuccessGreenTextDark, textColorByTag("fire_reached_title"))
-
-        composeRule.runOnIdle {
-            metrics.value = baseMetrics.copy(fireStatus = FireStatus.UNREACHABLE)
-        }
-        assertEquals(AlertRedTextDark, textColorByTag("fire_unreachable_title"))
+        assertEquals(WarningYellowTextDark, textColorByTag("fire_sim_delta_value"))
         composeRule.runOnIdle { darkTheme.value = false }
-        assertEquals(AlertRedTextLight, textColorByTag("fire_unreachable_title"))
+        assertEquals(WarningYellowTextLight, textColorByTag("fire_sim_delta_value"))
+
     }
 
     @Test

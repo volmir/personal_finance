@@ -5,7 +5,7 @@ VIER BEREICHE
 • Eingaben: Einnahmen, Ausgaben, liquide Mittel, Finanzanlagen, voller Sachwert, Verbindlichkeiten, Nominalrendite, Inflation, Kapitalertragsteuer, Geburtsdatum und Lebenserwartung. Hinweise erläutern die Kategorien. Finanzanlagen können zum Notfallpuffer zählen.
 • Kennzahlen: Cashflow, Sparquote, Notfallpuffer, Reichweite in Monaten, Verschuldungsgrad, Reinvermögen, Fidelity-Altersziel, finanzielle Freiheitsquote (CFS) und Realrendite.
 • Bewertung & Audit: Gesamtnote von 0 bis 10, Einzelnoten und automatische Beurteilung mit positiven, neutralen und negativen Kennzahlen. Basisbericht und Beurteilung lassen sich über das Android-Teilen-Menü weitergeben.
-• FIRE: geschätzter Rentenzeitpunkt, Rentenalter, Zielkapital und Kapitalverlauf bis zum gewählten Lebensalter. Drei Regler und 14 Szenarien verändern eine separate Simulation; die gespeicherten Basisdaten bleiben erhalten.
+• FIRE: geschätzter Rentenzeitpunkt, Rentenalter, Zielkapital und Kapitalverlauf bis zum gewählten Lebensalter. Drei Regler und 14 Szenarien verändern eine separate Simulation; die gespeicherten Basisdaten bleiben erhalten. Eine angeheftete Simulationsübersicht vergleicht Zeit bis FIRE und FIRE-Alter mit den Basiswerten und zeigt die Zeitänderung sowie die Anzahl gewählter Szenarien und Regler mit Werten ungleich null.
 
 MODELL UND SZENARIEN
 

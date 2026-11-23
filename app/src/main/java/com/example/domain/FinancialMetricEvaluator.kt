@@ -284,4 +284,12 @@ object FinancialMetricEvaluator {
         score >= COMPONENT_SCORE_NEUTRAL_THRESHOLD -> AuditIndicatorStatus.NEUTRAL
         else -> AuditIndicatorStatus.NEGATIVE
     }
+
+    /** Уменьшение срока FIRE позитивно; нулевая или недоступная разница нейтральна. */
+    fun getFireTimeChangeStatus(yearsChange: Double?): AuditIndicatorStatus = when {
+        yearsChange == null || !yearsChange.isFinite() -> AuditIndicatorStatus.NEUTRAL
+        yearsChange < 0.0 -> AuditIndicatorStatus.POSITIVE
+        yearsChange > 0.0 -> AuditIndicatorStatus.NEGATIVE
+        else -> AuditIndicatorStatus.NEUTRAL
+    }
 }

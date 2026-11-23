@@ -272,6 +272,11 @@ interface AppStrings {
     val fireChartRequired: String
     val fireChartYearsSuffix: String
     val fireChartFirePoint: (age: String) -> String
+    val fireSimTimeLabel: String
+    val fireSimAgeLabel: String
+    val fireSimDeltaLabel: String
+    val fireSimNoChanges: String
+    val fireSimChangesCount: (count: Int) -> String
     val fireSimSummaryTitle: String
     val fireSimEarlier: (diff: String, target: String, age: String) -> String
     val fireSimLater: (diff: String, target: String, age: String) -> String

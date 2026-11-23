@@ -2,6 +2,9 @@ package com.example.util
 
 import com.example.util.localization.AppLanguage
 import com.example.data.model.FireStatus
+import com.example.data.model.CalculatedMetrics
+import com.example.domain.model.AuditIndicatorStatus
+import com.example.domain.FinancialMetricEvaluator
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
 import java.math.BigDecimal
@@ -19,6 +22,13 @@ sealed interface FireHeroDisplay {
         val testTag: String
     ) : FireHeroDisplay
 }
+
+data class FireSimulationSummaryDisplay(
+    val years: String,
+    val age: String,
+    val delta: String,
+    val status: AuditIndicatorStatus
+)
 
 object Formatters {
     const val MAX_INPUT_VALUE: Double = 1e12
@@ -295,6 +305,66 @@ object Formatters {
             FireStatus.HORIZON_EXHAUSTED -> strings.fireUnreachableText
             FireStatus.REACHED_NOW, FireStatus.REACHABLE -> strings.fireRetirementAgeValue(formatRatio(retirementAge, lang))
         }
+    }
+
+    /** Сравнение для закреплённой панели; знак разницы — симуляция минус база. */
+    fun formatFireSimulationComparison(
+        base: CalculatedMetrics,
+        simulated: CalculatedMetrics,
+        activeChanges: Int,
+        lang: AppLanguage
+    ): FireSimulationSummaryDisplay {
+        val strings = com.example.util.localization.getAppStrings(lang)
+        val current = if (activeChanges > 0) simulated else base
+        fun compact(value: Double): String {
+            if (!value.isFinite()) return strings.metricUnavailableValue
+            return decimalFormat(lang, 2).apply { minimumFractionDigits = 0 }.format(
+                BigDecimal.valueOf(value).setScale(2, RoundingMode.HALF_EVEN)
+            )
+        }
+        fun years(metrics: CalculatedMetrics): String = when (
+            val display = formatFireHeroDisplay(metrics.yearsToRetirement, metrics.fireStatus, true, lang)
+        ) {
+            is FireHeroDisplay.Message -> display.text
+            is FireHeroDisplay.Numeric -> if (metrics.yearsToRetirement.isFinite()) {
+                "${compact(metrics.yearsToRetirement)} ${strings.fireYearsSuffix(metrics.yearsToRetirement)}"
+            } else strings.metricUnavailableValue
+        }
+        fun age(metrics: CalculatedMetrics): String = when (metrics.fireStatus) {
+            FireStatus.REACHABLE -> compact(metrics.retirementAge)
+            else -> formatFireRetirementAge(metrics.retirementAge, metrics.fireStatus, lang, compactUnreachable = true)
+        }
+        val bothReachable = base.fireStatus == FireStatus.REACHABLE && current.fireStatus == FireStatus.REACHABLE
+        val yearsText = if (activeChanges > 0 && (bothReachable || years(base) != years(current))) {
+            // Единица срока нужна только после правого числового значения.
+            val baseText = if (base.fireStatus == FireStatus.REACHABLE &&
+                base.yearsToRetirement.isFinite() && !isSubHundredthPositiveYears(base.yearsToRetirement)
+            ) compact(base.yearsToRetirement) else years(base)
+            "$baseText → ${years(current)}"
+        } else years(current)
+        val ageText = if (activeChanges > 0 && (bothReachable || age(base) != age(current))) {
+            "${age(base)} → ${age(current)}"
+        } else age(current)
+        var status = FinancialMetricEvaluator.getFireTimeChangeStatus(null)
+        val delta = when {
+            activeChanges == 0 -> strings.fireSimNoChanges
+            base.fireStatus != FireStatus.REACHABLE || current.fireStatus != FireStatus.REACHABLE ||
+                !base.yearsToRetirement.isFinite() || !current.yearsToRetirement.isFinite() -> strings.metricUnavailableValue
+            else -> {
+                // Сравниваем показанные сроки, чтобы округлённый ноль не получал похвалу/критику.
+                val difference = BigDecimal.valueOf(current.yearsToRetirement).setScale(2, RoundingMode.HALF_EVEN)
+                    .subtract(BigDecimal.valueOf(base.yearsToRetirement).setScale(2, RoundingMode.HALF_EVEN))
+                status = FinancialMetricEvaluator.getFireTimeChangeStatus(difference.toDouble())
+                val sign = when (difference.signum()) {
+                    -1 -> "↓ −"
+                    1 -> "↑ +"
+                    else -> ""
+                }
+                val magnitude = difference.abs().toDouble()
+                "$sign${compact(magnitude)} ${strings.fireYearsSuffix(magnitude)}"
+            }
+        }
+        return FireSimulationSummaryDisplay(yearsText, ageText, delta, status)
     }
 
     /**

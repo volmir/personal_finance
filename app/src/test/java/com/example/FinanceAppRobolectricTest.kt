@@ -5,6 +5,7 @@ import android.content.Context
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotSelected
@@ -262,7 +263,7 @@ class FinanceAppRobolectricTest {
         composeRule.onAllNodes(hasTestTag("fire_trajectory_card"), useUnmergedTree = true)
             .assertCountEquals(0)
         composeRule.onAllNodes(
-            hasText(Formatters.formatFireSimulationSummary(base, simulated, lang)) and
+            hasText(Formatters.formatFireSimulationComparison(base, simulated, 1, lang).delta) and
                 hasAnyAncestor(hasTestTag("fire_simulation_summary")),
             useUnmergedTree = true
         ).assertCountEquals(1)
@@ -273,21 +274,12 @@ class FinanceAppRobolectricTest {
         composeRule.onNodeWithTag("fire_slider_return").assertExists()
         composeRule.onNodeWithTag("switch_pos_expense_optimization").assertIsOn()
 
-        // Герой-карточка в «Симуляции» показывает смоделированный результат и бейдж симуляции.
-        list.performScrollToNode(hasTestTag("fire_hero_card"))
-        composeRule.onNodeWithTag("fire_hero_simulation_badge").assertIsDisplayed()
-        composeRule.onAllNodes(
-            hasText(badgeText) and hasAnyAncestor(hasTestTag("fire_hero_simulation_badge")),
-            useUnmergedTree = true
-        ).assertCountEquals(1)
-        composeRule.onAllNodes(
-            hasText(simulatedYears) and hasAnyAncestor(hasTestTag("fire_hero_card")),
-            useUnmergedTree = true
-        ).assertCountEquals(1)
-        composeRule.onAllNodes(
-            hasText(baseYears) and hasAnyAncestor(hasTestTag("fire_hero_card")),
-            useUnmergedTree = true
-        ).assertCountEquals(0)
+        // Сравнение закреплено, второй суммарной карточки в «Симуляции» нет.
+        composeRule.onNodeWithTag("fire_hero_card").assertDoesNotExist()
+        composeRule.onNodeWithTag("fire_sim_sticky_summary").assertIsDisplayed()
+        composeRule.onNodeWithTag("fire_sim_years_value", useUnmergedTree = true)
+            .assertTextEquals(Formatters.formatFireSimulationComparison(base, simulated, 1, lang).years)
+
     }
 
     @Test
@@ -346,7 +338,7 @@ class FinanceAppRobolectricTest {
         composeRule.onNodeWithTag("fire_subtab_simulation").assertIsSelected()
         composeRule.onNodeWithTag("fire_subtab_content_simulation").assertIsDisplayed()
         composeRule.onNodeWithTag("fire_subtab_content_base").assertDoesNotExist()
-        composeRule.onNodeWithTag("fire_hero_card").assertIsDisplayed()
+        composeRule.onNodeWithTag("fire_sim_sticky_summary").assertIsDisplayed()
         composeRule.runOnIdle {
             assertEquals(simulationBefore, viewModel.fireSimulation.value)
             assertEquals(inputBefore, viewModel.inputData.value)
