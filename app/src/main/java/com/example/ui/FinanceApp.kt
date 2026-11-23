@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -114,6 +115,8 @@ fun FinanceApp(viewModel: MainViewModel) {
         LocalAppStrings provides strings
     ) {
         Scaffold(
+            // IME уменьшает весь Scaffold; NavigationBar получает уже потреблённые insets.
+            modifier = Modifier.imePadding(),
             snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
             topBar = {
                 TopAppBar(
