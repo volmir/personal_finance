@@ -25,7 +25,7 @@ Personal Finance & FIRE Audit — offline Android app (Kotlin, Jetpack Compose, 
 | Dependencies | all in `gradle/libs.versions.toml`; FLOSS only |
 | Distribution | F-Droid only (IzzyOnDroid is declined; do not add anything for it). GitHub Releases via `v*` tags |
 | Network | app has **no INTERNET permission** and works fully offline. Do not add one, no analytics, no ads, no proprietary SDKs |
-| Languages | EN (default), RU, DE, FR, IT, ES. RU is selected only for `ru` and `be` system locales; `uk` is not RU |
+| Languages | EN (default), RU, DE, FR, IT, ES. RU is selected only for `ru` and `be` system locales; unsupported locales use EN |
 
 ## 2. Frozen product decisions (do not "fix" these)
 

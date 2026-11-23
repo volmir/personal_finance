@@ -20,8 +20,8 @@ class AppLanguageTest {
         assertEquals(AppLanguage.ES, AppLanguage.fromLocaleCode("es"))
         assertEquals(AppLanguage.ES, AppLanguage.fromLocaleCode("es_ES"))
         // Unsupported languages fall back to default English
-        assertEquals(AppLanguage.EN, AppLanguage.fromLocaleCode("ja"))
-        assertEquals(AppLanguage.EN, AppLanguage.fromLocaleCode("zh"))
-        assertEquals(AppLanguage.EN, AppLanguage.fromLocaleCode("pt"))
+        listOf("ja", "zh", "pt", "uk", "uk-UA", "uk_UA").forEach { languageCode ->
+            assertEquals(languageCode, AppLanguage.EN, AppLanguage.fromLocaleCode(languageCode))
+        }
     }
 }
