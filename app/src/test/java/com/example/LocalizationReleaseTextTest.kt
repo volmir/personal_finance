@@ -24,6 +24,11 @@ class LocalizationReleaseTextTest {
     private val today = LocalDate.of(2026, 11, 6)
 
     @Test
+    fun russianDisclaimerTitleHasCorrectSpelling() {
+        assertEquals("Отказ от ответственности", getAppStrings(AppLanguage.RU).disclaimerTitle)
+    }
+
+    @Test
     fun cashFlowAuditTextsAvoidGrowthAndSpeedClaimsInEveryLanguage() {
         val forbiddenPhrases = mapOf(
             AppLanguage.RU to listOf("быстр", "капитал не растёт", "капитал не растет"),

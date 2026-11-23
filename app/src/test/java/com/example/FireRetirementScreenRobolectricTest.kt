@@ -63,6 +63,68 @@ class FireRetirementScreenRobolectricTest {
     val composeRule = createComposeRule()
 
     @Test
+    fun `slider subtitles preserve scenario titles in all six languages`() {
+        val input = FinancialInputData.usAverageData()
+        val metrics = FinanceCalculator.calculate(input, today = LocalDate.of(2026, 11, 6))
+        val simulated = metrics.copy(
+            cashFlow = metrics.cashFlow + 100.0,
+            annualExpenses = metrics.annualExpenses + 1_200.0,
+            realReturnPercent = metrics.realReturnPercent + 1.0
+        )
+        val simulation = FireSimulationState(
+            realReturnAdjustment = 1.0,
+            scenarios = FireScenarioToggles(
+                salaryIncrease20 = true, mortgage20Years35Income = true,
+                carLoan5Years = true, childOrDependent18Years = true,
+                expenseOptimization15 = true, relocationLowerCost30 = true,
+                expensesPlus25 = true
+            )
+        )
+        val language = mutableStateOf(AppLanguage.RU)
+        composeRule.setContent {
+            MaterialTheme {
+                CompositionLocalProvider(
+                    LocalAppLanguage provides language.value,
+                    LocalAppStrings provides getAppStrings(language.value)
+                ) {
+                    FireRetirementScreen(input, metrics, simulated, simulation, emptyList(),
+                        onUpdateSimulation = { _, _, _ -> }, onToggleScenario = {}, onResetSimulation = {},
+                        modifier = Modifier.testTag("fire_test_list"))
+                }
+            }
+        }
+        composeRule.onNodeWithTag("fire_subtab_simulation").performClick()
+        composeRule.onNodeWithTag("fire_test_list").performScrollToNode(hasTestTag("fire_simulator_card"))
+
+        for (lang in AppLanguage.values()) {
+            composeRule.runOnIdle { language.value = lang }
+            val strings = getAppStrings(lang)
+            val savingsFactors = listOf(
+                strings.scenarioSalaryIncreaseTitle, strings.scenarioMortgageTitle,
+                strings.scenarioCarLoanTitle, strings.scenarioChildTitle,
+                strings.scenarioExpenseOptTitle, strings.scenarioRelocationTitle,
+                strings.scenarioInflationTitle
+            )
+            val expenseFactors = listOf(
+                strings.scenarioExpenseOptTitle, strings.scenarioRelocationTitle,
+                strings.scenarioInflationTitle, strings.scenarioMortgageTitle,
+                strings.scenarioCarLoanTitle, strings.scenarioChildTitle
+            )
+            val expected = listOf(
+                "+${Formatters.formatMoney(100.0, input.currencySymbol, lang)} ${strings.fireSliderBaseSuffix} (${savingsFactors.joinToString(", ")})",
+                "+ (${strings.fireSliderInc.trim(' ', '(', ')')}) • ${expenseFactors.joinToString(", ")}",
+                "+${Formatters.formatRatio(1.0, lang)}% ${strings.fireSliderBaseReturnSuffix}"
+            )
+            for (subtitle in expected) {
+                composeRule.onAllNodes(
+                    hasText(subtitle) and hasAnyAncestor(hasTestTag("fire_simulator_card")),
+                    useUnmergedTree = true
+                ).assertCountEquals(1)
+            }
+        }
+    }
+
+    @Test
     fun `base parameters live only in the FIRE subtab and show the base real return in every language`() {
         val input = FinancialInputData.usAverageData()
         val metrics = FinanceCalculator.calculate(input, today = LocalDate.of(2026, 11, 6))

@@ -565,7 +565,7 @@ val StringsRu: AppStrings = object : AppStrings {
     override val scenarioChildParam: (String, String) -> String = { percent, years -> "+${percent}% к расходам на $years лет" }
     override val scenarioChildDesc: (amt: String, years: String) -> String = { amt, years -> "Расходы на ребенка: +$amt/мес. (период $years лет)" }
 
-    override val disclaimerTitle: String = "Отказ от отвествености"
+    override val disclaimerTitle: String = "Отказ от ответственности"
     override val disclaimerText: String = "Важно: Проект является персональной разработкой и предоставляется исключительно в ознакомительных целях «как есть». Автор не несет ответственности за возможные сбои, потерю данных или иной ущерб, возникший в ходе использования данного ПО. Все расчеты, формулы, метрики и симуляции носят исключительно информационно-ознакомительный характер и не являются индивидуальной финансовой, инвестиционной или налоговой рекомендацией. Вы используете этот инструмент на свой собственный страх и риск."
     override val assumptionsDisclaimerTitle: String = "Дисклеймер"
     override val assumptionsDisclaimerBody: (returnRate: String, inflation: String) -> String = { returnRate, inflation -> fireAssumptionsBody(returnRate, inflation) }
