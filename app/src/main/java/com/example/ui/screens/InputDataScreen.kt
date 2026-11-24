@@ -121,7 +121,6 @@ fun InputDataScreen(
     val currencyScrollState = rememberSaveable(saver = ScrollState.Saver) { ScrollState(0) }
     // Подсказки и раскрытие формул сохраняются и вне видимой части LazyColumn.
     var expandedHints by rememberSaveable { mutableStateOf(setOf<String>()) }
-    val assetsFormulaExpanded = rememberSaveable { mutableStateOf(false) }
     val realReturnFormulaExpanded = rememberSaveable { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     val fieldFocus = remember { List(11) { FocusRequester() } }
@@ -350,7 +349,8 @@ fun InputDataScreen(
                     hintExpanded = strings.assetsHintExpanded,
                     instruction = strings.breakdownInstruction,
                     categories = strings.assetsCategories,
-                    modifier = Modifier.padding(top = 6.dp)
+                    modifier = Modifier.padding(top = 6.dp).testTag("input_assets_hint"),
+                    formula = strings.totalAssetsFormula
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
@@ -358,11 +358,10 @@ fun InputDataScreen(
                 // Расчет Активы (Σ) по единому шаблону
                 MetricIndicatorRow(
                     title = strings.totalAssetsTitle,
-                    collapsibleFormula = true,
-                    formulaExpandedState = assetsFormulaExpanded,
-                    formula = strings.totalAssetsFormula,
+                    formula = null,
                     value = Formatters.formatMoney(metrics.totalAssets, inputData.currencySymbol, lang),
-                    valueColor = MaterialTheme.colorScheme.primary
+                    valueColor = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.testTag("input_metric_total_assets")
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -674,7 +673,7 @@ fun InputDataScreen(
 @Composable
 fun MetricIndicatorRow(
     title: String,
-    formula: String,
+    formula: String?,
     value: String,
     valueColor: Color = MaterialTheme.colorScheme.primary,
     subValue: String? = null,
@@ -687,7 +686,7 @@ fun MetricIndicatorRow(
         color = MaterialTheme.colorScheme.surface,
         modifier = modifier.fillMaxWidth()
     ) {
-        if (collapsibleFormula) {
+        if (collapsibleFormula && formula != null) {
             val expandedState: MutableState<Boolean> = formulaExpandedState ?: rememberSaveable { mutableStateOf(false) }
             var expanded by expandedState
             val strings = LocalAppStrings.current
@@ -754,13 +753,15 @@ fun MetricIndicatorRow(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 )
-                Text(
-                    text = formula,
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        color = MaterialTheme.colorScheme.primary,
-                        fontFamily = FontFamily.Monospace
+                formula?.let {
+                    Text(
+                        text = it,
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            color = MaterialTheme.colorScheme.primary,
+                            fontFamily = FontFamily.Monospace
+                        )
                     )
-                )
+                }
             }
             Spacer(modifier = Modifier.width(8.dp))
             if (subValue != null) {
@@ -1003,7 +1004,8 @@ fun CategoryBreakdownHint(
     categories: List<BreakdownCategory>,
     isExpanded: Boolean,
     onExpandedChange: (Boolean) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    formula: String? = null
 ) {
     val strings = LocalAppStrings.current
 
@@ -1109,6 +1111,23 @@ fun CategoryBreakdownHint(
                     if (index < categories.size - 1) {
                         Spacer(modifier = Modifier.height(2.dp))
                     }
+                }
+                formula?.let {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = strings.metricCardFormulaPrefix.trimEnd(),
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    )
+                    Text(
+                        text = it,
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            color = MaterialTheme.colorScheme.primary,
+                            fontFamily = FontFamily.Monospace
+                        )
+                    )
                 }
             }
         }
