@@ -66,6 +66,7 @@ import com.example.domain.FinancialMetricEvaluator
 import com.example.domain.SimulatorScaleCalculator
 import com.example.domain.calculateSimulationOngoingExpenses
 import com.example.ui.FireSimulationState
+import com.example.ui.components.CollapsibleInfoCard
 import com.example.ui.components.FireTrajectoryChart
 import com.example.ui.components.ScenarioTogglesPanel
 import com.example.ui.theme.AlertRed
@@ -950,88 +951,24 @@ fun FireRetirementScreen(
 
         if (!isSimulationSubtab) fireItem {
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Card(
-                    shape = RoundedCornerShape(14.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                CollapsibleInfoCard(
+                    title = strings.fireAssumptionsTitle,
+                    body = strings.fireAssumptionsBody(
+                        Formatters.formatPercent(inputData.nominalReturnPercent, lang),
+                        Formatters.formatPercent(inputData.inflationPercent, lang)
                     ),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Row(
-                        modifier = Modifier.padding(14.dp),
-                        verticalAlignment = Alignment.Top
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.Analytics,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier
-                                .size(20.dp)
-                                .padding(top = 2.dp)
-                        )
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Column {
-                            Text(
-                                text = strings.fireAssumptionsTitle,
-                                style = MaterialTheme.typography.labelMedium.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                            )
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = strings.fireAssumptionsBody(
-                                    Formatters.formatPercent(inputData.nominalReturnPercent, lang),
-                                    Formatters.formatPercent(inputData.inflationPercent, lang)
-                                ),
-                                style = MaterialTheme.typography.bodySmall.copy(
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            )
-                        }
-                    }
-                }
+                    leadingIcon = Icons.Outlined.Analytics,
+                    iconTint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    testTag = "fire_assumptions_card"
+                )
 
-                Card(
-                    shape = RoundedCornerShape(14.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-                    ),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Row(
-                        modifier = Modifier.padding(14.dp),
-                        verticalAlignment = Alignment.Top
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Info,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier
-                                .size(20.dp)
-                                .padding(top = 2.dp)
-                        )
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Column {
-                            Text(
-                                text = strings.disclaimerTitle,
-                                style = MaterialTheme.typography.labelMedium.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                            )
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = strings.disclaimerText,
-                                style = MaterialTheme.typography.bodySmall.copy(
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            )
-                        }
-                    }
-                }
+                CollapsibleInfoCard(
+                    title = strings.disclaimerTitle,
+                    body = strings.disclaimerText,
+                    leadingIcon = Icons.Default.Info,
+                    iconTint = MaterialTheme.colorScheme.primary,
+                    testTag = "fire_disclaimer_card"
+                )
             }
             Spacer(modifier = Modifier.height(16.dp))
         }

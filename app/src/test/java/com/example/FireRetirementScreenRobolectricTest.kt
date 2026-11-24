@@ -1,5 +1,7 @@
 package com.example
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.mutableStateOf
@@ -8,6 +10,8 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.assertContentDescriptionEquals
+import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertHeightIsAtLeast
 import androidx.compose.ui.test.assert
@@ -61,6 +65,62 @@ import org.robolectric.annotation.GraphicsMode
 class FireRetirementScreenRobolectricTest {
     @get:Rule
     val composeRule = createComposeRule()
+
+    @Test
+    fun `info cards collapse independently in all languages themes and large font`() {
+        val input = FinancialInputData.defaultData()
+        val metrics = FinanceCalculator.calculate(input, today = LocalDate.of(2025, 1, 1))
+        val language = mutableStateOf(AppLanguage.RU)
+        val dark = mutableStateOf(false)
+        composeRule.setContent {
+            val density = LocalDensity.current
+            CompositionLocalProvider(
+                LocalAppLanguage provides language.value,
+                LocalAppStrings provides getAppStrings(language.value),
+                LocalDensity provides Density(density.density, 1.3f)
+            ) {
+                MyApplicationTheme(darkTheme = dark.value) {
+                    Box(Modifier.width(320.dp)) {
+                        FireRetirementScreen(input, metrics, metrics, FireSimulationState(), emptyList(),
+                            onUpdateSimulation = { _, _, _ -> }, onToggleScenario = {}, onResetSimulation = {},
+                            modifier = Modifier.testTag("fire_test_list"))
+                    }
+                }
+            }
+        }
+        for (lang in AppLanguage.values()) for (isDark in listOf(false, true)) {
+            composeRule.runOnIdle {
+                language.value = lang
+                dark.value = isDark
+            }
+            val strings = getAppStrings(lang)
+            val cards = listOf(
+                Triple("fire_assumptions_card", strings.fireAssumptionsTitle,
+                    strings.fireAssumptionsBody(
+                        Formatters.formatPercent(input.nominalReturnPercent, lang),
+                        Formatters.formatPercent(input.inflationPercent, lang)
+                    )),
+                Triple("fire_disclaimer_card", strings.disclaimerTitle, strings.disclaimerText)
+            )
+            for ((tag, title, body) in cards) {
+                composeRule.onNodeWithTag("fire_test_list").performScrollToNode(hasTestTag(tag))
+                composeRule.onNodeWithTag("${tag}_icon", useUnmergedTree = true).assertIsDisplayed()
+                composeRule.onNode(hasText(title) and hasAnyAncestor(hasTestTag(tag)), useUnmergedTree = true)
+                    .assertIsDisplayed()
+                composeRule.onNodeWithTag("${tag}_body").assertDoesNotExist()
+                composeRule.onNodeWithTag("${tag}_toggle")
+                    .assert(hasClickAction()).assertHeightIsAtLeast(48.dp)
+                    .assertContentDescriptionEquals(strings.metricCardExpand).performClick()
+                composeRule.onNodeWithTag("${tag}_body").assertTextEquals(body)
+                val otherTag = cards.first { it.first != tag }.first
+                composeRule.onNodeWithTag("${otherTag}_body").assertDoesNotExist()
+                composeRule.onNodeWithTag("fire_test_list").performScrollToNode(hasTestTag("${tag}_toggle"))
+                composeRule.onNodeWithTag("${tag}_toggle")
+                    .assertContentDescriptionEquals(strings.metricCardCollapse).performClick()
+                composeRule.onNodeWithTag("${tag}_body").assertDoesNotExist()
+            }
+        }
+    }
 
     @Test
     fun `FIRE birth date follows selected app language`() {

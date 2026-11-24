@@ -1,5 +1,6 @@
 package com.example
 
+import androidx.compose.ui.test.assertContentDescriptionEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertTextEquals
@@ -17,6 +18,7 @@ import androidx.compose.ui.test.performClick
 import com.example.ui.MainViewModel
 import com.example.ui.FireSimulationState
 import com.example.util.Formatters
+import com.example.util.localization.getAppStrings
 import com.example.util.localization.AppLanguage
 import org.junit.Assert.assertEquals
 import androidx.lifecycle.ViewModelProvider
@@ -36,6 +38,55 @@ class FireSubtabRecreationRobolectricTest {
 
     @get:Rule
     val composeRule = createAndroidComposeRule<MainActivity>()
+
+    @Test
+    fun `FIRE info cards keep independent states across subtabs main tabs and recreation`() {
+        if (composeRule.onAllNodesWithTag("sample_data_notice_confirm").fetchSemanticsNodes().isNotEmpty()) {
+            composeRule.onNodeWithTag("sample_data_notice_confirm").performClick()
+        }
+        val strings = getAppStrings(AppLanguage.EN)
+        composeRule.onNodeWithTag("nav_item_fire").performClick()
+        fun assertState(assumptionsExpanded: Boolean, disclaimerExpanded: Boolean) {
+            for ((tag, expanded) in listOf(
+                "fire_assumptions_card" to assumptionsExpanded,
+                "fire_disclaimer_card" to disclaimerExpanded
+            )) {
+                composeRule.onNode(hasScrollAction()).performScrollToNode(hasTestTag("${tag}_toggle"))
+                composeRule.onNodeWithTag("${tag}_toggle").assertContentDescriptionEquals(
+                    if (expanded) strings.metricCardCollapse else strings.metricCardExpand
+                )
+                if (expanded) composeRule.onNodeWithTag("${tag}_body").assertExists()
+                else composeRule.onNodeWithTag("${tag}_body").assertDoesNotExist()
+            }
+        }
+        fun toggle(tag: String) {
+            composeRule.onNode(hasScrollAction()).performScrollToNode(hasTestTag("${tag}_toggle"))
+            composeRule.onNodeWithTag("${tag}_toggle").performClick()
+        }
+        assertState(false, false)
+        toggle("fire_assumptions_card")
+        assertState(true, false)
+        composeRule.onNode(hasScrollAction()).performScrollToIndex(0)
+        composeRule.onNodeWithTag("fire_subtab_simulation").performClick()
+        composeRule.onNode(hasScrollAction()).performScrollToNode(hasTestTag("switch_pos_salary_increase"))
+        composeRule.onNodeWithTag("fire_assumptions_card").assertDoesNotExist()
+        composeRule.onNodeWithTag("fire_disclaimer_card").assertDoesNotExist()
+        composeRule.onNode(hasScrollAction()).performScrollToIndex(0)
+        composeRule.onNodeWithTag("fire_subtab_base").performClick()
+        assertState(true, false)
+        for (tab in listOf("input", "metrics", "scores")) {
+            composeRule.onNodeWithTag("nav_item_$tab").performClick()
+            composeRule.onNodeWithTag("nav_item_fire").performClick()
+            assertState(true, false)
+        }
+        composeRule.activityRule.scenario.recreate()
+        assertState(true, false)
+        toggle("fire_disclaimer_card")
+        assertState(true, true)
+        toggle("fire_assumptions_card")
+        composeRule.activityRule.scenario.recreate()
+        assertState(false, true)
+    }
 
     @Test
     fun `selected Simulation subtab survives Activity recreation`() {
