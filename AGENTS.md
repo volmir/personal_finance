@@ -12,6 +12,8 @@ Personal Finance & FIRE Audit — offline Android app (Kotlin, Jetpack Compose, 
 - If you cannot run Gradle (no network / no SDK), say so explicitly. Do static review, and for math verify with a small throwaway script. Never claim tests passed when they were not run.
 - If something is ambiguous or contradicts section 2, ask one short question instead of guessing.
 
+- **One-off tool lifecycle.** One-off migration, repair and data transformation tools must not remain indefinitely in the main codebase. Once the operation is complete, move durable product decisions into the active configuration or code, keep regression tests for the resulting behavior, and remove the one-off tool and its dedicated tests if it is no longer needed for reproducibility. Before removal, verify dependencies, invocation paths and data/build reproducibility; preserve tests for active behavior, supported user-data migrations and historical evidence. If the tool's continued necessity is unclear, do not remove it without separate approval. Cleanup of existing tools is a separate task and must not expand the scope of the current work automatically.
+
 ## 1. Facts
 
 | Item | Value |
