@@ -1,337 +1,106 @@
-# Рабочая очередь — UI и экспорт «Финансы и FIRE» (23–24.11.2026)
+## UI-01: Перенести формулу «Активы» в существующую подсказку
+tier: standard
+gate: bash orchestrator/run.sh --check unit && bash orchestrator/run.sh --check android
+retries: 1
+````prompt
+Следуй AGENTS.md. Только экран №1, показатель «Активы». Не переносить формулу доходности до UI-02. Не трогать другие экраны, расчёты, экспорт и оркестратор. Commit/push выполняет оркестратор.
 
-<!-- Подготовлено из утверждённого FINANCE_UI_TASKS_2026-11-24.md.
-     11 независимых задач. Формат совместим с orchestrator/orchestrator.py.
-     Порядок задач = порядок выполнения. Оркестратор запускает только по одному prompt.
-     gate профили android, unit и full берутся из существующего orchestrator/config.json.
-     Не добавляйте содержимое очереди к прежним задачам, если нужна только эта пачка. -->
+Проверенные файлы:
+- app/src/main/java/com/example/ui/screens/InputDataScreen.kt
+- app/src/main/java/com/example/util/localization/AppStrings.kt
+- app/src/main/java/com/example/util/localization/StringsRu.kt (и остальные локали только для сверки)
+- app/src/test/java/com/example/InputDataScreenRobolectricTest.kt
 
-## UI-MET-01: убрать верхнее пояснение на экране №2
+Текущая структура InputDataScreen.kt:
+- около строк 123–125: expandedHints, assetsFormulaExpanded, realReturnFormulaExpanded;
+- около строк 343–354: CategoryBreakdownHint(metricName = strings.assetsBreakdownName, isExpanded = "assets" in expandedHints, hintCollapsed = strings.assetsHintCollapsed, hintExpanded = strings.assetsHintExpanded, categories = strings.assetsCategories, modifier = Modifier.padding(top = 6.dp));
+- около строк 359–366: MetricIndicatorRow(title = strings.totalAssetsTitle, collapsibleFormula = true, formulaExpandedState = assetsFormulaExpanded, formula = strings.totalAssetsFormula, value = Formatters.formatMoney(metrics.totalAssets, inputData.currencySymbol, lang), valueColor = MaterialTheme.colorScheme.primary);
+- около строк 675–795: MetricIndicatorRow, ветка collapsibleFormula с TextButton(strings.metricCardInfo), другая ветка с постоянно видимой формулой;
+- около строк 998–1116: CategoryBreakdownHint, внутри if (isExpanded) инструкция и categories.forEachIndexed.
+
+Выполнить последовательно:
+1. В конец списка параметров CategoryBreakdownHint (после modifier, с сохранением совместимости остальных вызовов) добавить `formula: String? = null`. Внутри `if (isExpanded)`, СТРОГО после завершения categories.forEachIndexed, добавить только при ненулевой формуле:
+   - Spacer(height = 8.dp);
+   - Text(text = strings.metricCardFormulaPrefix.trimEnd(), style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface));
+   - Text(text = переданная формула, style = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.colorScheme.primary, fontFamily = FontFamily.Monospace)).
+   Использовать существующий локализованный `metricCardFormulaPrefix` (RU «Формула: »). Не менять исходные строки totalAssetsFormula и realReturnFormula, не добавлять дублирующие переводы. Не ограничивать формулу maxLines/ellipsis. Не изменять инструкцию и список категорий. Другие вызовы CategoryBreakdownHint по умолчанию не получают новую секцию.
+2. Передать `formula = strings.totalAssetsFormula` ТОЛЬКО в вызове с ключом "assets". Добавить стабильный тег `input_assets_hint` на существующий modifier (не заменять padding). Формула отображается только при раскрытии этой подсказки. Состояние раскрытия остаётся в expandedHints.
+3. В MetricIndicatorRow изменить тип `formula: String` на `formula: String?` (не вводить отдельный дублирующий компонент). В ветке обычного Row обернуть существующий Text(formula) в `formula?.let { ... }`, не добавляя Spacer при null. Сохранить прежний стиль и все параметры. На переходном этапе оставить ветку collapsibleFormula для доходности; сделать её условие `if (collapsibleFormula && formula != null)`, сохранив существующее поведение при ненулевой формуле. Это гарантирует, что Text не получает nullable строку. Остальные четыре вызова продолжают передавать исходную ненулевую формулу.
+4. В вызове MetricIndicatorRow с title = strings.totalAssetsTitle удалить `collapsibleFormula = true` и `formulaExpandedState = assetsFormulaExpanded`, заменить аргумент на `formula = null`, добавить `modifier = Modifier.testTag("input_metric_total_assets")` (если уже есть тег, не дублировать). Удалить только неиспользуемое объявление assetsFormulaExpanded. Не удалять realReturnFormulaExpanded. Теперь обычная ветка Row даёт название слева и исходное значение справа, с вертикальным центрированием и padding 12.dp. Не добавлять пустой ряд или Info. Сохранить Formatters, цвет, Surface, значение, переключатель `toggle_emergency_fund_mode` и поля ввода. Не изменять промежуток 12.dp перед итоговым показателем или 8.dp перед переключателем без объективной необходимости.
+
+Тесты (обязательная часть задачи):
+- В InputDataScreenRobolectricTest заменить для активов старый сценарий клика по StringsRu.metricCardInfo на открытие существующей подсказки по тегу input_assets_hint. Тест `only assets and real return formulas collapse independently and restore after scrolling and recreation` сейчас проверяет два старых Info; обновить ТОЛЬКО часть активов, оставить доходность на прежнем Info. Проверить, что в свернутой подсказке формулы нет, при раскрытии есть ровно один полный текст totalAssetsFormula и заголовок metricCardFormulaPrefix.trimEnd(), при сворачивании исчезает; отдельный Info в строке input_metric_total_assets отсутствует. После скролла и StateRestorationTester состояние сохраняется. Скроллить реальный LazyColumn до нужного элемента, использовать unmerged tree для дочерних Text, если clickable Surface объединяет семантику.
+- Тест `collapsible formulas preserve full text and style without value overlap at 320dp in all languages themes and font scales` сейчас напрямую рендерит две MetricIndicatorRow с collapsibleFormula=true. Заменить тестовую часть активов на Column с настоящими CategoryBreakdownHint и MetricIndicatorRow(formula = null) и управляемым состоянием подсказки. Для формулы оставить проверки точного текста, labelSmall/Monospace/primary и assertTextFits; для суммы оставить проверку полного текста и неперекрытия подписи/суммы (при крупном шрифте допустимо переносить подпись). Старую проверку доходности сохранить до UI-02. Использовать уже имеющиеся textLayoutResult/textStyle/assertTextFits и текущую матрицу 6 языков, обе темы, 320dp, fontScale 1/1.6. Не удалять покрытие четырёх постоянно видимых формул.
+- При необходимости разделить два теста на отдельные сценарии вместо смешивания старого и нового поведения. Не менять ожидания других экранов. Проверить, что новое поведение не добавляет формулу в другие CategoryBreakdownHint.
+
+Приёмка: формула активов видна ровно один раз и только в раскрытой основной подсказке, отдельного Info нет, итоговая сумма и переключатель прежние, реальная доходность и остальные формулы пока не изменены. Пройти unit + android gate. Итог: изменённые файлы, точные тесты и реальные результаты.
+````
+
+## UI-02: Перенести формулу «Реальная доходность капитала» в подсказку об инвестициях
+tier: standard
+gate: bash orchestrator/run.sh --check unit && bash orchestrator/run.sh --check android
+retries: 1
+````prompt
+Следуй AGENTS.md. Выполнять после UI-01. Только экран №1, карточка «Инвестиции и инфляция». Не изменять финансовую формулу, налог, расчётные значения, другие экраны, экспорт и оркестратор. Commit/push делает оркестратор.
+
+Файлы: app/src/main/java/com/example/ui/screens/InputDataScreen.kt; app/src/test/java/com/example/InputDataScreenRobolectricTest.kt. Строковые ресурсы уже существуют.
+
+Проверенные точки в исходнике до UI-01:
+- около строк 500–511: CategoryBreakdownHint(metricName = strings.investmentsBreakdownName, isExpanded = "investments" in expandedHints, hintCollapsed = strings.investmentsHintCollapsed, hintExpanded = strings.investmentsHintExpanded, categories = strings.investmentsCategories, modifier = Modifier.padding(top = 6.dp));
+- около строк 513–524: ОТДЕЛЬНАЯ CategoryBreakdownHint с ключом "capitalGainsTax", categories = strings.capitalGainsTaxCategories; не изменять;
+- около строк 529–537: MetricIndicatorRow(title = strings.realReturnTitle, collapsibleFormula = true, formulaExpandedState = realReturnFormulaExpanded, formula = strings.realReturnFormula, value = Formatters.formatPercent(metrics.realReturnPercent, lang), valueColor = StatusColors.getColor(FinancialMetricEvaluator.getRealReturnStatus(metrics.realReturnPercent)), modifier = Modifier.testTag("input_metric_real_return")).
+
+Выполнить:
+1. В существующем вызове CategoryBreakdownHint с ключом "investments" передать `formula = strings.realReturnFormula`, используя новый опциональный параметр из UI-01. Добавить `input_investments_hint` к существующему modifier, сохранив padding. Локализованный заголовок и стиль формулы уже находятся в CategoryBreakdownHint: не дублировать их. Формула должна быть в конце раскрытой подсказки об инвестициях, не в налоговой подсказке. Исходную строку realReturnFormula не менять.
+2. В вызове MetricIndicatorRow с title = strings.realReturnTitle заменить `formula = strings.realReturnFormula` на `formula = null`, удалить `collapsibleFormula = true` и `formulaExpandedState = realReturnFormulaExpanded`. Сохранить testTag, Formatters.formatPercent и StatusColors/FinancialMetricEvaluator без изменений. Удалить ставшее лишним объявление realReturnFormulaExpanded. Итоговая строка использует обычный Row (как активы) без Info и пустого пространства.
+3. Удаление мёртвого кода только после проверки `git grep -n -e 'collapsibleFormula' -e 'formulaExpandedState' -- '*.kt'`: если иных реальных потребителей MetricIndicatorRow с этой веткой нет, удалить оба параметра и всю ветку if (collapsibleFormula...) этого компонента, оставив только существующий обычный Row с nullable formula из UI-01. Обновить относящийся к этому компоненту KDoc. Удалить лишь действительно неиспользуемые импорты. Не удалять общие строки metricCardInfo/metricCardExpand/metricCardCollapse и не изменять MetricCard.kt экрана №2. Если обнаружатся новые внешние потребители, сохранить ветку для них и указать это в отчёте.
+4. Не менять CategoryBreakdownHint с ключом "capitalGainsTax" и другие подсказки. Состояния assets и investments должны оставаться независимыми через существующий expandedHints. Другие четыре MetricIndicatorRow (cashFlow, savingsRate, netWorth, horizon) сохраняют постоянно видимые формулы.
+
+Тесты:
+- В InputDataScreenRobolectricTest завершить обновление `only assets and real return formulas collapse independently and restore after scrolling and recreation`: обе формулы раскрываются через свои подсказки по тегам input_assets_hint / input_investments_hint. Проверить независимость, закрытие, восстановление после скролла и StateRestorationTester, отсутствие отдельного Info в обеих итоговых строках, отсутствие формулы доходности в налоговой подсказке. Проверить прежние четыре постоянно видимые формулы. Использовать unmerged tree для дочерних Text при объединённой семантике.
+- Завершить переделку `collapsible formulas preserve full text and style without value overlap at 320dp in all languages themes and font scales`: теперь оба случая рендерят новый настоящий CategoryBreakdownHint и MetricIndicatorRow(formula = null), с управляемым состоянием. Проверить неизменённые числовые значения и стиль формул, отсутствие обрезания/перекрытия, показ заголовка и формулы только при раскрытии, отсутствие старых Info. Сохранить исходную матрицу 6 языков, обе темы, 320dp, fontScale 1/1.6. Удалить только устаревшие assertions о геометрии старой кнопки Info, заменить соответствующими проверками геометрии новой подсказки; не удалять тест целиком. При необходимости уточнить названия тестов по новому контракту.
+- Проверить git grep на оставшиеся старые вызовы в тестах. Не менять тесты или код MetricsScreen: его Info остаётся.
+
+Приёмка: обе формулы перемещены в свои основные подсказки, оба отдельные Info удалены, налоговая подсказка и четыре другие формулы сохранены. Расчёты и цвета не изменены. Unit + android gate проходят. В отчёте отметить, удалена ли неиспользуемая ветка MetricIndicatorRow, какие тесты действительно выполнены.
+````
+
+## UI-03: Увеличить расстояние между показателями «Детализация баллов»
 tier: light
 gate: bash orchestrator/run.sh --check unit && bash orchestrator/run.sh --check android
 retries: 1
 ````prompt
-ЗАДАЧА UI-MET-01. Выполни строго описанную ниже правку, не переходи к следующей задаче.
+Следуй AGENTS.md. Только экран №3 «Анализ», карточка «Детализация баллов». Commit/push делает оркестратор.
 
-Общие правила ДЛЯ ЭТОЙ задачи:
-- Работай в текущей `main`, прочитай `AGENTS.md` и релевантные исходники перед правкой; не используй `feature/redesign-v2`. Если актуальный HEAD отличается от описанных мест, найдите соответствующий текущий код и опирайтесь на него; не затирайте чужие изменения.
-- Меняй ТОЛЬКО названную область и соответствующие тесты/строки; минимальный diff, без рефакторинга соседних компонентов, без новых зависимостей, без модификации `orchestrator/`, Gradle, релизных версий и applicationId.
-- Не изменяй финансовые формулы, статусы, пороги, сохраняемые данные, логику симулятора, 4 главные вкладки и внутренние FIRE/Симуляция, если этого прямо не требует задача. Сохрани обе темы, доступность и fontScale.
-- Все правки пользовательских строк выполняй через AppStrings для RU/EN/DE/FR/IT/ES. Не вставляй английские надписи в Composable.
-- Актуализируй релевантные regression/unit/Robolectric-тесты только при реальном изменении UX-контракта. Не удаляй assertions и не подгоняй ожидания без объяснения. Физические устройства НЕ требуются.
-- Проверь названные в задаче тесты (если они существуют) и компиляцию; при недоступности SDK не заявляй, что они прошли. По завершении укажи изменённые файлы, выполненные проверки и реальные результаты. Не делай git commit, push, checkout, reset и add вручную — этим управляет оркестратор.
+Файл: app/src/main/java/com/example/ui/screens/AuditScoreScreen.kt. Точное место около строк 195–251: Card с testTag("scores_breakdown_card"), Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)). В этой Column находятся заголовок с testTag("scores_breakdown_title") и четыре вызова private ScoreItemContent в порядке score_savings_rate, score_safety_months, score_debt_ratio, score_cfs.
 
-Конкретные инструкции и приёмка:
+Сделать только следующее: сохранить внешнюю Column с padding 16.dp и spacedBy(8.dp), заголовок оставить как есть. Обернуть четыре существующих вызова ScoreItemContent в одну вложенную Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)). Не менять аргументы, порядок или внутренности ScoreItemContent (около строки 513). Это даёт 8.dp между заголовком и первым показателем, ровно 12.dp между соседними показателями, без дополнительного отступа после последнего. Не добавлять Divider, Card, рамки, новые цвета. Не менять другие LazyColumn/items, внешние отступы, размеры шрифтов, баллы, прогресс-бары, расчёты и экспорт.
 
-**Файл:** `app/src/main/java/com/example/ui/screens/MetricsScreen.kt`.
+Тест: app/src/test/java/com/example/AuditScoreScreenRobolectricTest.kt, метод `breakdown keeps four compact rows and full heading at 320dp in all languages and themes` (около строки 174). В цикле по rows сейчас `assertEquals("$tag has an internal 8dp gap", 8.dp, bounds.top - previousBottom)`. Использовать rows.withIndex() либо эквивалент: expectedGap = if (index == 0) 8.dp else 12.dp. Сохранить проверки полного заголовка, четырёх тегов, текста, значения, баллов, ProgressBarRangeInfo, локалей, тем и fontScale. Не менять ApprovedUiRegressionTest, кроме объективно устаревшей проверки расстояния, если такая есть.
 
-**Текущее место:** первый `LazyColumn.item(key = "header")`, `Card(testTag("metrics_header_card"))`, `Column` с `Text(strings.metricsHeaderTitle)` и следующим `Text(strings.metricsHeaderSubtitle)`. Под заголовком расположен горизонтальный `Row(testTag("metrics_filter_row"))` с 4 фильтрами.
-
-**Сделать:** убрать ТОЛЬКО отображение `Text(text = strings.metricsHeaderSubtitle)` (например, RU: «Все ключевые метрики с формулами и оценкой»). Сохранить заголовок `metricsHeaderTitle`, иконку, карточку, фильтры, горизонтальную прокрутку и выбранный фильтр. Не обязательно удалять `metricsHeaderSubtitle` из `AppStrings` или шести словарей: избегать ненужной массовой правки локализаций. Если после удаления остаётся явно лишний вертикальный промежуток, скорректировать только соответствующий отступ внутри `metrics_header_card`.
-
-**Приёмка:** текст описания отсутствует для всех языков; `metrics_filter_row` и `metrics_header_card` доступны, фильтры переключаются и сохраняются. Проверить `MetricsScreenRobolectricTest`, `UiDisclosureStateRobolectricTest` и `:app:compileDebugKotlin`.
+Приёмка: только три промежутка между показателями выросли с 8 до 12.dp; суммарный рост высоты на 12.dp при прочих равных. Все четыре показателя внутри одной карточки, заголовок и внутренности прежние. Unit + android gate проходят. Указать результат теста и изменённые файлы.
 ````
 
-## UI-MET-02: формулы экрана №2 под раскрытие; «Инфо» справа от числа
-tier: standard
-gate: bash orchestrator/run.sh --check unit && bash orchestrator/run.sh --check android
-retries: 1
-````prompt
-ЗАДАЧА UI-MET-02. Выполни строго описанную ниже правку, не переходи к следующей задаче.
-
-Общие правила ДЛЯ ЭТОЙ задачи:
-- Работай в текущей `main`, прочитай `AGENTS.md` и релевантные исходники перед правкой; не используй `feature/redesign-v2`. Если актуальный HEAD отличается от описанных мест, найдите соответствующий текущий код и опирайтесь на него; не затирайте чужие изменения.
-- Меняй ТОЛЬКО названную область и соответствующие тесты/строки; минимальный diff, без рефакторинга соседних компонентов, без новых зависимостей, без модификации `orchestrator/`, Gradle, релизных версий и applicationId.
-- Не изменяй финансовые формулы, статусы, пороги, сохраняемые данные, логику симулятора, 4 главные вкладки и внутренние FIRE/Симуляция, если этого прямо не требует задача. Сохрани обе темы, доступность и fontScale.
-- Все правки пользовательских строк выполняй через AppStrings для RU/EN/DE/FR/IT/ES. Не вставляй английские надписи в Composable.
-- Актуализируй релевантные regression/unit/Robolectric-тесты только при реальном изменении UX-контракта. Не удаляй assertions и не подгоняй ожидания без объяснения. Физические устройства НЕ требуются.
-- Проверь названные в задаче тесты (если они существуют) и компиляцию; при недоступности SDK не заявляй, что они прошли. По завершении укажи изменённые файлы, выполненные проверки и реальные результаты. Не делай git commit, push, checkout, reset и add вручную — этим управляет оркестратор.
-
-Конкретные инструкции и приёмка:
-
-**Файлы:** `app/src/main/java/com/example/ui/components/MetricCard.kt`; при необходимости UI-тесты `MetricsScreenRobolectricTest.kt`, `UiDisclosureStateRobolectricTest.kt`, `TypographyLayoutRobolectricTest.kt`.
-
-**Текущее место:** `MetricCard(...)` принимает `value`, `formula`, `description`, `expanded`, `onExpandedChange`, `extraContent`. Сейчас: `Text(value)` в отдельной строке, ниже всегда видимый `Surface` с `metric_card_formula` и справа `Инфо`/стрелка, а внутри `AnimatedVisibility(visible = expanded)` видимо только `description`.
-
-**Сделать точно:**
-1. После заголовка карточки поместить `Text(value)` и действие `Инфо` с `ExpandMore/ExpandLess` **в одну горизонтальную строку**: значение слева (`Modifier.weight(1f)`, перенос не обрезать), «Инфо» и шеврон строго у правого края, вертикальное выравнивание по центру/базовой линии. На узкой ширине 320dp не допускать наложения и обрезания значения; не уменьшать шрифт.
-2. Убрать формульный `Surface` из постоянно видимой части. Разместить его **в начале** `AnimatedVisibility(expanded)`, перед существующим описанием; формула видна только после раскрытия. Описание также остаётся только внутри раскрытия.
-3. **Полностью сохранить** старый стиль самой формулы: `Surface(RoundedCornerShape(6.dp), surface alpha 0.8, outline alpha 0.2, BorderStroke 1.dp)`, `FontFamily.Monospace`, `MaterialTheme.typography.labelSmall`, локализованный префикс `metricCardFormulaPrefix`, отступы `6.dp/2.dp`, `testTag("metric_card_formula")`. На открытой формуле разрешить полный перенос без ellipsis (`maxLines=Int.MAX_VALUE`, `TextOverflow.Clip`).
-4. Не менять значения показателей, статусные цвета, иконки карточек, `extraContent` (включая дополнительные сведения Fidelity), сохранение `expandedMetrics` по ключам в `MetricsScreen`, поведение клика по карточке. При необходимости дать отдельный `testTag` кнопке «Инфо».
-5. Применить через **общий** `MetricCard`, а не править девять вызовов по отдельности.
-
-**Важное о тестах:** старые `MetricsScreenRobolectricTest` и `UiDisclosureStateRobolectricTest` явно ожидают `metric_card_formula` при закрытой карточке (однострочный текст). Это **устаревший контракт после утверждённой UX-правки**. Обновить их обоснованно: закрыто → формула отсутствует в дереве, открыто → видна полностью, возврат вкладок/пересоздание → открытое состояние сохраняется. Не исключать тест целиком, не менять настройки Robolectric и `Crossfade`.
-
-**Приёмка:** во всех 9 `MetricCard` на экране №2 скрытая формула отсутствует до раскрытия; при раскрытии видны и формула, и описание; числовой показатель и «Инфо» в одной строке; все фильтры, Fidelity, тестовые теги и локализации сохранены. Прогон тестов экрана и Android compile/lint.
-````
-
-## UI-SCORE-01: компактная «Детализация баллов» в одной карточке
-tier: standard
-gate: bash orchestrator/run.sh --check unit && bash orchestrator/run.sh --check android
-retries: 1
-````prompt
-ЗАДАЧА UI-SCORE-01. Выполни строго описанную ниже правку, не переходи к следующей задаче.
-
-Общие правила ДЛЯ ЭТОЙ задачи:
-- Работай в текущей `main`, прочитай `AGENTS.md` и релевантные исходники перед правкой; не используй `feature/redesign-v2`. Если актуальный HEAD отличается от описанных мест, найдите соответствующий текущий код и опирайтесь на него; не затирайте чужие изменения.
-- Меняй ТОЛЬКО названную область и соответствующие тесты/строки; минимальный diff, без рефакторинга соседних компонентов, без новых зависимостей, без модификации `orchestrator/`, Gradle, релизных версий и applicationId.
-- Не изменяй финансовые формулы, статусы, пороги, сохраняемые данные, логику симулятора, 4 главные вкладки и внутренние FIRE/Симуляция, если этого прямо не требует задача. Сохрани обе темы, доступность и fontScale.
-- Все правки пользовательских строк выполняй через AppStrings для RU/EN/DE/FR/IT/ES. Не вставляй английские надписи в Composable.
-- Актуализируй релевантные regression/unit/Robolectric-тесты только при реальном изменении UX-контракта. Не удаляй assertions и не подгоняй ожидания без объяснения. Физические устройства НЕ требуются.
-- Проверь названные в задаче тесты (если они существуют) и компиляцию; при недоступности SDK не заявляй, что они прошли. По завершении укажи изменённые файлы, выполненные проверки и реальные результаты. Не делай git commit, push, checkout, reset и add вручную — этим управляет оркестратор.
-
-Конкретные инструкции и приёмка:
-
-**Файл:** `app/src/main/java/com/example/ui/screens/AuditScoreScreen.kt`.
-
-**Текущий код:** `LazyColumn(verticalArrangement = Arrangement.spacedBy(16.dp))`; отдельный `item` с заголовком `strings.scoresBreakdownTitle` в стиле `titleMedium` (20sp); далее 4 отдельных `item`, каждый вызывает `ScoreItemCard` (самостоятельная Card с `padding(16.dp)`, описанием `comment` и прогресс-баром). Теги: `score_savings_rate`, `score_safety_months`, `score_debt_ratio`, `score_cfs`, а у прогресс-баров `${tag}_progress`.
-
-**Сделать:**
-1. Сгруппировать заголовок и все четыре показателя **в одном внешнем Card/Surface**, а не в четырёх независимых карточках. Избавиться от внешних зазоров 16dp между показателями; оставить **внутренние отступы 8dp** между компактными строками и, если уместно, очень тонкие разделители.
-2. В каждом показателе сохранить **название, текущее значение (`valuePrefix` + `currentValue`), цвет/бейдж балла `scoreOutOfTen` и `LinearProgressIndicator`**. Убрать **только поясняющий абзац `comment`** из UI; это не просьба убрать значение, оценку или прогресс-бар. Не изменять `FinancialMetricEvaluator`, баллы и `AuditOpinion`.
-3. Переписать `ScoreItemCard` как внутренний `ScoreItemContent`/`CompactScoreItem`, не создающий вложенных четырёх Card. Сохранить `testTag` для каждого показателя и каждого прогресс-бара. Вычисления `debtComment` и другие `comment` больше не нужны для этих визуальных строк, но не удалять локализованные тексты, если они используются ещё где-либо.
-4. Заголовок раздела перевести с `titleMedium` на более компактный `titleSmall` (14sp, lineHeight 20sp), сохранить Bold, `maxLines=1`. **Проверить фактическое вмещение полного заголовка на ширине 320dp в каждом языке.** Не урезать текст молча и не использовать `TextOverflow.Ellipsis` для сокрытия части заголовка; если не помещается, подобрать разумный краткий перевод для конкретного языка в `scoresBreakdownTitle` либо минимально изменить стиль в пределах принятых токенов, объяснив выбор.
-5. На первом показателе заменить `strings.savingsRateTitle` (с двоеточием) на уже существующий `strings.metricSavingsRateTitle` (**во всех 6 локалях без двоеточия**). НЕ редактировать глобальный `savingsRateTitle`: его использует экран №1, и это нежелательное побочное изменение.
-
-**Приёмка:** один визуальный блок, внутри 4 показателя в прежнем порядке; нет отдельных больших зазоров и пояснений; значения, цвета, бейджи, прогресс-бары и теги сохранены; заголовок в 1 строку на 320dp; «Норма сбережений» без двоеточия. Проверить `AuditScoreScreenRobolectricTest`, `ApprovedUiRegressionTest`, compile/lint.
-
-УТОЧНЕНИЕ ВЛАДЕЛЬЦА: удалить поясняющие описания под четырьмя показателями; названия, текущие значения, баллы и прогресс-бары оставить.
-````
-
-## UI-FIRE-RESET-01: сделать серую рамку «Сбросить» менее заметной
+## UI-04: Уменьшить вертикальные отступы «Допущения модели» и «Отказ от ответственности»
 tier: light
 gate: bash orchestrator/run.sh --check unit && bash orchestrator/run.sh --check android
 retries: 1
 ````prompt
-ЗАДАЧА UI-FIRE-RESET-01. Выполни строго описанную ниже правку, не переходи к следующей задаче.
+Следуй AGENTS.md. Только раскрывающиеся информационные карточки экрана №3 и базовой подвкладки FIRE экрана №4. Commit/push выполняет оркестратор.
 
-Общие правила ДЛЯ ЭТОЙ задачи:
-- Работай в текущей `main`, прочитай `AGENTS.md` и релевантные исходники перед правкой; не используй `feature/redesign-v2`. Если актуальный HEAD отличается от описанных мест, найдите соответствующий текущий код и опирайтесь на него; не затирайте чужие изменения.
-- Меняй ТОЛЬКО названную область и соответствующие тесты/строки; минимальный diff, без рефакторинга соседних компонентов, без новых зависимостей, без модификации `orchestrator/`, Gradle, релизных версий и applicationId.
-- Не изменяй финансовые формулы, статусы, пороги, сохраняемые данные, логику симулятора, 4 главные вкладки и внутренние FIRE/Симуляция, если этого прямо не требует задача. Сохрани обе темы, доступность и fontScale.
-- Все правки пользовательских строк выполняй через AppStrings для RU/EN/DE/FR/IT/ES. Не вставляй английские надписи в Composable.
-- Актуализируй релевантные regression/unit/Robolectric-тесты только при реальном изменении UX-контракта. Не удаляй assertions и не подгоняй ожидания без объяснения. Физические устройства НЕ требуются.
-- Проверь названные в задаче тесты (если они существуют) и компиляцию; при недоступности SDK не заявляй, что они прошли. По завершении укажи изменённые файлы, выполненные проверки и реальные результаты. Не делай git commit, push, checkout, reset и add вручную — этим управляет оркестратор.
+Проверенные файлы:
+- app/src/main/java/com/example/ui/components/CollapsibleInfoCard.kt (97 строк на исходном HEAD);
+- app/src/main/java/com/example/ui/screens/AuditScoreScreen.kt, вызовы с testTag = "audit_assumptions_card" и "developer_disclaimer_card";
+- app/src/main/java/com/example/ui/screens/FireRetirementScreen.kt, вызовы с testTag = "fire_assumptions_card" и "fire_disclaimer_card" внутри if (!isSimulationSubtab).
 
-Конкретные инструкции и приёмка:
+Точная причина большой высоты: в CollapsibleInfoCard внешняя Card содержит Column(modifier = Modifier.padding(14.dp)), внутри Row с IconButton(modifier = Modifier.size(48.dp)). При однострочном заголовке получается 48 + 14 + 14 = 76.dp без учёта иных ограничений. Замена на 12.dp дала бы всего 4.dp экономии, поэтому для умеренного заметного уменьшения выбран 8.dp сверху и снизу (64.dp при однострочном заголовке и прочих равных).
 
-**Файл:** `app/src/main/java/com/example/ui/screens/FireSimulationSummaryPanel.kt` (НЕ `FireRetirementScreen.kt`: реальная кнопка находится именно здесь).
+Сделать: проверить `git grep -n 'CollapsibleInfoCard(' -- '*.kt'`. Если в production имеются только четыре указанных вызова, изменить одну строку в общем компоненте: `Column(modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp))`. Если имеются новые потребители за пределами этих четырёх карточек, добавить опциональный параметр verticalPadding: Dp = 14.dp в CollapsibleInfoCard и передать 8.dp только в четырёх указанных вызовах (не затрагивать новые места). Не менять горизонтальный padding 14.dp, IconButton 48.dp, ведущую иконку 20.dp, промежуток 10.dp до заголовка, стиль текста, Card shape/border/colors. Не менять Spacer(4.dp) между заголовком и body, body padding(start = 30.dp), сам текст, независимое состояние rememberSaveable. Не менять внешний интервал 4.dp между двумя карточками в обоих экранах и внешние Spacer. В «Симуляции» эти карточки по-прежнему отсутствуют.
 
-**Текущее место (сверено с актуальной `main`):** внутри `FireSimulationSummaryPanel` уже есть `val resetEnabled = activeChanges > 0`, затем `val resetColor = if (resetEnabled) onSurfaceVariant else onSurface.copy(alpha = 0.38f)`; один `resetColor` используется и для `BorderStroke(1.dp, resetColor)`, и для текста, и для `ButtonDefaults.outlinedButtonColors`. Кнопка имеет `testTag("fire_sim_reset_button")`.
+Тесты:
+- app/src/test/java/com/example/AuditScoreScreenRobolectricTest.kt: `info cards collapse independently in all languages themes and large font` и `info card states survive tab disposal and saved instance restoration`.
+- app/src/test/java/com/example/FireRetirementScreenRobolectricTest.kt: `info cards collapse independently in all languages themes and large font`, `each internal subtab keeps only its own cards and FIRE explanations`.
+- app/src/test/java/com/example/FireSubtabRecreationRobolectricTest.kt: сохранить проверку восстановления состояний.
+- Добавить компактную проверку геометрии к существующим тестам или отдельный небольшой тест CollapsibleInfoCard в тестовом пакете com.example: при однострочном заголовке, fontScale 1, достаточно широкой карточке, высота свернутого блока ожидаемо 64.dp (допуск округления 1.dp), верхний/нижний зазор от Row/кнопки 8.dp, минимум 48.dp для тега `${testTag}_toggle`. При более крупном шрифте не ограничивать высоту Card сверху, заголовок переносится без обрезания. Сохранить проверки наличия/отсутствия `${testTag}_body`, иконок, локализованных описаний раскрытия и независимых состояний. Не утверждать, что при крупном шрифте высота всегда 64.dp.
 
-**Решение владельца:** граница и текст всегда **серые**, независимо от положительного, отрицательного или нейтрального FIRE; толщина рамки **строго `1.dp`**. Новая правка — рамка **менее контрастная в обоих состояниях**, текст не должен стать нечитаемым.
-
-**Реализация:** НЕ менять уже существующий `BorderStroke(width = 1.dp, ...)`, кроме передачи отдельного цвета рамки. Ввести переменную `resetBorderColor` независимо от существующего `resetColor` для текста; для **рамки** использовать:
-- `activeChanges > 0`: `MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f)`;
-- `activeChanges == 0`: `MaterialTheme.colorScheme.onSurface.copy(alpha = 0.25f)`.
-Оба оттенка серые и НЕ зависят от `display.status`. Для **текста** сохранить существующий `resetColor` БЕЗ ИЗМЕНЕНИЙ: активный `onSurfaceVariant`, неактивный `onSurface.copy(alpha = 0.38f)`; существующие `contentColor`, `disabledContentColor` и `Text(color = resetColor)` уже настроены и должны остаться. Только рамка станет более прозрачной. Прозрачный фон обеих кнопок, форма/высота/область клика без изменений. Не привязывать цвет к `StatusColors`.
-
-**Приёмка:** на положительной, отрицательной и нейтральной панели рамка одинаково серая, 1dp, менее заметная; при нуле изменений кнопка отключена; при изменениях доступна и сбрасывает сценарий. Проверить `FireSimulationStickySummaryRobolectricTest`, compile/lint.
+Приёмка: у четырёх карточек умеренно уменьшена высота, целевая область нажатия не уменьшена, другие компоненты и интервалы не изменены, тексты раскрываются/сворачиваются как раньше, оба экрана и обе темы работают. Unit + android gate проходят. Указать измеренную высоту, изменения и тесты.
 ````
-
-## UI-NAV-01: короткие подписи вкладок №3 и №4
-tier: light
-gate: bash orchestrator/run.sh --check unit && bash orchestrator/run.sh --check android
-retries: 1
-````prompt
-ЗАДАЧА UI-NAV-01. Выполни строго описанную ниже правку, не переходи к следующей задаче.
-
-Общие правила ДЛЯ ЭТОЙ задачи:
-- Работай в текущей `main`, прочитай `AGENTS.md` и релевантные исходники перед правкой; не используй `feature/redesign-v2`. Если актуальный HEAD отличается от описанных мест, найдите соответствующий текущий код и опирайтесь на него; не затирайте чужие изменения.
-- Меняй ТОЛЬКО названную область и соответствующие тесты/строки; минимальный diff, без рефакторинга соседних компонентов, без новых зависимостей, без модификации `orchestrator/`, Gradle, релизных версий и applicationId.
-- Не изменяй финансовые формулы, статусы, пороги, сохраняемые данные, логику симулятора, 4 главные вкладки и внутренние FIRE/Симуляция, если этого прямо не требует задача. Сохрани обе темы, доступность и fontScale.
-- Все правки пользовательских строк выполняй через AppStrings для RU/EN/DE/FR/IT/ES. Не вставляй английские надписи в Composable.
-- Актуализируй релевантные regression/unit/Robolectric-тесты только при реальном изменении UX-контракта. Не удаляй assertions и не подгоняй ожидания без объяснения. Физические устройства НЕ требуются.
-- Проверь названные в задаче тесты (если они существуют) и компиляцию; при недоступности SDK не заявляй, что они прошли. По завершении укажи изменённые файлы, выполненные проверки и реальные результаты. Не делай git commit, push, checkout, reset и add вручную — этим управляет оркестратор.
-
-Конкретные инструкции и приёмка:
-
-**Файлы:** `app/src/main/java/com/example/util/localization/StringsRu.kt`, `StringsEn.kt`, `StringsDe.kt`, `StringsFr.kt`, `StringsIt.kt`, `StringsEs.kt`. Для понимания: `FinanceApp.kt` использует `tab.localizedShortTitle(strings)` внутри нижнего `NavigationBarItem`.
-
-**Сделать:** изменить **только** свойства `tabScoresShort` и `tabFireShort` во всех языках:
-- RU: `Анализ` / `FIRE`;
-- EN: `Analysis` / `FIRE`;
-- DE: `Analyse` / `FIRE`;
-- FR: `Analyse` / `FIRE`;
-- IT: `Analisi` / `FIRE`;
-- ES: `Análisis` / `FIRE`.
-
-Не менять `tabScoresTitle`, `tabFireTitle` (это полные accessibility-названия), заголовки самих экранов, `AppTab` enum, тестовые теги, порядок четырёх вкладок и функцию навигации. Сохранять `textAlign=TextAlign.Center`, уже применённый к подписи в актуальном `FinanceApp.kt`.
-
-**Приёмка:** только 2 короткие подписи изменились; всё остальное без изменений. Прогон `FinanceAppRobolectricTest`, тестов локализации и compile/lint.
-````
-
-## UI-DISC-01: раскрываемые «Допущения модели» и «Отказ от ответственности» на экране №3
-tier: standard
-gate: bash orchestrator/run.sh --check unit && bash orchestrator/run.sh --check android
-retries: 1
-````prompt
-ЗАДАЧА UI-DISC-01. Выполни строго описанную ниже правку, не переходи к следующей задаче.
-
-Общие правила ДЛЯ ЭТОЙ задачи:
-- Работай в текущей `main`, прочитай `AGENTS.md` и релевантные исходники перед правкой; не используй `feature/redesign-v2`. Если актуальный HEAD отличается от описанных мест, найдите соответствующий текущий код и опирайтесь на него; не затирайте чужие изменения.
-- Меняй ТОЛЬКО названную область и соответствующие тесты/строки; минимальный diff, без рефакторинга соседних компонентов, без новых зависимостей, без модификации `orchestrator/`, Gradle, релизных версий и applicationId.
-- Не изменяй финансовые формулы, статусы, пороги, сохраняемые данные, логику симулятора, 4 главные вкладки и внутренние FIRE/Симуляция, если этого прямо не требует задача. Сохрани обе темы, доступность и fontScale.
-- Все правки пользовательских строк выполняй через AppStrings для RU/EN/DE/FR/IT/ES. Не вставляй английские надписи в Composable.
-- Актуализируй релевантные regression/unit/Robolectric-тесты только при реальном изменении UX-контракта. Не удаляй assertions и не подгоняй ожидания без объяснения. Физические устройства НЕ требуются.
-- Проверь названные в задаче тесты (если они существуют) и компиляцию; при недоступности SDK не заявляй, что они прошли. По завершении укажи изменённые файлы, выполненные проверки и реальные результаты. Не делай git commit, push, checkout, reset и add вручную — этим управляет оркестратор.
-
-Конкретные инструкции и приёмка:
-
-**Исходный код:** `app/src/main/java/com/example/ui/screens/AuditScoreScreen.kt`, последние `item` с двумя Card. Первая выводит `strings.fireAssumptionsTitle`, `strings.fireAssumptionsBody(...)` с левой `Icons.Outlined.Analytics`. Вторая выводит `strings.disclaimerTitle` и `strings.disclaimerText`, иконка `Icons.Default.Info`, `testTag("developer_disclaimer_card")`.
-
-**Сделать:** заменить эти два **только информационных** блока на раскрываемые: при первом показе оба свернуты, видны только левая оригинальная иконка и название; справа шеврон `ExpandMore` / `ExpandLess` и явная кнопка раскрытия. При нажатии раскрывается исходный текст полностью, без изменения текста или стилей; повторное нажатие сворачивает. У каждого блока своё независимое `rememberSaveable { mutableStateOf(false) }`, чтобы состояние переживало пересоздание вкладки/Activity. Не раскрывать оба одновременно автоматически. Оставить размеры, цвета, границы и форму существующих карточек. Правый контрол доступен для Compose semantics и TalkBack, использовать имеющиеся `strings.metricCardExpand/metricCardCollapse` либо локализованные существующие аналоги.
-
-**Для повторного применения:** допустимо вынести небольшой переиспользуемый `CollapsibleInfoCard` в `ui/components/` с параметрами `(title, body, leadingIcon, iconTint, testTag)` и собственным `rememberSaveable`; **не проводить массовый рефакторинг**. Если создаёшь компонент, задача `UI-DISC-02` должна его переиспользовать. Оставить `developer_disclaimer_card` на внешнем контейнере и добавить `audit_assumptions_card`.
-
-**Приёмка:** иконки слева видны при свёрнутом состоянии, заголовки видны, справа шеврон; тексты только после раскрытия; независимые состояния, сохранение при переключении вкладок; локализации и обе темы. Обновить/добавить тест в `AuditScoreScreenRobolectricTest`; compile/lint.
-````
-
-## UI-DISC-02: те же раскрываемые блоки на базовой вкладке FIRE
-tier: standard
-gate: bash orchestrator/run.sh --check unit && bash orchestrator/run.sh --check android
-retries: 1
-````prompt
-ЗАДАЧА UI-DISC-02. Выполни строго описанную ниже правку, не переходи к следующей задаче.
-
-Общие правила ДЛЯ ЭТОЙ задачи:
-- Работай в текущей `main`, прочитай `AGENTS.md` и релевантные исходники перед правкой; не используй `feature/redesign-v2`. Если актуальный HEAD отличается от описанных мест, найдите соответствующий текущий код и опирайтесь на него; не затирайте чужие изменения.
-- Меняй ТОЛЬКО названную область и соответствующие тесты/строки; минимальный diff, без рефакторинга соседних компонентов, без новых зависимостей, без модификации `orchestrator/`, Gradle, релизных версий и applicationId.
-- Не изменяй финансовые формулы, статусы, пороги, сохраняемые данные, логику симулятора, 4 главные вкладки и внутренние FIRE/Симуляция, если этого прямо не требует задача. Сохрани обе темы, доступность и fontScale.
-- Все правки пользовательских строк выполняй через AppStrings для RU/EN/DE/FR/IT/ES. Не вставляй английские надписи в Composable.
-- Актуализируй релевантные regression/unit/Robolectric-тесты только при реальном изменении UX-контракта. Не удаляй assertions и не подгоняй ожидания без объяснения. Физические устройства НЕ требуются.
-- Проверь названные в задаче тесты (если они существуют) и компиляцию; при недоступности SDK не заявляй, что они прошли. По завершении укажи изменённые файлы, выполненные проверки и реальные результаты. Не делай git commit, push, checkout, reset и add вручную — этим управляет оркестратор.
-
-Конкретные инструкции и приёмка:
-
-**Исходный код:** `app/src/main/java/com/example/ui/screens/FireRetirementScreen.kt`, условие `if (!isSimulationSubtab)` около конца `LazyColumn`; два Card `fireAssumptionsTitle/fireAssumptionsBody` и `disclaimerTitle/disclaimerText`. В подвкладке **«Симуляция» этих блоков нет** — оставить так.
-
-**Сделать:** точно то же поведение, что в `UI-DISC-01`: по умолчанию свернуты, оригинальные левые иконки видны, справа шеврон, в развернутом состоянии видны неизменённые тексты; собственные независимые `rememberSaveable` состояния. Если `CollapsibleInfoCard` уже реализован на предыдущем шаге, переиспользовать его, сохранив текущие цвета и границы FIRE. Не затрагивать stickyHeader панели симуляции, список сценариев, ползунки, `FireSubtabSelector` и графики. Присвоить теги `fire_assumptions_card`, `fire_disclaimer_card`.
-
-**Приёмка:** оба блока присутствуют и раскрываются только на базовой FIRE, отсутствуют в симуляции; работает переключение FIRE↔Симуляция и основных вкладок; обе темы, 6 языков. Тест `FireRetirementScreenRobolectricTest`/`FireSubtabRecreationRobolectricTest`, compile/lint.
-````
-
-## UI-INPUT-01: спрятать формулы только у «Активы» и «Реальная доходность капитала»
-tier: standard
-gate: bash orchestrator/run.sh --check unit && bash orchestrator/run.sh --check android
-retries: 1
-````prompt
-ЗАДАЧА UI-INPUT-01. Выполни строго описанную ниже правку, не переходи к следующей задаче.
-
-Общие правила ДЛЯ ЭТОЙ задачи:
-- Работай в текущей `main`, прочитай `AGENTS.md` и релевантные исходники перед правкой; не используй `feature/redesign-v2`. Если актуальный HEAD отличается от описанных мест, найдите соответствующий текущий код и опирайтесь на него; не затирайте чужие изменения.
-- Меняй ТОЛЬКО названную область и соответствующие тесты/строки; минимальный diff, без рефакторинга соседних компонентов, без новых зависимостей, без модификации `orchestrator/`, Gradle, релизных версий и applicationId.
-- Не изменяй финансовые формулы, статусы, пороги, сохраняемые данные, логику симулятора, 4 главные вкладки и внутренние FIRE/Симуляция, если этого прямо не требует задача. Сохрани обе темы, доступность и fontScale.
-- Все правки пользовательских строк выполняй через AppStrings для RU/EN/DE/FR/IT/ES. Не вставляй английские надписи в Composable.
-- Актуализируй релевантные regression/unit/Robolectric-тесты только при реальном изменении UX-контракта. Не удаляй assertions и не подгоняй ожидания без объяснения. Физические устройства НЕ требуются.
-- Проверь названные в задаче тесты (если они существуют) и компиляцию; при недоступности SDK не заявляй, что они прошли. По завершении укажи изменённые файлы, выполненные проверки и реальные результаты. Не делай git commit, push, checkout, reset и add вручную — этим управляет оркестратор.
-
-Конкретные инструкции и приёмка:
-
-**Файл:** `app/src/main/java/com/example/ui/screens/InputDataScreen.kt`.
-
-**Точное место:** общий `@Composable fun MetricIndicatorRow(title, formula, value, valueColor, subValue, modifier)` около нижней части файла. Сейчас формула всегда видна под названием слева, значение справа. Он также используется для Cash Flow, Savings Rate, Net Worth, Horizon — **их не менять**.
-
-**Сделать:** добавить в `MetricIndicatorRow` необязательный аргумент `collapsibleFormula: Boolean = false` (или эквивалент); в двух конкретных вызовах `MetricIndicatorRow(title = strings.totalAssetsTitle, ...)` и `MetricIndicatorRow(title = strings.realReturnTitle, modifier.testTag("input_metric_real_return"), ...)` установить `collapsibleFormula = true`.
-
-Для `collapsibleFormula = true`: по умолчанию не отображать формулу; добавить ненавязчивый контрол «Инфо» + `ExpandMore` справа в области заголовка/значения, не заслоняя сумму на ширине 320dp; при раскрытии показать формулу **под основной строкой**, с **тем же прежним шрифтом `labelSmall`, `FontFamily.Monospace`, цветом primary** и исходным текстом, при повторном клике скрыть. Запомнить раскрытие через `rememberSaveable`, оставить независимые состояния для двух строк. Если подпись не вмещается, допускается небольшой шеврон с локализованной семантикой вместо сокращения чисел. Для всех остальных вызовов `collapsibleFormula=false`: сохранить прежний UI совершенно без изменений.
-
-**Приёмка:** только две обозначенные формулы скрыты по умолчанию, раскрываются и сохраняют стиль/полный текст; остальные 4 строки показывают формулу как раньше; значения и расчёты не меняются. Тест `InputDataScreenRobolectricTest` и compile/lint.
-````
-
-## UI-EXPORT-01: добавить краткую характеристику под круговой оценкой в экспорт оценки
-tier: standard
-gate: bash orchestrator/run.sh --check unit && bash orchestrator/run.sh --check android
-retries: 1
-````prompt
-ЗАДАЧА UI-EXPORT-01. Выполни строго описанную ниже правку, не переходи к следующей задаче.
-
-Общие правила ДЛЯ ЭТОЙ задачи:
-- Работай в текущей `main`, прочитай `AGENTS.md` и релевантные исходники перед правкой; не используй `feature/redesign-v2`. Если актуальный HEAD отличается от описанных мест, найдите соответствующий текущий код и опирайтесь на него; не затирайте чужие изменения.
-- Меняй ТОЛЬКО названную область и соответствующие тесты/строки; минимальный diff, без рефакторинга соседних компонентов, без новых зависимостей, без модификации `orchestrator/`, Gradle, релизных версий и applicationId.
-- Не изменяй финансовые формулы, статусы, пороги, сохраняемые данные, логику симулятора, 4 главные вкладки и внутренние FIRE/Симуляция, если этого прямо не требует задача. Сохрани обе темы, доступность и fontScale.
-- Все правки пользовательских строк выполняй через AppStrings для RU/EN/DE/FR/IT/ES. Не вставляй английские надписи в Composable.
-- Актуализируй релевантные regression/unit/Robolectric-тесты только при реальном изменении UX-контракта. Не удаляй assertions и не подгоняй ожидания без объяснения. Физические устройства НЕ требуются.
-- Проверь названные в задаче тесты (если они существуют) и компиляцию; при недоступности SDK не заявляй, что они прошли. По завершении укажи изменённые файлы, выполненные проверки и реальные результаты. Не делай git commit, push, checkout, reset и add вручную — этим управляет оркестратор.
-
-Конкретные инструкции и приёмка:
-
-**Исходный код:** `AuditScoreScreen.kt`, header card `ScoreGauge(...)`, далее `scoresTotalResult(...)` и **`statusDesc = ScoreColorEvaluator.getTotalScoreStatusDescription(scores.totalScore, strings)`** — это краткий текст под «кружком». Кнопка экспорта оценки — `IconButton(testTag("share_audit_button"))` в заголовке. Текст формируется `String.format(Locale.ROOT, strings.shareScoreReportTemplate, 11 аргументов)`.
-
-**Сделать:** в **экспорт финансовой оценки по `share_audit_button`** добавить именно готовый `statusDesc` (НЕ генерировать новый текст, НЕ дублировать расчёты). Разместить сразу после строки с общей оценкой (например, «Итоговый результат: 6,7 из 10»), перед четырьмя компонентными оценками. Предпочтительный минимальный вариант: в `shareScoreReportTemplate` на всех 6 языках после общей оценки добавить локализованную строку с **12-м позиционным параметром** `%12${'$'}s` и в `String.format` передать в качестве **12-го аргумента** результат `ScoreColorEvaluator.getTotalScoreStatusDescription(...)`. Не менять номера уже существующих 11 параметров. Не изменять сам текст statusDesc на экране или классификацию общей оценки.
-
-**Тесты:** `AuditScoreScreenRobolectricTest` (точная проверка Intent.EXTRA_TEXT), `AuditorAnalysisTest` (там тоже вручную собирается `shareScoreReportTemplate` с 11 аргументами — при обновлении проверок добавить 12-й), локализация шести языков. Проверить, что экспорт в текстовом виде содержит краткий статус **один раз** и только в нужном месте. Compile/lint.
-
-УТОЧНЕНИЕ ВЛАДЕЛЬЦА: краткий текст — характеристика финансового состояния под круговой диаграммой общей оценки, не комментарии отдельных компонентов. Использовать существующий statusDesc.
-````
-
-## UI-EXPORT-02: пиктограмма в экспортируемом заголовке «Допущения модели»
-tier: light
-gate: bash orchestrator/run.sh --check unit && bash orchestrator/run.sh --check android
-retries: 1
-````prompt
-ЗАДАЧА UI-EXPORT-02. Выполни строго описанную ниже правку, не переходи к следующей задаче.
-
-Общие правила ДЛЯ ЭТОЙ задачи:
-- Работай в текущей `main`, прочитай `AGENTS.md` и релевантные исходники перед правкой; не используй `feature/redesign-v2`. Если актуальный HEAD отличается от описанных мест, найдите соответствующий текущий код и опирайтесь на него; не затирайте чужие изменения.
-- Меняй ТОЛЬКО названную область и соответствующие тесты/строки; минимальный diff, без рефакторинга соседних компонентов, без новых зависимостей, без модификации `orchestrator/`, Gradle, релизных версий и applicationId.
-- Не изменяй финансовые формулы, статусы, пороги, сохраняемые данные, логику симулятора, 4 главные вкладки и внутренние FIRE/Симуляция, если этого прямо не требует задача. Сохрани обе темы, доступность и fontScale.
-- Все правки пользовательских строк выполняй через AppStrings для RU/EN/DE/FR/IT/ES. Не вставляй английские надписи в Composable.
-- Актуализируй релевантные regression/unit/Robolectric-тесты только при реальном изменении UX-контракта. Не удаляй assertions и не подгоняй ожидания без объяснения. Физические устройства НЕ требуются.
-- Проверь названные в задаче тесты (если они существуют) и компиляцию; при недоступности SDK не заявляй, что они прошли. По завершении укажи изменённые файлы, выполненные проверки и реальные результаты. Не делай git commit, push, checkout, reset и add вручную — этим управляет оркестратор.
-
-Конкретные инструкции и приёмка:
-
-**Исходный код:** `app/src/main/java/com/example/domain/AuditorAnalysisGenerator.kt`:
-- `GroupedAuditOpinion.toFormattedShareText(...)` — `appendLine(strings.fireAssumptionsTitle)`;
-- `AuditorAnalysisGenerator.generateExportSummary(...)` — ещё один `appendLine(strings.fireAssumptionsTitle)`.
-
-**Сделать:** в **обеих** текстовых экспортных ветках добавить одинаковую текстовую пиктограмму перед локализованным заголовком, например:
-
-```kotlin
-appendLine("📐 ${strings.fireAssumptionsTitle}")
-```
-
-Пиктограмма — Unicode для plain text, не `ImageVector` (из Compose иконки в `ACTION_SEND` не вставляются). Сохранить существующий текст, порядок «Допущения модели» → описание → disclaimer и все шесть языков. **Не добавлять эмодзи в `fireAssumptionsTitle` сам по себе**: иначе он затронет экранные заголовки и возможны дубли. `shareScoreReportTemplate` не содержит этот раздел — туда ничего не добавлять.
-
-**Приёмка:** пиктограмма ровно один раз у заголовка в обоих экспортируемых форматах, без дублирования, без изменения экранных карточек. Проверить `AuditorAnalysisTest` во всех языках и compile/lint.
-````
-
-## UI-EXPORT-03: актуализировать название приложения в экспортных текстах для 6 языков
-tier: standard
-gate: bash orchestrator/run.sh --check full
-retries: 1
-````prompt
-ЗАДАЧА UI-EXPORT-03. Выполни строго описанную ниже правку, не переходи к следующей задаче.
-
-Общие правила ДЛЯ ЭТОЙ задачи:
-- Работай в текущей `main`, прочитай `AGENTS.md` и релевантные исходники перед правкой; не используй `feature/redesign-v2`. Если актуальный HEAD отличается от описанных мест, найдите соответствующий текущий код и опирайтесь на него; не затирайте чужие изменения.
-- Меняй ТОЛЬКО названную область и соответствующие тесты/строки; минимальный diff, без рефакторинга соседних компонентов, без новых зависимостей, без модификации `orchestrator/`, Gradle, релизных версий и applicationId.
-- Не изменяй финансовые формулы, статусы, пороги, сохраняемые данные, логику симулятора, 4 главные вкладки и внутренние FIRE/Симуляция, если этого прямо не требует задача. Сохрани обе темы, доступность и fontScale.
-- Все правки пользовательских строк выполняй через AppStrings для RU/EN/DE/FR/IT/ES. Не вставляй английские надписи в Composable.
-- Актуализируй релевантные regression/unit/Robolectric-тесты только при реальном изменении UX-контракта. Не удаляй assertions и не подгоняй ожидания без объяснения. Физические устройства НЕ требуются.
-- Проверь названные в задаче тесты (если они существуют) и компиляцию; при недоступности SDK не заявляй, что они прошли. По завершении укажи изменённые файлы, выполненные проверки и реальные результаты. Не делай git commit, push, checkout, reset и add вручную — этим управляет оркестратор.
-
-Конкретные инструкции и приёмка:
-
-**Исходный код:** `appName` уже локализован в `StringsRu/En/De/Fr/It/Es.kt` как:
-- RU: `Финансы и FIRE`;
-- EN: `Finance & FIRE`;
-- DE: `Finanzen & FIRE`;
-- FR: `Finances et FIRE`;
-- IT: `Finanze e FIRE`;
-- ES: `Finanzas y FIRE`.
-
-Сейчас `auditShareGeneratedBy` всё ещё содержит старые варианты «Личные финансы» / `Personal Finance` / переводы старого названия. Также `exportHeaderTitle` содержит старое название в заголовках краткого отчёта.
-
-**Сделать:** обновить в **шести** `Strings??.kt` оба поля `auditShareGeneratedBy` и `exportHeaderTitle`, чтобы они использовали точное локализованное актуальное `appName`, сохранив общую структуру фразы и существующие `💡` и `📊`. Пример RU:
-- `auditShareGeneratedBy = "💡 Сформировано в приложении «Финансы и FIRE»"`;
-- `exportHeaderTitle = "📊 ФИНАНСОВЫЙ ОТЧЁТ — ФИНАНСЫ И FIRE"` (или прежнее «ОТЧЕТ» — сохрани орфографическую систему проекта).
-
-Для EN/DE/FR/IT/ES выбрать соответствующее написание точно как `appName`, а если в заголовке верхний регистр — применить локализованное написание в верхнем регистре. Не менять UI-название, `applicationId`, `README`, Fastlane metadata, имя APK. Выполнить поиск старого названия в **текстах экспорта** и привести оставшиеся в них упоминания к новой форме, но не делать глобальный поиск-замену во всём проекте.
-
-**Приёмка:** `generateExportSummary()` и `toFormattedShareText()` во всех шести языках содержат текущий бренд, больше не содержат старое название; все прочие элементы текстового отчёта прежние. Проверить `AuditorAnalysisTest`, `LocalizationReleaseTextTest`, compile/lint.
-
-ФИНАЛ ПАЧКИ: после этого изменения выполнить полный профиль gate (его запускает оркестратор); если возникла регрессия от предыдущих задач, диагностировать её и исправлять только в рамках затронутых участков/тестов. Не выполнять дополнительные UI-правки.
-````
-
