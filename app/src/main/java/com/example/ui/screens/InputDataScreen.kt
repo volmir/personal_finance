@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -48,10 +47,8 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -119,9 +116,8 @@ fun InputDataScreen(
     val keyboard = LocalSoftwareKeyboardController.current
     val listState = rememberLazyListState()
     val currencyScrollState = rememberSaveable(saver = ScrollState.Saver) { ScrollState(0) }
-    // Подсказки и раскрытие формул сохраняются и вне видимой части LazyColumn.
+    // Подсказки сохраняются и вне видимой части LazyColumn.
     var expandedHints by rememberSaveable { mutableStateOf(setOf<String>()) }
-    val realReturnFormulaExpanded = rememberSaveable { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     val fieldFocus = remember { List(11) { FocusRequester() } }
     // Индексы секций в LazyColumn; следующий редактор может ещё не быть создан.
@@ -506,7 +502,8 @@ fun InputDataScreen(
                     hintExpanded = strings.investmentsHintExpanded,
                     instruction = strings.breakdownInstruction,
                     categories = strings.investmentsCategories,
-                    modifier = Modifier.padding(top = 6.dp)
+                    modifier = Modifier.padding(top = 6.dp).testTag("input_investments_hint"),
+                    formula = strings.realReturnFormula
                 )
 
                 CategoryBreakdownHint(
@@ -527,9 +524,7 @@ fun InputDataScreen(
                 // Шаблон отображения "Реальная доходность капитала"
                 MetricIndicatorRow(
                     title = strings.realReturnTitle,
-                    collapsibleFormula = true,
-                    formulaExpandedState = realReturnFormulaExpanded,
-                    formula = strings.realReturnFormula,
+                    formula = null,
                     value = Formatters.formatPercent(metrics.realReturnPercent, lang),
                     valueColor = StatusColors.getColor(FinancialMetricEvaluator.getRealReturnStatus(metrics.realReturnPercent)),
                     modifier = Modifier.testTag("input_metric_real_return")
@@ -667,7 +662,7 @@ fun InputDataScreen(
 
 /**
  * Единый шаблон строки вывода показателей (как в блоке "Реальная доходность капитала"):
- * Слева: название показателя и формула.
+ * Слева: название показателя и необязательная постоянно видимая формула.
  * Справа: форматированное значение.
  */
 @Composable
@@ -677,71 +672,14 @@ fun MetricIndicatorRow(
     value: String,
     valueColor: Color = MaterialTheme.colorScheme.primary,
     subValue: String? = null,
-    modifier: Modifier = Modifier,
-    collapsibleFormula: Boolean = false,
-    formulaExpandedState: MutableState<Boolean>? = null
+    modifier: Modifier = Modifier
 ) {
     Surface(
         shape = RoundedCornerShape(10.dp),
         color = MaterialTheme.colorScheme.surface,
         modifier = modifier.fillMaxWidth()
     ) {
-        if (collapsibleFormula && formula != null) {
-            val expandedState: MutableState<Boolean> = formulaExpandedState ?: rememberSaveable { mutableStateOf(false) }
-            var expanded by expandedState
-            val strings = LocalAppStrings.current
-            Column(modifier = Modifier.padding(12.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = title,
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        ),
-                        modifier = Modifier.weight(1f)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Column(horizontalAlignment = Alignment.End) {
-                        Text(
-                            text = value,
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = StatusColors.getReadableTextColor(valueColor)
-                            ),
-                            textAlign = TextAlign.End
-                        )
-                        if (subValue != null) {
-                            Text(
-                                text = subValue,
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                ),
-                                textAlign = TextAlign.End
-                            )
-                        }
-                        TextButton(
-                            onClick = { expanded = !expanded },
-                            modifier = Modifier.heightIn(min = 48.dp)
-                        ) {
-                            Text(text = strings.metricCardInfo, style = MaterialTheme.typography.labelSmall)
-                            Icon(
-                                imageVector = if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                                contentDescription = if (expanded) strings.metricCardCollapse else strings.metricCardExpand,
-                                modifier = Modifier.size(16.dp)
-                            )
-                        }
-                    }
-                }
-                if (expanded) {
-                    Text(
-                        text = formula,
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            color = MaterialTheme.colorScheme.primary,
-                            fontFamily = FontFamily.Monospace
-                        )
-                    )
-                }
-            }
-        } else Row(
+        Row(
             modifier = Modifier.padding(12.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween

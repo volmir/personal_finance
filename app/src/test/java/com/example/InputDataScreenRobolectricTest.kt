@@ -27,6 +27,8 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performScrollToNode
+import androidx.compose.ui.test.performSemanticsAction
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.text.font.FontFamily
@@ -77,7 +79,7 @@ class InputDataScreenRobolectricTest {
     }
 
     @Test
-    fun `only assets and real return formulas collapse independently and restore after scrolling and recreation`() {
+    fun `assets and real return formulas use independent hints and restore after scrolling and recreation`() {
         val restoration = StateRestorationTester(composeRule)
         val input = FinancialInputData.usAverageData()
         restoration.setContent {
@@ -91,65 +93,82 @@ class InputDataScreenRobolectricTest {
                 }
             }
         }
-        fun scrollTo(text: String) {
-            composeRule.onNodeWithTag("input_test_list").performScrollToNode(hasText(text))
+        fun scrollToTag(tag: String) {
+            composeRule.onNodeWithTag("input_test_list").performScrollToNode(hasTestTag(tag))
         }
-        fun scrollToAssetsHint() {
-            composeRule.onNodeWithTag("input_test_list").performScrollToNode(hasTestTag("input_assets_hint"))
+        fun toggleHint(tag: String) {
+            // Раскрытая подсказка может быть выше viewport: вызываем её доступное действие.
+            composeRule.onNodeWithTag(tag).performSemanticsAction(SemanticsActions.OnClick) { it() }
         }
-        fun assertAssetsFormulaExpanded() {
-            composeRule.onAllNodesWithText(StringsRu.totalAssetsFormula, useUnmergedTree = true).assertCountEquals(1)
-            composeRule.onNodeWithText(StringsRu.totalAssetsFormula, useUnmergedTree = true)
-                .assertTextEquals(StringsRu.totalAssetsFormula)
-            composeRule.onNodeWithText(StringsRu.metricCardFormulaPrefix.trimEnd(), useUnmergedTree = true).assertExists()
+        fun assertFormulaExpanded(tag: String, formula: String) {
+            scrollToTag(tag)
+            composeRule.onAllNodesWithText(formula, useUnmergedTree = true).assertCountEquals(1)
+            composeRule.onNodeWithText(formula, useUnmergedTree = true)
+                .assertTextEquals(formula).assert(hasAnyAncestor(hasTestTag(tag)))
+            composeRule.onNode(
+                hasText(StringsRu.metricCardFormulaPrefix.trimEnd()) and hasAnyAncestor(hasTestTag(tag)),
+                useUnmergedTree = true
+            ).assertExists()
         }
-        scrollTo(StringsRu.totalAssetsTitle)
-        composeRule.onNode(hasText(StringsRu.metricCardInfo) and hasAnyAncestor(hasTestTag("input_metric_total_assets")))
-            .assertDoesNotExist()
-        scrollToAssetsHint()
-        composeRule.onNodeWithText(StringsRu.totalAssetsFormula, useUnmergedTree = true).assertDoesNotExist()
-        composeRule.onNodeWithText(StringsRu.metricCardFormulaPrefix.trimEnd(), useUnmergedTree = true).assertDoesNotExist()
-        composeRule.onNodeWithTag("input_assets_hint").performClick()
-        assertAssetsFormulaExpanded()
-        composeRule.onNodeWithTag("input_assets_hint").performClick()
-        composeRule.onNodeWithText(StringsRu.totalAssetsFormula, useUnmergedTree = true).assertDoesNotExist()
-        composeRule.onNodeWithText(StringsRu.metricCardFormulaPrefix.trimEnd(), useUnmergedTree = true).assertDoesNotExist()
-        composeRule.onNodeWithTag("input_assets_hint").performClick()
-        scrollTo(StringsRu.realReturnTitle)
-        composeRule.onNodeWithText(StringsRu.realReturnFormula).assertDoesNotExist()
-        composeRule.onNodeWithText(StringsRu.metricCardInfo).performScrollTo().performClick()
-        composeRule.onNodeWithText(StringsRu.realReturnFormula).assertExists()
-        scrollToAssetsHint()
-        assertAssetsFormulaExpanded()
-        scrollTo(StringsRu.realReturnTitle)
+        for (tag in listOf("input_metric_total_assets", "input_metric_real_return")) {
+            scrollToTag(tag)
+            composeRule.onNode(hasText(StringsRu.metricCardInfo) and hasAnyAncestor(hasTestTag(tag)), useUnmergedTree = true)
+                .assertDoesNotExist()
+        }
+        for ((tag, formula) in listOf(
+            "input_assets_hint" to StringsRu.totalAssetsFormula,
+            "input_investments_hint" to StringsRu.realReturnFormula
+        )) {
+            scrollToTag(tag)
+            composeRule.onNodeWithText(formula, useUnmergedTree = true).assertDoesNotExist()
+            toggleHint(tag)
+            assertFormulaExpanded(tag, formula)
+            toggleHint(tag)
+            composeRule.onNodeWithText(formula, useUnmergedTree = true).assertDoesNotExist()
+            toggleHint(tag)
+        }
+        assertFormulaExpanded("input_assets_hint", StringsRu.totalAssetsFormula)
+        assertFormulaExpanded("input_investments_hint", StringsRu.realReturnFormula)
+        // Налоговая подсказка раскрывается отдельно и не содержит формулы доходности.
+        val taxHint = composeRule.onNode(hasText(StringsRu.capitalGainsTaxHintCollapsed) and hasClickAction())
+        taxHint.performScrollTo().performClick()
+        composeRule.onNodeWithText(StringsRu.capitalGainsTaxHintExpanded, useUnmergedTree = true).assertExists()
+        scrollToTag("input_investments_hint")
+        toggleHint("input_investments_hint")
+        composeRule.onNodeWithText(StringsRu.capitalGainsTaxHintExpanded, useUnmergedTree = true).assertExists()
+        composeRule.onNodeWithText(StringsRu.realReturnFormula, useUnmergedTree = true).assertDoesNotExist()
+        toggleHint("input_investments_hint")
+        assertFormulaExpanded("input_investments_hint", StringsRu.realReturnFormula)
+        scrollToTag("input_metric_horizon")
         restoration.emulateSavedInstanceStateRestore()
-        scrollTo(StringsRu.realReturnTitle)
-        composeRule.onNodeWithText(StringsRu.realReturnFormula).assertExists()
-        composeRule.onNodeWithText(StringsRu.metricCardInfo).performScrollTo().performClick()
-        composeRule.onNodeWithText(StringsRu.realReturnFormula).assertDoesNotExist()
-        scrollToAssetsHint()
-        assertAssetsFormulaExpanded()
-        composeRule.onNodeWithTag("input_assets_hint").performClick()
+        assertFormulaExpanded("input_investments_hint", StringsRu.realReturnFormula)
+        toggleHint("input_investments_hint")
+        composeRule.onNodeWithText(StringsRu.realReturnFormula, useUnmergedTree = true).assertDoesNotExist()
+        assertFormulaExpanded("input_assets_hint", StringsRu.totalAssetsFormula)
+        toggleHint("input_assets_hint")
         composeRule.onNodeWithText(StringsRu.totalAssetsFormula, useUnmergedTree = true).assertDoesNotExist()
+        scrollToTag("input_investments_hint")
+        composeRule.onNodeWithText(StringsRu.realReturnFormula, useUnmergedTree = true).assertDoesNotExist()
         for ((tag, formula) in listOf(
             "input_metric_cash_flow" to StringsRu.cashFlowFormula,
             "input_metric_savings_rate" to StringsRu.savingsRateFormula,
             "input_metric_net_worth" to StringsRu.netWorthFormula,
             "input_metric_horizon" to StringsRu.horizonFormula
         )) {
-            composeRule.onNodeWithTag("input_test_list").performScrollToNode(hasTestTag(tag))
-            composeRule.onNodeWithText(formula).assertExists()
+            scrollToTag(tag)
+            composeRule.onNodeWithText(formula, useUnmergedTree = true).assertExists()
         }
     }
 
     @org.robolectric.annotation.Config(qualifiers = "w320dp-h800dp-xxhdpi")
     @org.robolectric.annotation.GraphicsMode(org.robolectric.annotation.GraphicsMode.Mode.NATIVE)
     @Test
-    fun `collapsible formulas preserve full text and style without value overlap at 320dp in all languages themes and font scales`() {
+    fun `hint formulas preserve full text and style without value overlap at 320dp in all languages themes and font scales`() {
         val language = mutableStateOf(AppLanguage.RU)
         val dark = mutableStateOf(false)
         val scale = mutableStateOf(1f)
         val assetsExpanded = mutableStateOf(false)
+        val investmentsExpanded = mutableStateOf(false)
         val input = FinancialInputData.usAverageData()
         val metrics = FinanceCalculator.calculate(input, today = today)
         var expectedStyle = androidx.compose.ui.text.TextStyle.Default
@@ -182,11 +201,21 @@ class InputDataScreenRobolectricTest {
                                 value = com.example.util.Formatters.formatMoney(metrics.totalAssets, input.currencySymbol, language.value),
                                 modifier = Modifier.testTag("assets")
                             )
+                            CategoryBreakdownHint(
+                                metricName = strings.investmentsBreakdownName,
+                                hintCollapsed = strings.investmentsHintCollapsed,
+                                hintExpanded = strings.investmentsHintExpanded,
+                                instruction = strings.breakdownInstruction,
+                                categories = strings.investmentsCategories,
+                                isExpanded = investmentsExpanded.value,
+                                onExpandedChange = { investmentsExpanded.value = it },
+                                modifier = Modifier.testTag("input_investments_hint"),
+                                formula = strings.realReturnFormula
+                            )
                             MetricIndicatorRow(
                                 title = strings.realReturnTitle,
-                                formula = strings.realReturnFormula,
+                                formula = null,
                                 value = com.example.util.Formatters.formatPercent(metrics.realReturnPercent, language.value),
-                                collapsibleFormula = true,
                                 modifier = Modifier.testTag("return")
                             )
                         }
@@ -203,46 +232,44 @@ class InputDataScreenRobolectricTest {
                         scale.value = fontScale
                     }
                     val strings = getAppStrings(lang)
-                    val assetsValue = com.example.util.Formatters.formatMoney(metrics.totalAssets, input.currencySymbol, lang)
-                    val assetsValueNode = composeRule.onNodeWithText(assetsValue, useUnmergedTree = true).performScrollTo()
-                    assetsValueNode.assertTextEquals(assetsValue)
-                    assertTextFits(assetsValueNode)
-                    val assetsTitle = composeRule.onNodeWithText(strings.totalAssetsTitle, useUnmergedTree = true)
-                    assertTextFits(assetsTitle)
-                    assertTrue("$lang $fontScale title overlaps value",
-                        assetsTitle.fetchSemanticsNode().boundsInWindow.right <= assetsValueNode.fetchSemanticsNode().boundsInWindow.left)
-                    composeRule.onNode(hasText(strings.metricCardInfo) and hasAnyAncestor(hasTestTag("assets"))).assertDoesNotExist()
-                    val assetsHint = composeRule.onNodeWithTag("input_assets_hint").performScrollTo()
-                    composeRule.onNodeWithText(strings.totalAssetsFormula, useUnmergedTree = true).assertDoesNotExist()
-                    assetsHint.performClick()
-                    val assetsFormula = composeRule.onNodeWithText(strings.totalAssetsFormula, useUnmergedTree = true).performScrollTo()
-                    composeRule.onAllNodesWithText(strings.totalAssetsFormula, useUnmergedTree = true).assertCountEquals(1)
-                    assetsFormula.assertTextEquals(strings.totalAssetsFormula)
-                    assertEquals(expectedStyle, assetsFormula.textStyle())
-                    assertTextFits(assetsFormula)
-                    composeRule.onNodeWithText(strings.metricCardFormulaPrefix.trimEnd(), useUnmergedTree = true).assertExists()
-                    assetsHint.performClick()
-                    composeRule.onNodeWithText(strings.totalAssetsFormula, useUnmergedTree = true).assertDoesNotExist()
-                    for ((tag, formula, value) in listOf(
-                        Triple("return", strings.realReturnFormula, com.example.util.Formatters.formatPercent(metrics.realReturnPercent, lang))
+                    for ((tag, hintTag, title, formula, value) in listOf(
+                        listOf("assets", "input_assets_hint", strings.totalAssetsTitle, strings.totalAssetsFormula,
+                            com.example.util.Formatters.formatMoney(metrics.totalAssets, input.currencySymbol, lang)),
+                        listOf("return", "input_investments_hint", strings.realReturnTitle, strings.realReturnFormula,
+                            com.example.util.Formatters.formatPercent(metrics.realReturnPercent, lang))
                     )) {
-                        val control = composeRule.onNode(hasText(strings.metricCardInfo) and hasAnyAncestor(hasTestTag(tag))).performScrollTo()
-                        val valueNode = composeRule.onNodeWithText(value, useUnmergedTree = true)
-                        val valueBounds = valueNode.fetchSemanticsNode().boundsInWindow
-                        val controlBounds = control.fetchSemanticsNode().boundsInWindow
+                        val valueNode = composeRule.onNodeWithText(value, useUnmergedTree = true).performScrollTo()
                         valueNode.assertTextEquals(value)
                         assertTextFits(valueNode)
-                        assertTrue("$lang $fontScale control overlaps value", valueBounds.bottom <= controlBounds.top)
-                        control.assertHeightIsAtLeast(48.dp)
-                        composeRule.onNodeWithText(formula).assertDoesNotExist()
-                        control.performClick()
-                        val formulaNode = composeRule.onNodeWithText(formula, useUnmergedTree = true)
-                        formulaNode.assertTextEquals(formula)
+                        val titleNode = composeRule.onNodeWithText(title, useUnmergedTree = true)
+                        assertTextFits(titleNode)
+                        assertTrue("$lang $fontScale title overlaps value",
+                            titleNode.fetchSemanticsNode().boundsInWindow.right <= valueNode.fetchSemanticsNode().boundsInWindow.left)
+                        composeRule.onNode(hasText(strings.metricCardInfo) and hasAnyAncestor(hasTestTag(tag)), useUnmergedTree = true)
+                            .assertDoesNotExist()
+                        val hint = composeRule.onNodeWithTag(hintTag).performScrollTo()
+                        hint.assert(hasClickAction())
+                        composeRule.onNodeWithText(formula, useUnmergedTree = true).assertDoesNotExist()
+                        composeRule.onNodeWithText(strings.metricCardFormulaPrefix.trimEnd(), useUnmergedTree = true).assertDoesNotExist()
+                        hint.performClick()
+                        val formulaNode = composeRule.onNodeWithText(formula, useUnmergedTree = true).performScrollTo()
+                        composeRule.onAllNodesWithText(formula, useUnmergedTree = true).assertCountEquals(1)
+                        formulaNode.assertTextEquals(formula).assert(hasAnyAncestor(hasTestTag(hintTag)))
                         assertEquals(expectedStyle, formulaNode.textStyle())
                         assertTextFits(formulaNode)
-                        assertTrue(control.fetchSemanticsNode().boundsInWindow.bottom <= formulaNode.fetchSemanticsNode().boundsInWindow.top)
-                        control.performClick()
-                        composeRule.onNodeWithText(formula).assertDoesNotExist()
+                        val prefix = composeRule.onNodeWithText(strings.metricCardFormulaPrefix.trimEnd(), useUnmergedTree = true)
+                        prefix.assertExists()
+                        val formulaBounds = formulaNode.fetchSemanticsNode().boundsInWindow
+                        val hintBounds = hint.fetchSemanticsNode().boundsInWindow
+                        assertTrue(formulaBounds.left >= hintBounds.left)
+                        assertTrue(formulaBounds.right <= hintBounds.right)
+                        assertTrue(prefix.fetchSemanticsNode().boundsInWindow.bottom <= formulaBounds.top)
+                        // Формула завершает подсказку, итоговая строка расположена ниже неё.
+                        valueNode.performScrollTo()
+                        assertTrue(formulaNode.fetchSemanticsNode().boundsInWindow.bottom <= valueNode.fetchSemanticsNode().boundsInWindow.top)
+                        hint.performClick()
+                        composeRule.onNodeWithText(formula, useUnmergedTree = true).assertDoesNotExist()
+                        prefix.assertDoesNotExist()
                     }
                 }
             }
