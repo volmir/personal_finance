@@ -192,101 +192,61 @@ fun AuditScoreScreen(
 
         // Section Breakdown Items
         item {
-            Text(
-                text = strings.scoresBreakdownTitle,
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
-                ),
-                modifier = Modifier.padding(start = 4.dp, top = 4.dp)
-            )
-        }
-
-        // 1. Норма сбережений Score
-        item {
-            ScoreItemCard(
-                title = strings.savingsRateTitle,
-                score = scores.savingsRateScore,
-                currentValue = Formatters.formatPercent(metrics.savingsRate, lang),
-                formula = strings.savingsRateFormula,
-                comment = strings.savingsRateScoreComment(
-                    metrics.savingsRate,
-                    Formatters.formatPercent(metrics.savingsRate, lang),
-                    strings.formatThreshold(FinancialMetricEvaluator.SAVINGS_RATE_POSITIVE_THRESHOLD)
-                ),
-                valuePrefix = strings.scoreValuePrefix,
-                scoreOutOfTen = strings.scoreOutOfTen(scores.savingsRateScore),
-                tag = "score_savings_rate"
-            )
-        }
-
-        // 2. Запас месячных расходов Score
-        item {
-            val monthsText = String.format(Locale.ROOT, strings.safetyMonthsValueFormat, Formatters.formatRatio(metrics.safetyMonths, lang))
-            ScoreItemCard(
-                title = strings.metricSafetyMonthsTitle,
-                score = scores.safetyMonthsScore,
-                currentValue = monthsText,
-                formula = strings.metricSafetyMonthsFormula,
-                comment = strings.safetyMonthsScoreComment(
-                    metrics.safetyMonths,
-                    monthsText,
-                    strings.formatThreshold(FinancialMetricEvaluator.SAFETY_MONTHS_NEUTRAL_THRESHOLD),
-                    strings.formatThreshold(FinancialMetricEvaluator.SAFETY_MONTHS_POSITIVE_THRESHOLD),
-                    strings.formatThreshold(FinancialMetricEvaluator.SAFETY_MONTHS_TIER_EXCELLENT)
-                ),
-                valuePrefix = strings.scoreValuePrefix,
-                scoreOutOfTen = strings.scoreOutOfTen(scores.safetyMonthsScore),
-                tag = "score_safety_months"
-            )
-        }
-
-        // 3. Коэффициент задолженности Score
-        item {
-            val debtComment = when (FinancialMetricEvaluator.getDebtRatioStatus(metrics.debtRatio)) {
-                AuditIndicatorStatus.POSITIVE -> strings.debtComment0(
-                    strings.formatDebtRatioThreshold(FinancialMetricEvaluator.DEBT_RATIO_ZERO_THRESHOLD),
-                    strings.formatDebtRatioThreshold(FinancialMetricEvaluator.DEBT_RATIO_POSITIVE_THRESHOLD)
-                )
-                AuditIndicatorStatus.NEUTRAL -> strings.debtComment1(
-                    strings.formatDebtRatioThreshold(FinancialMetricEvaluator.DEBT_RATIO_POSITIVE_THRESHOLD),
-                    strings.formatDebtRatioThreshold(FinancialMetricEvaluator.DEBT_RATIO_NEUTRAL_THRESHOLD)
-                )
-                AuditIndicatorStatus.NEGATIVE -> if (metrics.debtRatio <= FinancialMetricEvaluator.DEBT_RATIO_TIER_CRITICAL) {
-                    strings.debtComment2(
-                        strings.formatDebtRatioThreshold(FinancialMetricEvaluator.DEBT_RATIO_NEUTRAL_THRESHOLD),
-                        strings.formatDebtRatioThreshold(FinancialMetricEvaluator.DEBT_RATIO_TIER_CRITICAL)
+            Card(
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("scores_breakdown_card")
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = strings.scoresBreakdownTitle,
+                        style = MaterialTheme.typography.titleSmall.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        ),
+                        maxLines = 1,
+                        modifier = Modifier.testTag("scores_breakdown_title")
                     )
-                } else {
-                    strings.debtComment3(
-                        strings.formatDebtRatioThreshold(FinancialMetricEvaluator.DEBT_RATIO_TIER_CRITICAL)
+
+                    ScoreItemContent(
+                        title = strings.metricSavingsRateTitle,
+                        score = scores.savingsRateScore,
+                        currentValue = Formatters.formatPercent(metrics.savingsRate, lang),
+                        valuePrefix = strings.scoreValuePrefix,
+                        scoreOutOfTen = strings.scoreOutOfTen(scores.savingsRateScore),
+                        tag = "score_savings_rate"
+                    )
+                    ScoreItemContent(
+                        title = strings.metricSafetyMonthsTitle,
+                        score = scores.safetyMonthsScore,
+                        currentValue = String.format(Locale.ROOT, strings.safetyMonthsValueFormat, Formatters.formatRatio(metrics.safetyMonths, lang)),
+                        valuePrefix = strings.scoreValuePrefix,
+                        scoreOutOfTen = strings.scoreOutOfTen(scores.safetyMonthsScore),
+                        tag = "score_safety_months"
+                    )
+                    ScoreItemContent(
+                        title = strings.metricDebtRatioTitle,
+                        score = scores.debtRatioScore,
+                        currentValue = Formatters.formatRatio(metrics.debtRatio, lang),
+                        valuePrefix = strings.scoreValuePrefix,
+                        scoreOutOfTen = strings.scoreOutOfTen(scores.debtRatioScore),
+                        tag = "score_debt_ratio"
+                    )
+                    ScoreItemContent(
+                        title = strings.metricCfsTitle,
+                        score = scores.cfsScore,
+                        currentValue = Formatters.formatRatio(metrics.financialFreedomRatio, lang),
+                        valuePrefix = strings.scoreValuePrefix,
+                        scoreOutOfTen = strings.scoreOutOfTen(scores.cfsScore),
+                        tag = "score_cfs"
                     )
                 }
             }
-            ScoreItemCard(
-                title = strings.metricDebtRatioTitle,
-                score = scores.debtRatioScore,
-                currentValue = Formatters.formatRatio(metrics.debtRatio, lang),
-                formula = strings.metricDebtRatioFormula,
-                comment = debtComment,
-                valuePrefix = strings.scoreValuePrefix,
-                scoreOutOfTen = strings.scoreOutOfTen(scores.debtRatioScore),
-                tag = "score_debt_ratio"
-            )
-        }
-
-        // 4. Коэффициент финансовой свободы Score
-        item {
-            ScoreItemCard(
-                title = strings.metricCfsTitle,
-                score = scores.cfsScore,
-                currentValue = Formatters.formatRatio(metrics.financialFreedomRatio, lang),
-                formula = strings.metricCfsFormula,
-                comment = com.example.domain.FinanceCalculator.getCfsStageDescription(metrics.financialFreedomRatio, lang),
-                valuePrefix = strings.scoreValuePrefix,
-                scoreOutOfTen = strings.scoreOutOfTen(scores.cfsScore),
-                tag = "score_cfs"
-            )
         }
 
         // Recommendations Card (Аудиторское заключение по всем показателям)
@@ -615,88 +575,73 @@ fun AuditScoreScreen(
 }
 
 @Composable
-fun ScoreItemCard(
+private fun ScoreItemContent(
     title: String,
     score: Int,
     currentValue: String,
-    formula: String,
-    comment: String,
     valuePrefix: String,
     scoreOutOfTen: String,
     tag: String
 ) {
-    Card(
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+    Column(
         modifier = Modifier
             .fillMaxWidth()
             .testTag(tag)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            val scoreStatus = FinancialMetricEvaluator.getComponentScoreStatus(score)
-            val scoreColor = StatusColors.getColor(scoreStatus)
-            val scoreTextColor = StatusColors.getTextColor(scoreStatus)
+        val scoreStatus = FinancialMetricEvaluator.getComponentScoreStatus(score)
+        val scoreColor = StatusColors.getColor(scoreStatus)
+        val scoreTextColor = StatusColors.getTextColor(scoreStatus)
 
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier.fillMaxWidth()
-            ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+            modifier = Modifier.fillMaxWidth()
+        ) {
 
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = title,
-                        style = MaterialTheme.typography.titleSmall.copy(
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleSmall.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
-                    Text(
-                        text = "$valuePrefix $currentValue",
-                        style = MaterialTheme.typography.bodySmall.copy(
-                            color = scoreTextColor,
-                            fontWeight = FontWeight.SemiBold
-                        )
+                )
+                Text(
+                    text = "$valuePrefix $currentValue",
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        color = scoreTextColor,
+                        fontWeight = FontWeight.SemiBold
                     )
-                }
-
-                Surface(
-                    shape = CircleShape,
-                    color = scoreColor.copy(alpha = 0.15f)
-                ) {
-                    Text(
-                        text = scoreOutOfTen,
-                        style = MaterialTheme.typography.labelMedium.copy(
-                            fontWeight = FontWeight.Bold,
-                            color = scoreTextColor
-                        ),
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
-                    )
-                }
+                )
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
-
-            LinearProgressIndicator(
-                progress = { (score / 10f).coerceIn(0f, 1f) },
-                color = scoreTextColor,
-                trackColor = MaterialTheme.colorScheme.surface,
-                strokeCap = StrokeCap.Round,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(6.dp)
-                    .testTag("${tag}_progress")
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = comment,
-                style = MaterialTheme.typography.bodySmall.copy(
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+            Surface(
+                shape = CircleShape,
+                color = scoreColor.copy(alpha = 0.15f)
+            ) {
+                Text(
+                    text = scoreOutOfTen,
+                    style = MaterialTheme.typography.labelMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = scoreTextColor
+                    ),
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
                 )
-            )
+            }
         }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        LinearProgressIndicator(
+            progress = { (score / 10f).coerceIn(0f, 1f) },
+            color = scoreTextColor,
+            trackColor = MaterialTheme.colorScheme.surface,
+            strokeCap = StrokeCap.Round,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(6.dp)
+                .testTag("${tag}_progress")
+        )
     }
 }
 

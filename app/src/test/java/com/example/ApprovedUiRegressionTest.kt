@@ -9,6 +9,7 @@ import com.example.util.localization.StringsRu
 import com.example.util.localization.getAppStrings
 import java.util.Locale
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -20,6 +21,25 @@ import org.robolectric.RobolectricTestRunner
  */
 @RunWith(RobolectricTestRunner::class)
 class ApprovedUiRegressionTest {
+
+    @Test
+    fun `score breakdown uses compact headings and savings titles without a colon in all languages`() {
+        val titles = mapOf(
+            AppLanguage.RU to "Детализация баллов",
+            AppLanguage.EN to "Score Breakdown",
+            AppLanguage.DE to "Punkteübersicht",
+            AppLanguage.FR to "Détail des scores",
+            AppLanguage.IT to "Dettaglio punteggi",
+            AppLanguage.ES to "Desglose de puntos"
+        )
+        for (lang in AppLanguage.values()) {
+            val strings = getAppStrings(lang)
+            assertEquals("$lang breakdown title", titles.getValue(lang), strings.scoresBreakdownTitle)
+            assertFalse("$lang metric savings title", strings.metricSavingsRateTitle.contains(":"))
+        }
+        assertEquals("Норма сбережений", StringsRu.metricSavingsRateTitle)
+        assertEquals("Норма сбережений:", StringsRu.savingsRateTitle)
+    }
 
     @Test
     fun `main navigation keeps exactly four tabs in the approved order`() {

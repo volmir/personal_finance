@@ -3,16 +3,22 @@ package com.example
 import android.content.Context
 import android.content.ContextWrapper
 import android.content.Intent
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertContentDescriptionEquals
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertHeightIsAtLeast
 import androidx.compose.ui.test.assertTextEquals
+import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasClickAction
@@ -23,7 +29,11 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
+import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.test.core.app.ApplicationProvider
 import com.example.data.model.FinancialInputData
 import com.example.domain.AuditorAnalysisGenerator
@@ -31,11 +41,13 @@ import com.example.domain.FinanceCalculator
 import com.example.domain.model.AuditIndicatorStatus
 import com.example.ui.screens.AuditOpinionIndicatorItem
 import com.example.ui.screens.AuditScoreScreen
+import com.example.ui.theme.MyApplicationTheme
 import com.example.util.Formatters
 import com.example.util.localization.AppLanguage
 import com.example.util.localization.LocalAppLanguage
 import com.example.util.localization.LocalAppStrings
 import com.example.util.localization.StringsRu
+import com.example.util.localization.getAppStrings
 import java.time.LocalDate
 import java.util.Locale
 import org.junit.Assert.assertEquals
@@ -44,11 +56,90 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.GraphicsMode
 
 @RunWith(RobolectricTestRunner::class)
 class AuditScoreScreenRobolectricTest {
     @get:Rule
     val composeRule = createComposeRule()
+
+    @Test
+    @GraphicsMode(GraphicsMode.Mode.NATIVE)
+    fun `breakdown keeps four compact rows and full heading at 320dp in all languages and themes`() {
+        val input = FinancialInputData.defaultData()
+        val metrics = FinanceCalculator.calculate(input, today = LocalDate.of(2025, 1, 1))
+        val language = mutableStateOf(AppLanguage.RU)
+        val dark = mutableStateOf(false)
+        val scale = mutableStateOf(1f)
+        composeRule.setContent {
+            val density = LocalDensity.current
+            CompositionLocalProvider(
+                LocalAppLanguage provides language.value,
+                LocalAppStrings provides getAppStrings(language.value),
+                LocalDensity provides Density(density.density, scale.value)
+            ) {
+                MyApplicationTheme(darkTheme = dark.value) {
+                    Box(Modifier.width(320.dp)) {
+                        AuditScoreScreen(inputData = input, metrics = metrics)
+                    }
+                }
+            }
+        }
+
+        for (lang in AppLanguage.values()) for (isDark in listOf(false, true)) for (fontScale in listOf(1f, 1.3f)) {
+            composeRule.runOnIdle {
+                language.value = lang
+                dark.value = isDark
+                scale.value = fontScale
+            }
+            val strings = getAppStrings(lang)
+            composeRule.onNode(hasScrollAction()).performScrollToNode(hasTestTag("scores_breakdown_card"))
+            val heading = composeRule.onNodeWithTag("scores_breakdown_title", useUnmergedTree = true)
+            heading.assertTextEquals(strings.scoresBreakdownTitle)
+                .assert(hasAnyAncestor(hasTestTag("scores_breakdown_card")))
+            val layouts = mutableListOf<TextLayoutResult>()
+            heading.fetchSemanticsNode().config[SemanticsActions.GetTextLayoutResult].action!!.invoke(layouts)
+            val layout = layouts.single()
+            assertEquals("$lang heading lines", 1, layout.lineCount)
+            // Semantics may recreate an intrinsic-width paragraph; compare actual line extents.
+            assertTrue("$lang heading must fit at 320dp, scale $fontScale", !layout.didOverflowHeight &&
+                layout.getLineRight(0) - layout.getLineLeft(0) <= heading.fetchSemanticsNode().size.width + 0.5f)
+            assertTrue("$lang heading must not be ellipsized", !layout.isLineEllipsized(0))
+            assertEquals(14.sp, layout.layoutInput.style.fontSize)
+            assertEquals(20.sp, layout.layoutInput.style.lineHeight)
+            assertEquals(FontWeight.Bold, layout.layoutInput.style.fontWeight)
+
+            val rows = listOf(
+                Triple("score_savings_rate", strings.metricSavingsRateTitle,
+                    Formatters.formatPercent(metrics.savingsRate, lang) to metrics.scores.savingsRateScore),
+                Triple("score_safety_months", strings.metricSafetyMonthsTitle,
+                    String.format(Locale.ROOT, strings.safetyMonthsValueFormat, Formatters.formatRatio(metrics.safetyMonths, lang)) to metrics.scores.safetyMonthsScore),
+                Triple("score_debt_ratio", strings.metricDebtRatioTitle,
+                    Formatters.formatRatio(metrics.debtRatio, lang) to metrics.scores.debtRatioScore),
+                Triple("score_cfs", strings.metricCfsTitle,
+                    Formatters.formatRatio(metrics.financialFreedomRatio, lang) to metrics.scores.cfsScore)
+            )
+            var previousBottom = heading.getUnclippedBoundsInRoot().bottom
+            for ((tag, title, valueAndScore) in rows) {
+                val (value, score) = valueAndScore
+                val row = composeRule.onNodeWithTag(tag, useUnmergedTree = true)
+                row.assert(hasAnyAncestor(hasTestTag("scores_breakdown_card")))
+                val bounds = row.getUnclippedBoundsInRoot()
+                assertEquals("$tag has an internal 8dp gap", 8.dp, bounds.top - previousBottom)
+                previousBottom = bounds.bottom
+                // Exactly title, current value and badge: no explanatory paragraph.
+                val descendants = hasAnyAncestor(hasTestTag(tag))
+                composeRule.onAllNodes(descendants and SemanticsMatcher.keyIsDefined(SemanticsProperties.Text), useUnmergedTree = true)
+                    .assertCountEquals(3)
+                for (text in listOf(title, "${strings.scoreValuePrefix} $value", strings.scoreOutOfTen(score))) {
+                    composeRule.onNode(descendants and hasText(text), useUnmergedTree = true).assertExists()
+                }
+                val progress = composeRule.onNodeWithTag("${tag}_progress", useUnmergedTree = true)
+                progress.assert(hasAnyAncestor(hasTestTag(tag)))
+                assertEquals(score / 10f, progress.fetchSemanticsNode().config[SemanticsProperties.ProgressBarRangeInfo].current)
+            }
+        }
+    }
 
     @Test
     fun `fallback icon depends only on status and ignores numbers debt words and embedded icons`() {
