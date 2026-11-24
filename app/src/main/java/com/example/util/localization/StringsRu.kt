@@ -612,7 +612,7 @@ val StringsRu: AppStrings = object : AppStrings {
     override val auditShareNeutralEmpty: String = "• Нет нейтральных показателей"
     override val auditShareNegativeHeader: String = "🔴 НЕГАТИВНЫЕ ПОКАЗАТЕЛИ (%1${'$'}d):"
     override val auditShareNegativeEmpty: String = "• Критических и негативных факторов не выявлено 🎉"
-    override val auditShareGeneratedBy: String = "💡 Сформировано в приложении «Личные финансы»"
+    override val auditShareGeneratedBy: String = "💡 Сформировано в приложении «Финансы и FIRE»"
     override val auditShareDisclaimer: String = "⚠️ Важно: Проект является персональной разработкой и предоставляется исключительно в ознакомительных целях «как есть». Автор не несет ответственности за возможные сбои, потерю данных или иной ущерб, возникший в ходе использования данного ПО. Все расчеты, формулы, метрики и симуляции носят исключительно информационно-ознакомительный характер и не являются индивидуальной финансовой, инвестиционной или налоговой рекомендацией. Вы используете этот инструмент на свой собственный страх и риск."
 
     // Auditor Indicators
@@ -672,7 +672,7 @@ val StringsRu: AppStrings = object : AppStrings {
     override val auditRealReturnNegative: String = "⚠️ Реальная доходность капитала (%1${'$'}s): Инфляция (%2${'$'}s) превышает доходность капитала (%3${'$'}s). Происходит скрытое обесценивание накоплений и потеря покупательной способности."
 
     // Export Summary
-    override val exportHeaderTitle: String = "📊 ФИНАНСОВЫЙ ОТЧЕТ — ЛИЧНЫЕ ФИНАНСЫ"
+    override val exportHeaderTitle: String = "📊 ФИНАНСОВЫЙ ОТЧЕТ — ФИНАНСЫ И FIRE"
     override val exportSection1Title: String = "1. Исходные данные:"
     override val exportIncomeLine: String = "• Доход: %1${'$'}s/мес."
     override val exportExpensesLine: String = "• Расходы: %1${'$'}s/мес."

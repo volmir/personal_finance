@@ -29,6 +29,36 @@ class LocalizationReleaseTextTest {
     }
 
     @Test
+    fun bothExportsUseCurrentAppNameInEveryLanguage() {
+        val oldNames = mapOf(
+            AppLanguage.RU to "Личные финансы",
+            AppLanguage.EN to "Personal Finance",
+            AppLanguage.DE to "Persönliche Finanzen",
+            AppLanguage.FR to "Finances Personnelles",
+            AppLanguage.IT to "Finanza Personale",
+            AppLanguage.ES to "Finanzas Personales"
+        )
+        val input = FinancialInputData.usAverageData()
+        val metrics = FinanceCalculator.calculate(input, today = today)
+        for ((lang, oldName) in oldNames) {
+            val strings = getAppStrings(lang)
+            val export = AuditorAnalysisGenerator.generateExportSummary(input, metrics, lang)
+            val share = AuditorAnalysisGenerator.generate(input, metrics, lang)
+                .toFormattedShareText(input, metrics, lang)
+
+            assertTrue("$lang export header", export.lineSequence().first().endsWith(" — ${strings.appName.uppercase(Locale.ROOT)}"))
+            assertTrue("$lang export icon", export.startsWith("📊 "))
+            assertTrue("$lang attribution icon", strings.auditShareGeneratedBy.startsWith("💡 "))
+            assertTrue("$lang attribution brand", strings.auditShareGeneratedBy.contains(strings.appName))
+            for (text in listOf(export, share)) {
+                assertEquals("$lang attribution", 1, text.lineSequence().count { it == strings.auditShareGeneratedBy })
+                assertTrue("$lang current brand", text.contains(strings.appName))
+                assertFalse("$lang old brand", text.contains(oldName, ignoreCase = true))
+            }
+        }
+    }
+
+    @Test
     fun cashFlowAuditTextsAvoidGrowthAndSpeedClaimsInEveryLanguage() {
         val forbiddenPhrases = mapOf(
             AppLanguage.RU to listOf("быстр", "капитал не растёт", "капитал не растет"),

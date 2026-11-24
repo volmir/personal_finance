@@ -609,7 +609,7 @@ val StringsDe: AppStrings = object : AppStrings {
     override val auditShareNeutralEmpty: String = "• Keine neutralen Kennzahlen"
     override val auditShareNegativeHeader: String = "🔴 NEGATIVE KENNZAHLEN (%1${'$'}d):"
     override val auditShareNegativeEmpty: String = "• Keine kritischen Risikofaktoren festgestellt 🎉"
-    override val auditShareGeneratedBy: String = "💡 Erstellt in der App \"Persönliche Finanzen\""
+    override val auditShareGeneratedBy: String = "💡 Erstellt in der App \"Finanzen & FIRE\""
     override val auditShareDisclaimer: String = "⚠️ Wichtig: Dieses Projekt ist eine persönliche Entwicklung und wird ausschließlich zu Informationszwecken «wie besehen» bereitgestellt. Der Autor übernimmt keine Haftung für Fehlfunktionen, Datenverluste oder sonstige Schäden. Alle Berechnungen und Simulationen dienen reinen Informationszwecken und stellen keine Finanz- oder Steuerberatung dar. Nutzung auf eigenes Risiko."
 
     // Auditor Indicators
@@ -669,7 +669,7 @@ val StringsDe: AppStrings = object : AppStrings {
     override val auditRealReturnNegative: String = "⚠️ Reale Kapitalrendite (%1${'$'}s): Inflation (%2${'$'}s) übersteigt Rendite (%3${'$'}s). Es kommt zu schleichender Entwertung der Ersparnisse."
 
     // Export Summary
-    override val exportHeaderTitle: String = "📊 FINANZBERICHT — PERSÖNLICHE FINANZEN"
+    override val exportHeaderTitle: String = "📊 FINANZBERICHT — FINANZEN & FIRE"
     override val exportSection1Title: String = "1. Eingabedaten:"
     override val exportIncomeLine: String = "• Einkommen: %1${'$'}s/Mon."
     override val exportExpensesLine: String = "• Ausgaben: %1${'$'}s/Mon."

@@ -610,7 +610,7 @@ val StringsEn: AppStrings = object : AppStrings {
     override val auditShareNeutralEmpty: String = "• No neutral indicators"
     override val auditShareNegativeHeader: String = "🔴 NEGATIVE INDICATORS (%1${'$'}d):"
     override val auditShareNegativeEmpty: String = "• No critical or negative factors detected 🎉"
-    override val auditShareGeneratedBy: String = "💡 Generated in \"Personal Finance\" app"
+    override val auditShareGeneratedBy: String = "💡 Generated in \"Finance & FIRE\" app"
     override val auditShareDisclaimer: String = "⚠️ Important: This project is a personal development and is provided solely for informational purposes \"as is\". The author is not responsible for any malfunctions, data loss, or other damages arising from the use of this software. All calculations, formulas, metrics, and simulations are for informational purposes only and do not constitute individual financial, investment, or tax advice. You use this tool at your own risk."
 
     // Auditor Indicators
@@ -670,7 +670,7 @@ val StringsEn: AppStrings = object : AppStrings {
     override val auditRealReturnNegative: String = "⚠️ Real Return on Capital (%1${'$'}s): Inflation (%2${'$'}s) exceeds capital returns (%3${'$'}s). Hidden depreciation of savings and loss of purchasing power occurring."
 
     // Export Summary
-    override val exportHeaderTitle: String = "📊 FINANCIAL REPORT — PERSONAL FINANCE"
+    override val exportHeaderTitle: String = "📊 FINANCIAL REPORT — FINANCE & FIRE"
     override val exportSection1Title: String = "1. Input Data:"
     override val exportIncomeLine: String = "• Income: %1${'$'}s/mo."
     override val exportExpensesLine: String = "• Expenses: %1${'$'}s/mo."
