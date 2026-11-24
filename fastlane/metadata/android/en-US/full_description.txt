@@ -4,8 +4,12 @@ FOUR SCREENS
 
 • Inputs: income and expenses, liquid and financial assets, full property value, liabilities, nominal return, inflation, capital-gains tax, birth date and life-expectancy age. Expandable hints explain the categories. Choose whether financial assets count toward the emergency reserve.
 • Metrics: cash flow, savings rate, emergency reserve, months of coverage, debt ratio, net worth, Fidelity age-based savings benchmark, financial freedom ratio (CFS) and real return.
-• Scores & Audit: a total score from 0 to 10, component ratings and an automated assessment grouped into positive, neutral and negative indicators. Share the base summary or assessment through Android's share menu.
+• Analysis: a total score from 0 to 10, component ratings and an automated assessment grouped into positive, neutral and negative indicators. Share the base summary or assessment through Android's share menu.
 • FIRE: estimated retirement time and age, target capital and a capital trajectory chart through the chosen horizon. Three sliders and 14 scenarios adjust a separate simulation; saved base inputs remain intact. A pinned simulation panel compares FIRE time and age with the base values and shows the time change and the number of selected scenarios and nonzero sliders.
+
+INTERFACE
+
+Formulas and model assumptions expand on tap. Scroll positions, filters and open hints are kept when switching tabs. Dates follow the interface language; FIRE durations use tenths of a year, with a separate label for a positive duration that rounds to zero.
 
 MODEL AND SCENARIOS
 

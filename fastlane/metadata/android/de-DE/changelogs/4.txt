@@ -1,0 +1,6 @@
+• Tastatureingabe, Scrollen und Zugang zu unteren Feldern verbessert.
+• Scrollpositionen, Filter und offene Hinweise bleiben beim Tabwechsel erhalten.
+• Kompaktere Kennzahlen und Analyse; Formeln und Annahmen per Antippen.
+• Fixierte Simulationsübersicht vergleicht FIRE-Zeit und -Alter mit der Basis.
+• FIRE-Zeiten auf Zehnteljahre gerundet; Übersetzungen und Bewertungsexport korrigiert.
+• Lesbarkeit, Barrierefreiheit und Start im dunklen Design verbessert.

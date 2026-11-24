@@ -1,12 +1,17 @@
 package com.example
 
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.view.View
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
@@ -49,6 +54,7 @@ import com.example.util.localization.AppLanguage
 import com.example.util.localization.LocalAppLanguage
 import com.example.util.localization.LocalAppStrings
 import com.example.util.localization.getAppStrings
+import java.io.File
 import java.time.LocalDate
 import kotlin.math.abs
 import org.junit.Assert.assertEquals
@@ -65,6 +71,89 @@ import org.robolectric.annotation.GraphicsMode
 class FireRetirementScreenRobolectricTest {
     @get:Rule
     val composeRule = createComposeRule()
+
+    @Test
+    @Config(qualifiers = "w360dp-h800dp-xxhdpi")
+    @GraphicsMode(GraphicsMode.Mode.NATIVE)
+    fun russianHeroTitleFitsAt360dp() = assertRussianHeroTitleFits(360)
+
+    @Test
+    @Config(qualifiers = "w411dp-h891dp-xxhdpi")
+    @GraphicsMode(GraphicsMode.Mode.NATIVE)
+    fun russianHeroTitleFitsAt411dp() = assertRussianHeroTitleFits(411)
+
+    private fun assertRussianHeroTitleFits(widthDp: Int) {
+        val input = FinancialInputData.usAverageData()
+        val metrics = FinanceCalculator.calculate(input, today = LocalDate.of(2026, 11, 6))
+        val strings = getAppStrings(AppLanguage.RU)
+        val fontScale = mutableStateOf(1f)
+        var view: View? = null
+        composeRule.setContent {
+            val density = LocalDensity.current
+            val currentView = LocalView.current
+            SideEffect { view = currentView }
+            CompositionLocalProvider(
+                LocalAppLanguage provides AppLanguage.RU,
+                LocalAppStrings provides strings,
+                LocalDensity provides Density(density.density, fontScale.value)
+            ) {
+                MyApplicationTheme(darkTheme = false, dynamicColor = false) {
+                    FireRetirementScreen(input, metrics, metrics, FireSimulationState(), emptyList(),
+                        onUpdateSimulation = { _, _, _ -> }, onToggleScenario = {}, onResetSimulation = {},
+                        modifier = Modifier.testTag("fire_test_list"))
+                }
+            }
+        }
+        for (scale in listOf(1f, 1.6f)) {
+            composeRule.runOnIdle { fontScale.value = scale }
+            val title = composeRule.onNode(
+                hasText(strings.fireHeroTitle) and hasAnyAncestor(hasTestTag("fire_hero_card")),
+                useUnmergedTree = true
+            ).assertIsDisplayed()
+            val node = title.fetchSemanticsNode()
+            val layouts = mutableListOf<TextLayoutResult>()
+            node.config[SemanticsActions.GetTextLayoutResult].action?.invoke(layouts)
+            val layout = layouts.single()
+            val density = requireNotNull(view).resources.displayMetrics.density
+            val context = "RU width=$widthDp fontScale=$scale"
+            val report = File("build/reports/fire-hero-title/ru-$widthDp-$scale-${layout.layoutInput.style.fontSize.value}sp")
+            requireNotNull(report.parentFile).mkdirs()
+            File("${report.path}.txt").writeText(
+                "$context fontSize=${layout.layoutInput.style.fontSize} lineHeight=${layout.layoutInput.style.lineHeight} " +
+                    "lines=${layout.lineCount} bounds=${node.boundsInWindow}\n"
+            )
+            composeRule.runOnIdle {
+                val currentView = requireNotNull(view)
+                val bitmap = Bitmap.createBitmap(currentView.width, currentView.height, Bitmap.Config.ARGB_8888)
+                currentView.draw(Canvas(bitmap))
+                File("${report.path}.png").outputStream().use {
+                    assertTrue(bitmap.compress(Bitmap.CompressFormat.PNG, 100, it))
+                }
+                bitmap.recycle()
+            }
+            assertEquals("$context viewport", widthDp.toFloat(),
+                composeRule.onNodeWithTag("fire_test_list").fetchSemanticsNode().size.width / density, 0.5f)
+            if (scale == 1f) {
+                assertEquals("$context title lines", 1, layout.lineCount)
+                assertTrue("$context title height", node.size.height <= layout.layoutInput.style.lineHeight.value * density + 1f)
+            } else {
+                assertTrue("$context natural wrapping", layout.lineCount > 1)
+            }
+            assertFalse("$context vertical clipping", layout.didOverflowHeight)
+            for (line in 0 until layout.lineCount) {
+                assertFalse("$context ellipsis", layout.isLineEllipsized(line))
+                assertTrue("$context line fits", layout.getLineRight(line) - layout.getLineLeft(line) <= node.size.width + 0.5f)
+            }
+            assertEquals("$context full text", strings.fireHeroTitle.length,
+                layout.getLineEnd(layout.lineCount - 1, visibleEnd = true))
+            assertTrue("$context soft wrap", layout.layoutInput.softWrap)
+            assertEquals("$context unrestricted lines", Int.MAX_VALUE, layout.layoutInput.maxLines)
+            composeRule.onNode(
+                hasText(strings.fireHeroSubtitle) and hasAnyAncestor(hasTestTag("fire_hero_card")),
+                useUnmergedTree = true
+            ).assertIsDisplayed()
+        }
+    }
 
     @Test
     fun `info cards collapse independently in all languages themes and large font`() {

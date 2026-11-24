@@ -1,0 +1,6 @@
+• Mejoras de teclado, desplazamiento y acceso a los campos inferiores.
+• Se conservan posición, filtros y ayudas abiertas al cambiar de pestaña.
+• Indicadores y análisis más compactos; fórmulas y supuestos desplegables.
+• Panel fijo que compara plazo y edad FIRE con los valores de base.
+• Plazos FIRE redondeados a décimas de año; traducciones y exportación de la puntuación corregidas.
+• Mejoras de legibilidad, accesibilidad e inicio en tema oscuro.

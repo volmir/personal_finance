@@ -1,0 +1,6 @@
+• Improved keyboard input, scrolling and access to lower fields.
+• Scroll positions, filters and expanded hints survive navigation.
+• More compact metrics and analysis; tap to reveal formulas and assumptions.
+• A pinned simulation panel compares FIRE time and age with the base values.
+• FIRE durations round to tenths of a year; corrected translations and score exports.
+• Improved readability, accessibility and dark-theme launch.

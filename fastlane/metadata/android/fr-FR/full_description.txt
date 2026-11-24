@@ -4,8 +4,12 @@ QUATRE ÉCRANS
 
 • Données : revenus, dépenses, actifs liquides et financiers, valeur totale des biens, dettes, rendement nominal, inflation, impôt sur les plus-values, date de naissance et espérance de vie. Des indications expliquent les catégories. Les actifs financiers peuvent compter dans la réserve d’urgence.
 • Indicateurs : flux de trésorerie, taux d’épargne, réserve, autonomie en mois, endettement, patrimoine net, repère Fidelity lié à l’âge, ratio de liberté financière (CFS) et rendement réel.
-• Score & Audit : note globale de 0 à 10, notes des composantes et évaluation automatique des indicateurs positifs, neutres et négatifs. Le résumé de base et l’évaluation se partagent via le menu Android.
+• Analyse : note globale de 0 à 10, notes des composantes et évaluation automatique des indicateurs positifs, neutres et négatifs. Le résumé de base et l’évaluation se partagent via le menu Android.
 • FIRE : délai et âge de départ estimés, capital cible et trajectoire du capital jusqu’à l’âge choisi. Trois curseurs et 14 scénarios modifient une simulation distincte ; les données de base sont conservées. Un panneau de simulation fixe compare le délai et l’âge FIRE aux valeurs de base et affiche la variation du délai ainsi que le nombre de scénarios sélectionnés et de curseurs non nuls.
+
+INTERFACE
+
+Formules et hypothèses repliables. Position, filtres et aides ouvertes conservés entre onglets. Dates selon la langue ; délais FIRE au dixième d’année, avec un libellé distinct pour un délai positif arrondi à zéro.
 
 MODÈLE ET SCÉNARIOS
 

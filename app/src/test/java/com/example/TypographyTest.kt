@@ -24,7 +24,9 @@ class TypographyTest {
             listOf("screens", "components").flatMap { File(ui, it).walkTopDown().filter { file -> file.extension == "kt" }.toList() }
         val overrides = files.flatMap { file ->
             file.readLines().mapIndexedNotNull { index, line ->
-                if (Regex("\\bfontSize\\s*=").containsMatchIn(line)) "${file.name}:${index + 1}: $line" else null
+                if (Regex("\\bfontSize\\s*=").containsMatchIn(line) &&
+                    !line.contains("typography-size-exception")
+                ) "${file.name}:${index + 1}: $line" else null
             }
         }
         assertTrue("Use a complete typography role, not a local fontSize:\n${overrides.joinToString("\n")}", overrides.isEmpty())

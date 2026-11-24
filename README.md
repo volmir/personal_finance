@@ -18,6 +18,8 @@
 
 The published release is **[v1.0.2 / versionCode 3](https://github.com/volmir/personal_finance/releases/tag/v1.0.2)**, built from commit `293849bcb33355ef68df9da68e09892fe2262529`. Its checksum, signing certificate, version and release flags have been verified. See the dated [release verification report](./docs/release-readiness-1.0.2.md).
 
+The working version is **1.0.3 / versionCode 4**, prepared for a future manual release. Minor UI edits are still planned; the owner approved reusing the current screenshots and deferred the final release build. It is not published and has no release tag. See [release notes](./docs/release-notes-1.0.3.md) and [preparation and checks](./docs/release-prep-1.0.3.md).
+
 ---
 
 ## 📖 App Description
@@ -81,7 +83,7 @@ Cash flow and savings rate equal to zero are negative indicators. A zero net wor
 - **Three Sliders:** Adjust the monthly savings/income level, monthly expenses, and real investment return for the hypothetical projection.
 - **14 Built-in Scenarios:**
   - *Positive:* income +20%; financial assets +25%; expenses −15%; cost of living −30%; a one-off inheritance of 12 monthly incomes; property sale proceeds capped at 20 monthly incomes and property value; expenses −25% after 18 years.
-  - *Stress tests:* one-off reserve draw equal to 12 current monthly incomes for job loss; financial assets −30%; mortgage payments of 35% of monthly income for 20 years; car payments of 20% of monthly income for 5 years; one-off expense of 5 monthly incomes; expenses +25% (scenario label says inflation); child/dependent costs +25% of expenses for 18 years.
+  - *Stress tests:* one-off reserve draw equal to 12 current monthly incomes for job loss; financial assets −30%; mortgage payments of 35% of monthly income for 20 years; car payments of 20% of monthly income for 5 years; one-off expense of 5 monthly incomes; expenses +25%; child/dependent costs +25% of expenses for 18 years.
 - **Scenario Income Bases:** Job-loss reserves and mortgage/car payments include the salary-increase scenario. Inheritance, property sales and large one-off expenses use the original monthly income.
 - **Interactive Trajectory Chart:** Compare projected capital with required capital through the selected life-expectancy horizon.
 
@@ -112,7 +114,7 @@ The projection assumes constant return and inflation. Other taxes, market-event 
 | **Release APK native libraries** | `arm64-v8a`, `armeabi-v7a`, `x86`, `x86_64` |
 | **Runtime checks, 2026-11-06** | AOSP x86_64 emulators on API 24 and 36: installation, cold start, four tabs, and resume |
 | **Internet permission** | Not requested |
-| **Build tools** | Gradle Wrapper 9.3.1, AGP 9.1.1, Kotlin 2.2.10; JDK 17 in CI, JDK 21 used for local verification |
+| **Build tools** | Gradle Wrapper 9.3.1, AGP 9.1.1, Kotlin 2.2.10; JDK 17 supported, JDK 21 used for local verification |
 
 Hardware RAM and installed-size requirements have not been benchmarked. Emulator checks and their exact scope are recorded in the [verification report](./docs/release-readiness-1.0.1.md).
 
@@ -155,7 +157,7 @@ The project includes automated JVM unit and Robolectric integration test suites:
 
 ### Running Tests Locally
 
-CI is configured for JDK 17. The latest local JVM/Robolectric checks and screenshot generation used JDK 21. The shared Robolectric configuration in `app/src/test/resources/robolectric.properties` specifies API 35; localization/formatting suites also run on API 28. Separate emulator checks covered API 24 and 36. See the [dated results](./docs/release-readiness-1.0.1.md) for the tested snapshot and limits of those checks.
+The former GitHub Actions workflow used JDK 17 and was intentionally removed by the owner. Checks and release publication are manual. Local JVM/Robolectric checks and screenshot generation use JDK 21. The shared Robolectric configuration in `app/src/test/resources/robolectric.properties` specifies API 35; localization/formatting suites also run on API 28. Separate emulator checks covered API 24 and 36. See the [dated results](./docs/release-readiness-1.0.1.md) for the tested snapshot and limits of those checks.
 
 ```bash
 # Run all unit and Robolectric tests
@@ -171,7 +173,7 @@ Use `--offline` when dependencies are already cached. A fresh build needs the An
 
 ## 📦 Building & Installation
 
-Install Android SDK Platform `android-36.1` and Build Tools `36.0.0`, and select JDK 17 (CI) or JDK 21 (used for local verification). Set `ANDROID_HOME` or a local `sdk.dir` entry in `local.properties`; keep that file and signing keys out of Git. Use the checked-in Gradle Wrapper.
+Install Android SDK Platform `android-36.1` and Build Tools `36.0.0`, and select JDK 17 or JDK 21 (used for local verification). Set `ANDROID_HOME` or a local `sdk.dir` entry in `local.properties`; keep that file and signing keys out of Git. Use the checked-in Gradle Wrapper.
 
 ### 1. Clone the repository
 ```bash
@@ -199,15 +201,15 @@ Distribution uses signed GitHub Releases:
 
 - 📦 **[GitHub Releases](https://github.com/volmir/personal_finance/releases):** Signed APKs, APK checksums, and public signing certificate information.
 - 🤖 **[F-Droid Inclusion Guide](./FDROID_SETUP.md):** Prepare and test the build recipe in advance. Submit to the official repository no earlier than **January 10, 2027**, after three months of active development since October 10, 2026, unless a documented policy exception applies. Inclusion remains subject to review.
-- 🚀 **[GitHub Actions CI/CD Workflow](./.github/workflows/build-and-release.yml):** Builds the release APK on version tags, verifies its signature, and publishes it with APK checksums and public certificate information.
-- 📁 **Fastlane Metadata:** The single source of store titles and descriptions is [fastlane/metadata/android](./fastlane/metadata/android): `title.txt`, `short_description.txt`, and `full_description.txt` for `ru-RU`, `en-US`, `de-DE`, `es-ES`, `fr-FR`, and `it-IT`. Historical `v1.0` release notes remain in `changelogs/1.txt`; release notes for `v1.0.1` (`versionCode = 2`) are in `changelogs/2.txt`, and notes for `v1.0.2` (`versionCode = 3`) are in `changelogs/3.txt`. Screenshots are in `images/phoneScreenshots/` for each locale. The published app version is `1.0.2 / 3`. Future release tags require an explicit author request; published tags are never moved.
+- 🚀 **Manual release:** The owner intentionally removed the GitHub Actions release workflow. Build, sign with the existing release key, verify the APK and prepare its checksum and certificate information manually; publish only after explicit author approval. See the [1.0.3 preparation checklist](./docs/release-prep-1.0.3.md).
+- 📁 **Fastlane Metadata:** The single source of store titles and descriptions is [fastlane/metadata/android](./fastlane/metadata/android): `title.txt`, `short_description.txt`, and `full_description.txt` for `ru-RU`, `en-US`, `de-DE`, `es-ES`, `fr-FR`, and `it-IT`. Historical `v1.0` release notes remain in `changelogs/1.txt`; release notes for `v1.0.1` (`versionCode = 2`) are in `changelogs/2.txt`, and notes for `v1.0.2` (`versionCode = 3`) are in `changelogs/3.txt`. Draft notes for `1.0.3` (`versionCode = 4`) are in `changelogs/4.txt`. Screenshots are in `images/phoneScreenshots/` for each locale. The published app version is `1.0.2 / 3`. Future release tags require an explicit author request; published tags are never moved.
 - 📄 **OSI-Approved License:** [MIT License](./LICENSE) in the project root.
 
 For `v1.0.1`, `fdroid lint` and a local build in the official F-Droid buildserver container passed; the Binaries check verified reproducibility against the published signed APK. For `v1.0`, a local rebuild in the official F-Droid buildserver container passed comparison with the published APK using `apksigcopier`. For `v1.0.2`, the recipe entry was added after publication, the official F-Droid container build passed, and the published APK was verified against both the container build and an independent rebuild from the tag with `apksigcopier`. The [F-Droid guide](./FDROID_SETUP.md) records the verification and recipe for retaining the developer's signature. Official repository verification and inclusion are still pending.
 
 The development snapshot recorded on 2026-11-06 built with SDK 36.1 in the official F-Droid container. This is a local compatibility check, not a build on F-Droid's production infrastructure or proof that the next signed release is reproducible. `lintRelease` completed with 0 errors and 38 warnings; see the [verification report](./docs/release-readiness-1.0.1.md).
 
-The store includes 24 screenshots: four tabs in each of the six languages, at 1080×2400. They are generated from the actual Compose interface using Robolectric and the light theme. The last regeneration used JDK 21 and the Android SDK:
+The 1.0.3 store materials include 30 screenshots: four main tabs and an active simulation in each of the six languages, at 1080×2400. They are generated from the actual Compose interface using Robolectric and the light theme. The last regeneration used JDK 21 and the Android SDK:
 
 ```bash
 GENERATE_STORE_SCREENSHOTS=1 bash ./gradlew testDebugUnitTest --tests com.example.StoreScreenshotsTest --rerun-tasks

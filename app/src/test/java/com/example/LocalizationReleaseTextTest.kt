@@ -24,6 +24,21 @@ class LocalizationReleaseTextTest {
     private val today = LocalDate.of(2026, 11, 6)
 
     @Test
+    fun fireHeroTitleUsesShortTextInEveryLanguage() {
+        val expected = mapOf(
+            AppLanguage.RU to "Финансовая свобода, FIRE",
+            AppLanguage.EN to "Financial Independence, FIRE",
+            AppLanguage.DE to "Finanzielle Freiheit, FIRE",
+            AppLanguage.ES to "Independencia Financiera, FIRE",
+            AppLanguage.FR to "Indépendance Financière, FIRE",
+            AppLanguage.IT to "Indipendenza Finanziaria, FIRE"
+        )
+        for (lang in AppLanguage.values()) {
+            assertEquals("$lang FIRE hero title", expected.getValue(lang), getAppStrings(lang).fireHeroTitle)
+        }
+    }
+
+    @Test
     fun russianDisclaimerTitleHasCorrectSpelling() {
         assertEquals("Отказ от ответственности", getAppStrings(AppLanguage.RU).disclaimerTitle)
     }

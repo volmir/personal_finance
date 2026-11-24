@@ -2,7 +2,7 @@
 
 **Personal Finance & FIRE Audit** is an Android app for manually recording a monthly budget and balance sheet, calculating financial indicators, and modeling a FIRE (Financial Independence, Retire Early) scenario. It is a calculator and educational tool, with no connection to banks.
 
-This document describes the published version [v1.0.2 / versionCode 3](https://github.com/volmir/personal_finance/releases/tag/v1.0.2), built from commit `293849bcb33355ef68df9da68e09892fe2262529`. Its checksum, signing certificate, version and release flags have been verified. Release checks are recorded in [the dated verification report](docs/release-readiness-1.0.2.md).
+This document describes the working version **1.0.3 / versionCode 4**, prepared for a future release. It is not published and has no release tag. The published version remains [v1.0.2 / versionCode 3](https://github.com/volmir/personal_finance/releases/tag/v1.0.2); its checks are recorded in [the 1.0.2 report](docs/release-readiness-1.0.2.md). Current preparation and verification limits are recorded in [the 1.0.3 checklist](docs/release-prep-1.0.3.md).
 
 ## App Screens
 
@@ -24,6 +24,8 @@ Enter property at its full value and debts separately. Amounts range from 0 to 1
 
 Base monetary metrics are rounded to the selected currency precision before dependent ratios are calculated.
 
+The keyboard supports moving to the next field and completing entry; the lower fields remain reachable while the keyboard is visible. The birth date is displayed in the interface language and edited in ISO format. The total-assets formula and real-return formula are available in their category hints.
+
 The life-expectancy input must be greater than the current age and no more than 120. While an empty or invalid draft is shown, a hint identifies the saved value used in calculations. If a birth-date change exhausts the saved horizon, the app reports that condition rather than automatically extending the horizon. Current age and the remaining planning horizon are calculated in whole years. Age is recalculated when the app resumes.
 
 ### 2. Financial Metrics
@@ -40,15 +42,15 @@ The app calculates nine metrics:
 8. **Financial Freedom Ratio (CFS):** net worth, including property, divided by annual expenses. It expresses net worth in years of expenses. Readiness to live on capital income is assessed on the FIRE tab, which uses investable capital.
 9. **Real Return:** nominal return adjusted for inflation using the Fisher equation: `(1 + nominal return) / (1 + inflation) − 1`. The model applies a lower limit of −50% to the resulting real return.
 
-Values are accompanied by color-coded assessments and brief explanations.
+Values are accompanied by color-coded assessments and brief explanations. Metric formulas expand on tap, and the information control sits next to the value.
 
 Cash flow and savings rate of zero are negative indicators. Net worth of zero is neutral; positive net worth is positive when it is at least 50% of total assets, and otherwise neutral. Fidelity is positive at 100% of its target or above, neutral from 70% up to but excluding 100%, and negative below 70%. Unavailable Fidelity values are shown as `—` and omitted from the audit.
 
 Zero denominators have explicit boundary rules. With no income, savings rate is −100% for a deficit and 0% otherwise. With no assets, debt ratio is unavailable and negative when liabilities exist, and 0 otherwise. With no expenses, positive emergency reserves use 12 safety months; a zero reserve uses 0. With zero annual expenses, CFS is 30 for positive net worth, −1 for negative net worth, and 0 for zero net worth. These conventions do not establish readiness for retirement.
 
-### 3. Score & Audit
+### 3. Analysis
 
-The overall financial health score ranges from 0 to 10. Component weights are CFS 45%, savings rate 25%, emergency-fund runway 15%, and debt ratio 15%. The screen shows the overall score, component ratings, and an assessment generated from the metrics, with positive, neutral, and negative signals. The summary and full assessment can be shared through Android's system share menu.
+The overall financial health score ranges from 0 to 10. Component weights are CFS 45%, savings rate 25%, emergency-fund runway 15%, and debt ratio 15%. The screen shows the overall score, component ratings, and an assessment generated from the metrics, with positive, neutral, and negative signals. The summary and full assessment can be shared through Android's system share menu. Component scores appear in one compact card. Model assumptions and the disclaimer expand independently. The score export includes the brief assessment below the total score and uses the localized app name.
 
 CFS stages follow inclusive lower and exclusive upper bounds:
 
@@ -82,6 +84,8 @@ Capital-gains tax is estimated in a simplified way for the financial-assets shar
 
 The retirement point is found by comparing projected capital (starting assets and accumulated net cash flow, accounting for real return) with target capital. A deficit reduces projected capital. Return and inflation come from the Input Data screen; the planning horizon is life-expectancy age minus current age. Age and planning horizon are calculated in full years as of the calculation date, so the projected retirement age and duration may differ from exact values by a fraction of a year.
 
+FIRE durations and projected retirement ages are displayed to tenths of a year, without trailing zeros. A small positive time that rounds to zero has a separate label, so it is not presented as an already reached goal. The calculation retains its original precision. The simulation has a pinned three-row comparison with the base time, retirement age and time change, plus an active-change count and reset control.
+
 **Three simulator sliders** adjust monthly savings/income, expenses, and the real-return adjustment. Changes apply to a separate "What if?" calculation without overwriting the original financial inputs. Slider state is bounded after input changes, scenario changes, and restoration from local storage. Return adjustments respect the nominal-return limits at the selected inflation rate. Metrics, Audit, and exported reports use the base calculation; the FIRE tab shows the simulation while it is active.
 
 **14 built-in scenarios:**
@@ -108,7 +112,8 @@ Job-loss costs and mortgage/car payments use income after the salary-increase sc
 ## Language, Storage & Limitations
 
 - The interface supports 6 languages: English (default), Russian (for system locales `ru` and `be`), German (`de`), French (`fr`), Italian (`it`), and Spanish (`es`). The language is selected automatically from the Android system locale without additional interface controls.
-- The app runs on Android 7.0 (API 24) and later. The current working snapshot was tested separately on AOSP x86_64 emulators at API 24 and 36; this is not a claim of testing every device or Android version.
+- The app runs on Android 7.0 (API 24) and later. Emulator checks at API 24 and 36 recorded in the 1.0.2 report apply to that published version; checks of the prepared 1.0.3 APK are recorded separately in its preparation checklist.
+- Scroll positions, filters and disclosure states are retained when navigating between tabs. Simulator state and base inputs remain separate.
 - The app does not request the `INTERNET` permission; inputs and calculations are processed locally. Reports are shared only at the user's initiative through Android and an app of their choice.
 - The app does not connect to banks, import transactions, or download market quotes or exchange rates.
 - Inputs, the current tab, detected language, and simulator state are saved in local preferences. Invalid stored numeric values are restored to valid defaults or bounds. System-language changes are reflected when the app observes the updated locale configuration.

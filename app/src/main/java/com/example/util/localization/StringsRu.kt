@@ -438,7 +438,7 @@ val StringsRu: AppStrings = object : AppStrings {
     override val neutralEmptyText: String = "Нейтральных показателей нет — все метрики в позитивной или негативной зоне."
     override val negativeEmptyText: String = "🎉 Критических и негативных факторов не выявлено — все показатели в безопасной зоне!"
 
-    override val fireHeroTitle: String = "Финансовая свобода, пенсия, FIRE"
+    override val fireHeroTitle: String = "Финансовая свобода, FIRE"
     override val fireHeroSubtitle: String = "Расчет срока до выхода на пенсию"
     override val fireSubtabBase: String = "FIRE"
     override val fireSubtabSimulation: String = "Симуляция"

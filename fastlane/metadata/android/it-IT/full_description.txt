@@ -4,8 +4,12 @@ QUATTRO SCHERMATE
 
 • Dati: entrate, spese, attività liquide e finanziarie, valore complessivo dei beni, debiti, rendimento nominale, inflazione, imposta sulle plusvalenze, data di nascita e aspettativa di vita. Le indicazioni spiegano le categorie. Le attività finanziarie possono contribuire alla riserva d’emergenza.
 • Indicatori: flusso di cassa, tasso di risparmio, riserva, copertura in mesi, indebitamento, patrimonio netto, riferimento Fidelity per età, rapporto di libertà finanziaria (CFS) e rendimento reale.
-• Punteggio & Audit: voto complessivo da 0 a 10, voti delle componenti e valutazione automatica degli indicatori positivi, neutri e negativi. Il riepilogo di base e la valutazione si condividono dal menu Android.
+• Analisi: voto complessivo da 0 a 10, voti delle componenti e valutazione automatica degli indicatori positivi, neutri e negativi. Il riepilogo di base e la valutazione si condividono dal menu Android.
 • FIRE: tempo ed età di pensionamento stimati, capitale necessario e andamento del capitale fino all’età scelta. Tre cursori e 14 scenari modificano una simulazione separata; i dati di base restano salvati. Un pannello fisso della simulazione confronta il tempo e l’età FIRE con i valori di base e mostra la variazione del tempo e il numero di scenari selezionati e cursori diversi da zero.
+
+INTERFACCIA
+
+Formule e ipotesi sono espandibili. Posizione, filtri e suggerimenti aperti restano al cambio di scheda. Date nella lingua dell’app; tempi FIRE ai decimi di anno, con un testo distinto per un tempo positivo arrotondato a zero.
 
 MODELLO E SCENARI
 

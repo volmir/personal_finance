@@ -13,7 +13,10 @@ import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.performClick
 import androidx.test.core.app.ApplicationProvider
 import com.example.ui.AppTab
 import com.example.ui.FinanceApp
@@ -71,9 +74,24 @@ class StoreScreenshotsTest {
             AppTab.SCORES to "3-audit.png",
             AppTab.FIRE to "4-fire.png"
         )
+        fun capture(destination: File, filename: String) {
+            composeRule.mainClock.advanceTimeBy(1_000)
+            composeRule.waitForIdle()
+            val bitmap = composeRule.runOnIdle {
+                val view = composeRule.activity.findViewById<View>(android.R.id.content)
+                Bitmap.createBitmap(view.width, view.height, Bitmap.Config.ARGB_8888).also {
+                    view.draw(Canvas(it))
+                }
+            }
+            assertTrue(bitmap.width >= 320 && bitmap.height > bitmap.width)
+            File(destination, filename).outputStream().use {
+                assertTrue(bitmap.compress(Bitmap.CompressFormat.PNG, 100, it))
+            }
+        }
         try {
             for (locale in locales) {
                 composeRule.runOnIdle {
+                    viewModel.resetSimulation()
                     selectedLocale = locale
                     viewModel.updateLanguageFromSystem(locale.substringBefore('-'))
                 }
@@ -84,19 +102,12 @@ class StoreScreenshotsTest {
                         viewModel.selectTab(tab)
                         contentVersion++
                     }
-                    composeRule.mainClock.advanceTimeBy(1_000)
-                    composeRule.waitForIdle()
-                    val bitmap = composeRule.runOnIdle {
-                        val view = composeRule.activity.findViewById<View>(android.R.id.content)
-                        Bitmap.createBitmap(view.width, view.height, Bitmap.Config.ARGB_8888).also {
-                            view.draw(Canvas(it))
-                        }
-                    }
-                    assertTrue(bitmap.width >= 320 && bitmap.height > bitmap.width)
-                    File(destination, filename).outputStream().use {
-                        assertTrue(bitmap.compress(Bitmap.CompressFormat.PNG, 100, it))
-                    }
+                    capture(destination, filename)
                 }
+                composeRule.runOnIdle { viewModel.updateSimulation(200.0, 0.0, 100.0) }
+                composeRule.onNodeWithTag("fire_subtab_simulation").performClick()
+                composeRule.onNodeWithTag("fire_sim_sticky_summary").assertIsDisplayed()
+                capture(destination, "5-simulation.png")
             }
         } finally {
             composeRule.runOnIdle { viewModel.flushPendingSave() }

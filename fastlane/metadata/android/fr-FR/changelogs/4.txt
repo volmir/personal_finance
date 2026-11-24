@@ -1,0 +1,6 @@
+• Saisie au clavier, défilement et accès aux champs du bas améliorés.
+• Position, filtres et aides ouvertes conservés entre onglets.
+• Indicateurs et analyse plus compacts ; formules et hypothèses repliables.
+• Panneau fixe comparant le délai et l’âge FIRE aux valeurs de base.
+• Délais FIRE arrondis au dixième d’année ; traductions et export du score corrigés.
+• Lisibilité, accessibilité et lancement en thème sombre améliorés.

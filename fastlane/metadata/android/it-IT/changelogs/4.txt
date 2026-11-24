@@ -1,0 +1,6 @@
+• Migliorati tastiera, scorrimento e accesso ai campi inferiori.
+• Posizione, filtri e suggerimenti aperti mantenuti tra le schede.
+• Indicatori e analisi più compatti; formule e ipotesi espandibili.
+• Pannello fisso che confronta tempo ed età FIRE con i valori di base.
+• Tempi FIRE arrotondati ai decimi di anno; corretti traduzioni ed esportazione del punteggio.
+• Migliorati leggibilità, accessibilità e avvio con tema scuro.

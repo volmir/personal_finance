@@ -58,6 +58,7 @@ import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.data.model.CalculatedMetrics
 import com.example.data.model.FireStatus
 import com.example.data.model.FinancialInputData
@@ -74,6 +75,7 @@ import com.example.ui.theme.StatusColors
 import com.example.ui.theme.SuccessGreen
 import com.example.util.FireHeroDisplay
 import com.example.util.Formatters
+import com.example.util.localization.AppLanguage
 import com.example.util.localization.LocalAppLanguage
 import com.example.util.localization.LocalAppStrings
 import java.math.BigDecimal
@@ -277,7 +279,11 @@ fun FireRetirementScreen(
                                     text = strings.fireHeroTitle,
                                     style = MaterialTheme.typography.titleMedium.copy(
                                         fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.onSurface
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        fontSize = if (lang == AppLanguage.RU) 19.sp // typography-size-exception: Russian hero title
+                                            else MaterialTheme.typography.titleMedium.fontSize,
+                                        lineHeight = if (lang == AppLanguage.RU) 26.sp
+                                            else MaterialTheme.typography.titleMedium.lineHeight
                                     )
                                 )
                                 Text(

@@ -10,8 +10,8 @@ Changelog: https://github.com/volmir/personal_finance/releases
 
 AutoUpdateMode: Version
 UpdateCheckMode: Tags
-CurrentVersion: '1.0.2'
-CurrentVersionCode: 3
+CurrentVersion: '1.0.3'
+CurrentVersionCode: 4
 
 Builds:
   - versionName: '1.0'
@@ -31,6 +31,13 @@ Builds:
   - versionName: '1.0.2'
     versionCode: 3
     commit: v1.0.2
+    subdir: app
+    gradle:
+      - yes
+
+  - versionName: '1.0.3'
+    versionCode: 4
+    commit: v1.0.3
     subdir: app
     gradle:
       - yes
