@@ -214,38 +214,43 @@ fun AuditScoreScreen(
                         modifier = Modifier.testTag("scores_breakdown_title")
                     )
 
-                    ScoreItemContent(
-                        title = strings.metricSavingsRateTitle,
-                        score = scores.savingsRateScore,
-                        currentValue = Formatters.formatPercent(metrics.savingsRate, lang),
-                        valuePrefix = strings.scoreValuePrefix,
-                        scoreOutOfTen = strings.scoreOutOfTen(scores.savingsRateScore),
-                        tag = "score_savings_rate"
-                    )
-                    ScoreItemContent(
-                        title = strings.metricSafetyMonthsTitle,
-                        score = scores.safetyMonthsScore,
-                        currentValue = String.format(Locale.ROOT, strings.safetyMonthsValueFormat, Formatters.formatRatio(metrics.safetyMonths, lang)),
-                        valuePrefix = strings.scoreValuePrefix,
-                        scoreOutOfTen = strings.scoreOutOfTen(scores.safetyMonthsScore),
-                        tag = "score_safety_months"
-                    )
-                    ScoreItemContent(
-                        title = strings.metricDebtRatioTitle,
-                        score = scores.debtRatioScore,
-                        currentValue = Formatters.formatRatio(metrics.debtRatio, lang),
-                        valuePrefix = strings.scoreValuePrefix,
-                        scoreOutOfTen = strings.scoreOutOfTen(scores.debtRatioScore),
-                        tag = "score_debt_ratio"
-                    )
-                    ScoreItemContent(
-                        title = strings.metricCfsTitle,
-                        score = scores.cfsScore,
-                        currentValue = Formatters.formatRatio(metrics.financialFreedomRatio, lang),
-                        valuePrefix = strings.scoreValuePrefix,
-                        scoreOutOfTen = strings.scoreOutOfTen(scores.cfsScore),
-                        tag = "score_cfs"
-                    )
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        ScoreItemContent(
+                            title = strings.metricSavingsRateTitle,
+                            score = scores.savingsRateScore,
+                            currentValue = Formatters.formatPercent(metrics.savingsRate, lang),
+                            valuePrefix = strings.scoreValuePrefix,
+                            scoreOutOfTen = strings.scoreOutOfTen(scores.savingsRateScore),
+                            tag = "score_savings_rate"
+                        )
+                        ScoreItemContent(
+                            title = strings.metricSafetyMonthsTitle,
+                            score = scores.safetyMonthsScore,
+                            currentValue = String.format(Locale.ROOT, strings.safetyMonthsValueFormat, Formatters.formatRatio(metrics.safetyMonths, lang)),
+                            valuePrefix = strings.scoreValuePrefix,
+                            scoreOutOfTen = strings.scoreOutOfTen(scores.safetyMonthsScore),
+                            tag = "score_safety_months"
+                        )
+                        ScoreItemContent(
+                            title = strings.metricDebtRatioTitle,
+                            score = scores.debtRatioScore,
+                            currentValue = Formatters.formatRatio(metrics.debtRatio, lang),
+                            valuePrefix = strings.scoreValuePrefix,
+                            scoreOutOfTen = strings.scoreOutOfTen(scores.debtRatioScore),
+                            tag = "score_debt_ratio"
+                        )
+                        ScoreItemContent(
+                            title = strings.metricCfsTitle,
+                            score = scores.cfsScore,
+                            currentValue = Formatters.formatRatio(metrics.financialFreedomRatio, lang),
+                            valuePrefix = strings.scoreValuePrefix,
+                            scoreOutOfTen = strings.scoreOutOfTen(scores.cfsScore),
+                            tag = "score_cfs"
+                        )
+                    }
                 }
             }
         }

@@ -226,12 +226,14 @@ class AuditScoreScreenRobolectricTest {
                     Formatters.formatRatio(metrics.financialFreedomRatio, lang) to metrics.scores.cfsScore)
             )
             var previousBottom = heading.getUnclippedBoundsInRoot().bottom
-            for ((tag, title, valueAndScore) in rows) {
+            for ((index, rowData) in rows.withIndex()) {
+                val (tag, title, valueAndScore) = rowData
                 val (value, score) = valueAndScore
                 val row = composeRule.onNodeWithTag(tag, useUnmergedTree = true)
                 row.assert(hasAnyAncestor(hasTestTag("scores_breakdown_card")))
                 val bounds = row.getUnclippedBoundsInRoot()
-                assertEquals("$tag has an internal 8dp gap", 8.dp, bounds.top - previousBottom)
+                val expectedGap = if (index == 0) 8.dp else 12.dp
+                assertEquals("$tag has an internal ${expectedGap.value}dp gap", expectedGap, bounds.top - previousBottom)
                 previousBottom = bounds.bottom
                 // Exactly title, current value and badge: no explanatory paragraph.
                 val descendants = hasAnyAncestor(hasTestTag(tag))
