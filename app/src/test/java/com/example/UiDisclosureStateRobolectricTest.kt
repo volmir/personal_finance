@@ -166,11 +166,23 @@ class UiDisclosureStateRobolectricTest {
     private fun assertFormulaExpanded(title: String, expanded: Boolean) {
         list().performScrollToNode(hasTestTag(cardTag(title)))
         val layouts = mutableListOf<TextLayoutResult>()
-        val node = composeRule.onNode(
+        val formula = composeRule.onNode(
             hasTestTag("metric_card_formula") and hasAnyAncestor(hasTestTag(cardTag(title))),
             useUnmergedTree = true
-        ).fetchSemanticsNode()
+        )
+        if (!expanded) {
+            formula.assertDoesNotExist()
+            return
+        }
+        val node = formula.fetchSemanticsNode()
         assertTrue(node.config[SemanticsActions.GetTextLayoutResult].action!!.invoke(layouts))
-        assertEquals(if (expanded) Int.MAX_VALUE else 1, layouts.single().layoutInput.maxLines)
+        assertEquals(Int.MAX_VALUE, layouts.single().layoutInput.maxLines)
+        val layout = layouts.single()
+        // Intrinsic paragraph width can differ from the measured width; check actual lines.
+        assertTrue("Expanded formula must fit completely", !layout.didOverflowHeight &&
+            (0 until layout.lineCount).all {
+                !layout.isLineEllipsized(it) &&
+                    layout.getLineRight(it) - layout.getLineLeft(it) <= layout.size.width + 0.5f
+            })
     }
 }

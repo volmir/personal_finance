@@ -283,9 +283,9 @@ class MetricsScreenRobolectricTest {
     }
 
     @Test
-    @Config(qualifiers = "w360dp-h800dp-xxhdpi")
+    @Config(qualifiers = "w320dp-h800dp-xxhdpi")
     @GraphicsMode(GraphicsMode.Mode.NATIVE)
-    fun `metric card formulas are single-line when collapsed and wrap completely when expanded`() {
+    fun `metric card formulas are absent when collapsed and wrap completely when expanded`() {
         val input = FinancialInputData.defaultData()
         val metrics = FinanceCalculator.calculate(input, today = LocalDate.of(2025, 1, 1))
         val language = mutableStateOf(AppLanguage.RU)
@@ -313,7 +313,7 @@ class MetricsScreenRobolectricTest {
             return results.first()
         }
 
-        for (lang in listOf(AppLanguage.RU, AppLanguage.EN)) {
+        for (lang in AppLanguage.values()) {
             composeRule.runOnIdle { language.value = lang }
             composeRule.waitForIdle()
             val strings = getAppStrings(lang)
@@ -342,18 +342,33 @@ class MetricsScreenRobolectricTest {
                     useUnmergedTree = true
                 )
 
-                // Collapsed: strictly 1 line
-                val collapsedLayout = formulaNode.readTextLayout()
-                assertEquals(
-                    "[$lang] Collapsed formula for '$title' must be 1 line",
-                    1,
-                    collapsedLayout.lineCount
+                // Approved disclosure contract: no formula in the collapsed tree.
+                formulaNode.assertDoesNotExist()
+                val descriptionNode = composeRule.onNode(
+                    hasTestTag("metric_card_description") and hasAnyAncestor(hasTestTag(cardTag)),
+                    useUnmergedTree = true
                 )
-                assertEquals(
-                    "[$lang] Collapsed formula for '$title' must allow ellipsis",
-                    TextOverflow.Ellipsis,
-                    collapsedLayout.layoutInput.overflow
+                descriptionNode.assertDoesNotExist()
+                val valueNode = composeRule.onNode(
+                    hasTestTag("metric_card_value") and hasAnyAncestor(hasTestTag(cardTag)),
+                    useUnmergedTree = true
                 )
+                val infoNode = composeRule.onNode(
+                    hasTestTag("metric_card_info") and hasAnyAncestor(hasTestTag(cardTag)),
+                    useUnmergedTree = true
+                )
+                val valueBounds = valueNode.getUnclippedBoundsInRoot()
+                val infoBounds = infoNode.getUnclippedBoundsInRoot()
+                val cardBounds = composeRule.onNodeWithTag(cardTag).getUnclippedBoundsInRoot()
+                assertTrue("[$lang] Value and Info must not overlap", valueBounds.right <= infoBounds.left)
+                assertEquals(
+                    (valueBounds.top.value + valueBounds.bottom.value) / 2f,
+                    (infoBounds.top.value + infoBounds.bottom.value) / 2f,
+                    0.5f
+                )
+                assertEquals(cardBounds.right.value - 12f, infoBounds.right.value, 0.5f)
+                val valueLayout = valueNode.readTextLayout()
+                assertTrue("[$lang] Value must fit completely", !valueLayout.hasVisualOverflow)
                 val collapsedHeight = composeRule.onNodeWithTag(cardTag)
                     .getUnclippedBoundsInRoot().height
 
@@ -388,15 +403,10 @@ class MetricsScreenRobolectricTest {
                 composeRule.onNodeWithTag(cardTag).performClick()
                 composeRule.waitForIdle()
 
+                descriptionNode.assertExists()
                 val expandedLayout = formulaNode.readTextLayout()
                 assertExpandedLayoutFits(expandedLayout, "Expanded")
-                if (collapsedLayout.isLineEllipsized(0)) {
-                    wrappedCount++
-                    assertTrue(
-                        "[$lang] Expanded formula for '$title' was ellipsized when collapsed so it must wrap across multiple lines (lines=${expandedLayout.lineCount})",
-                        expandedLayout.lineCount > 1
-                    )
-                }
+                if (expandedLayout.lineCount > 1) wrappedCount++
                 val expandedHeight = composeRule.onNodeWithTag(cardTag)
                     .getUnclippedBoundsInRoot().height
                 assertTrue(
@@ -408,12 +418,8 @@ class MetricsScreenRobolectricTest {
                 composeRule.onNodeWithTag(cardTag).performClick()
                 composeRule.waitForIdle()
 
-                val recollapsedLayout = formulaNode.readTextLayout()
-                assertEquals(
-                    "[$lang] Re-collapsed formula for '$title' must return to 1 line",
-                    1,
-                    recollapsedLayout.lineCount
-                )
+                formulaNode.assertDoesNotExist()
+                descriptionNode.assertDoesNotExist()
                 val recollapsedHeight = composeRule.onNodeWithTag(cardTag)
                     .getUnclippedBoundsInRoot().height
                 assertEquals(
@@ -439,7 +445,7 @@ class MetricsScreenRobolectricTest {
             }
 
             assertTrue(
-                "[$lang] Expected at least 3 formulas to wrap at 360dp phone width, but saw $wrappedCount",
+                "[$lang] Expected at least 3 formulas to wrap at 320dp phone width, but saw $wrappedCount",
                 wrappedCount >= 3
             )
         }

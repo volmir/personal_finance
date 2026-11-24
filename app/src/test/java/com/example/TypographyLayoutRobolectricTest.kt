@@ -96,17 +96,14 @@ class TypographyLayoutRobolectricTest {
                 for (layout in layouts) {
                     val text = layout.layoutInput.text.text
                     if (layout.layoutInput.style.fontSize.value < 12f) failures += "$context below 12sp: $text"
-                    // Collapsed formula previews deliberately use ellipsis; expanding reveals the full formula.
-                    val collapsedFormula = node.config.getOrElse(SemanticsProperties.TestTag) { "" } == "metric_card_formula" &&
-                        layout.layoutInput.maxLines == 1
                     // GetTextLayoutResult can recreate an intrinsic-width paragraph using
                     // the original maxWidth (even Infinity). Check actual line extents,
                     // not didOverflowWidth, which then compares that maxWidth with size.
                     val lineTooWide = (0 until layout.lineCount).any {
                         layout.getLineRight(it) - layout.getLineLeft(it) > layout.size.width + 0.5f
                     }
-                    if (!collapsedFormula && (lineTooWide || layout.didOverflowHeight ||
-                            (0 until layout.lineCount).any { layout.isLineEllipsized(it) })) {
+                    if (lineTooWide || layout.didOverflowHeight ||
+                            (0 until layout.lineCount).any { layout.isLineEllipsized(it) }) {
                         val issue = "$context overflow: $text (size=${layout.size}, lines=${layout.lineCount}, " +
                             "width=${layout.didOverflowWidth}, height=${layout.didOverflowHeight}, " +
                             "paragraph=${layout.multiParagraph.width}x${layout.multiParagraph.height}, " +

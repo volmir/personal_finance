@@ -151,53 +151,29 @@ fun MetricCard(
 
             Spacer(modifier = Modifier.height(6.dp))
 
-            // Main Value
-            Text(
-                text = value,
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontWeight = FontWeight.Bold,
-                    color = StatusColors.getReadableTextColor(highlightColor)
-                )
-            )
-
-            Spacer(modifier = Modifier.height(4.dp))
-
-            // Formula chip & Expand button
+            // Main Value & Expand button
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Surface(
-                    shape = RoundedCornerShape(6.dp),
-                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.8f),
+                Text(
+                    text = value,
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = StatusColors.getReadableTextColor(highlightColor)
+                    ),
                     modifier = Modifier
-                        .weight(1f, fill = false)
-                        .border(
-                            width = 1.dp,
-                            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f),
-                            shape = RoundedCornerShape(6.dp)
-                        )
-                ) {
-                    Text(
-                        text = "${strings.metricCardFormulaPrefix} $formula",
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            fontFamily = FontFamily.Monospace,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        ),
-                        maxLines = if (expanded) Int.MAX_VALUE else 1,
-                        overflow = if (expanded) TextOverflow.Clip else TextOverflow.Ellipsis,
-                        modifier = Modifier
-                            .padding(horizontal = 6.dp, vertical = 2.dp)
-                            .testTag("metric_card_formula")
-                    )
-                }
+                        .weight(1f)
+                        .testTag("metric_card_value")
+                )
 
                 Spacer(modifier = Modifier.width(8.dp))
 
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(start = 2.dp)
+                    modifier = Modifier
+                        .padding(start = 2.dp)
+                        .testTag("metric_card_info")
                 ) {
                     Text(
                         text = if (expanded) strings.metricCardHide else strings.metricCardInfo,
@@ -222,6 +198,32 @@ fun MetricCard(
             AnimatedVisibility(visible = expanded) {
                 Column(modifier = Modifier.padding(top = 8.dp)) {
                     Surface(
+                        shape = RoundedCornerShape(6.dp),
+                        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.8f),
+                        modifier = Modifier
+                            .border(
+                                width = 1.dp,
+                                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f),
+                                shape = RoundedCornerShape(6.dp)
+                            )
+                    ) {
+                        Text(
+                            text = "${strings.metricCardFormulaPrefix} $formula",
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontFamily = FontFamily.Monospace,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            ),
+                            maxLines = Int.MAX_VALUE,
+                            overflow = TextOverflow.Clip,
+                            modifier = Modifier
+                                .padding(horizontal = 6.dp, vertical = 2.dp)
+                                .testTag("metric_card_formula")
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Surface(
                         shape = RoundedCornerShape(8.dp),
                         color = MaterialTheme.colorScheme.surface,
                         modifier = Modifier.fillMaxWidth()
@@ -241,6 +243,7 @@ fun MetricCard(
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
                                 text = description,
+                                modifier = Modifier.testTag("metric_card_description"),
                                 style = MaterialTheme.typography.bodySmall.copy(
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
