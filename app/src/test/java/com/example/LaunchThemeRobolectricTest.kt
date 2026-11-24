@@ -20,10 +20,11 @@ import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [35, 36])
+// API 36 требует JDK 21, тогда как CI использует JDK 17.
+@Config(sdk = [35])
 class LaunchThemeRobolectricTest {
     @Test
-    @Config(sdk = [24, 26, 27, 35, 36])
+    @Config(sdk = [24, 26, 27, 35])
     fun `manifest launch theme matches Compose before activity creation in both modes`() {
         val app = ApplicationProvider.getApplicationContext<Context>()
         val info = app.packageManager.getActivityInfo(
