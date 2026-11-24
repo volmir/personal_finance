@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalContext
@@ -17,6 +18,7 @@ import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertContentDescriptionEquals
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertHeightIsAtLeast
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
@@ -26,6 +28,7 @@ import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.junit4.StateRestorationTester
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
@@ -62,6 +65,108 @@ import org.robolectric.annotation.GraphicsMode
 class AuditScoreScreenRobolectricTest {
     @get:Rule
     val composeRule = createComposeRule()
+
+    @Test
+    fun `info cards collapse independently in all languages themes and large font`() {
+        val input = FinancialInputData.defaultData()
+        val metrics = FinanceCalculator.calculate(input, today = LocalDate.of(2025, 1, 1))
+        val language = mutableStateOf(AppLanguage.RU)
+        val dark = mutableStateOf(false)
+        composeRule.setContent {
+            val density = LocalDensity.current
+            CompositionLocalProvider(
+                LocalAppLanguage provides language.value,
+                LocalAppStrings provides getAppStrings(language.value),
+                LocalDensity provides Density(density.density, 1.3f)
+            ) {
+                MyApplicationTheme(darkTheme = dark.value) {
+                    Box(Modifier.width(320.dp)) {
+                        AuditScoreScreen(inputData = input, metrics = metrics)
+                    }
+                }
+            }
+        }
+        for (lang in AppLanguage.values()) for (isDark in listOf(false, true)) {
+            composeRule.runOnIdle {
+                language.value = lang
+                dark.value = isDark
+            }
+            val strings = getAppStrings(lang)
+            val cards = listOf(
+                Triple("audit_assumptions_card", strings.fireAssumptionsTitle,
+                    strings.fireAssumptionsBody(
+                        Formatters.formatPercent(input.nominalReturnPercent, lang),
+                        Formatters.formatPercent(input.inflationPercent, lang)
+                    )),
+                Triple("developer_disclaimer_card", strings.disclaimerTitle, strings.disclaimerText)
+            )
+            for ((tag, title, body) in cards) {
+                composeRule.onNode(hasScrollAction()).performScrollToNode(hasTestTag(tag))
+                composeRule.onNodeWithTag("${tag}_icon", useUnmergedTree = true).assertIsDisplayed()
+                composeRule.onNode(hasText(title) and hasAnyAncestor(hasTestTag(tag)), useUnmergedTree = true)
+                    .assertIsDisplayed()
+                composeRule.onNodeWithTag("${tag}_body").assertDoesNotExist()
+                composeRule.onNodeWithTag("${tag}_toggle")
+                    .assert(hasClickAction()).assertHeightIsAtLeast(48.dp)
+                    .assertContentDescriptionEquals(strings.metricCardExpand).performClick()
+                composeRule.onNodeWithTag("${tag}_body").assertTextEquals(body)
+                val otherTag = cards.first { it.first != tag }.first
+                composeRule.onNodeWithTag("${otherTag}_body").assertDoesNotExist()
+                composeRule.onNode(hasScrollAction()).performScrollToNode(hasTestTag("${tag}_toggle"))
+                composeRule.onNodeWithTag("${tag}_toggle")
+                    .assertContentDescriptionEquals(strings.metricCardCollapse).performClick()
+                composeRule.onNodeWithTag("${tag}_body").assertDoesNotExist()
+            }
+        }
+    }
+
+    @Test
+    fun `info card states survive tab disposal and saved instance restoration`() {
+        val input = FinancialInputData.defaultData()
+        val metrics = FinanceCalculator.calculate(input, today = LocalDate.of(2025, 1, 1))
+        val showAudit = mutableStateOf(true)
+        val restoration = StateRestorationTester(composeRule)
+        restoration.setContent {
+            val tabs = rememberSaveableStateHolder()
+            MaterialTheme {
+                CompositionLocalProvider(LocalAppStrings provides StringsRu) {
+                    if (showAudit.value) {
+                        tabs.SaveableStateProvider("scores") {
+                            AuditScoreScreen(inputData = input, metrics = metrics)
+                        }
+                    }
+                }
+            }
+        }
+        fun toggle(tag: String) {
+            composeRule.onNode(hasScrollAction()).performScrollToNode(hasTestTag("${tag}_toggle"))
+            composeRule.onNodeWithTag("${tag}_toggle").performClick()
+        }
+        fun assertState(assumptionsExpanded: Boolean, disclaimerExpanded: Boolean) {
+            for ((tag, expanded) in listOf(
+                "audit_assumptions_card" to assumptionsExpanded,
+                "developer_disclaimer_card" to disclaimerExpanded
+            )) {
+                composeRule.onNode(hasScrollAction()).performScrollToNode(hasTestTag("${tag}_toggle"))
+                composeRule.onNodeWithTag("${tag}_toggle").assertContentDescriptionEquals(
+                    if (expanded) StringsRu.metricCardCollapse else StringsRu.metricCardExpand
+                )
+                if (expanded) composeRule.onNodeWithTag("${tag}_body").assertExists()
+                else composeRule.onNodeWithTag("${tag}_body").assertDoesNotExist()
+            }
+        }
+        toggle("audit_assumptions_card")
+        composeRule.runOnIdle { showAudit.value = false }
+        composeRule.runOnIdle { showAudit.value = true }
+        assertState(true, false)
+        restoration.emulateSavedInstanceStateRestore()
+        assertState(true, false)
+        toggle("developer_disclaimer_card")
+        assertState(true, true)
+        toggle("audit_assumptions_card")
+        restoration.emulateSavedInstanceStateRestore()
+        assertState(false, true)
+    }
 
     @Test
     @GraphicsMode(GraphicsMode.Mode.NATIVE)
