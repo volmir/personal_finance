@@ -64,7 +64,7 @@ data class GroupedAuditOpinion(
             appendLine("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
             appendLine(strings.auditShareGeneratedBy)
             appendLine()
-            appendLine(strings.fireAssumptionsTitle)
+            appendLine("📐 ${strings.fireAssumptionsTitle}")
             appendLine(strings.fireAssumptionsBody(
                 Formatters.formatPercent(inputData.nominalReturnPercent, lang),
                 Formatters.formatPercent(inputData.inflationPercent, lang)
@@ -461,7 +461,7 @@ object AuditorAnalysisGenerator {
             appendLine("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
             appendLine(strings.auditShareGeneratedBy)
             appendLine()
-            appendLine(strings.fireAssumptionsTitle)
+            appendLine("📐 ${strings.fireAssumptionsTitle}")
             appendLine(strings.fireAssumptionsBody(
                 Formatters.formatPercent(inputData.nominalReturnPercent, lang),
                 Formatters.formatPercent(inputData.inflationPercent, lang)

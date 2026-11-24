@@ -355,6 +355,10 @@ class AuditorAnalysisTest {
             val share = opinion.toFormattedShareText(input, metrics, lang)
 
             // Block order: assumptions before disclaimer
+            assertEquals(1, export.lineSequence().count { it == "📐 ${strings.fireAssumptionsTitle}" })
+            assertEquals(1, share.lineSequence().count { it == "📐 ${strings.fireAssumptionsTitle}" })
+            assertFalse(export.lineSequence().any { it == strings.fireAssumptionsTitle })
+            assertFalse(share.lineSequence().any { it == strings.fireAssumptionsTitle })
             val exportAssumptionsIdx = export.indexOf(strings.fireAssumptionsTitle)
             val exportDisclaimerIdx = export.indexOf(strings.auditShareDisclaimer)
             assertTrue(exportAssumptionsIdx in 0 until exportDisclaimerIdx)
