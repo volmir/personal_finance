@@ -52,10 +52,10 @@ class ApprovedUiRegressionTest {
     @Test
     fun `approved Russian navigation and section labels are unchanged`() {
         assertEquals("Посмотреть показатели", StringsRu.calculateButtonText)
-        assertEquals("Итоги и Баллы", StringsRu.tabScoresShort)
+        assertEquals("Анализ", StringsRu.tabScoresShort)
         assertEquals("Финансовая оценка", StringsRu.scoresHeaderTitle)
         assertEquals("Капитал и риски", StringsRu.categoryCapitalRisks)
-        assertEquals("FIRE и Пенсия", StringsRu.tabFireShort)
+        assertEquals("FIRE", StringsRu.tabFireShort)
         assertEquals("Бенчмарки", StringsRu.categoryBenchmarks)
         assertEquals("FIRE", StringsRu.fireSubtabBase)
         assertEquals("Симуляция", StringsRu.fireSubtabSimulation)

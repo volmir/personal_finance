@@ -9,9 +9,9 @@ val StringsIt: AppStrings = object : AppStrings {
     override val tabMetricsTitle: String = "Indicatori Calcolati"
     override val tabMetricsShort: String = "Metriche"
     override val tabScoresTitle: String = "Punteggio & Audit Finanziario"
-    override val tabScoresShort: String = "Punteggio"
+    override val tabScoresShort: String = "Analisi"
     override val tabFireTitle: String = "Indipendenza Finanziaria, Pensione, FIRE"
-    override val tabFireShort: String = "FIRE & Piano"
+    override val tabFireShort: String = "FIRE"
     override val quickScorePrefix: String = "Punteggio"
 
     override val sampleDataNoticeMessage: String = "Al primo avvio sono presenti valori di esempio — controllali e sostituiscili con i tuoi"
