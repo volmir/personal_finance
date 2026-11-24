@@ -81,12 +81,17 @@ internal fun FireSimulationSummaryPanel(
                     } else {
                         MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
                     }
+                    val resetBorderColor = if (resetEnabled) {
+                        MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f)
+                    } else {
+                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.25f)
+                    }
                     OutlinedButton(
                         onClick = onResetSimulation,
                         enabled = resetEnabled,
                         border = BorderStroke(
                             width = 1.dp,
-                            color = resetColor
+                            color = resetBorderColor
                         ),
                         colors = ButtonDefaults.outlinedButtonColors(
                             containerColor = Color.Transparent,
