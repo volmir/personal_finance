@@ -1,28 +1,38 @@
 package com.example
 
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertHeightIsAtLeast
 import androidx.compose.ui.test.assertTextEquals
+import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasTestTag
+import androidx.compose.ui.test.junit4.StateRestorationTester
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import com.example.data.model.FinancialInputData
 import com.example.data.model.FireStatus
 import com.example.domain.FinanceCalculator
 import com.example.ui.screens.InputDataScreen
+import com.example.ui.screens.MetricIndicatorRow
 import com.example.util.localization.AppLanguage
 import com.example.util.localization.LocalAppLanguage
 import com.example.util.localization.LocalAppStrings
@@ -59,6 +69,134 @@ class InputDataScreenRobolectricTest {
             }
         }
         composeRule.onNodeWithTag("input_test_list").performScrollToNode(hasTestTag("input_life_expectancy"))
+    }
+
+    @Test
+    fun `only assets and real return formulas collapse independently and restore after scrolling and recreation`() {
+        val restoration = StateRestorationTester(composeRule)
+        val input = FinancialInputData.usAverageData()
+        restoration.setContent {
+            MaterialTheme {
+                CompositionLocalProvider(LocalAppStrings provides StringsRu) {
+                    InputDataScreen(
+                        input, FinanceCalculator.calculate(input, today = today),
+                        onUpdate = {}, onNavigateToMetrics = {},
+                        modifier = Modifier.testTag("input_test_list")
+                    )
+                }
+            }
+        }
+        fun scrollTo(text: String) {
+            composeRule.onNodeWithTag("input_test_list").performScrollToNode(hasText(text))
+        }
+        scrollTo(StringsRu.totalAssetsTitle)
+        composeRule.onNodeWithText(StringsRu.totalAssetsFormula).assertDoesNotExist()
+        composeRule.onNodeWithText(StringsRu.metricCardInfo).performScrollTo().performClick()
+        composeRule.onNodeWithText(StringsRu.totalAssetsFormula).assertExists()
+        scrollTo(StringsRu.realReturnTitle)
+        composeRule.onNodeWithText(StringsRu.realReturnFormula).assertDoesNotExist()
+        composeRule.onNodeWithText(StringsRu.metricCardInfo).performScrollTo().performClick()
+        composeRule.onNodeWithText(StringsRu.realReturnFormula).assertExists()
+        scrollTo(StringsRu.totalAssetsTitle)
+        composeRule.onNodeWithText(StringsRu.metricCardInfo).performScrollTo()
+        composeRule.onNodeWithText(StringsRu.totalAssetsFormula).assertExists()
+        scrollTo(StringsRu.realReturnTitle)
+        restoration.emulateSavedInstanceStateRestore()
+        scrollTo(StringsRu.realReturnTitle)
+        composeRule.onNodeWithText(StringsRu.realReturnFormula).assertExists()
+        composeRule.onNodeWithText(StringsRu.metricCardInfo).performScrollTo().performClick()
+        composeRule.onNodeWithText(StringsRu.realReturnFormula).assertDoesNotExist()
+        scrollTo(StringsRu.totalAssetsTitle)
+        composeRule.onNodeWithText(StringsRu.metricCardInfo).performScrollTo()
+        composeRule.onNodeWithText(StringsRu.totalAssetsFormula).assertExists()
+        composeRule.onNodeWithText(StringsRu.metricCardInfo).performScrollTo().performClick()
+        composeRule.onNodeWithText(StringsRu.totalAssetsFormula).assertDoesNotExist()
+        for ((tag, formula) in listOf(
+            "input_metric_cash_flow" to StringsRu.cashFlowFormula,
+            "input_metric_savings_rate" to StringsRu.savingsRateFormula,
+            "input_metric_net_worth" to StringsRu.netWorthFormula,
+            "input_metric_horizon" to StringsRu.horizonFormula
+        )) {
+            composeRule.onNodeWithTag("input_test_list").performScrollToNode(hasTestTag(tag))
+            composeRule.onNodeWithText(formula).assertExists()
+        }
+    }
+
+    @org.robolectric.annotation.Config(qualifiers = "w320dp-h800dp-xxhdpi")
+    @org.robolectric.annotation.GraphicsMode(org.robolectric.annotation.GraphicsMode.Mode.NATIVE)
+    @Test
+    fun `collapsible formulas preserve full text and style without value overlap at 320dp in all languages themes and font scales`() {
+        val language = mutableStateOf(AppLanguage.RU)
+        val dark = mutableStateOf(false)
+        val scale = mutableStateOf(1f)
+        val input = FinancialInputData.usAverageData()
+        val metrics = FinanceCalculator.calculate(input, today = today)
+        var expectedStyle = androidx.compose.ui.text.TextStyle.Default
+        composeRule.setContent {
+            val density = LocalDensity.current
+            CompositionLocalProvider(LocalDensity provides Density(density.density, scale.value)) {
+                com.example.ui.theme.MyApplicationTheme(darkTheme = dark.value, dynamicColor = false) {
+                    val strings = getAppStrings(language.value)
+                    expectedStyle = MaterialTheme.typography.labelSmall.copy(
+                        color = MaterialTheme.colorScheme.primary,
+                        fontFamily = FontFamily.Monospace
+                    )
+                    CompositionLocalProvider(LocalAppStrings provides strings) {
+                        // 320dp minus the screen's 16dp and section's 14dp padding on each side.
+                        Column(Modifier.width(260.dp)) {
+                            MetricIndicatorRow(
+                                title = strings.totalAssetsTitle,
+                                formula = strings.totalAssetsFormula,
+                                value = com.example.util.Formatters.formatMoney(metrics.totalAssets, input.currencySymbol, language.value),
+                                collapsibleFormula = true,
+                                modifier = Modifier.testTag("assets")
+                            )
+                            MetricIndicatorRow(
+                                title = strings.realReturnTitle,
+                                formula = strings.realReturnFormula,
+                                value = com.example.util.Formatters.formatPercent(metrics.realReturnPercent, language.value),
+                                collapsibleFormula = true,
+                                modifier = Modifier.testTag("return")
+                            )
+                        }
+                    }
+                }
+            }
+        }
+        for (isDark in listOf(false, true)) {
+            for (lang in AppLanguage.values()) {
+                for (fontScale in listOf(1f, 1.6f)) {
+                    composeRule.runOnIdle {
+                        dark.value = isDark
+                        language.value = lang
+                        scale.value = fontScale
+                    }
+                    val strings = getAppStrings(lang)
+                    for ((tag, formula, value) in listOf(
+                        Triple("assets", strings.totalAssetsFormula, com.example.util.Formatters.formatMoney(metrics.totalAssets, input.currencySymbol, lang)),
+                        Triple("return", strings.realReturnFormula, com.example.util.Formatters.formatPercent(metrics.realReturnPercent, lang))
+                    )) {
+                        val control = composeRule.onNode(hasText(strings.metricCardInfo) and hasAnyAncestor(hasTestTag(tag)))
+                        val valueNode = composeRule.onNodeWithText(value, useUnmergedTree = true)
+                        val valueBounds = valueNode.fetchSemanticsNode().boundsInWindow
+                        val controlBounds = control.fetchSemanticsNode().boundsInWindow
+                        valueNode.assertTextEquals(value)
+                        assertTextFits(valueNode)
+                        assertTrue("$lang $fontScale control overlaps value", valueBounds.bottom <= controlBounds.top)
+                        control.assertHeightIsAtLeast(48.dp)
+                        composeRule.onNodeWithText(formula).assertDoesNotExist()
+                        control.performClick()
+                        val formulaNode = composeRule.onNodeWithText(formula, useUnmergedTree = true)
+                        formulaNode.assertTextEquals(formula)
+                        assertEquals(expectedStyle, formulaNode.textStyle())
+                        assertTextFits(formulaNode)
+                        assertTrue(control.fetchSemanticsNode().boundsInWindow.bottom <= formulaNode.fetchSemanticsNode().boundsInWindow.top)
+                        control.performClick()
+                        composeRule.onNodeWithText(formula).assertDoesNotExist()
+                    }
+                }
+            }
+        }
     }
 
     @Test
@@ -343,6 +481,17 @@ class InputDataScreenRobolectricTest {
             assertTrue("$lang formula/value overlap: $formulaBounds vs $valueBounds", formulaBounds.right <= valueBounds.left)
             assertTrue("$lang title/formula vertical order: $titleBounds vs $formulaBounds", titleBounds.bottom <= formulaBounds.top)
             assertTrue("$lang value/sub overlap: $valueBounds vs $subBounds", valueBounds.bottom <= subBounds.top)
+        }
+    }
+
+    private fun assertTextFits(node: androidx.compose.ui.test.SemanticsNodeInteraction) {
+        val layout = node.textLayoutResult()
+        // Like TypographyLayoutRobolectricTest: intrinsic-width semantics layouts can
+        // report didOverflowWidth against the original maxWidth. Check the actual lines.
+        assertFalse(layout.didOverflowHeight)
+        for (line in 0 until layout.lineCount) {
+            assertFalse(layout.isLineEllipsized(line))
+            assertTrue(layout.getLineRight(line) - layout.getLineLeft(line) <= layout.size.width + 0.5f)
         }
     }
 
