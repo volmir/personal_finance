@@ -588,7 +588,7 @@ val StringsEs: AppStrings = object : AppStrings {
 
     // Score & Safety Months formats
     override val safetyMonthsValueFormat: String = "%1${'$'}s meses"
-    override val shareScoreReportTemplate: String = "📊 Informe Financiero & Auditoría de Capital:\n• Puntuación global: %1${'$'}s de 10\n• Tasa de ahorro: %2${'$'}s/10 (%3${'$'}s)\n• Colchón de seguridad: %4${'$'}s/10 (%5${'$'}s meses)\n• Ratio de endeudamiento: %6${'$'}s/10 (%7${'$'}s)\n• Libertad financiera (CFS): %8${'$'}s/10 (%9${'$'}s)\n• Plazo para la jubilación (FIRE): %10${'$'}s años (a los %11${'$'}s)\n"
+    override val shareScoreReportTemplate: String = "📊 Informe Financiero & Auditoría de Capital:\n• Puntuación global: %1${'$'}s de 10\n%12${'$'}s\n• Tasa de ahorro: %2${'$'}s/10 (%3${'$'}s)\n• Colchón de seguridad: %4${'$'}s/10 (%5${'$'}s meses)\n• Ratio de endeudamiento: %6${'$'}s/10 (%7${'$'}s)\n• Libertad financiera (CFS): %8${'$'}s/10 (%9${'$'}s)\n• Plazo para la jubilación (FIRE): %10${'$'}s años (a los %11${'$'}s)\n"
 
     // CFS Stage descriptions
     override val cfsStageDebt: (String) -> String = { debt -> "CFS < $debt — Te encuentras en deuda neta" }

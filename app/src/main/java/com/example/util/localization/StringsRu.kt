@@ -591,7 +591,7 @@ val StringsRu: AppStrings = object : AppStrings {
 
     // Score & Safety Months formats
     override val safetyMonthsValueFormat: String = "%1${'$'}s мес."
-    override val shareScoreReportTemplate: String = "📊 Финансовый отчет и аудит капитала:\n• Итоговый результат: %1${'$'}s из 10\n• Норма сбережений: %2${'$'}s/10 (%3${'$'}s)\n• Запас расходов: %4${'$'}s/10 (%5${'$'}s мес.)\n• Коэффициент задолженности: %6${'$'}s/10 (%7${'$'}s)\n• Коэффициент фин. свободы: %8${'$'}s/10 (%9${'$'}s)\n• До пенсии (FIRE): %10${'$'}s лет (в %11${'$'}s)\n"
+    override val shareScoreReportTemplate: String = "📊 Финансовый отчет и аудит капитала:\n• Итоговый результат: %1${'$'}s из 10\n%12${'$'}s\n• Норма сбережений: %2${'$'}s/10 (%3${'$'}s)\n• Запас расходов: %4${'$'}s/10 (%5${'$'}s мес.)\n• Коэффициент задолженности: %6${'$'}s/10 (%7${'$'}s)\n• Коэффициент фин. свободы: %8${'$'}s/10 (%9${'$'}s)\n• До пенсии (FIRE): %10${'$'}s лет (в %11${'$'}s)\n"
 
     // CFS Stage descriptions
     override val cfsStageDebt: (String) -> String = { debt -> "КФС < $debt — Вы в долгах" }

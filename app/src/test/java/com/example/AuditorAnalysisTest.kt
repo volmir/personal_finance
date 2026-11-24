@@ -6,6 +6,7 @@ import com.example.domain.AuditorAnalysisGenerator
 import com.example.domain.FinanceCalculator
 import com.example.domain.FinancialMetricEvaluator
 import com.example.domain.model.AuditIndicatorStatus
+import com.example.ui.theme.ScoreColorEvaluator
 import com.example.util.Formatters
 import com.example.util.localization.AppLanguage
 import org.junit.Assert.assertEquals
@@ -371,6 +372,7 @@ class AuditorAnalysisTest {
             assertFalse(export.contains("años años"))
 
             val scores = metrics.scores
+            val statusDesc = ScoreColorEvaluator.getTotalScoreStatusDescription(scores.totalScore, strings)
             val scoreReport = String.format(
                 java.util.Locale.ROOT,
                 strings.shareScoreReportTemplate,
@@ -384,7 +386,18 @@ class AuditorAnalysisTest {
                 scores.cfsScore,
                 Formatters.formatRatio(metrics.financialFreedomRatio, lang),
                 Formatters.formatFireYearsToRetirement(metrics.yearsToRetirement, metrics.fireStatus, lang),
-                Formatters.formatFireRetirementAge(metrics.retirementAge, metrics.fireStatus, lang)
+                Formatters.formatFireRetirementAge(metrics.retirementAge, metrics.fireStatus, lang),
+                statusDesc
+            )
+            val reportLines = scoreReport.lines()
+            assertEquals("$lang: status follows total score", statusDesc, reportLines[2])
+            assertEquals(
+                "$lang: status occurs exactly once", 1,
+                scoreReport.windowed(statusDesc.length).count { it == statusDesc }
+            )
+            assertTrue(
+                "$lang: component scores follow status",
+                reportLines[3].endsWith(": ${scores.savingsRateScore}/10 (${Formatters.formatPercent(metrics.savingsRate, lang)})")
             )
             assertFalse(scoreReport.contains("лет лет"))
             assertFalse(scoreReport.contains("yrs yrs"))

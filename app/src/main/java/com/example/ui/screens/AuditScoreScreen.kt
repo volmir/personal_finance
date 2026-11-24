@@ -75,6 +75,7 @@ fun AuditScoreScreen(
     val lang = LocalAppLanguage.current
     val strings = LocalAppStrings.current
     val scores = metrics.scores
+    val statusDesc = ScoreColorEvaluator.getTotalScoreStatusDescription(scores.totalScore, strings)
 
     LazyColumn(
         modifier = modifier
@@ -135,7 +136,8 @@ fun AuditScoreScreen(
                                     scores.cfsScore,
                                     Formatters.formatRatio(metrics.financialFreedomRatio, lang),
                                     Formatters.formatFireYearsToRetirement(metrics.yearsToRetirement, metrics.fireStatus, lang),
-                                    Formatters.formatFireRetirementAge(metrics.retirementAge, metrics.fireStatus, lang)
+                                    Formatters.formatFireRetirementAge(metrics.retirementAge, metrics.fireStatus, lang),
+                                    statusDesc
                                 )
                                 val sendIntent = Intent().apply {
                                     action = Intent.ACTION_SEND
@@ -177,8 +179,6 @@ fun AuditScoreScreen(
                             color = totalScoreTextColor
                         )
                     )
-
-                    val statusDesc = ScoreColorEvaluator.getTotalScoreStatusDescription(scores.totalScore, strings)
 
                     Text(
                         text = statusDesc,

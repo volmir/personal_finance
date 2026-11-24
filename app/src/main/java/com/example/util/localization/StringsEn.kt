@@ -589,7 +589,7 @@ val StringsEn: AppStrings = object : AppStrings {
 
     // Score & Safety Months formats
     override val safetyMonthsValueFormat: String = "%1${'$'}s mo."
-    override val shareScoreReportTemplate: String = "📊 Financial Report & Capital Audit:\n• Overall Score: %1${'$'}s of 10\n• Savings Rate: %2${'$'}s/10 (%3${'$'}s)\n• Expense Buffer: %4${'$'}s/10 (%5${'$'}s mo.)\n• Debt Ratio: %6${'$'}s/10 (%7${'$'}s)\n• Financial Freedom Ratio: %8${'$'}s/10 (%9${'$'}s)\n• Time to Retirement (FIRE): %10${'$'}s yrs (at age %11${'$'}s)\n"
+    override val shareScoreReportTemplate: String = "📊 Financial Report & Capital Audit:\n• Overall Score: %1${'$'}s of 10\n%12${'$'}s\n• Savings Rate: %2${'$'}s/10 (%3${'$'}s)\n• Expense Buffer: %4${'$'}s/10 (%5${'$'}s mo.)\n• Debt Ratio: %6${'$'}s/10 (%7${'$'}s)\n• Financial Freedom Ratio: %8${'$'}s/10 (%9${'$'}s)\n• Time to Retirement (FIRE): %10${'$'}s yrs (at age %11${'$'}s)\n"
 
     // CFS Stage descriptions
     override val cfsStageDebt: (String) -> String = { debt -> "CFS < $debt — You are in debt" }

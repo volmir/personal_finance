@@ -44,6 +44,7 @@ import com.example.domain.FinanceCalculator
 import com.example.domain.model.AuditIndicatorStatus
 import com.example.ui.screens.AuditOpinionIndicatorItem
 import com.example.ui.screens.AuditScoreScreen
+import com.example.ui.theme.ScoreColorEvaluator
 import com.example.ui.theme.MyApplicationTheme
 import com.example.util.Formatters
 import com.example.util.localization.AppLanguage
@@ -506,6 +507,7 @@ class AuditScoreScreenRobolectricTest {
         val sendIntent = requireNotNull(chooser.getParcelableExtra<Intent>(Intent.EXTRA_INTENT))
         assertEquals(Intent.ACTION_SEND, sendIntent.action)
         assertEquals("text/plain", sendIntent.type)
+        val statusDesc = ScoreColorEvaluator.getTotalScoreStatusDescription(scores.totalScore, StringsRu)
         val expectedReport = String.format(
             Locale.ROOT,
             StringsRu.shareScoreReportTemplate,
@@ -519,9 +521,14 @@ class AuditScoreScreenRobolectricTest {
             scores.cfsScore,
             Formatters.formatRatio(metrics.financialFreedomRatio, AppLanguage.RU),
             Formatters.formatFireYearsToRetirement(metrics.yearsToRetirement, metrics.fireStatus, AppLanguage.RU),
-            Formatters.formatFireRetirementAge(metrics.retirementAge, metrics.fireStatus, AppLanguage.RU)
+            Formatters.formatFireRetirementAge(metrics.retirementAge, metrics.fireStatus, AppLanguage.RU),
+            statusDesc
         )
-        assertEquals(expectedReport, sendIntent.getStringExtra(Intent.EXTRA_TEXT))
+        val actualReport = requireNotNull(sendIntent.getStringExtra(Intent.EXTRA_TEXT))
+        assertEquals(expectedReport, actualReport)
+        assertEquals(statusDesc, actualReport.lines()[2])
+        assertEquals(1, actualReport.windowed(statusDesc.length).count { it == statusDesc })
+        assertTrue(actualReport.lines()[3].startsWith("• Норма сбережений:"))
     }
 
     @Test
