@@ -113,12 +113,6 @@ fun MetricsScreen(
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
                             )
-                            Text(
-                                text = strings.metricsHeaderSubtitle,
-                                style = MaterialTheme.typography.bodySmall.copy(
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            )
                         }
                     }
 
