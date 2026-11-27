@@ -48,9 +48,9 @@
         "heavy": "opencode/big-pickle"
       },
       "deepseek-v4.1-flash-free": {
-        "light": "opencode/deepseek-v4.1-flash-free",
-        "standard": "opencode/deepseek-v4.1-flash-free#high",
-        "heavy": "opencode/deepseek-v4.1-flash-free#high"
+        "light": "opencode/deepseek-v4.1-flash-free#high",
+        "standard": "opencode/deepseek-v4.1-flash-free#max",
+        "heavy": "opencode/deepseek-v4.1-flash-free#max"
       }
     }
   },
