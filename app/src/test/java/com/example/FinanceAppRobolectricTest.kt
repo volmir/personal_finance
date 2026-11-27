@@ -47,6 +47,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
+@org.robolectric.annotation.Config(qualifiers = "ru-w360dp-h800dp")
 class FinanceAppRobolectricTest {
     @get:Rule
     val composeRule = createAndroidComposeRule<ComponentActivity>()
@@ -63,7 +64,7 @@ class FinanceAppRobolectricTest {
         }
 
     @Test
-    @Config(qualifiers = "ru-rRU")
+    @Config(qualifiers = "ru-rRU-w360dp-h800dp")
     fun `new install shows the sample data notice once over input`() {
         val app = ApplicationProvider.getApplicationContext<Application>()
         val viewModel = createNewInstallViewModel()
@@ -348,10 +349,11 @@ class FinanceAppRobolectricTest {
     }
 
     @Test
-    fun `selecting Simulation survives switching to Input and back to FIRE`() {
+    fun `selecting Simulation survives short and multiple main tab switches`() {
         val viewModel = createViewModel()
         composeRule.setContent { FinanceApp(viewModel) }
 
+        composeRule.onNodeWithTag("nav_item_input").assertIsSelected()
         composeRule.onNodeWithTag("nav_item_fire").performClick()
         composeRule.onNodeWithTag("fire_subtab_base").assertIsSelected()
         composeRule.onNodeWithTag("fire_subtab_simulation").performClick()
@@ -365,18 +367,6 @@ class FinanceAppRobolectricTest {
         composeRule.onNodeWithTag("fire_subtab_simulation").assertIsSelected()
         composeRule.onNodeWithTag("fire_subtab_content_simulation").assertIsDisplayed()
         composeRule.onNodeWithTag("fire_subtab_content_base").assertDoesNotExist()
-    }
-
-    @Test
-    fun `selecting Simulation survives multiple main tab switches`() {
-        val viewModel = createViewModel()
-        composeRule.setContent { FinanceApp(viewModel) }
-
-        // Данные -> FIRE -> Симуляция -> Показатели -> Итоги и Баллы -> FIRE
-        composeRule.onNodeWithTag("nav_item_input").assertIsSelected()
-        composeRule.onNodeWithTag("nav_item_fire").performClick()
-        composeRule.onNodeWithTag("fire_subtab_simulation").performClick()
-        composeRule.onNodeWithTag("fire_subtab_simulation").assertIsSelected()
 
         composeRule.onNodeWithTag("nav_item_metrics").performClick()
         composeRule.onNodeWithTag("metrics_header_card").assertIsDisplayed()
@@ -384,10 +374,10 @@ class FinanceAppRobolectricTest {
         composeRule.onNodeWithTag("nav_item_scores").assertIsSelected()
         composeRule.onNodeWithTag("nav_item_input").performClick()
         composeRule.onNodeWithTag("nav_item_input").assertIsSelected()
-
         composeRule.onNodeWithTag("nav_item_fire").performClick()
         composeRule.onNodeWithTag("fire_subtab_simulation").assertIsSelected()
         composeRule.onNodeWithTag("fire_subtab_content_simulation").assertIsDisplayed()
+        composeRule.onNodeWithTag("fire_subtab_content_base").assertDoesNotExist()
         composeRule.onAllNodes(hasTestTag("fire_trajectory_card"), useUnmergedTree = true)
             .assertCountEquals(0)
     }

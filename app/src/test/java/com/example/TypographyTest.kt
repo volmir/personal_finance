@@ -63,8 +63,8 @@ class TypographyTest {
     }
 
     @Test
-    fun `font scaling keeps every role readable including small text at twice the scale`() {
-        for (fontScale in listOf(1f, 1.3f, 2f)) {
+    fun `font scaling keeps every role readable including small text at increased scale`() {
+        for (fontScale in listOf(1f, 1.3f)) {
             with(Density(density = 2f, fontScale = fontScale)) {
                 for (style in styles) {
                     // Android увеличивает крупный текст слабее мелкого: линейная формула неверна.

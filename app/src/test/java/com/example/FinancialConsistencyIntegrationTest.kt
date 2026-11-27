@@ -54,6 +54,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
+@org.robolectric.annotation.Config(qualifiers = "ru-w360dp-h800dp")
 class FinancialConsistencyIntegrationTest {
     @get:Rule
     val composeRule = createComposeRule()

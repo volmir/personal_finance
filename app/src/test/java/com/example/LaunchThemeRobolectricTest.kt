@@ -21,7 +21,7 @@ import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
 // API 36 требует JDK 21, тогда как CI использует JDK 17.
-@Config(sdk = [35])
+@Config(sdk = [35], qualifiers = "ru-w360dp-h800dp")
 class LaunchThemeRobolectricTest {
     @Test
     @Config(sdk = [24, 26, 27, 35])

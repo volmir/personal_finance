@@ -30,6 +30,8 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.util.ReflectionHelpers
 
 @RunWith(RobolectricTestRunner::class)
+// Preserve the default-language content assertions through Activity recreation.
+@org.robolectric.annotation.Config(qualifiers = "en-w360dp-h800dp")
 class FireSubtabRecreationRobolectricTest {
     @Before
     fun resetViewModelFactory() {

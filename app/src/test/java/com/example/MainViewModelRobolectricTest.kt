@@ -297,17 +297,24 @@ class MainViewModelRobolectricTest {
         val input = viewModel.inputData.value
         val config = SimulatorScaleCalculator.calculateReturnConfig(baseMetrics.realReturnPercent, input.inflationPercent)
         assertEquals(0f, config.maxValue, 0f)
-        var previous = Double.NEGATIVE_INFINITY
+        assertTrue(config.steps > 0)
+        // Preserve both the Double grid and the Float positions emitted by the UI slider.
+        for (floatGrid in listOf(false, true)) {
+            var previous = Double.NEGATIVE_INFINITY
+            for (index in 0..config.steps + 1) {
+                val delta = if (floatGrid) {
+                    (config.minValue + index * config.stepSize.toFloat()).toDouble()
+                } else {
+                    config.minValue + index * config.stepSize
+                }
+                viewModel.updateSimulation(0.0, delta, 0.0)
 
-        for (index in 0..config.steps + 1) {
-            val delta = config.minValue + index * config.stepSize
-            viewModel.updateSimulation(0.0, delta, 0.0)
-
-            val realReturn = viewModel.simulatedMetrics.value.realReturnPercent
-            assertEquals(delta, viewModel.fireSimulation.value.realReturnAdjustment, 0.0)
-            assertEquals(baseMetrics.realReturnPercent + delta, realReturn, 0.000001)
-            assertTrue("step $index must change the projected rate", realReturn > previous)
-            previous = realReturn
+                val realReturn = viewModel.simulatedMetrics.value.realReturnPercent
+                assertEquals(delta, viewModel.fireSimulation.value.realReturnAdjustment, 0.0)
+                assertEquals(baseMetrics.realReturnPercent + delta, realReturn, 0.000001)
+                assertTrue("step $index (floatGrid=$floatGrid) must change the projected rate", realReturn > previous)
+                previous = realReturn
+            }
         }
         assertEquals(baseMetrics, viewModel.metrics.value)
         assertEquals(input, viewModel.inputData.value)
@@ -469,35 +476,6 @@ class MainViewModelRobolectricTest {
         viewModel.flushPendingSave()
     }
 
-    @Test
-    fun `nominal return at 100 and inflation at 2_5 percent ensures all slider positions change metrics`() {
-        val viewModel = MainViewModel(app) { today }
-        viewModel.updateInputData {
-            it.copy(nominalReturnPercent = 100.0, inflationPercent = 2.5)
-        }
-        val input = viewModel.inputData.value
-        val metrics = viewModel.metrics.value
-        val returnConfig = SimulatorScaleCalculator.calculateReturnConfig(
-            realReturnPercent = metrics.realReturnPercent,
-            inflationPercent = input.inflationPercent
-        )
-
-        // При nominal = 100% шкала не должна позволять положительные дельты, создающие мёртвую зону
-        assertTrue(returnConfig.maxValue <= 0.0f)
-        assertTrue(returnConfig.steps > 0)
-
-        var previousRealReturn = Double.NEGATIVE_INFINITY
-        for (i in 0..returnConfig.steps + 1) {
-            val delta = (returnConfig.minValue + i * returnConfig.stepSize.toFloat()).toDouble()
-            viewModel.updateSimulation(extraSavings = 0.0, realReturnDelta = delta, expReduction = 0.0)
-            val simMetrics = viewModel.simulatedMetrics.value
-            // Метрики строго монотонно меняются при каждом положении ползунка
-            assertTrue("Step $i ($delta%) must change real return: ${simMetrics.realReturnPercent} > $previousRealReturn",
-                simMetrics.realReturnPercent > previousRealReturn)
-            previousRealReturn = simMetrics.realReturnPercent
-        }
-        viewModel.flushPendingSave()
-    }
 
     @Test
     fun `saved simulation state out of scale is bounded on launch`() {

@@ -33,11 +33,15 @@ class AuditorAnalysisTest {
         for ((lang, explanation) in explanations) {
             val opinion = AuditorAnalysisGenerator.generate(input, metrics, lang)
             val item = opinion.negative.single { it.id == "cash_flow" }
+            assertEquals("$lang", AuditIndicatorStatus.NEGATIVE, item.status)
             assertEquals("$lang", FinancialMetricEvaluator.getCashFlowStatus(0.0), item.status)
             assertFalse("$lang", opinion.positive.any { it.id == "cash_flow" })
             assertFalse("$lang", opinion.neutral.any { it.id == "cash_flow" })
             assertTrue("$lang", item.text.startsWith("⚠️"))
             assertTrue("$lang", item.text.contains(explanation))
+            if (lang == AppLanguage.RU) {
+                assertTrue(item.text.contains("доходы равны расходам", ignoreCase = true))
+            }
         }
     }
 
@@ -447,29 +451,5 @@ class AuditorAnalysisTest {
 
         val enExport = AuditorAnalysisGenerator.generateExportSummary(input, metrics, AppLanguage.EN)
         assertTrue(enExport.contains(enExpected))
-    }
-
-    @Test
-    fun testCashFlowZeroPlacedInNegativeGroupWithWarningIcon() {
-        val input = FinancialInputData(
-            monthlyIncome = 50_000.0,
-            monthlyExpenses = 50_000.0
-        )
-        val metrics = FinanceCalculator.calculate(input)
-        assertEquals(0.0, metrics.cashFlow, 0.0)
-
-        for (lang in AppLanguage.values()) {
-            val opinion = AuditorAnalysisGenerator.generate(input, metrics, lang)
-            val negativeCashFlow = opinion.negative.firstOrNull { it.id == "cash_flow" }
-            org.junit.Assert.assertNotNull("cash_flow must be present in negative group for $lang", negativeCashFlow)
-            assertTrue("cash_flow must not be present in neutral group for $lang", opinion.neutral.none { it.id == "cash_flow" })
-            assertEquals(AuditIndicatorStatus.NEGATIVE, negativeCashFlow!!.status)
-            assertTrue("Text must start with ⚠️ for $lang: ${negativeCashFlow.text}", negativeCashFlow.text.startsWith("⚠️"))
-        }
-
-        val ruOpinion = AuditorAnalysisGenerator.generate(input, metrics, AppLanguage.RU)
-        val ruCashFlow = ruOpinion.negative.first { it.id == "cash_flow" }
-        assertTrue(ruCashFlow.text.contains("доходы равны расходам", ignoreCase = true))
-        assertTrue(ruCashFlow.text.contains("свободного ресурса для накоплений нет, поэтому показатель негативный", ignoreCase = true))
     }
 }

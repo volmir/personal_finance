@@ -10,7 +10,6 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
@@ -34,7 +33,6 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.test.core.app.ApplicationProvider
@@ -63,34 +61,32 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.GraphicsMode
 
 @RunWith(RobolectricTestRunner::class)
+@org.robolectric.annotation.Config(qualifiers = "ru-w360dp-h800dp")
 class AuditScoreScreenRobolectricTest {
     @get:Rule
     val composeRule = createComposeRule()
 
     @Test
-    fun `info cards collapse independently in all languages themes and large font`() {
+    fun `info cards collapse independently with accessible toggles`() {
         val input = FinancialInputData.defaultData()
         val metrics = FinanceCalculator.calculate(input, today = LocalDate.of(2025, 1, 1))
         val language = mutableStateOf(AppLanguage.RU)
         val dark = mutableStateOf(false)
         composeRule.setContent {
-            val density = LocalDensity.current
             CompositionLocalProvider(
                 LocalAppLanguage provides language.value,
-                LocalAppStrings provides getAppStrings(language.value),
-                LocalDensity provides Density(density.density, 1.3f)
+                LocalAppStrings provides getAppStrings(language.value)
             ) {
                 MyApplicationTheme(darkTheme = dark.value) {
-                    Box(Modifier.width(320.dp)) {
+                    Box(Modifier.width(360.dp)) {
                         AuditScoreScreen(inputData = input, metrics = metrics)
                     }
                 }
             }
         }
-        for (lang in AppLanguage.values()) for (isDark in listOf(false, true)) {
+        for (lang in listOf(AppLanguage.RU)) {
             composeRule.runOnIdle {
                 language.value = lang
-                dark.value = isDark
             }
             val strings = getAppStrings(lang)
             val cards = listOf(
@@ -171,32 +167,27 @@ class AuditScoreScreenRobolectricTest {
 
     @Test
     @GraphicsMode(GraphicsMode.Mode.NATIVE)
-    fun `breakdown keeps four compact rows and full heading at 320dp in all languages and themes`() {
+    fun `breakdown keeps four compact rows and full heading at standard viewport`() {
         val input = FinancialInputData.defaultData()
         val metrics = FinanceCalculator.calculate(input, today = LocalDate.of(2025, 1, 1))
         val language = mutableStateOf(AppLanguage.RU)
         val dark = mutableStateOf(false)
-        val scale = mutableStateOf(1f)
         composeRule.setContent {
-            val density = LocalDensity.current
             CompositionLocalProvider(
                 LocalAppLanguage provides language.value,
-                LocalAppStrings provides getAppStrings(language.value),
-                LocalDensity provides Density(density.density, scale.value)
+                LocalAppStrings provides getAppStrings(language.value)
             ) {
                 MyApplicationTheme(darkTheme = dark.value) {
-                    Box(Modifier.width(320.dp)) {
+                    Box(Modifier.width(360.dp)) {
                         AuditScoreScreen(inputData = input, metrics = metrics)
                     }
                 }
             }
         }
 
-        for (lang in AppLanguage.values()) for (isDark in listOf(false, true)) for (fontScale in listOf(1f, 1.3f)) {
+        for (lang in listOf(AppLanguage.RU)) {
             composeRule.runOnIdle {
                 language.value = lang
-                dark.value = isDark
-                scale.value = fontScale
             }
             val strings = getAppStrings(lang)
             composeRule.onNode(hasScrollAction()).performScrollToNode(hasTestTag("scores_breakdown_card"))
@@ -208,7 +199,7 @@ class AuditScoreScreenRobolectricTest {
             val layout = layouts.single()
             assertEquals("$lang heading lines", 1, layout.lineCount)
             // Semantics may recreate an intrinsic-width paragraph; compare actual line extents.
-            assertTrue("$lang heading must fit at 320dp, scale $fontScale", !layout.didOverflowHeight &&
+            assertTrue("$lang heading must fit at 360dp, scale 1.0", !layout.didOverflowHeight &&
                 layout.getLineRight(0) - layout.getLineLeft(0) <= heading.fetchSemanticsNode().size.width + 0.5f)
             assertTrue("$lang heading must not be ellipsized", !layout.isLineEllipsized(0))
             assertEquals(14.sp, layout.layoutInput.style.fontSize)

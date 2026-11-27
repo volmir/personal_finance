@@ -32,6 +32,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
+@org.robolectric.annotation.Config(qualifiers = "ru-w360dp-h800dp")
 class FireScrollStateRobolectricTest {
     @get:Rule
     val composeRule = createAndroidComposeRule<ComponentActivity>()
@@ -64,7 +65,9 @@ class FireScrollStateRobolectricTest {
             }
         }
 
-        scrollTo("fire_parameters_card")
+        // At the standard 800dp height the parameters already fit without scrolling.
+        scrollTo("fire_trajectory_card")
+        composeRule.onNodeWithTag("fire_parameters_card").assertIsDisplayed()
         val basePosition = position()
         assertTrue(basePosition > 0f)
         // Управляем тем же selectedSubtab, который FinanceApp передаёт экрану;

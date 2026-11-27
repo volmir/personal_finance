@@ -81,7 +81,7 @@ import org.robolectric.annotation.GraphicsMode
  * и совпадение цвета прогресс-бара Fidelity с числовым значением и процентом.
  */
 @RunWith(RobolectricTestRunner::class)
-@Config(qualifiers = "w411dp-h891dp-xxhdpi")
+@Config(qualifiers = "w360dp-h800dp-xxhdpi")
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 class UnifiedStatusColorsRobolectricTest {
     @get:Rule
@@ -289,6 +289,7 @@ class UnifiedStatusColorsRobolectricTest {
             composeRule.onNodeWithTag("tab_fire_list").performScrollToNode(hasTestTag("fire_chart_status_label"))
             assertEquals(expectedRed, textColorByTag("fire_chart_status_label"))
 
+            composeRule.onNodeWithTag("tab_fire_list").performScrollToNode(hasTestTag("fire_subtab_selector"))
             composeRule.onNodeWithTag("fire_subtab_simulation").performClick()
             composeRule.onNodeWithTag("tab_fire_list").performScrollToNode(hasTestTag("fire_slider_return_value"))
             assertEquals(expectedRed, textColorByTag("fire_slider_return_value"))

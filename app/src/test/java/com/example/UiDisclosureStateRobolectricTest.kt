@@ -32,7 +32,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.util.ReflectionHelpers
 
 @RunWith(RobolectricTestRunner::class)
-@Config(qualifiers = "ru-w320dp-h800dp")
+@Config(qualifiers = "ru-w360dp-h800dp")
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 class UiDisclosureStateRobolectricTest {
     @get:Rule

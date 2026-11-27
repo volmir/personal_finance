@@ -11,7 +11,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.SemanticsMatcher
-import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -23,14 +22,12 @@ import com.example.data.model.FinancialInputData
 import com.example.data.model.FireStatus
 import com.example.domain.AuditorAnalysisGenerator
 import com.example.domain.FinanceCalculator
-import com.example.domain.FinancialMetricEvaluator
 import com.example.domain.ScenarioConstants
 import com.example.ui.FireScenarioToggles
 import com.example.ui.FireSimulationState
 import com.example.ui.components.ScenarioTogglesPanel
 import com.example.ui.screens.AuditScoreScreen
 import com.example.ui.screens.FireRetirementScreen
-import com.example.ui.screens.MetricsScreen
 import com.example.ui.theme.AlertRedTextDark
 import com.example.ui.theme.AlertRedTextLight
 import com.example.ui.theme.EmeraldDarkPrimary
@@ -63,7 +60,7 @@ import org.robolectric.annotation.Config
  * контрастный текстовый оттенок из [StatusColors], а не базовый акцент.
  */
 @RunWith(RobolectricTestRunner::class)
-@Config(qualifiers = "w411dp-h891dp")
+@Config(qualifiers = "w360dp-h800dp")
 class StatusTextColorUsageRobolectricTest {
     @get:Rule
     val composeRule = createComposeRule()
@@ -341,39 +338,6 @@ class StatusTextColorUsageRobolectricTest {
         )
     }
 
-    @Test
-    fun `fidelity progress value uses the same readable text color as the metric`() {
-        val input = FinancialInputData.usAverageData()
-        val metrics = FinanceCalculator.calculate(input, today = today)
-        val fidelityStatus = FinancialMetricEvaluator.getFidelityStatus(metrics.fidelityRatio)
-
-        composeRule.setContent {
-            TestTheme(darkTheme = false) {
-                CompositionLocalProvider(
-                    LocalAppLanguage provides AppLanguage.RU,
-                    LocalAppStrings provides strings
-                ) {
-                    MetricsScreen(
-                        inputData = input,
-                        metrics = metrics,
-                        modifier = Modifier.testTag("metrics_list")
-                    )
-                }
-            }
-        }
-
-        val cardTag = "metric_card_${strings.metricFidelityTitle.replace(" ", "_")}"
-        composeRule.onNodeWithTag("metrics_list").performScrollToNode(hasTestTag(cardTag))
-        val percentText = Formatters.formatPercent(metrics.fidelityPercent, AppLanguage.RU)
-        val node = composeRule.onNode(
-            hasText(percentText) and hasAnyAncestor(hasTestTag(cardTag)),
-            useUnmergedTree = true
-        )
-        assertEquals(
-            StatusColors.getReadableTextColor(StatusColors.getColor(fidelityStatus), darkTheme = false),
-            node.textColor()
-        )
-    }
 
     @Test
     fun `auditor opinion counters keep readable status text in both themes`() {

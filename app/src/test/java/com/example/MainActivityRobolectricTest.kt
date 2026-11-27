@@ -13,6 +13,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.util.ReflectionHelpers
 
 @RunWith(RobolectricTestRunner::class)
+@org.robolectric.annotation.Config(qualifiers = "ru-w360dp-h800dp")
 class MainActivityRobolectricTest {
     @Before
     fun resetViewModelFactory() {

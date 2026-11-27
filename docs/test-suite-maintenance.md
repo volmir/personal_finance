@@ -1,7 +1,8 @@
 # Жизненный цикл тестов — рабочий реестр
 
 Аудит TEST-C01, 27.11.2026. Изменены только этот реестр и корневой AGENTS.md.
-Ни одно удаление/слияние ниже ещё не выполнено; экономия времени не измерена.
+На момент TEST-C01 ни одно удаление/слияние ниже не было выполнено.
+Фактически применённые решения и замеры TEST-C02 записаны в конце этого реестра.
 Решения относятся к фактическому коду до FA-01–FA-11, FIRE-M01–M09 и FIRE-UI-01.
 Будущие требования очереди не считаются реализованными. Квоты удаления нет.
 
@@ -259,3 +260,168 @@ TypographyLayout (TXT и 320/1.6 PNG) можно исключить вместе
 В Git не включать XML, PNG, логи, init scripts и временные измерительные скрипты.
 Никакие release APK, эмуляторы, screenshots opt-in или mutation testing для аудита
 не запускались. Числа и поведение пользователя не изменены.
+
+
+## TEST-C02: выполненная очистка до функциональных изменений
+
+27.11.2026. Повторно проверены тела тестов и действующие P3–P7: ветвь нулевого
+cash flow зависит от знака, не абсолютного дохода; nominal=100/inflation=2.5 и
+обход шагов совпадают; выбранный FIRE subtab хранится в rememberSaveable;
+Fidelity percent в обоих цветовых тестах выбирается одинаково, а остающийся
+UnifiedStatusColors дополнительно проверяет все статусы, темы и пиксель полосы.
+Формулы, налоги, старый агрегатор, сценарии, production UI и все DEFER сохранены.
+
+### Применённые DELETE/MERGE
+
+| Изменение | Остающаяся защита и перенос assertions |
+|---|---|
+| Удалён ExampleInstrumentedTest.kt | Единственный assert сравнивал BuildConfig.APPLICATION_ID с targetContext.packageName. Повторный поиск класса/метода и connected-test invocation не нашёл самостоятельного smoke-процесса. MainActivityRobolectricTest сохраняет запуск Activity; это не device smoke. Runner и зависимости сохранены, APK identity/device checks выпуска остаются обязательными. |
+| Удалён RU-only `when cashFlow is zero MetricsScreen displays income equals expenses subtitle` | `zero cash flow subtitle says income equals expenses in every language` сохраняет RU и ещё пять языков, отсутствие negative subtitle. |
+| Два теста максимальной доходности MainViewModel → `every return slider step changes metrics at maximum nominal return` | Перенесён `steps > 0`; сохранены maxValue=0, все положения обеих сеток (Double и Float UI), точная delta/realReturn, монотонность, неизменность base metrics/input. |
+| Два zero-cash-flow теста AuditorAnalysis → `zero cash flow stays negative with a warning and explanation in every language` | Сохранены явный NEGATIVE, negative/not neutral/not positive, ⚠️, пояснения шести языков; перенесено RU «доходы равны расходам» ignoreCase. |
+| Два parseDouble-only метода NumberInputField → DecimalInputParsingTest | Все 18 assertions перенесены дословно: пустые/sign-only строки, grouped numbers, оба разделителя, fallback и cap. UI input/focus/cursor/JPY тесты остаются Robolectric. |
+| Два маршрута FinanceApp → `selecting Simulation survives short and multiple main tab switches` | Сохранён короткий Input→FIRE round trip и затем Metrics→Scores→Input→FIRE; проверки selection/content/base absence стоят на обоих возвратах. Trajectory отсутствует; обратный маршрут, active slider/scenario, recreation и scroll restoration не удалены. |
+| Удалён `fidelity progress value uses the same readable text color as the metric` | `fidelity value percent and progress bar share exact status color across statuses and themes` сохраняет selector процента, NEGATIVE/NEUTRAL/POSITIVE, обе темы, цвет текста и пиксель fill. |
+| CollapsibleInfoCard: два geometry/large-font метода → один стандартный geometry-тест | Сохранены card displayed, 64dp height, 48dp toggle, body absent/click/full body/displayed. Старый large-font метод не измерял clipping. Реальные длинные локализованные title/body/expand/collapse/independence перенесены в новый минимальный component semantics-тест шести языков. |
+| FIRE: удалена 411dp hero-обёртка | Одна 360dp обёртка проверяет 1.0 и единственный целевой UI scale 1.3: реальную ширину, полный текст, line extents, отсутствие height overflow/ellipsis, soft wrap, видимый subtitle. Удалены лишь конфигурационные требования >1 строки на 1.6 и Int.MAX_VALUE как детали реализации. |
+| FIRE age-row: два метода → `retirement age rows fit both subtabs with long labels and themed unreachable color` | Перенесены точный label, label height/width fit; добавлена проверка его ellipsis/line extents. Сохранены обе подвкладки, UNREACHABLE/короткий label, reachable age/REACHED_NOW, value fit/ellipsis, two-column gap и цвет unreachable. |
+| Sticky summary: шесть width-обёрток → две 360dp | Сохранены comparison cases, pin/insets/corners/opaque pixels, два scroll/no bleed-through, reset callbacks, no lever calls и ровно одна панель/reset. |
+
+Необязательные TXT/PNG hero title и typography удалены: повторный поиск нашёл
+только writer в самих тестах, действующего consumer или документированной команды
+для этих артефактов нет. Layout assertions остаются; сообщения при падении содержат
+контекст/размеры/текст. CapturePanel/sampleProgressIndicatorFillPixel и pixel assertions
+сохранены. StoreScreenshotsTest и opt-in команда не изменены, генерация не запускалась.
+Не обнаружено production-инструмента, требующего отдельного решения об удалении.
+
+### Фактический UI budget и число конфигураций
+
+Ниже считается профиль параметров **на контракт/обход**, отдельно от числа @Test.
+Статусы, значения, страницы lazy-list, повторные expand/collapse и действия не
+считаются дополнительными визуальными конфигурациями и сохраняются внутри профиля.
+У обеих FIRE подвкладок отдельно указаны экранные обходы общей typography-матрицы.
+
+| Проверка | До | После | Остающиеся параметры/риск |
+|---|---:|---:|---|
+| TypographyLayout — экранные обходы | **180** | **8** | RU/light: INPUT, METRICS, SCORES, FIRE, SIMULATION; DE/light: METRICS; EN/light: INPUT, SCORES. Все lazy pages, раскрытые explanations, >=12sp, no overflow/ellipsis и завершение scroll сохранены. |
+| Hero title | 4 | 2 | RU/360/light, scale 1.0/1.3; один проблемный компонент. |
+| FIRE info cards | 12 | 1 | RU/360/1.0/light, независимость двух карточек и accessibility. |
+| Audit info cards | 12 | 1 | То же; шесть локалей проверяются общим компонентом. |
+| Audit breakdown | 24 | 1 | RU/360/1.0/light; четыре строки, current value, score/progress, gaps и полный heading сохранены. |
+| FIRE status wrapping | 6 | 2 | RU и DE/light; REACHED_NOW, UNREACHABLE, sub-tenth и обе подвкладки. |
+| FIRE age-row, два прежних метода | 12 + 12 | 3 | RU/light, DE/light, RU/dark, обе подвкладки и прежние состояния; geometry уникального старого метода перенесена. |
+| Sticky comparison, все width-обёртки | 108 | 3 | RU/light, DE/light, RU/dark; **7 cases в каждом профиле: 756 → 21** проверок таблицы. |
+| Sticky opaque, все width-обёртки | 108 | 2 | RU/light и RU/dark, реальные разные цвета пикселей. |
+| Input hint formulas | 24 | 3 | RU/light, DE/light, RU/dark; обе подсказки, full formula/style/source/value и порядок. |
+| Input horizon formula/style | 12 | 3 | RU/light, DE/light, RU/dark; dynamic birth date, нулевой/исчерпанный horizon сохранены. |
+| Input horizon geometry | 6 | 2 | RU и DE/light; title/formula/value/substitution, fit и отсутствие overlap. |
+| Metrics expanded formulas | 6 | 2 | RU и DE/light; все 9 карточек, collapsed/re-expanded, style/bounds/fit/ellipsis. Удалён только критерий «>=3 формулы обязаны переноситься при 320dp». |
+| Scenario section geometry | 6 | 2 | RU и DE/light; отсутствие 2.1/2.2, alignment/counters. Содержимое четырёх headers всех шести языков перенесено в существующий component-localization тест описаний. |
+| CollapsibleInfoCard geometry | 2 | 1 | RU/360/1.0; отдельно 6 языков в минимальной content/semantics проверке без visual matrix. |
+| FIRE date, subtitles, base parameters, active count, reset, selector labels | По 6 | По 1 | Wiring/base isolation/колбэки/48dp/semantics на RU; тексты всех шести языков в LocalizedUiTextTest, даты в FireFormatterTest, числа/статусы/units в прежних formatter-тестах. |
+
+Исправлена арифметическая описка таблицы TEST-C01: 3 widths × 3 scales × 2 locales ×
+2 themes × 5 screens = **180**, не 540. Исходный код подтверждает 180.
+Вместо десяти предложенных общих обходов оставлено восемь: дополнительные
+DE/SIMULATION и RU/dark/SIMULATION уже защищены специализированными sticky tests.
+Новых 411dp-прогонов не добавлено: отдельного незащищённого риска не найдено.
+
+Проверены все UI-классы, включая остальные Robolectric tests и TypographyTest:
+явные/неявные обычные viewport заменены на 360×800, в том числе IME/keyboard,
+UiDisclosure, navigation/restoration, NumberInputField и цветовые интеграции.
+UI width 320 и меньше, scale 1.5/1.6/2.0+ из обычных проверок исключены; единственный
+повышенный UI scale — hero 1.3. Дешёвый Typography Density/sp остаётся 1.0/1.3.
+LaunchTheme сохраняет все API 24/26/27/35 resource-ветви и обе системные темы.
+Контрастность, status profiles и обе темы цветовых тестов сохранены, а не заменены
+общим layout-тестом. Для цветового cross-tab теста перед нажатием selector добавлена
+прокрутка: на 360dp после осмотра графика lazy-list уже не компонует selector.
+Это адаптация навигации fixture, assertions и production UI не изменены.
+FireScrollState прокручивает к следующей карточке графика: при 800dp parameters уже
+помещаются без scroll. Положительная позиция, видимость parameters, обе независимые
+позиции и точное сохранение после восстановления остаются. FireSubtabRecreation
+явно использует EN/360/1.0: его прежние EN expected strings не изменены, это одна
+конфигурация риска восстановления контента языка по умолчанию, без layout-матрицы.
+
+Шесть языков сохраняют минимальные content/editor/accessibility проверки:
+NumberInputField, Input invalid horizon, Metrics unavailable/zero cash flow,
+Scenario descriptions и FireAccessibility — именованные самостоятельные риски,
+не полная визуальная матрица. LocalizedUiTextTest фиксирует полные исходные labels,
+состав/порядок scenario factors, suffixes и count(3) без Android/Compose. Production
+собирает subtitles одинаковой ветвью для каждого AppStrings; RU screen assertions
+сохраняют проверку сборки/принадлежности карточке, pure таблица — все исходные тексты.
+Полный assumptions/disclaimer и expand/collapse labels проверяются на общем
+CollapsibleInfoCard во всех языках; на двух реальных экранах остаётся wiring.
+
+### Проверки и измерения TEST-C02
+
+Финальный запуск: **27.11.2026, 12:07:31–12:09:56 UTC**, Temurin 21.0.13,
+тот же wrapper 9.3.1, Linux, кешированные SDK/dependencies и прогретый daemon;
+другие сборки параллельно не запускались. Команда:
+`bash ./gradlew testDebugUnitTest --offline --console=plain --no-configuration-cache --init-script /tmp/test-c02-2loyzkku/force-test.gradle`.
+Скрипт с теми же outputs.upToDateWhen/doNotCacheIf и System.nanoTime, что в C01,
+применён только к :app:testDebugUnitTest; GENERATE_STORE_SCREENSHOTS удалён из
+окружения. Ни clean, ни --rerun-tasks, ни постоянные изменения Gradle не применялись.
+Компиляция изменённых тестов выполнена отдельно перед замером.
+
+| Показатель | TEST-C01 | TEST-C02 |
+|---|---:|---:|
+| JVM @Test в исходниках | 330 | 320 |
+| JUnit XML cases / classes | 333 / 43 | 323 / 44 |
+| Выполнено успешно | 332 | 322 |
+| Skipped | 1 | 1 — прежний opt-in StoreScreenshotsTest |
+| Failures / errors | 0 / 0 | 0 / 0 |
+| Wall time subprocess, time.monotonic | 212,961 с | **144,973 с** |
+| Интервал задачи, System.nanoTime | 209,998 с | **143,239 с** |
+| Gradle | 1 executed, 29 up-to-date | 1 executed, 29 up-to-date |
+| Android instrumentation @Test (отдельно от JVM) | 1 | 0 |
+
+Дополнительный класс — дешёвый LocalizedUiTextTest, а не новая UI-матрица.
+Все 44 финальных XML имеют mtime внутри измеренного запуска; totals сверены по
+XML, единственный skipped case — captureLocalizedStoreScreenshots. Свежие XML,
+metadata/measure.json и логи сохранены в /tmp/test-c02-2loyzkku вне Git.
+Для C01 использованы сохранённые /tmp/test-c01-d5n02gu4/summary.json, metadata.json
+и gradle.log с указанным исходным временем. Найденные перед C02 XML с timestamp
+24.11 — кешированные старые результаты; они **не использованы** как новый baseline.
+
+В этой сопоставимой паре wall time сократился на **67,988 с (31,9%)**.
+Это одиночные прогоны, не статистическая оценка ускорения. Время отдельных классов
+ниже взято из XML, не суммируется для вычисления wall time; часть классов не ускорилась.
+
+| Класс | XML time C01, с | XML time C02, с |
+|---|---:|---:|
+| TypographyLayoutRobolectricTest | 23,254 | 8,845 |
+| FireSimulationStickySummaryRobolectricTest | 24,827 | 3,001 |
+| FireRetirementScreenRobolectricTest | 18,690 | 5,375 |
+| AuditScoreScreenRobolectricTest | 20,706 | 9,910 |
+| InputDataScreenRobolectricTest | 15,534 | 14,585 |
+| MetricsScreenRobolectricTest | 11,116 | 12,073 |
+| UnifiedStatusColorsRobolectricTest | 24,760 | 23,340 |
+
+Дополнительно действительно выполнены:
+
+- `:app:compileDebugUnitTestKotlin :app:compileDebugAndroidTestKotlin --offline --console=plain`
+  через bash ./gradlew — BUILD SUCCESSFUL; имя androidTest-задачи подтверждено Gradle,
+  после удаления единственного instrumentation-файла она имеет **NO-SOURCE**.
+  Это не запуск на устройстве; runner/dependencies не удалены.
+- Узкий прогон десяти затронутых screen/layout/IME/color suites: 61 case, сначала
+  один сбой fixture (selector после scroll на 360dp), затем исправлен подготовительный
+  scroll без удаления assertions. Первый полный измеренный запуск: 323 cases,
+  319 успешных / 3 failed / 1 skipped за 137,123 с; выявлены только вышеописанные
+  предпосылки fixture о scroll и EN. Этот запуск не выдан за зелёный результат.
+- После адаптации — FireScrollStateRobolectricTest, FireSubtabRecreationRobolectricTest,
+  ScenarioTogglesPanelRobolectricTest: **5/5 успешно**, BUILD SUCCESSFUL за 48 с
+  вместе с компиляцией. MainViewModelRobolectricTest: **18/18 успешно**, 41 с вместе
+  с компиляцией; обе сетки slider positions сохранены. Затем весь финальный набор
+  запущен заново без фильтров и прошёл, как показано в таблице.
+- `git diff --check` и статическая сверка области diff, включая untracked файлы:
+  только app tests и этот реестр. Исходники финансовых формул/налогов, persistence,
+  scenario math, contrast и StoreScreenshots tests дополнительно сравнены побайтово
+  с началом задачи и не изменены. Обычных qualifiers/Box width <=320 и массовых
+  scale 1.3/1.6 либо scale >=2 не осталось.
+
+Сам gate оставлен оркестратору согласно заданию; orchestrator и его тесты/логи
+не изменялись и не запускались. Device instrumentation, эмуляторы, opt-in store
+screenshots, release build, commit/push и изменения Git-истории не выполнялись.
+Поддержка устройств/языков и пользовательские числа не изменены. Остаточный риск —
+осознанно сокращённая широта визуальных сочетаний; функциональные assertions,
+численные границы, локализация и семантика сохранены перечисленными проверками.

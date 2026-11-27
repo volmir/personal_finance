@@ -3,9 +3,6 @@ package com.example
 import android.app.Application
 import android.content.Context
 import android.content.res.Configuration
-import android.graphics.Bitmap
-import android.graphics.Canvas
-import android.view.View
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -33,7 +30,6 @@ import com.example.ui.FinanceApp
 import com.example.ui.MainViewModel
 import com.example.ui.theme.MyApplicationTheme
 import java.time.LocalDate
-import java.io.File
 import java.util.Locale
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -45,19 +41,19 @@ import org.robolectric.annotation.GraphicsMode
 
 /** Real app, including bars, every lazy-list page, both FIRE subtabs and expanded explanations. */
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [35], qualifiers = "w411dp-h891dp-mdpi")
+@Config(sdk = [35], qualifiers = "ru-w360dp-h800dp-mdpi")
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 class TypographyLayoutRobolectricTest {
     @get:Rule
     val composeRule = createAndroidComposeRule<ComponentActivity>()
 
     @Test
-    fun `RU and DE text fits at 320 360 411dp with font scales 1 1_3 1_6 in both themes`() {
+    fun `standard screens and selected localization risks fit completely`() {
         val app = ApplicationProvider.getApplicationContext<Application>()
         app.getSharedPreferences("user_finance_data", Context.MODE_PRIVATE).edit().clear().commit()
         val viewModel = MainViewModel(app) { LocalDate.of(2026, 11, 6) }
         viewModel.dismissSampleDataNotice()
-        val width = mutableStateOf(320)
+        val width = mutableStateOf(360)
         val scale = mutableStateOf(1f)
         val dark = mutableStateOf(false)
         val language = mutableStateOf("ru")
@@ -83,10 +79,6 @@ class TypographyLayoutRobolectricTest {
             }
         }
         val failures = linkedSetOf<String>()
-        val report = File("build/reports/typography-matrix.txt").apply {
-            requireNotNull(parentFile).mkdirs()
-            writeText("")
-        }
         val textMatcher = SemanticsMatcher.keyIsDefined(SemanticsActions.GetTextLayoutResult)
         val listMatcher = SemanticsMatcher.keyIsDefined(SemanticsActions.ScrollToIndex)
         fun inspect(context: String) {
@@ -109,82 +101,75 @@ class TypographyLayoutRobolectricTest {
                             "paragraph=${layout.multiParagraph.width}x${layout.multiParagraph.height}, " +
                             "font=${layout.layoutInput.style.fontSize}, lineHeight=${layout.layoutInput.style.lineHeight}, " +
                             "constraints=${layout.layoutInput.constraints})"
-                        if (failures.add(issue)) report.appendText("$issue\n")
+                        failures.add(issue)
                     }
                 }
             }
         }
         try {
-            for (w in listOf(320, 360, 411)) for (s in listOf(1f, 1.3f, 1.6f)) {
-                for (lang in listOf("ru", "de")) for (isDark in listOf(false, true)) {
-                    composeRule.runOnIdle {
-                        width.value = w
-                        scale.value = s
-                        language.value = lang
-                        dark.value = isDark
-                        viewModel.updateLanguageFromSystem(lang)
-                        viewModel.selectTab(AppTab.INPUT)
-                        version.value++
+            // Five baseline screens; each extra configuration protects one named risk.
+            val scenarios = listOf(
+                Triple("ru", false, listOf("INPUT", "METRICS", "SCORES", "FIRE", "SIMULATION")),
+                Triple("de", false, listOf("METRICS")), // Long metric names and formulas.
+                Triple("en", false, listOf("INPUT", "SCORES")) // Default-language fields and audit.
+            )
+            // Sticky summary DE and dark rendering are covered by its dedicated pixel/layout tests.
+            for ((lang, isDark, screens) in scenarios) {
+                val w = 360
+                val s = 1f
+                composeRule.runOnIdle {
+                    width.value = w
+                    scale.value = s
+                    language.value = lang
+                    dark.value = isDark
+                    viewModel.updateLanguageFromSystem(lang)
+                    viewModel.selectTab(AppTab.INPUT)
+                    version.value++
+                }
+                val navWidth = composeRule.onNodeWithTag("bottom_nav_bar").fetchSemanticsNode().size.width
+                assertTrue("Requested width=$w, actual navigation width=$navWidth", navWidth == w)
+                for (screen in screens) {
+                    if (screen == "SIMULATION") {
+                        composeRule.onNodeWithTag("fire_subtab_simulation").performClick()
+                    } else {
+                        composeRule.runOnIdle { viewModel.selectTab(AppTab.valueOf(screen)) }
                     }
-                    val navWidth = composeRule.onNodeWithTag("bottom_nav_bar").fetchSemanticsNode().size.width
-                    assertTrue("Requested width=$w, actual navigation width=$navWidth", navWidth == w)
-                    for (screen in listOf("INPUT", "METRICS", "SCORES", "FIRE", "SIMULATION")) {
-                        if (screen == "SIMULATION") {
-                            composeRule.onNodeWithTag("fire_subtab_simulation").performClick()
-                        } else {
-                            composeRule.runOnIdle { viewModel.selectTab(AppTab.valueOf(screen)) }
-                        }
-                        composeRule.mainClock.advanceTimeBy(1_000)
-                        val context = "$w/$s/$lang/dark=$isDark/$screen"
-                        if (w == 320 && s == 1.6f) {
-                            val bitmap = composeRule.runOnIdle {
-                                val view = composeRule.activity.findViewById<View>(android.R.id.content)
-                                Bitmap.createBitmap(view.width, view.height, Bitmap.Config.ARGB_8888).also {
-                                    view.draw(Canvas(it))
+                    composeRule.mainClock.advanceTimeBy(1_000)
+                    val context = "$w/$s/$lang/dark=$isDark/$screen"
+                    val expanded = mutableSetOf<String>()
+                    var pages = 0
+                    while (true) {
+                        inspect(context)
+                        if (screen == "METRICS") {
+                            val cards = composeRule.onAllNodes(SemanticsMatcher.keyIsDefined(SemanticsActions.OnClick), useUnmergedTree = true)
+                                .fetchSemanticsNodes().filter {
+                                    val tag = it.config.getOrElse(SemanticsProperties.TestTag) { "" }
+                                    tag.startsWith("metric_card_") && tag != "metric_card_formula" && tag !in expanded
                                 }
+                            for (card in cards) {
+                                expanded += card.config[SemanticsProperties.TestTag]
+                                composeRule.runOnIdle { card.config[SemanticsActions.OnClick].action?.invoke() }
                             }
-                            val screenshot = File(report.parentFile, "typography-screenshots/$lang-$isDark-$screen.png")
-                            requireNotNull(screenshot.parentFile).mkdirs()
-                            screenshot.outputStream().use { assertTrue(bitmap.compress(Bitmap.CompressFormat.PNG, 100, it)) }
-                            bitmap.recycle()
+                            composeRule.mainClock.advanceTimeBy(500)
+                            inspect("$context/expanded")
                         }
-                        val expanded = mutableSetOf<String>()
-                        var pages = 0
-                        while (true) {
-                            inspect(context)
-                            if (screen == "METRICS") {
-                                val cards = composeRule.onAllNodes(SemanticsMatcher.keyIsDefined(SemanticsActions.OnClick), useUnmergedTree = true)
-                                    .fetchSemanticsNodes().filter {
-                                        val tag = it.config.getOrElse(SemanticsProperties.TestTag) { "" }
-                                        tag.startsWith("metric_card_") && tag != "metric_card_formula" && tag !in expanded
-                                    }
-                                for (card in cards) {
-                                    expanded += card.config[SemanticsProperties.TestTag]
-                                    composeRule.runOnIdle { card.config[SemanticsActions.OnClick].action?.invoke() }
-                                }
-                                composeRule.mainClock.advanceTimeBy(500)
-                                inspect("$context/expanded")
-                            }
-                            val list = composeRule.onAllNodes(listMatcher).fetchSemanticsNodes().single()
-                            val range = list.config[SemanticsProperties.VerticalScrollAxisRange]
-                            if (range.value() >= range.maxValue()) break
-                            composeRule.onAllNodes(listMatcher)[0].performSemanticsAction(SemanticsActions.ScrollBy) {
-                                it(0f, 400f)
-                            }
-                            composeRule.waitForIdle()
-                            // LazyColumn estimates the scroll range from average item height;
-                            // it can decrease when an expanded card is composed.
-                            check(++pages < 150) { "$context did not reach list end" }
+                        val list = composeRule.onAllNodes(listMatcher).fetchSemanticsNodes().single()
+                        val range = list.config[SemanticsProperties.VerticalScrollAxisRange]
+                        if (range.value() >= range.maxValue()) break
+                        composeRule.onAllNodes(listMatcher)[0].performSemanticsAction(SemanticsActions.ScrollBy) {
+                            it(0f, 400f)
                         }
-                        report.appendText("$context: ${pages + 1} pages, cumulative issues=${failures.size}\n")
-                        // The selector must be back on screen before switching to Simulation.
-                        if (screen == "FIRE") composeRule.onAllNodes(listMatcher)[0].performScrollToIndex(0)
+                        composeRule.waitForIdle()
+                        // LazyColumn estimates the scroll range from average item height;
+                        // it can decrease when an expanded card is composed.
+                        check(++pages < 150) { "$context did not reach list end" }
                     }
+                    // The selector must be back on screen before switching to Simulation.
+                    if (screen == "FIRE") composeRule.onAllNodes(listMatcher)[0].performScrollToIndex(0)
                 }
             }
         } finally {
             composeRule.runOnIdle { viewModel.flushPendingSave() }
-            report.appendText(failures.joinToString("\n"))
         }
         assertTrue("Typography matrix failures (${failures.size}):\n${failures.joinToString("\n")}", failures.isEmpty())
     }

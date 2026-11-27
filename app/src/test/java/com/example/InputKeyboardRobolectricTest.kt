@@ -35,7 +35,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
-@Config(qualifiers = "w400dp-h800dp-mdpi")
+@Config(qualifiers = "w360dp-h800dp-mdpi")
 class InputKeyboardRobolectricTest {
     @get:Rule
     val composeRule = createComposeRule()

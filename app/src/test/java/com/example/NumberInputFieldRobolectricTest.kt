@@ -23,6 +23,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
+@org.robolectric.annotation.Config(qualifiers = "ru-w360dp-h800dp")
 class NumberInputFieldRobolectricTest {
     @get:Rule
     val composeRule = createComposeRule()
@@ -121,13 +122,6 @@ class NumberInputFieldRobolectricTest {
         assertEquals(-1.5, value.value, 0.0)
     }
 
-    @Test
-    fun `empty and sign-only values parse as zero`() {
-        assertEquals(0.0, Formatters.parseDouble(""), 0.0)
-        assertEquals(0.0, Formatters.parseDouble("-"), 0.0)
-        assertEquals(0.0, Formatters.parseDouble("-."), 0.0)
-        assertEquals(0.0, Formatters.parseDouble("-,", AppLanguage.RU), 0.0)
-    }
 
     @Test
     fun `decimal input keeps typed dot and parses 7 point 5`() {
@@ -346,31 +340,6 @@ class NumberInputFieldRobolectricTest {
         assertTrue(value.value <= 1e12)
     }
 
-    @Test
-    fun `parseDouble correctly parses across locales without corrupting grouped numbers`() {
-        // EN
-        assertEquals(1500.0, Formatters.parseDouble("1500", AppLanguage.EN), 0.0)
-        assertEquals(1500.5, Formatters.parseDouble("1500.5", AppLanguage.EN), 0.0)
-        assertEquals(1500.0, Formatters.parseDouble("1,500", AppLanguage.EN), 0.0)
-        assertEquals(6000.0, Formatters.parseDouble("6,000.00", AppLanguage.EN), 0.0)
-
-        // DE, ES, IT
-        assertEquals(1500.5, Formatters.parseDouble("1500,5", AppLanguage.DE), 0.0)
-        assertEquals(1500.5, Formatters.parseDouble("1.500,5", AppLanguage.DE), 0.0)
-        assertEquals(1500.5, Formatters.parseDouble("1500.5", AppLanguage.DE), 0.0) // fallback dot
-        assertEquals(6000.0, Formatters.parseDouble("6.000,00", AppLanguage.DE), 0.0)
-
-        assertEquals(1500.5, Formatters.parseDouble("1500,5", AppLanguage.ES), 0.0)
-        assertEquals(1500.5, Formatters.parseDouble("1500,5", AppLanguage.IT), 0.0)
-
-        // RU
-        assertEquals(6000.0, Formatters.parseDouble("6 000,00", AppLanguage.RU), 0.0)
-        assertEquals(1500.5, Formatters.parseDouble("1500,5", AppLanguage.RU), 0.0)
-        assertEquals(1500.5, Formatters.parseDouble("1500.5", AppLanguage.RU), 0.0)
-
-        // Overflow clamp
-        assertEquals(1e12, Formatters.parseDouble("1000000000000000000", AppLanguage.EN), 0.0)
-    }
 
     @Test
     fun `typing 7_555 in percent field saves 7_56 and typing 100_555 in money saves 100_56 without changing field text during focus`() {

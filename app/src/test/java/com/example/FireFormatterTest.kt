@@ -17,7 +17,9 @@ class FireFormatterTest {
             for (systemLocale in listOf(java.util.Locale.JAPAN, java.util.Locale.US)) {
                 java.util.Locale.setDefault(systemLocale)
                 for ((lang, expected) in mapOf(AppLanguage.RU to "2 янв. 2000 г.",
-                    AppLanguage.EN to "Jan 2, 2000", AppLanguage.DE to "02.01.2000")) {
+                    AppLanguage.EN to "Jan 2, 2000", AppLanguage.DE to "02.01.2000",
+                    AppLanguage.FR to "2 janv. 2000", AppLanguage.IT to "2 gen 2000",
+                    AppLanguage.ES to "2 ene 2000")) {
                     // CLDR в JDK 17/21 различается пробелом перед «г.».
                     assertEquals(expected, Formatters.formatDate("2000-01-02", lang).replace('\u202F', ' '))
                 }

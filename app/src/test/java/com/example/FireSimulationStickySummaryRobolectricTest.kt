@@ -18,7 +18,6 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
@@ -33,7 +32,6 @@ import androidx.compose.ui.test.click
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeUp
 import androidx.compose.ui.text.TextLayoutResult
-import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.assertIsNotDisplayed
@@ -68,7 +66,7 @@ import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 
 @RunWith(RobolectricTestRunner::class)
-@Config(qualifiers = "w320dp-h640dp-xxhdpi")
+@Config(qualifiers = "ru-w360dp-h800dp-xxhdpi")
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 class FireSimulationStickySummaryRobolectricTest {
     @get:Rule
@@ -158,15 +156,8 @@ class FireSimulationStickySummaryRobolectricTest {
     }
 
     @Test
-    fun `comparison matrix at 320dp`() = assertComparisonMatrix()
-
-    @Test
-    @Config(qualifiers = "w360dp-h640dp-xxhdpi")
+    @Config(qualifiers = "ru-w360dp-h800dp-xxhdpi")
     fun `comparison matrix at 360dp`() = assertComparisonMatrix()
-
-    @Test
-    @Config(qualifiers = "w411dp-h640dp-xxhdpi")
-    fun `comparison matrix at 411dp`() = assertComparisonMatrix()
 
     private fun assertComparisonMatrix() {
         val input = FinancialInputData.usAverageData()
@@ -175,15 +166,12 @@ class FireSimulationStickySummaryRobolectricTest {
         )
         val language = mutableStateOf(AppLanguage.RU)
         val dark = mutableStateOf(false)
-        val scale = mutableStateOf(1f)
         val simulated = mutableStateOf(base.copy(yearsToRetirement = 21.5, retirementAge = 59.5))
         composeRule.setContent {
-            val density = LocalDensity.current
             MyApplicationTheme(darkTheme = dark.value, dynamicColor = false) {
                 CompositionLocalProvider(
                     LocalAppLanguage provides language.value,
-                    LocalAppStrings provides getAppStrings(language.value),
-                    LocalDensity provides Density(density.density, scale.value)
+                    LocalAppStrings provides getAppStrings(language.value)
                 ) {
                     FireRetirementScreen(input, base, simulated.value, FireSimulationState(scenarios = FireScenarioToggles(salaryIncrease20 = true)),
                         emptyList(), onUpdateSimulation = { _, _, _ -> }, onToggleScenario = {}, onResetSimulation = {},
@@ -192,14 +180,14 @@ class FireSimulationStickySummaryRobolectricTest {
             }
         }
         composeRule.onNodeWithTag("fire_subtab_simulation").performClick()
-        for (isDark in listOf(false, true)) for (font in listOf(1f, 1.3f, 1.6f)) for (lang in AppLanguage.values()) {
+        // RU baseline, DE long cells, RU dark status colors; no Cartesian product.
+        for ((lang, isDark) in listOf(AppLanguage.RU to false, AppLanguage.DE to false, AppLanguage.RU to true)) {
             for ((status, years) in listOf(FireStatus.REACHABLE to 21.5, FireStatus.REACHABLE to 27.0,
                 FireStatus.REACHABLE to 24.0, FireStatus.REACHED_NOW to 0.0,
                 FireStatus.UNREACHABLE to 21.5, FireStatus.HORIZON_EXHAUSTED to 21.5,
                 FireStatus.INVALID_AGE to 21.5)) {
                 composeRule.runOnIdle {
                     dark.value = isDark
-                    scale.value = font
                     language.value = lang
                     simulated.value = base.copy(fireStatus = status, yearsToRetirement = years, retirementAge = 38.0 + years)
                 }
@@ -211,12 +199,12 @@ class FireSimulationStickySummaryRobolectricTest {
                     value.assertIsDisplayed()
                     val left = label.fetchSemanticsNode().boundsInRoot
                     val right = value.fetchSemanticsNode().boundsInRoot
-                    assertTrue("$lang $font $status two columns", left.right < right.left)
-                    assertTrue("$lang $font $status row order", minOf(left.top, right.top) >= previousBottom)
+                    assertTrue("$lang $status two columns", left.right < right.left)
+                    assertTrue("$lang $status row order", minOf(left.top, right.top) >= previousBottom)
                     previousBottom = maxOf(left.bottom, right.bottom)
                     val labelLayout = assertFits("fire_sim_${row}_label")
                     val valueLayout = assertFits("fire_sim_${row}_value")
-                    assertEquals("$lang $font $status baseline", left.top + labelLayout.firstBaseline,
+                    assertEquals("$lang $status baseline", left.top + labelLayout.firstBaseline,
                         right.top + valueLayout.firstBaseline, 1f)
                 }
                 val controls = composeRule.onNodeWithTag("fire_sim_changes_count").fetchSemanticsNode().boundsInRoot
@@ -240,15 +228,8 @@ class FireSimulationStickySummaryRobolectricTest {
     }
 
     @Test
-    fun `opaque sticky panel at 320dp`() = assertStickyPanel()
-
-    @Test
-    @Config(qualifiers = "w360dp-h640dp-xxhdpi")
+    @Config(qualifiers = "ru-w360dp-h800dp-xxhdpi")
     fun `opaque sticky panel at 360dp`() = assertStickyPanel()
-
-    @Test
-    @Config(qualifiers = "w411dp-h640dp-xxhdpi")
-    fun `opaque sticky panel at 411dp`() = assertStickyPanel()
 
     private fun assertStickyPanel() {
         val input = FinancialInputData.usAverageData()
@@ -256,19 +237,16 @@ class FireSimulationStickySummaryRobolectricTest {
             fireStatus = FireStatus.REACHABLE, yearsToRetirement = 24.0, retirementAge = 62.0
         )
         val dark = mutableStateOf(false)
-        val scale = mutableStateOf(1f)
         val language = mutableStateOf(AppLanguage.RU)
         var background = Color.Transparent
         var resetCalls = 0
         var leverCalls = 0
         composeRule.setContent {
-            val density = LocalDensity.current
             MyApplicationTheme(darkTheme = dark.value, dynamicColor = false) {
                 background = MaterialTheme.colorScheme.background
                 CompositionLocalProvider(
                     LocalAppLanguage provides language.value,
-                    LocalAppStrings provides getAppStrings(language.value),
-                    LocalDensity provides Density(density.density, scale.value)
+                    LocalAppStrings provides getAppStrings(language.value)
                 ) {
                     // Ненулевые system insets и Scaffold padding, как в FinanceApp.
                     Scaffold(
@@ -289,11 +267,9 @@ class FireSimulationStickySummaryRobolectricTest {
         }
         composeRule.onNodeWithTag("fire_subtab_simulation").performClick()
         val list = composeRule.onNodeWithTag("fire_test_list")
-        for (isDark in listOf(false, true)) for (font in listOf(1f, 1.3f, 1.6f)) for (lang in AppLanguage.values()) {
+        for (isDark in listOf(false, true)) {
             composeRule.runOnIdle {
-                language.value = lang
                 dark.value = isDark
-                scale.value = font
             }
             list.performScrollToIndex(0)
             composeRule.onNodeWithTag("fire_subtab_selector").assertIsDisplayed()

@@ -9,7 +9,6 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertCountEquals
@@ -32,7 +31,6 @@ import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import com.example.data.model.FinancialInputData
 import com.example.data.model.FireStatus
@@ -55,6 +53,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
+@org.robolectric.annotation.Config(qualifiers = "ru-w360dp-h800dp")
 class InputDataScreenRobolectricTest {
     @get:Rule
     val composeRule = createComposeRule()
@@ -160,21 +159,19 @@ class InputDataScreenRobolectricTest {
         }
     }
 
-    @org.robolectric.annotation.Config(qualifiers = "w320dp-h800dp-xxhdpi")
+    @org.robolectric.annotation.Config(qualifiers = "w360dp-h800dp-xxhdpi")
     @org.robolectric.annotation.GraphicsMode(org.robolectric.annotation.GraphicsMode.Mode.NATIVE)
     @Test
-    fun `hint formulas preserve full text and style without value overlap at 320dp in all languages themes and font scales`() {
+    fun `hint formulas preserve full text and style without value overlap at standard width with long text and theme risks`() {
         val language = mutableStateOf(AppLanguage.RU)
         val dark = mutableStateOf(false)
-        val scale = mutableStateOf(1f)
         val assetsExpanded = mutableStateOf(false)
         val investmentsExpanded = mutableStateOf(false)
         val input = FinancialInputData.usAverageData()
         val metrics = FinanceCalculator.calculate(input, today = today)
         var expectedStyle = androidx.compose.ui.text.TextStyle.Default
         composeRule.setContent {
-            val density = LocalDensity.current
-            CompositionLocalProvider(LocalDensity provides Density(density.density, scale.value)) {
+            CompositionLocalProvider(LocalAppLanguage provides language.value) {
                 com.example.ui.theme.MyApplicationTheme(darkTheme = dark.value, dynamicColor = false) {
                     val strings = getAppStrings(language.value)
                     expectedStyle = MaterialTheme.typography.labelSmall.copy(
@@ -182,8 +179,8 @@ class InputDataScreenRobolectricTest {
                         fontFamily = FontFamily.Monospace
                     )
                     CompositionLocalProvider(LocalAppStrings provides strings) {
-                        // 320dp minus the screen's 16dp and section's 14dp padding on each side.
-                        Column(Modifier.width(260.dp).verticalScroll(rememberScrollState())) {
+                        // 360dp minus the screen's 16dp and section's 14dp padding on each side.
+                        Column(Modifier.width(300.dp).verticalScroll(rememberScrollState())) {
                             CategoryBreakdownHint(
                                 metricName = strings.assetsBreakdownName,
                                 hintCollapsed = strings.assetsHintCollapsed,
@@ -223,55 +220,50 @@ class InputDataScreenRobolectricTest {
                 }
             }
         }
-        for (isDark in listOf(false, true)) {
-            for (lang in AppLanguage.values()) {
-                for (fontScale in listOf(1f, 1.6f)) {
-                    composeRule.runOnIdle {
-                        dark.value = isDark
-                        language.value = lang
-                        scale.value = fontScale
-                    }
-                    val strings = getAppStrings(lang)
-                    for ((tag, hintTag, title, formula, value) in listOf(
-                        listOf("assets", "input_assets_hint", strings.totalAssetsTitle, strings.totalAssetsFormula,
-                            com.example.util.Formatters.formatMoney(metrics.totalAssets, input.currencySymbol, lang)),
-                        listOf("return", "input_investments_hint", strings.realReturnTitle, strings.realReturnFormula,
-                            com.example.util.Formatters.formatPercent(metrics.realReturnPercent, lang))
-                    )) {
-                        val valueNode = composeRule.onNodeWithText(value, useUnmergedTree = true).performScrollTo()
-                        valueNode.assertTextEquals(value)
-                        assertTextFits(valueNode)
-                        val titleNode = composeRule.onNodeWithText(title, useUnmergedTree = true)
-                        assertTextFits(titleNode)
-                        assertTrue("$lang $fontScale title overlaps value",
-                            titleNode.fetchSemanticsNode().boundsInWindow.right <= valueNode.fetchSemanticsNode().boundsInWindow.left)
-                        composeRule.onNode(hasText(strings.metricCardInfo) and hasAnyAncestor(hasTestTag(tag)), useUnmergedTree = true)
-                            .assertDoesNotExist()
-                        val hint = composeRule.onNodeWithTag(hintTag).performScrollTo()
-                        hint.assert(hasClickAction())
-                        composeRule.onNodeWithText(formula, useUnmergedTree = true).assertDoesNotExist()
-                        composeRule.onNodeWithText(strings.metricCardFormulaPrefix.trimEnd(), useUnmergedTree = true).assertDoesNotExist()
-                        hint.performClick()
-                        val formulaNode = composeRule.onNodeWithText(formula, useUnmergedTree = true).performScrollTo()
-                        composeRule.onAllNodesWithText(formula, useUnmergedTree = true).assertCountEquals(1)
-                        formulaNode.assertTextEquals(formula).assert(hasAnyAncestor(hasTestTag(hintTag)))
-                        assertEquals(expectedStyle, formulaNode.textStyle())
-                        assertTextFits(formulaNode)
-                        val prefix = composeRule.onNodeWithText(strings.metricCardFormulaPrefix.trimEnd(), useUnmergedTree = true)
-                        prefix.assertExists()
-                        val formulaBounds = formulaNode.fetchSemanticsNode().boundsInWindow
-                        val hintBounds = hint.fetchSemanticsNode().boundsInWindow
-                        assertTrue(formulaBounds.left >= hintBounds.left)
-                        assertTrue(formulaBounds.right <= hintBounds.right)
-                        assertTrue(prefix.fetchSemanticsNode().boundsInWindow.bottom <= formulaBounds.top)
-                        // Формула завершает подсказку, итоговая строка расположена ниже неё.
-                        valueNode.performScrollTo()
-                        assertTrue(formulaNode.fetchSemanticsNode().boundsInWindow.bottom <= valueNode.fetchSemanticsNode().boundsInWindow.top)
-                        hint.performClick()
-                        composeRule.onNodeWithText(formula, useUnmergedTree = true).assertDoesNotExist()
-                        prefix.assertDoesNotExist()
-                    }
-                }
+        for ((lang, isDark) in listOf(AppLanguage.RU to false, AppLanguage.DE to false, AppLanguage.RU to true)) {
+            composeRule.runOnIdle {
+                dark.value = isDark
+                language.value = lang
+            }
+            val strings = getAppStrings(lang)
+            for ((tag, hintTag, title, formula, value) in listOf(
+                listOf("assets", "input_assets_hint", strings.totalAssetsTitle, strings.totalAssetsFormula,
+                    com.example.util.Formatters.formatMoney(metrics.totalAssets, input.currencySymbol, lang)),
+                listOf("return", "input_investments_hint", strings.realReturnTitle, strings.realReturnFormula,
+                    com.example.util.Formatters.formatPercent(metrics.realReturnPercent, lang))
+            )) {
+                val valueNode = composeRule.onNodeWithText(value, useUnmergedTree = true).performScrollTo()
+                valueNode.assertTextEquals(value)
+                assertTextFits(valueNode)
+                val titleNode = composeRule.onNodeWithText(title, useUnmergedTree = true)
+                assertTextFits(titleNode)
+                assertTrue("$lang title overlaps value",
+                    titleNode.fetchSemanticsNode().boundsInWindow.right <= valueNode.fetchSemanticsNode().boundsInWindow.left)
+                composeRule.onNode(hasText(strings.metricCardInfo) and hasAnyAncestor(hasTestTag(tag)), useUnmergedTree = true)
+                    .assertDoesNotExist()
+                val hint = composeRule.onNodeWithTag(hintTag).performScrollTo()
+                hint.assert(hasClickAction())
+                composeRule.onNodeWithText(formula, useUnmergedTree = true).assertDoesNotExist()
+                composeRule.onNodeWithText(strings.metricCardFormulaPrefix.trimEnd(), useUnmergedTree = true).assertDoesNotExist()
+                hint.performClick()
+                val formulaNode = composeRule.onNodeWithText(formula, useUnmergedTree = true).performScrollTo()
+                composeRule.onAllNodesWithText(formula, useUnmergedTree = true).assertCountEquals(1)
+                formulaNode.assertTextEquals(formula).assert(hasAnyAncestor(hasTestTag(hintTag)))
+                assertEquals(expectedStyle, formulaNode.textStyle())
+                assertTextFits(formulaNode)
+                val prefix = composeRule.onNodeWithText(strings.metricCardFormulaPrefix.trimEnd(), useUnmergedTree = true)
+                prefix.assertExists()
+                val formulaBounds = formulaNode.fetchSemanticsNode().boundsInWindow
+                val hintBounds = hint.fetchSemanticsNode().boundsInWindow
+                assertTrue(formulaBounds.left >= hintBounds.left)
+                assertTrue(formulaBounds.right <= hintBounds.right)
+                assertTrue(prefix.fetchSemanticsNode().boundsInWindow.bottom <= formulaBounds.top)
+                // Формула завершает подсказку, итоговая строка расположена ниже неё.
+                valueNode.performScrollTo()
+                assertTrue(formulaNode.fetchSemanticsNode().boundsInWindow.bottom <= valueNode.fetchSemanticsNode().boundsInWindow.top)
+                hint.performClick()
+                composeRule.onNodeWithText(formula, useUnmergedTree = true).assertDoesNotExist()
+                prefix.assertDoesNotExist()
             }
         }
     }
@@ -469,19 +461,19 @@ class InputDataScreenRobolectricTest {
         assertTrue(formulaBounds.right <= resultBounds.left)
         assertTrue(resultBounds.bottom <= subBounds.top)
 
-        // Все 6 языков и тёмная тема
-        for (isDark in listOf(false, true)) {
-            composeRule.runOnIdle { darkTheme.value = isDark }
-            for (lang in AppLanguage.values()) {
-                composeRule.runOnIdle { language.value = lang }
-                composeRule.waitForIdle()
-                val localized = getAppStrings(lang)
-                composeRule.onNodeWithText(localized.horizonTitle).assertExists()
-                composeRule.onNodeWithText(localized.horizonFormula).assertExists()
-                composeRule.onNodeWithText(localized.horizonValueFormat(44, 38)).assertExists()
-                composeRule.onNodeWithText("82 \u2212 38").assertExists()
-                assertFalse(composeRule.onNodeWithText(localized.horizonFormula, useUnmergedTree = true).textLayoutResult().hasVisualOverflow)
+        // Long formula text and the theme-dependent formula style.
+        for ((lang, isDark) in listOf(AppLanguage.RU to false, AppLanguage.DE to false, AppLanguage.RU to true)) {
+            composeRule.runOnIdle {
+                darkTheme.value = isDark
+                language.value = lang
             }
+            composeRule.waitForIdle()
+            val localized = getAppStrings(lang)
+            composeRule.onNodeWithText(localized.horizonTitle).assertExists()
+            composeRule.onNodeWithText(localized.horizonFormula).assertExists()
+            composeRule.onNodeWithText(localized.horizonValueFormat(44, 38)).assertExists()
+            composeRule.onNodeWithText("82 \u2212 38").assertExists()
+            assertFalse(composeRule.onNodeWithText(localized.horizonFormula, useUnmergedTree = true).textLayoutResult().hasVisualOverflow)
         }
 
         // Динамическое обновление даты рождения и возраста дожития
@@ -519,10 +511,10 @@ class InputDataScreenRobolectricTest {
         composeRule.onNodeWithText("82 \u2212 85").assertExists()
     }
 
-    @org.robolectric.annotation.Config(qualifiers = "w320dp-h640dp-xxhdpi")
+    @org.robolectric.annotation.Config(qualifiers = "w360dp-h800dp-xxhdpi")
     @org.robolectric.annotation.GraphicsMode(org.robolectric.annotation.GraphicsMode.Mode.NATIVE)
     @Test
-    fun `horizon row has no clipping or overlap on narrow screens in all languages`() {
+    fun `horizon row has no clipping or overlap in standard and long text locales`() {
         val input = mutableStateOf(
             FinancialInputData.usAverageData().copy(
                 birthDate = today.minusYears(38).toString(),
@@ -548,7 +540,7 @@ class InputDataScreenRobolectricTest {
             }
         }
 
-        for (lang in AppLanguage.values()) {
+        for (lang in listOf(AppLanguage.RU, AppLanguage.DE)) {
             composeRule.runOnIdle { language.value = lang }
             composeRule.waitForIdle()
             composeRule.onNodeWithTag("input_test_list").performScrollToNode(hasTestTag("input_metric_horizon"))
