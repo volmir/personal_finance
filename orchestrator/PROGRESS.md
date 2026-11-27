@@ -8,3 +8,6 @@
 
 - [FA-01] ✓ 2026-11-27T12:15:50+00:00 — Зафиксировать согласованную методику и обновить правила проекта — ИТОГ: Создана `docs/financial-assessment-methodology.md` со всеми правилами FA-01–FA-11. В `AGENTS.md` заменено старое правило cap и добавлено узкое исключение для очереди FA.
 <!-- orchestrator:v1 {"id": "FA-01", "fingerprint": "c36fa6f236578bae21a02d159cb60f7210663975a9777ec52edf066236ba2f8e", "date": "2026-11-27T12:15:50+00:00", "gate": "passed", "manual": false, "summary": "ИТОГ: Создана `docs/financial-assessment-methodology.md` со всеми правилами FA-01–FA-11. В `AGENTS.md` заменено старое правило cap и добавлено узкое исключение для очереди FA.", "model": "gpt-5.6-luna", "effort": "medium"} -->
+
+- [FA-02] ✓ 2026-11-27T15:59:50+00:00 — Добавить оценки девяти показателей без переключения действующей методики — ## ИТОГ
+<!-- orchestrator:v1 {"id": "FA-02", "fingerprint": "eca99621e266315edc1953cd776db0976ef8e6fbec0c06eb7b7283874c5c4369", "date": "2026-11-27T15:59:50+00:00", "gate": "passed", "manual": false, "summary": "## ИТОГ", "model": "opencode/deepseek-v4.1-flash-free#max", "effort": "medium"} -->

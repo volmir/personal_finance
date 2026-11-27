@@ -24,6 +24,26 @@ object FinancialMetricEvaluator {
         else -> AuditIndicatorStatus.NEGATIVE
     }
 
+    const val CASH_FLOW_SCORE_ZERO_THRESHOLD = 0.0
+
+    /**
+     * Балл денежного потока. Нулевой и отрицательный поток получают 0.
+     * При положительном потоке и положительном доходе используется норма сбережений:
+     * <= 20% — 8, (20%, 50%) — 9, >= 50% — 10.
+     * Положительный поток при нулевом доходе не оценивается: отсутствует знаменатель.
+     */
+    fun getCashFlowScore(cashFlow: Double, savingsRate: Double, monthlyIncome: Double): Int? {
+        if (!cashFlow.isFinite()) return null
+        if (cashFlow <= CASH_FLOW_SCORE_ZERO_THRESHOLD) return 0
+        if (!monthlyIncome.isFinite() || monthlyIncome <= 0.0) return null
+        if (!savingsRate.isFinite()) return null
+        return when {
+            savingsRate <= SAVINGS_RATE_POSITIVE_THRESHOLD -> 8
+            savingsRate < SAVINGS_RATE_TIER_EXCELLENT -> 9
+            else -> 10
+        }
+    }
+
     // =========================================================================
     // 2. Норма сбережений (Savings Rate)
     // <= 0%: негативный (0 баллов)
@@ -128,6 +148,10 @@ object FinancialMetricEvaluator {
     // =========================================================================
 
     const val NET_WORTH_POSITIVE_SHARE_THRESHOLD = 0.5
+    const val NET_WORTH_SCORE_ZERO_THRESHOLD = 0.0
+    const val NET_WORTH_SCORE_SHARE_LOW = 0.25
+    const val NET_WORTH_SCORE_SHARE_HIGH = 0.7
+    const val NET_WORTH_SCORE_SHARE_EXCELLENT = 0.9
 
     fun getNetWorthStatus(netWorth: Double, totalAssets: Double): AuditIndicatorStatus = when {
         netWorth < 0.0 -> AuditIndicatorStatus.NEGATIVE
@@ -135,6 +159,27 @@ object FinancialMetricEvaluator {
         netWorth > 0.0 && (totalAssets == 0.0 || netWorth / totalAssets >= NET_WORTH_POSITIVE_SHARE_THRESHOLD) ->
             AuditIndicatorStatus.POSITIVE
         else -> AuditIndicatorStatus.NEUTRAL
+    }
+
+    /**
+     * Балл чистого капитала:
+     * < 0 — 0, == 0 — 5, положительный — по доле в активах:
+     * < 0.25 — 6, [0.25, 0.5) — 7, [0.5, 0.7) — 8, [0.7, 0.9) — 9, >= 0.9 — 10.
+     * Положительный капитал при неположительных активах неконсистентен и не оценивается.
+     */
+    fun getNetWorthScore(netWorth: Double, totalAssets: Double): Int? {
+        if (!netWorth.isFinite()) return null
+        if (netWorth < NET_WORTH_SCORE_ZERO_THRESHOLD) return 0
+        if (netWorth == NET_WORTH_SCORE_ZERO_THRESHOLD) return 5
+        if (!totalAssets.isFinite() || totalAssets <= 0.0) return null
+        val share = netWorth / totalAssets
+        return when {
+            share < NET_WORTH_SCORE_SHARE_LOW -> 6
+            share < NET_WORTH_POSITIVE_SHARE_THRESHOLD -> 7
+            share < NET_WORTH_SCORE_SHARE_HIGH -> 8
+            share < NET_WORTH_SCORE_SHARE_EXCELLENT -> 9
+            else -> 10
+        }
     }
 
     // =========================================================================
@@ -146,6 +191,14 @@ object FinancialMetricEvaluator {
 
     const val FIDELITY_POSITIVE_THRESHOLD = 1.0
     const val FIDELITY_NEUTRAL_THRESHOLD = 0.7
+
+    const val FIDELITY_SCORE_ZERO_THRESHOLD = 0.0
+    const val FIDELITY_SCORE_TIER_MINIMAL = 0.2
+    const val FIDELITY_SCORE_TIER_LOW = 0.4
+    const val FIDELITY_SCORE_TIER_NEAR_TARGET = 0.8
+    const val FIDELITY_SCORE_TIER_ALMOST_TARGET = 0.9
+    const val FIDELITY_SCORE_TIER_ABOVE_TARGET = 1.2
+    const val FIDELITY_SCORE_TIER_STRONG = 1.5
 
     fun fidelityCapital(liquid: Double, financial: Double, property: Double, liabilities: Double): Double {
         return liquid + financial - maxOf(0.0, liabilities - property)
@@ -183,6 +236,38 @@ object FinancialMetricEvaluator {
         }
         val ratio = capital / target
         return getFidelityStatus(ratio)
+    }
+
+    /**
+     * Балл Fidelity по точному отношению капитала к ориентиру:
+     * <= 0 — 0; (0, 0.2) — 2; [0.2, 0.4) — 3; [0.4, 0.7) — 4; [0.7, 0.8) — 5;
+     * [0.8, 0.9) — 6; [0.9, 1.0) — 7; [1.0, 1.2) — 8; [1.2, 1.5) — 9; >= 1.5 — 10.
+     * Используются значения ratio, а не проценты и не округлённый отображаемый текст.
+     */
+    fun getFidelityScore(ratio: Double): Int? {
+        if (!ratio.isFinite()) return null
+        return when {
+            ratio <= FIDELITY_SCORE_ZERO_THRESHOLD -> 0
+            ratio < FIDELITY_SCORE_TIER_MINIMAL -> 2
+            ratio < FIDELITY_SCORE_TIER_LOW -> 3
+            ratio < FIDELITY_NEUTRAL_THRESHOLD -> 4
+            ratio < FIDELITY_SCORE_TIER_NEAR_TARGET -> 5
+            ratio < FIDELITY_SCORE_TIER_ALMOST_TARGET -> 6
+            ratio < FIDELITY_POSITIVE_THRESHOLD -> 7
+            ratio < FIDELITY_SCORE_TIER_ABOVE_TARGET -> 8
+            ratio < FIDELITY_SCORE_TIER_STRONG -> 9
+            else -> 10
+        }
+    }
+
+    /**
+     * Балл Fidelity доступен только при валидном возрасте и положительном ориентире.
+     * При target <= 0 ориентир недоступен; возвращается null, а не достижение цели.
+     */
+    fun getFidelityScore(capital: Double, target: Double, isAgeValid: Boolean): Int? {
+        if (!isAgeValid) return null
+        if (!capital.isFinite() || !target.isFinite() || target <= 0.0) return null
+        return getFidelityScore(calculateFidelityRatio(capital, target))
     }
 
     // =========================================================================
@@ -257,6 +342,30 @@ object FinancialMetricEvaluator {
         realReturnPercent > 0.0 -> AuditIndicatorStatus.POSITIVE
         realReturnPercent == 0.0 -> AuditIndicatorStatus.NEUTRAL
         else -> AuditIndicatorStatus.NEGATIVE
+    }
+
+    const val REAL_RETURN_SCORE_CRITICAL_THRESHOLD = -5.0
+    const val REAL_RETURN_SCORE_NEGATIVE_THRESHOLD = -2.0
+    const val REAL_RETURN_SCORE_ZERO_THRESHOLD = 0.0
+    const val REAL_RETURN_SCORE_POSITIVE_THRESHOLD = 2.0
+    const val REAL_RETURN_SCORE_HIGH_THRESHOLD = 4.0
+
+    /**
+     * Условный балл реальной доходности (в процентах, не в долях):
+     * < -5 — 0; [-5, -2) — 2; [-2, 0) — 4; == 0 — 6; (0, 2) — 8; [2, 4) — 9; >= 4 — 10.
+     * Это параметр прогноза; балл не входит в итоговую оценку.
+     */
+    fun getRealReturnScore(realReturnPercent: Double): Int? {
+        if (!realReturnPercent.isFinite()) return null
+        return when {
+            realReturnPercent < REAL_RETURN_SCORE_CRITICAL_THRESHOLD -> 0
+            realReturnPercent < REAL_RETURN_SCORE_NEGATIVE_THRESHOLD -> 2
+            realReturnPercent < REAL_RETURN_SCORE_ZERO_THRESHOLD -> 4
+            realReturnPercent == REAL_RETURN_SCORE_ZERO_THRESHOLD -> 6
+            realReturnPercent < REAL_RETURN_SCORE_POSITIVE_THRESHOLD -> 8
+            realReturnPercent < REAL_RETURN_SCORE_HIGH_THRESHOLD -> 9
+            else -> 10
+        }
     }
 
     // =========================================================================
