@@ -1,0 +1,4 @@
+# Журнал задач
+
+- [TEST-C01] ✓ 2026-11-27T11:53:42+00:00 — Провести аудит тестов и зафиксировать правила их жизненного цикла — ИТОГ: TEST-C01 выполнено. В AGENTS.md добавлены правила жизненного цикла тестов и полный UI test matrix budget. Создан docs/test-suite-maintenance.md с картой контрактов, доказательствами и отдельным списком DEFER. Код и тесты не изменены.
+<!-- orchestrator:v1 {"id": "TEST-C01", "fingerprint": "dd061ebd63dc1ffb175501e60e5a32109e1ba4731893f1bf90d147de58930f98", "date": "2026-11-27T11:53:42+00:00", "gate": "passed", "manual": false, "summary": "ИТОГ: TEST-C01 выполнено. В AGENTS.md добавлены правила жизненного цикла тестов и полный UI test matrix budget. Создан docs/test-suite-maintenance.md с картой контрактов, доказательствами и отдельным списком DEFER. Код и тесты не изменены.", "model": "gpt-6.1-sol", "effort": "high"} -->
