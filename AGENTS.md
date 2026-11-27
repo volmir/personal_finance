@@ -5,7 +5,7 @@ Personal Finance & FIRE Audit — offline Android app (Kotlin, Jetpack Compose, 
 ## 0. Working rules
 
 - Reply to the user in **Russian**, briefly. Code identifiers and commit messages stay in English.
-- Current phase: **release hardening; `1.0.3` / `4` is in preparation, `1.0.2` / `3` remains the published release**. Fix defects and logical inconsistencies only. **No new features, no behavior changes beyond the fix, no refactors that are not needed for the fix.** If a fix would change a user-visible number, say so before applying it.
+- Current phase: **release hardening; `1.0.3` / `4` is in preparation, `1.0.2` / `3` remains the published release**. Fix defects and logical inconsistencies only. **No new features, no behavior changes beyond the fix, no refactors that are not needed for the fix.** If a fix would change a user-visible number, say so before applying it. Узкое исключение: согласованная очередь FA-01–FA-11 может менять правила оценки ровно в пределах утверждённой спецификации `docs/financial-assessment-methodology.md`; это отдельное функциональное изменение, а не выпуск версии.
 - Minimal diffs: do not reformat, rename, or reorder untouched code. One logical change per commit.
 - Never silently edit a test expectation to make a test pass. If an expectation must change, state which value changed, by how much, and why.
 - Every bug fix ships with a regression test (boundary values for formulas).
@@ -48,7 +48,7 @@ Personal Finance & FIRE Audit — offline Android app (Kotlin, Jetpack Compose, 
 - Fidelity benchmark compares liquid + financial assets minus debts not covered by property: `max(0, liabilities - property)`. Multiplier interpolation between benchmark ages stays; 0.5x up to age 25.
 - FIRE start capital is investable assets adjusted for uncovered debts (same formula as the Fidelity capital).
 - Net worth status rule (`>= 50% of assets` is positive) lives in `FinancialMetricEvaluator` and is used on Input, Metrics and Audit.
-- Total score may be green with a neutral CFS. The cap (6.0) applies only when the CFS component score is below 5.
+- Согласованные правила комплексной оценки, включая девять показателей, веса, доступность, агрегацию, cap, статусы и экспорт, закреплены в [методике финансовой оценки](docs/financial-assessment-methodology.md). В FA-* не менять остальные frozen decisions из этого раздела.
 - Yen (¥) amounts are shown and entered as whole numbers.
 - Simulation badge in the FIRE hero card sits to the right of "До пенсии осталось", only while simulating.
 - The simulator never changes the saved base input; the Audit and export always use base metrics.
