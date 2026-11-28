@@ -1,5 +1,7 @@
 package com.example.domain.model
 
+import com.example.domain.FinancialMetricEvaluator
+
 /**
  * Четыре взвешенные группы комплексной оценки. Веса заданы в процентах
  * и не настраиваются пользователем.
@@ -89,4 +91,93 @@ data class FinancialAssessmentComponents(
                 }
             )
     }
+}
+
+/**
+ * Причина ограничения итогового балла сверху. Набор пуст, если cap не изменил
+ * значение: условия не выполнены либо исходный балл не превышает предел.
+ */
+enum class FinancialAssessmentCapReason {
+    NEGATIVE_NET_WORTH,
+    LIABILITIES_WITHOUT_ASSETS
+}
+
+/** Почему итоговый балл недоступен. */
+enum class FinancialAssessmentUnavailableReason {
+    ALL_ZERO_INPUT,
+    NO_AVAILABLE_GROUPS
+}
+
+/**
+ * Балл группы без предварительного округления. null означает, что вся группа
+ * недоступна; ноль остаётся валидным критическим баллом.
+ */
+data class FinancialAssessmentGroupScore(
+    val group: FinancialAssessmentGroup,
+    val score: Double?
+) {
+    init {
+        require(score == null || (score.isFinite() && score in 0.0..10.0)) {
+            "Group score must be null or finite between 0 and 10"
+        }
+    }
+
+    val isAvailable: Boolean get() = score != null
+}
+
+/**
+ * Неизменяемый результат комплексной оценки: девять компонентов, четыре группы,
+ * покрытие и итог. [rawScore] — неокруглённый балл до cap, [totalScore] — итог
+ * после cap и округления HALF_UP до одного знака. При недоступности оба равны
+ * null, а [unavailableReason] объясняет причину; подставной ноль не используется.
+ */
+data class FinancialAssessmentResult(
+    val components: FinancialAssessmentComponents,
+    val groups: List<FinancialAssessmentGroupScore>,
+    val rawScore: Double?,
+    val totalScore: Double?,
+    val coveragePercent: Int,
+    val capReasons: Set<FinancialAssessmentCapReason>,
+    val unavailableReason: FinancialAssessmentUnavailableReason?
+) {
+    init {
+        require(groups.map { it.group } == FinancialAssessmentGroup.values().toList()) {
+            "Groups must contain every assessment group exactly once in catalog order"
+        }
+        require(coveragePercent in 0..100) { "Coverage must be between 0 and 100" }
+        require((totalScore == null) == (rawScore == null)) {
+            "Raw and total scores must be available together"
+        }
+        require((totalScore == null) == (unavailableReason != null)) {
+            "Unavailable total must have exactly one reason"
+        }
+        require(totalScore == null || (totalScore.isFinite() && totalScore in 0.0..10.0)) {
+            "Total score must be null or finite between 0 and 10"
+        }
+        require(rawScore == null || (rawScore.isFinite() && rawScore in 0.0..10.0)) {
+            "Raw score must be null or finite between 0 and 10"
+        }
+        require(capReasons.isEmpty() || totalScore != null) {
+            "Cap reason requires an available total"
+        }
+    }
+
+    private val byGroup: Map<FinancialAssessmentGroup, FinancialAssessmentGroupScore> =
+        groups.associateBy { it.group }
+
+    operator fun get(group: FinancialAssessmentGroup): FinancialAssessmentGroupScore =
+        byGroup.getValue(group)
+
+    val isAvailable: Boolean get() = totalScore != null
+    val isComplete: Boolean get() = coveragePercent == 100
+    val isIncomplete: Boolean get() = !isComplete
+    val isCapped: Boolean get() = capReasons.isNotEmpty()
+
+    /** Статус считается только по округлённому итогу; null не передаётся в evaluator. */
+    val overallStatus: AuditIndicatorStatus?
+        get() = totalScore?.let { FinancialMetricEvaluator.getTotalScoreStatus(it) }
+
+    /** Верхняя зелёная ступень [FinancialMetricEvaluator.TOTAL_SCORE_EXCELLENT_MIN]. */
+    val isExcellent: Boolean
+        get() = totalScore != null && totalScore >= FinancialMetricEvaluator.TOTAL_SCORE_EXCELLENT_MIN
 }

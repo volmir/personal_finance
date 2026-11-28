@@ -292,6 +292,13 @@ object FinancialMetricEvaluator {
     const val TOTAL_SCORE_CFS_CAP_TRIGGER = 5
     const val TOTAL_SCORE_CAP_FOR_LOW_CFS = 6.0
 
+    /**
+     * Предел нового итогового балла при отрицательном чистом капитале или
+     * долгах без активов. Старый cap по низкому КФС использует отдельную
+     * константу и продолжает действовать до переключения методики.
+     */
+    const val ASSESSMENT_SCORE_CAP = 6.0
+
     fun calculateCfs(netWorth: Double, annualExpenses: Double): Double {
         return when {
             annualExpenses > 0.0 -> netWorth / annualExpenses
