@@ -25,14 +25,14 @@
   "retry_delay": 30,
   "models": {
     "codex": {
-      "light": "gpt-5.6-luna",
-      "standard": "gpt-6.1-sol",
-      "heavy": "gpt-6.1-sol"
+      "light": "gpt-6-luna",
+      "standard": "gpt-6.2-sol",
+      "heavy": "gpt-6.2-sol"
     },
     "opencode": {
-      "light": "opencode/muse-ember-1.0#medium",
-      "standard": "opencode/deepseek-v4.1-flash#max",
-      "heavy": "opencode/deepseek-v4.1-flash#max"
+      "light": "opencode/deepseek-v4.1-flash-free#high",
+      "standard": "opencode/deepseek-v4.1-flash-free#high",
+      "heavy": "opencode/deepseek-v4.1-flash-free#high"
     }
   },
   "model_sets": {
@@ -49,8 +49,8 @@
       },
       "deepseek-v4.1-flash-free": {
         "light": "opencode/deepseek-v4.1-flash-free#high",
-        "standard": "opencode/deepseek-v4.1-flash-free#max",
-        "heavy": "opencode/deepseek-v4.1-flash-free#max"
+        "standard": "opencode/deepseek-v4.1-flash-free#high",
+        "heavy": "opencode/deepseek-v4.1-flash-free#high"
       }
     }
   },
